@@ -104,3 +104,44 @@ src/
 2. Wait for deployment to complete (1-2 minutes)
 3. Hard refresh browser: `Ctrl+Shift+R` (Windows) or `Cmd+Shift+R` (Mac)
 4. Verify all routes match Editor View
+
+---
+
+## RLS Security Model
+
+### Overview
+
+All 23 database tables have Row-Level Security (RLS) enabled with a Phase 1 allowlist security model.
+
+**Full Policy Matrix:** See [RLS_POLICY_MATRIX.md](./RLS_POLICY_MATRIX.md)
+
+### Security Posture (Phase 1)
+
+| Attribute | Value |
+|-----------|-------|
+| Model | Single-email allowlist |
+| Allowed Email | `info@devmart.sr` |
+| Default Access | Deny all |
+| RLS Status | Enabled on all tables |
+
+### Table Categories
+
+| Category | Tables | Access Pattern |
+|----------|--------|----------------|
+| Shared Core | person, household, household_member, contact_point, address | Admin allowlist |
+| Bouwsubsidie | subsidy_case, subsidy_case_status_history, subsidy_document_*, social_report, technical_report, generated_document | Admin allowlist |
+| Woning Registratie | housing_registration, housing_registration_status_history, housing_urgency, district_quota, allocation_*, assignment_record | Admin allowlist |
+| Public Access | public_status_access | Admin allowlist (token validation deferred) |
+| System | app_user_profile (user self), audit_event (append-only) | Special patterns |
+
+### Immutable Patterns (By Design)
+
+- **No DELETE** on any table — Records are immutable for audit compliance
+- **No UPDATE** on history/status tables — Append-only for audit trail
+- **No SELECT** on audit_event — Write-only; admin reads via Supabase Dashboard
+
+### Change History
+
+| Date | Change | Reason |
+|------|--------|--------|
+| 2026-01-07 | RLS Security Model section added | Phase 8 security audit |

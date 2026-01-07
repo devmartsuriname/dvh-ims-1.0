@@ -45,6 +45,68 @@ Build citizen-facing public interfaces:
 
 ---
 
+## C.1 Guardian Rules Re-confirmation (MANDATORY)
+
+| Rule | Status |
+|------|--------|
+| Darkone Admin 1:1 only | CONFIRMED — Admin UI remains untouched |
+| DARKONE_ASSET_MAP for all UI | CONFIRMED — Public uses same Mingcute icons via IconifyIcon |
+| NO Bootstrap (custom or extended) | CONFIRMED |
+| NO new icon libraries | CONFIRMED — Mingcute only via IconifyIcon |
+| NO custom UI systems | CONFIRMED |
+| NO layout changes to Admin | CONFIRMED — only new PublicLayout created |
+| NO monorepo conversion | CONFIRMED — single src/ folder |
+| NO SCSS duplication | CONFIRMED — single style.scss import |
+
+---
+
+## C.2 Theme Isolation Guardrails (MANDATORY)
+
+### Light Theme Enforcement (Public UI ONLY)
+
+| Rule | Scope | Implementation |
+|------|-------|----------------|
+| Light theme via `data-bs-theme="light"` | PublicLayout wrapper ONLY | Set on layout root element, NOT html/body |
+| NO global theme flips | html/body/root elements | NEVER modify document-level theme attributes |
+| NO SCSS global overrides | style.scss and plugins | No new imports that affect admin forms |
+| NO CSS imports in components | Table components | NEVER import gridjs/theme/mermaid.css or similar |
+
+### Prohibited Actions
+
+- ❌ DO NOT set `data-bs-theme` on `<html>` or `<body>` in public routes
+- ❌ DO NOT import external CSS that overrides Darkone form controls (e.g., `gridjs/dist/theme/mermaid.css`)
+- ❌ DO NOT create new SCSS files that modify `input.gridjs-input` or similar admin elements
+- ❌ DO NOT duplicate Darkone SCSS into public-specific files
+
+### Required Pattern for Public Pages
+
+Public pages MUST use a scoped layout wrapper:
+
+```tsx
+// PublicLayout.tsx — CORRECT PATTERN
+const PublicLayout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div data-bs-theme="light" className="public-wrapper">
+      {/* Light theme applies ONLY within this div */}
+      {children}
+    </div>
+  )
+}
+```
+
+Theme attribute is applied ONLY to the PublicLayout wrapper div, NOT to html/body.
+
+### Cross-Module Integrity Check (Pre-Phase 5 Completion)
+
+Before Phase 5 completion, verify:
+- [ ] Admin pages still render with dark theme (no white inputs)
+- [ ] No Grid.js inputs in admin have white backgrounds
+- [ ] Darkone SCSS in `src/assets/scss/` is unchanged
+- [ ] No new CSS imports in style.scss
+- [ ] Public pages render with light theme correctly
+
+---
+
 ## D. Database Impact (DOCUMENTATION ONLY)
 
 ### No New Tables

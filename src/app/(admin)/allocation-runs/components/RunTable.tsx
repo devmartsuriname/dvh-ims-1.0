@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
-import { Card, CardBody, Button, Badge, Spinner } from 'react-bootstrap'
-import { Grid, html } from 'gridjs'
-import 'gridjs/dist/theme/mermaid.css'
+import { useState, useEffect } from 'react'
+import { Card, CardBody, Button, Spinner } from 'react-bootstrap'
+import { Grid } from 'gridjs-react'
+import { html } from 'gridjs'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'react-toastify'
 import { useNavigate } from 'react-router-dom'
@@ -53,72 +53,30 @@ const RunTable = () => {
     fetchRuns()
   }, [])
 
+  // Listen for view clicks from Grid.js
   useEffect(() => {
-    if (!loading && runs.length >= 0) {
-      const gridContainer = document.getElementById('runs-grid')
-      if (gridContainer) {
-        gridContainer.innerHTML = ''
-        
-        new Grid({
-          columns: [
-            { name: 'Run ID', width: '150px' },
-            { name: 'District', width: '100px' },
-            { name: 'Run Date', width: '150px' },
-            { 
-              name: 'Status', 
-              width: '100px',
-              formatter: (cell) => {
-                const status = String(cell)
-                return html(`<span class="badge bg-${STATUS_BADGES[status] || 'secondary'}">${status}</span>`)
-              }
-            },
-            { name: 'Candidates', width: '100px' },
-            { name: 'Allocated', width: '100px' },
-            {
-              name: 'Actions',
-              width: '100px',
-              formatter: (_, row) => html(`
-                <button class="btn btn-sm btn-soft-info view-run" data-id="${row.cells[6].data}">
-                  View
-                </button>
-              `)
-            }
-          ],
-          data: runs.map(r => [
-            r.id.substring(0, 8) + '...',
-            r.district_code,
-            new Date(r.run_date).toLocaleString(),
-            r.run_status,
-            r.candidates_count ?? '-',
-            r.allocations_count ?? '-',
-            r.id
-          ]),
-          search: true,
-          pagination: { limit: 10 },
-          className: {
-            table: 'table table-hover mb-0'
-          }
-        }).render(gridContainer)
-
-        // Add click handler for view buttons
-        gridContainer.addEventListener('click', (e) => {
-          const target = e.target as HTMLElement
-          const viewBtn = target.closest('.view-run')
-          if (viewBtn) {
-            const id = viewBtn.getAttribute('data-id')
-            if (id) {
-              navigate(`/allocation-runs/${id}`)
-            }
-          }
-        })
-      }
+    const handleViewClick = (e: CustomEvent) => {
+      navigate(`/allocation-runs/${e.detail}`)
     }
-  }, [loading, runs, navigate])
+    window.addEventListener('run-view', handleViewClick as EventListener)
+    return () => window.removeEventListener('run-view', handleViewClick as EventListener)
+  }, [navigate])
 
   const handleRunExecuted = () => {
     setShowModal(false)
     fetchRuns()
   }
+
+  // Prepare grid data
+  const gridData = runs.map(r => [
+    r.id.substring(0, 8) + '...',
+    r.district_code,
+    new Date(r.run_date).toLocaleString(),
+    r.run_status,
+    r.candidates_count ?? '-',
+    r.allocations_count ?? '-',
+    r.id
+  ])
 
   return (
     <>
@@ -141,7 +99,38 @@ const RunTable = () => {
               <Spinner animation="border" variant="primary" />
             </div>
           ) : (
-            <div id="runs-grid"></div>
+            <Grid
+              data={gridData}
+              columns={[
+                { name: 'Run ID', width: '150px' },
+                { name: 'District', width: '100px' },
+                { name: 'Run Date', width: '150px' },
+                { 
+                  name: 'Status', 
+                  width: '100px',
+                  formatter: (cell) => {
+                    const status = String(cell)
+                    return html(`<span class="badge bg-${STATUS_BADGES[status] || 'secondary'}">${status}</span>`)
+                  }
+                },
+                { name: 'Candidates', width: '100px' },
+                { name: 'Allocated', width: '100px' },
+                {
+                  name: 'Actions',
+                  width: '100px',
+                  formatter: (cell) => html(`
+                    <button class="btn btn-sm btn-soft-info" onclick="window.dispatchEvent(new CustomEvent('run-view', {detail: '${cell}'}))">
+                      View
+                    </button>
+                  `)
+                }
+              ]}
+              search={true}
+              pagination={{ limit: 10 }}
+              className={{
+                table: 'table table-hover mb-0'
+              }}
+            />
           )}
         </CardBody>
       </Card>

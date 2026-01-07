@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Card, CardBody, Button, Badge, Spinner, Tab, Tabs } from 'react-bootstrap'
-import { Grid, html } from 'gridjs'
-import 'gridjs/dist/theme/mermaid.css'
+import { Card, CardBody, Spinner, Tab, Tabs } from 'react-bootstrap'
+import { Grid } from 'gridjs-react'
+import { html } from 'gridjs'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'react-toastify'
 import DecisionFormModal from './DecisionFormModal'
@@ -100,98 +100,42 @@ const DecisionTable = () => {
     fetchData()
   }, [])
 
+  // Listen for decision clicks from Grid.js
   useEffect(() => {
-    if (!loading) {
-      // Render pending candidates grid
-      const pendingContainer = document.getElementById('pending-grid')
-      if (pendingContainer && pendingCandidates.length > 0) {
-        pendingContainer.innerHTML = ''
-        
-        new Grid({
-          columns: [
-            { name: 'Rank', width: '60px' },
-            { name: 'Reference', width: '120px' },
-            { name: 'District', width: '100px' },
-            { name: 'Urgency', width: '80px' },
-            { name: 'Run Date', width: '120px' },
-            {
-              name: 'Action',
-              width: '120px',
-              formatter: (_, row) => html(`
-                <button class="btn btn-sm btn-primary make-decision" data-id="${row.cells[5].data}">
-                  Make Decision
-                </button>
-              `)
-            }
-          ],
-          data: pendingCandidates.map(c => [
-            c.composite_rank,
-            c.registration?.reference_number || '-',
-            c.registration?.district_code || '-',
-            c.urgency_score,
-            c.run ? new Date(c.run.run_date).toLocaleDateString() : '-',
-            c.id
-          ]),
-          pagination: { limit: 10 },
-          className: {
-            table: 'table table-hover mb-0'
-          }
-        }).render(pendingContainer)
-
-        pendingContainer.addEventListener('click', (e) => {
-          const target = e.target as HTMLElement
-          const btn = target.closest('.make-decision')
-          if (btn) {
-            const id = btn.getAttribute('data-id')
-            const candidate = pendingCandidates.find(c => c.id === id)
-            if (candidate) {
-              setSelectedCandidate(candidate)
-              setShowModal(true)
-            }
-          }
-        })
-      }
-
-      // Render decisions grid
-      const decisionsContainer = document.getElementById('decisions-grid')
-      if (decisionsContainer && decisions.length > 0) {
-        decisionsContainer.innerHTML = ''
-        
-        new Grid({
-          columns: [
-            { name: 'Registration', width: '150px' },
-            { 
-              name: 'Decision', 
-              width: '100px',
-              formatter: (cell) => {
-                const decision = String(cell)
-                return html(`<span class="badge bg-${DECISION_BADGES[decision] || 'secondary'}">${decision}</span>`)
-              }
-            },
-            { name: 'Reason', width: '200px' },
-            { name: 'Decided At', width: '150px' }
-          ],
-          data: decisions.map(d => [
-            d.registration_id.substring(0, 12) + '...',
-            d.decision,
-            d.decision_reason || '-',
-            new Date(d.decided_at).toLocaleString()
-          ]),
-          search: true,
-          pagination: { limit: 10 },
-          className: {
-            table: 'table table-hover mb-0'
-          }
-        }).render(decisionsContainer)
+    const handleDecisionClick = (e: CustomEvent) => {
+      const candidate = pendingCandidates.find(c => c.id === e.detail)
+      if (candidate) {
+        setSelectedCandidate(candidate)
+        setShowModal(true)
       }
     }
-  }, [loading, pendingCandidates, decisions])
+    window.addEventListener('decision-make', handleDecisionClick as EventListener)
+    return () => window.removeEventListener('decision-make', handleDecisionClick as EventListener)
+  }, [pendingCandidates])
 
   const handleDecisionMade = () => {
     setShowModal(false)
     setSelectedCandidate(null)
     fetchData()
   }
+
+  // Prepare grid data for pending candidates
+  const pendingGridData = pendingCandidates.map(c => [
+    c.composite_rank,
+    c.registration?.reference_number || '-',
+    c.registration?.district_code || '-',
+    c.urgency_score,
+    c.run ? new Date(c.run.run_date).toLocaleDateString() : '-',
+    c.id
+  ])
+
+  // Prepare grid data for decisions history
+  const decisionsGridData = decisions.map(d => [
+    d.registration_id.substring(0, 12) + '...',
+    d.decision,
+    d.decision_reason || '-',
+    new Date(d.decided_at).toLocaleString()
+  ])
 
   return (
     <>
@@ -209,7 +153,29 @@ const DecisionTable = () => {
                     No pending decisions. All selected candidates have been processed.
                   </div>
                 ) : (
-                  <div id="pending-grid"></div>
+                  <Grid
+                    data={pendingGridData}
+                    columns={[
+                      { name: 'Rank', width: '60px' },
+                      { name: 'Reference', width: '120px' },
+                      { name: 'District', width: '100px' },
+                      { name: 'Urgency', width: '80px' },
+                      { name: 'Run Date', width: '120px' },
+                      {
+                        name: 'Action',
+                        width: '120px',
+                        formatter: (cell) => html(`
+                          <button class="btn btn-sm btn-primary" onclick="window.dispatchEvent(new CustomEvent('decision-make', {detail: '${cell}'}))">
+                            Make Decision
+                          </button>
+                        `)
+                      }
+                    ]}
+                    pagination={{ limit: 10 }}
+                    className={{
+                      table: 'table table-hover mb-0'
+                    }}
+                  />
                 )}
               </Tab>
               <Tab eventKey="history" title={`History (${decisions.length})`}>
@@ -218,7 +184,27 @@ const DecisionTable = () => {
                     No decisions made yet.
                   </div>
                 ) : (
-                  <div id="decisions-grid"></div>
+                  <Grid
+                    data={decisionsGridData}
+                    columns={[
+                      { name: 'Registration', width: '150px' },
+                      { 
+                        name: 'Decision', 
+                        width: '100px',
+                        formatter: (cell) => {
+                          const decision = String(cell)
+                          return html(`<span class="badge bg-${DECISION_BADGES[decision] || 'secondary'}">${decision}</span>`)
+                        }
+                      },
+                      { name: 'Reason', width: '200px' },
+                      { name: 'Decided At', width: '150px' }
+                    ]}
+                    search={true}
+                    pagination={{ limit: 10 }}
+                    className={{
+                      table: 'table table-hover mb-0'
+                    }}
+                  />
                 )}
               </Tab>
             </Tabs>

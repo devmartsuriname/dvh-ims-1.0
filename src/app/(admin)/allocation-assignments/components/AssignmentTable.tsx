@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Card, CardBody, Button, Badge, Spinner } from 'react-bootstrap'
-import { Grid, html } from 'gridjs'
-import 'gridjs/dist/theme/mermaid.css'
+import { Card, CardBody, Button, Spinner } from 'react-bootstrap'
+import { Grid } from 'gridjs-react'
+import { html } from 'gridjs'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'react-toastify'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
@@ -57,55 +57,20 @@ const AssignmentTable = () => {
     fetchAssignments()
   }, [])
 
-  useEffect(() => {
-    if (!loading && assignments.length >= 0) {
-      const gridContainer = document.getElementById('assignments-grid')
-      if (gridContainer) {
-        gridContainer.innerHTML = ''
-        
-        if (assignments.length === 0) {
-          gridContainer.innerHTML = '<div class="text-center text-muted py-4">No assignments recorded yet.</div>'
-          return
-        }
-        
-        new Grid({
-          columns: [
-            { name: 'Reference', width: '120px' },
-            { 
-              name: 'Type', 
-              width: '100px',
-              formatter: (cell) => {
-                const type = String(cell)
-                return html(`<span class="badge bg-${TYPE_BADGES[type] || 'secondary'}">${type}</span>`)
-              }
-            },
-            { name: 'Assignment Date', width: '120px' },
-            { name: 'Housing Ref', width: '150px' },
-            { name: 'Notes', width: '200px' },
-            { name: 'Recorded At', width: '150px' }
-          ],
-          data: assignments.map(a => [
-            a.registration?.reference_number || a.registration_id.substring(0, 12) + '...',
-            a.assignment_type,
-            new Date(a.assignment_date).toLocaleDateString(),
-            a.housing_reference || '-',
-            a.notes || '-',
-            new Date(a.recorded_at).toLocaleString()
-          ]),
-          search: true,
-          pagination: { limit: 10 },
-          className: {
-            table: 'table table-hover mb-0'
-          }
-        }).render(gridContainer)
-      }
-    }
-  }, [loading, assignments])
-
   const handleAssignmentCreated = () => {
     setShowModal(false)
     fetchAssignments()
   }
+
+  // Prepare grid data
+  const gridData = assignments.map(a => [
+    a.registration?.reference_number || a.registration_id.substring(0, 12) + '...',
+    a.assignment_type,
+    new Date(a.assignment_date).toLocaleDateString(),
+    a.housing_reference || '-',
+    a.notes || '-',
+    new Date(a.recorded_at).toLocaleString()
+  ])
 
   return (
     <>
@@ -127,8 +92,34 @@ const AssignmentTable = () => {
             <div className="text-center py-4">
               <Spinner animation="border" variant="primary" />
             </div>
+          ) : assignments.length === 0 ? (
+            <div className="text-center text-muted py-4">
+              No assignments recorded yet.
+            </div>
           ) : (
-            <div id="assignments-grid"></div>
+            <Grid
+              data={gridData}
+              columns={[
+                { name: 'Reference', width: '120px' },
+                { 
+                  name: 'Type', 
+                  width: '100px',
+                  formatter: (cell) => {
+                    const type = String(cell)
+                    return html(`<span class="badge bg-${TYPE_BADGES[type] || 'secondary'}">${type}</span>`)
+                  }
+                },
+                { name: 'Assignment Date', width: '120px' },
+                { name: 'Housing Ref', width: '150px' },
+                { name: 'Notes', width: '200px' },
+                { name: 'Recorded At', width: '150px' }
+              ]}
+              search={true}
+              pagination={{ limit: 10 }}
+              className={{
+                table: 'table table-hover mb-0'
+              }}
+            />
           )}
         </CardBody>
       </Card>

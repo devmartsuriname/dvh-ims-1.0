@@ -233,11 +233,21 @@ This project follows strict Devmart governance rules:
 
 ### Guardian Rules (Non-Negotiable)
 - Darkone Admin UI must remain 1:1
-- No Bootstrap or alternative UI frameworks
-- No custom icon libraries
+- Darkone SCSS + Darkone Assets Library ONLY
+- NO custom Bootstrap extensions beyond Darkone baseline
+- NO new icon libraries
+- NO custom UI systems
+- NO layout changes
 - Public frontend Light Theme only
 - RLS enforced at database level
 - Audit-first governance
+- All UI icons/assets MUST be from DARKONE_ASSET_MAP
+
+### DARKONE_ASSET_MAP Compliance
+- Menu icons: `mingcute:*` prefix (verified in asset map)
+- UI components: react-bootstrap (Darkone baseline)
+- Tables: Grid.js with Darkone SCSS
+- Forms: TextFormInput wrappers
 
 ### Execution Discipline
 - No phase skipping
@@ -245,6 +255,21 @@ This project follows strict Devmart governance rules:
 - No self-initiated fixes
 - Errors require STOP and REPORT
 - All deviations require explicit approval from Delroy
+
+---
+
+## 14. Technical Stack (Confirmed)
+
+| Component | Technology |
+|-----------|------------|
+| Framework | Vite + React SPA |
+| Routing | React Router DOM v6 |
+| Route Registration | `src/routes/index.tsx` |
+| Menu Config | `src/assets/data/menu-items.ts` |
+| UI Baseline | Darkone Admin 1:1 |
+| Backend | Supabase (PostgreSQL + Auth + RLS) |
+
+**Note:** This is NOT Next.js. The folder structure follows Darkone conventions.
 
 ---
 

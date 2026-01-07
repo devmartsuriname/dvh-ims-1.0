@@ -265,16 +265,50 @@ Detailed phase plans are maintained in `/phases/`:
 
 Each phase document contains:
 - A. Phase Objective
-- B. Explicit Scope (ALLOWED)
-- C. Explicit Out of Scope (FORBIDDEN)
-- D. Database Impact
-- E. UI Impact
+- B. Framework & Routing (for UI phases)
+- C. Explicit Scope (ALLOWED)
+- D. Explicit Out of Scope (FORBIDDEN)
+- E. Database Impact
 - F. Security and RLS Considerations
-- G. Verification Criteria
-- H. Restore Point (Documentation Snapshot — no execution)
-- I. Hard Stop Statement
+- G. Audit Trail
+- H. UI Impact (Darkone 1:1 compliance)
+- I. Verification Criteria
+- J. Admin Account Requirement
+- K. Restore Points
+- L. Hard Stop Statement
+- M. Governance References
 
 Phase documents are authoritative for execution scope.
+
+---
+
+## 10. Technical Stack Reference
+
+| Component | Technology |
+|-----------|------------|
+| Framework | Vite + React SPA |
+| Routing | React Router DOM v6 |
+| Route Registration | `src/routes/index.tsx` |
+| Menu Config | `src/assets/data/menu-items.ts` |
+| UI Baseline | Darkone Admin 1:1 |
+| Backend | Supabase (PostgreSQL + Auth + RLS) |
+
+**Note:** This is NOT Next.js App Router. Folder structure follows Darkone conventions.
+
+---
+
+## 11. Guardian Rules Reference
+
+All implementation must comply with Guardian Rules defined in:
+- `/docs/Architecture_Security.md` — Section 11 and Section 13.2
+
+Key rules:
+- Darkone Admin UI 1:1 only
+- Darkone SCSS + Assets Library only
+- NO custom Bootstrap extensions
+- NO new icon libraries
+- All icons from DARKONE_ASSET_MAP (mingcute:* prefix)
+- Public frontend Light Theme only
 
 ---
 

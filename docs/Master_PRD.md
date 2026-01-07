@@ -199,4 +199,21 @@ No phase skipping is permitted.
 
 ---
 
+## 13. Guardian Rules Reference
+
+All implementation must comply with the non-negotiable Guardian Rules defined in:
+- `/docs/Architecture_Security.md` — Section 11 and Section 13.2
+
+Key rules:
+- Darkone Admin UI must remain 1:1
+- Darkone SCSS + Darkone Assets Library ONLY
+- NO custom Bootstrap extensions
+- NO new icon libraries
+- NO custom UI systems
+- NO layout changes
+- Public frontend Light Theme only
+- All UI icons/assets from DARKONE_ASSET_MAP only
+
+---
+
 **End of Master PRD**

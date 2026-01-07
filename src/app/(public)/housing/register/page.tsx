@@ -1,80 +1,142 @@
-import { Card, CardBody, Container, Button } from 'react-bootstrap'
-import { Link } from 'react-router-dom'
-import IconifyIcon from '@/components/wrapper/IconifyIcon'
+import { useState } from 'react'
+import { Container, Card } from 'react-bootstrap'
+import PublicHeader from '@/components/public/PublicHeader'
+import PublicFooter from '@/components/public/PublicFooter'
+import WizardProgress, { type WizardStep } from '@/components/public/WizardProgress'
+import { HousingFormData, SubmissionResult } from './types'
+import { WIZARD_STEPS, INITIAL_FORM_DATA } from './constants'
+
+import Step0Introduction from './steps/Step0Introduction'
+import Step1PersonalInfo from './steps/Step1PersonalInfo'
+import Step2ContactInfo from './steps/Step2ContactInfo'
+import Step3LivingSituation from './steps/Step3LivingSituation'
+import Step4HousingPreference from './steps/Step4HousingPreference'
+import Step5Reason from './steps/Step5Reason'
+import Step6Income from './steps/Step6Income'
+import Step7Urgency from './steps/Step7Urgency'
+import Step8Review from './steps/Step8Review'
+import Step9Receipt from './steps/Step9Receipt'
 
 /**
- * Housing Registration Wizard Placeholder
+ * Housing Registration Public Wizard
+ * Phase 5 - Checkpoint 5
  * 
- * Static placeholder for Phase 5 Checkpoint 2
- * Wizard implementation comes in Checkpoint 5
+ * 10-step wizard for Housing Registration applications
+ * Uses react-bootstrap components per Darkone 1:1 standard
  */
-const HousingWizardPlaceholder = () => {
+const HousingRegistrationWizard = () => {
+  const [currentStep, setCurrentStep] = useState(0)
+  const [formData, setFormData] = useState<HousingFormData>(INITIAL_FORM_DATA)
+  const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Cast readonly array to mutable for WizardProgress compatibility
+  const progressSteps: WizardStep[] = WIZARD_STEPS.map(step => ({ title: step.title }))
+
+  const handleNext = () => {
+    if (currentStep === 8) {
+      // Step 8 (Review) triggers submission
+      handleSubmit()
+    } else {
+      setCurrentStep(prev => Math.min(prev + 1, WIZARD_STEPS.length - 1))
+    }
+  }
+
+  const handleBack = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 0))
+  }
+
+  const updateFormData = (data: Partial<HousingFormData>) => {
+    setFormData(prev => ({ ...prev, ...data }))
+  }
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    
+    // Mock submission delay
+    await new Promise(resolve => setTimeout(resolve, 1500))
+    
+    // Generate mock reference number (WR-YYYY-NNNNNN) and token
+    const referenceNumber = `WR-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`
+    const accessToken = crypto.randomUUID().slice(0, 12).toUpperCase()
+    
+    setSubmissionResult({
+      reference_number: referenceNumber,
+      access_token: accessToken,
+      submitted_at: new Date().toISOString()
+    })
+    
+    setCurrentStep(9)
+    setIsSubmitting(false)
+  }
+
+  const renderStep = () => {
+    const commonProps = {
+      formData,
+      updateFormData,
+      onNext: handleNext,
+      onBack: handleBack
+    }
+
+    switch (currentStep) {
+      case 0:
+        return <Step0Introduction onNext={handleNext} />
+      case 1:
+        return <Step1PersonalInfo {...commonProps} />
+      case 2:
+        return <Step2ContactInfo {...commonProps} />
+      case 3:
+        return <Step3LivingSituation {...commonProps} />
+      case 4:
+        return <Step4HousingPreference {...commonProps} />
+      case 5:
+        return <Step5Reason {...commonProps} />
+      case 6:
+        return <Step6Income {...commonProps} />
+      case 7:
+        return <Step7Urgency {...commonProps} />
+      case 8:
+        return (
+          <Step8Review 
+            formData={formData}
+            updateFormData={updateFormData}
+            onNext={handleNext}
+            onBack={handleBack}
+            isSubmitting={isSubmitting}
+          />
+        )
+      case 9:
+        return <Step9Receipt result={submissionResult!} />
+      default:
+        return null
+    }
+  }
+
   return (
     <div className="d-flex flex-column min-vh-100">
-      {/* Header */}
-      <header className="py-3 border-bottom bg-white">
-        <Container>
-          <div className="d-flex align-items-center gap-3">
-            <Link to="/" className="text-decoration-none">
-              <img 
-                src="/assets/images/logo-dark.png" 
-                alt="VolksHuisvesting Logo" 
-                height="36" 
-              />
-            </Link>
-            <div>
-              <h6 className="mb-0 fw-bold">Housing Registration</h6>
-              <small className="text-muted">VolksHuisvesting Suriname</small>
-            </div>
-          </div>
-        </Container>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-grow-1 py-5 bg-light">
-        <Container>
-          <Card className="border-0 shadow-sm mx-auto" style={{ maxWidth: 600 }}>
-            <CardBody className="text-center py-5 px-4">
-              <div className="mb-4">
-                <span className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10" style={{ width: 80, height: 80 }}>
-                  <IconifyIcon 
-                    icon="mingcute:home-4-line" 
-                    className="text-success"
-                    style={{ fontSize: '2.5rem' }}
-                  />
-                </span>
-              </div>
-              <h3 className="fw-bold mb-3">Housing Registration Wizard</h3>
-              <p className="text-muted mb-4">
-                The registration wizard is currently being prepared. 
-                This feature will be available in the next update.
-              </p>
-              <div className="d-flex flex-column gap-2 align-items-center">
-                <span className="badge bg-warning text-dark">Coming Soon</span>
-                <Link to="/">
-                  <Button variant="outline-secondary" size="sm" className="mt-3">
-                    <IconifyIcon icon="mingcute:arrow-left-line" className="me-1" />
-                    Back to Home
-                  </Button>
-                </Link>
-              </div>
-            </CardBody>
+      <PublicHeader />
+      
+      <main className="flex-grow-1 py-4 bg-light">
+        <Container style={{ maxWidth: 800 }}>
+          {/* Progress indicator - hide on receipt step */}
+          {currentStep < 9 && (
+            <WizardProgress 
+              steps={progressSteps} 
+              currentStep={currentStep} 
+            />
+          )}
+          
+          <Card className="border-0 shadow-sm">
+            <Card.Body className="p-4">
+              {renderStep()}
+            </Card.Body>
           </Card>
         </Container>
       </main>
-
-      {/* Footer */}
-      <footer className="py-3 border-top bg-white">
-        <Container>
-          <div className="text-center">
-            <small className="text-muted">
-              © {new Date().getFullYear()} Ministry of Social Affairs and Housing
-            </small>
-          </div>
-        </Container>
-      </footer>
+      
+      <PublicFooter />
     </div>
   )
 }
 
-export default HousingWizardPlaceholder
+export default HousingRegistrationWizard

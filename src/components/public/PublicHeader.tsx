@@ -18,7 +18,7 @@ const PublicHeader = () => {
             <img 
               src={logoSozavo} 
               alt="VolksHuisvesting Suriname" 
-              height="48" 
+              style={{ height: '40px', width: 'auto' }}
             />
             <div>
               <h5 className="mb-0 fw-bold text-dark">VolksHuisvesting</h5>

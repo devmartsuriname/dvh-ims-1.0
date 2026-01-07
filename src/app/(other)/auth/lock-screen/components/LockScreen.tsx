@@ -35,7 +35,7 @@ const LockScreen = () => {
                   <CardBody className=" p-5">
                     <div className="text-center">
                       <div className="mx-auto mb-4 text-center auth-logo">
-                        <Link to="/dashboards">
+                        <Link to="/dashboards" className="d-inline-block">
                           <img src={logoSozavo} style={{ height: '56px', width: 'auto' }} alt="VolksHuisvesting" />
                         </Link>
                       </div>

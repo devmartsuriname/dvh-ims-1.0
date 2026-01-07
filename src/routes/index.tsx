@@ -1,5 +1,8 @@
 import { lazy } from 'react'
-import { Navigate, type RouteProps } from 'react-router-dom'
+import { type RouteProps } from 'react-router-dom'
+
+// Public Routes (Citizen-facing, Light Theme)
+const PublicPlaceholder = lazy(() => import('@/app/(public)/placeholder/page'))
 
 const Dashboards = lazy(() => import('@/app/(admin)/dashboards/page'))
 
@@ -90,13 +93,19 @@ export type RoutesProps = {
   exact?: boolean
 }
 
-const initialRoutes: RoutesProps[] = [
-  {
-    path: '/',
-    name: 'root',
-    element: <Navigate to="/dashboards" />,
-  },
+/**
+ * Public Routes - Citizen-facing pages with light theme
+ * These routes are rendered inside PublicLayout (scoped light theme)
+ * NO authentication required
+ */
+export const publicRoutes: RoutesProps[] = [
+  { path: '/', name: 'Landing', element: <PublicPlaceholder /> },
 ]
+
+/**
+ * Admin Routes - Internal staff pages with dark theme
+ * These routes require authentication and use AdminLayout
+ */
 
 const generalRoutes: RoutesProps[] = [
   {
@@ -375,7 +384,6 @@ const allocationRoutes: RoutesProps[] = [
 ]
 
 export const appRoutes = [
-  ...initialRoutes,
   ...sharedCoreRoutes,
   ...bouwsubsidieRoutes,
   ...woningRegistratieRoutes,

@@ -23,13 +23,14 @@ const CountryMap = () => {
 
   const salesLocationOptions = {
     map: 'world',
-    zoomOnScroll: true,
+    zoomOnScroll: false,
     zoomButtons: false,
+    draggable: false,
     markersSelectable: true,
     focusOn: {
       region: 'SR',
-      scale: 8,
-      animate: true,
+      scale: 15,
+      animate: false,
     },
     selectedRegions: ['SR'],
     markers: displayMarkers,
@@ -47,7 +48,7 @@ const CountryMap = () => {
       },
       selected: {
         fill: '#7f56da',
-        fillOpacity: 0.6,
+        fillOpacity: 0.8,
       },
     },
   }

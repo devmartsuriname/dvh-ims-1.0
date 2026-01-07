@@ -147,6 +147,44 @@ export type Database = {
           },
         ]
       }
+      generated_document: {
+        Row: {
+          case_id: string
+          document_type: string
+          file_name: string
+          file_path: string
+          generated_at: string
+          generated_by: string | null
+          id: string
+        }
+        Insert: {
+          case_id: string
+          document_type: string
+          file_name: string
+          file_path: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+        }
+        Update: {
+          case_id?: string
+          document_type?: string
+          file_name?: string
+          file_path?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_document_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "subsidy_case"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       household: {
         Row: {
           created_at: string
@@ -259,6 +297,273 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      social_report: {
+        Row: {
+          case_id: string
+          created_at: string
+          created_by: string | null
+          finalized_at: string | null
+          finalized_by: string | null
+          id: string
+          is_finalized: boolean
+          report_json: Json
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          created_by?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          is_finalized?: boolean
+          report_json?: Json
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          created_by?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          is_finalized?: boolean
+          report_json?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_report_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "subsidy_case"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subsidy_case: {
+        Row: {
+          applicant_person_id: string
+          approved_amount: number | null
+          case_number: string
+          created_at: string
+          created_by: string | null
+          district_code: string
+          household_id: string
+          id: string
+          rejection_reason: string | null
+          requested_amount: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          applicant_person_id: string
+          approved_amount?: number | null
+          case_number: string
+          created_at?: string
+          created_by?: string | null
+          district_code: string
+          household_id: string
+          id?: string
+          rejection_reason?: string | null
+          requested_amount?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          applicant_person_id?: string
+          approved_amount?: number | null
+          case_number?: string
+          created_at?: string
+          created_by?: string | null
+          district_code?: string
+          household_id?: string
+          id?: string
+          rejection_reason?: string | null
+          requested_amount?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subsidy_case_applicant_person_id_fkey"
+            columns: ["applicant_person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subsidy_case_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "household"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subsidy_case_status_history: {
+        Row: {
+          case_id: string
+          changed_at: string
+          changed_by: string | null
+          from_status: string | null
+          id: string
+          reason: string | null
+          to_status: string
+        }
+        Insert: {
+          case_id: string
+          changed_at?: string
+          changed_by?: string | null
+          from_status?: string | null
+          id?: string
+          reason?: string | null
+          to_status: string
+        }
+        Update: {
+          case_id?: string
+          changed_at?: string
+          changed_by?: string | null
+          from_status?: string | null
+          id?: string
+          reason?: string | null
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subsidy_case_status_history_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "subsidy_case"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subsidy_document_requirement: {
+        Row: {
+          created_at: string
+          description: string | null
+          document_code: string
+          document_name: string
+          id: string
+          is_mandatory: boolean
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          document_code: string
+          document_name: string
+          id?: string
+          is_mandatory?: boolean
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          document_code?: string
+          document_name?: string
+          id?: string
+          is_mandatory?: boolean
+        }
+        Relationships: []
+      }
+      subsidy_document_upload: {
+        Row: {
+          case_id: string
+          file_name: string
+          file_path: string
+          id: string
+          is_verified: boolean
+          requirement_id: string
+          uploaded_at: string
+          uploaded_by: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          case_id: string
+          file_name: string
+          file_path: string
+          id?: string
+          is_verified?: boolean
+          requirement_id: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          case_id?: string
+          file_name?: string
+          file_path?: string
+          id?: string
+          is_verified?: boolean
+          requirement_id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subsidy_document_upload_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "subsidy_case"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subsidy_document_upload_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "subsidy_document_requirement"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      technical_report: {
+        Row: {
+          case_id: string
+          created_at: string
+          created_by: string | null
+          finalized_at: string | null
+          finalized_by: string | null
+          id: string
+          is_finalized: boolean
+          report_json: Json
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          created_by?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          is_finalized?: boolean
+          report_json?: Json
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          created_by?: string | null
+          finalized_at?: string | null
+          finalized_by?: string | null
+          id?: string
+          is_finalized?: boolean
+          report_json?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technical_report_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "subsidy_case"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

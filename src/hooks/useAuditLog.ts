@@ -1,12 +1,14 @@
 import { supabase } from '@/integrations/supabase/client'
 import type { Json } from '@/integrations/supabase/types'
 
-type AuditAction = 'create' | 'update' | 'delete'
-type EntityType = 'person' | 'household' | 'household_member' | 'contact_point' | 'address'
+type AuditAction = 'create' | 'update' | 'delete' | 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE'
+type EntityType = 'person' | 'household' | 'household_member' | 'contact_point' | 'address' | 'subsidy_case' | 'subsidy_document' | 'social_report' | 'technical_report'
 
 interface AuditLogParams {
-  entityType: EntityType
-  entityId: string
+  entityType?: EntityType
+  entity_type?: EntityType
+  entityId?: string
+  entity_id?: string
   action: AuditAction
   reason?: string
   metadata?: Json
@@ -20,16 +22,26 @@ export async function logAuditEvent(params: AuditLogParams): Promise<void> {
     return
   }
 
+  const entityType = params.entityType || params.entity_type
+  const entityId = params.entityId || params.entity_id
+
   const { error } = await supabase.from('audit_event').insert([{
     actor_user_id: user.id,
-    entity_type: params.entityType,
-    entity_id: params.entityId,
-    action: params.action,
+    entity_type: entityType,
+    entity_id: entityId,
+    action: params.action.toUpperCase(),
     reason: params.reason ?? null,
     metadata_json: params.metadata ?? null,
   }])
 
   if (error) {
     console.error('Failed to log audit event:', error)
+  }
+}
+
+// Hook wrapper for convenience
+export function useAuditLog() {
+  return {
+    logEvent: logAuditEvent
   }
 }

@@ -30,6 +30,17 @@ export const MENU_ITEMS: MenuItemType[] = [
     url: '/households',
   },
   {
+    key: 'bouwsubsidie',
+    label: 'BOUWSUBSIDIE',
+    isTitle: true,
+  },
+  {
+    key: 'subsidy-cases',
+    label: 'Subsidy Cases',
+    icon: 'mingcute:file-check-line',
+    url: '/subsidy-cases',
+  },
+  {
     key: 'auth',
     label: 'Authentication',
     icon: 'mingcute:user-3-line',

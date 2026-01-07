@@ -8,6 +8,8 @@ const PersonList = lazy(() => import('@/app/(admin)/persons/page'))
 const PersonDetail = lazy(() => import('@/app/(admin)/persons/[id]/page'))
 const HouseholdList = lazy(() => import('@/app/(admin)/households/page'))
 const HouseholdDetail = lazy(() => import('@/app/(admin)/households/[id]/page'))
+const SubsidyCaseList = lazy(() => import('@/app/(admin)/subsidy-cases/page'))
+const SubsidyCaseDetail = lazy(() => import('@/app/(admin)/subsidy-cases/[id]/page'))
 
 // Base UI Routes
 const Accordions = lazy(() => import('@/app/(admin)/base-ui/accordion/page'))

@@ -1,80 +1,119 @@
-import { Card, CardBody, Container, Button } from 'react-bootstrap'
+/**
+ * Status Tracker Page
+ * Phase 5 - Checkpoint 6
+ * 
+ * Public page for citizens to check their application status
+ * using reference number and access token.
+ * 
+ * Uses shared PublicHeader/PublicFooter for Darkone 1:1 parity.
+ */
+
+import { useState } from 'react'
+import { Container } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
+import { PublicHeader, PublicFooter } from '@/components/public'
+import StatusForm from './components/StatusForm'
+import StatusResult from './components/StatusResult'
+import { 
+  getApplicationType, 
+  MOCK_BOUWSUBSIDIE_RESULT, 
+  MOCK_HOUSING_RESULT 
+} from './constants'
+import type { LookupState, StatusLookupResponse } from './types'
 
 /**
- * Status Tracker Placeholder
- * 
- * Static placeholder for Phase 5 Checkpoint 2
- * Status tracking implementation comes in Checkpoint 6
+ * Main Status Tracker Page Component
  */
-const StatusTrackerPlaceholder = () => {
+const StatusTrackerPage = () => {
+  const [lookupState, setLookupState] = useState<LookupState>('idle')
+  const [result, setResult] = useState<StatusLookupResponse | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  /**
+   * Handle status lookup (mock implementation)
+   */
+  const handleLookup = (referenceNumber: string, accessToken: string) => {
+    setLookupState('loading')
+    setError(null)
+
+    // Simulate API call with delay
+    setTimeout(() => {
+      const applicationType = getApplicationType(referenceNumber)
+      
+      if (!applicationType) {
+        setError('Invalid reference number format')
+        setLookupState('error')
+        return
+      }
+
+      // Mock: For demonstration, return mock data based on application type
+      // In production, this would call the Edge Function
+      const mockResult = applicationType === 'bouwsubsidie' 
+        ? { ...MOCK_BOUWSUBSIDIE_RESULT, reference_number: referenceNumber }
+        : { ...MOCK_HOUSING_RESULT, reference_number: referenceNumber }
+
+      setResult(mockResult)
+      setLookupState('success')
+    }, 1500)
+  }
+
+  /**
+   * Reset to initial form state
+   */
+  const handleReset = () => {
+    setLookupState('idle')
+    setResult(null)
+    setError(null)
+  }
+
   return (
     <div className="d-flex flex-column min-vh-100">
-      {/* Header */}
-      <header className="py-3 border-bottom bg-white">
-        <Container>
-          <div className="d-flex align-items-center gap-3">
-            <Link to="/" className="text-decoration-none">
-              <img 
-                src="/assets/images/logo-dark.png" 
-                alt="VolksHuisvesting Logo" 
-                height="36" 
-              />
-            </Link>
-            <div>
-              <h6 className="mb-0 fw-bold">Application Status</h6>
-              <small className="text-muted">VolksHuisvesting Suriname</small>
-            </div>
-          </div>
-        </Container>
-      </header>
+      <PublicHeader />
 
-      {/* Main Content */}
       <main className="flex-grow-1 py-5 bg-light">
-        <Container>
-          <Card className="border-0 shadow-sm mx-auto" style={{ maxWidth: 600 }}>
-            <CardBody className="text-center py-5 px-4">
-              <div className="mb-4">
-                <span className="d-inline-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10" style={{ width: 80, height: 80 }}>
-                  <IconifyIcon 
-                    icon="mingcute:search-line" 
-                    className="text-info"
-                    style={{ fontSize: '2.5rem' }}
-                  />
-                </span>
-              </div>
-              <h3 className="fw-bold mb-3">Status Tracker</h3>
-              <p className="text-muted mb-4">
-                The status tracking feature is currently being prepared. 
-                This feature will be available in the next update.
-              </p>
-              <div className="d-flex flex-column gap-2 align-items-center">
-                <span className="badge bg-warning text-dark">Coming Soon</span>
-                <Link to="/">
-                  <Button variant="outline-secondary" size="sm" className="mt-3">
-                    <IconifyIcon icon="mingcute:arrow-left-line" className="me-1" />
-                    Back to Home
-                  </Button>
+        <Container style={{ maxWidth: 700 }}>
+          {/* Breadcrumb */}
+          <nav className="mb-4">
+            <ol className="breadcrumb mb-0">
+              <li className="breadcrumb-item">
+                <Link to="/" className="text-decoration-none">
+                  <IconifyIcon icon="mingcute:home-4-line" className="me-1" />
+                  Home
                 </Link>
-              </div>
-            </CardBody>
-          </Card>
+              </li>
+              <li className="breadcrumb-item active">Status Tracker</li>
+            </ol>
+          </nav>
+
+          {/* Conditional Rendering based on state */}
+          {lookupState === 'success' && result ? (
+            <StatusResult result={result} onReset={handleReset} />
+          ) : (
+            <StatusForm 
+              onSubmit={handleLookup}
+              isLoading={lookupState === 'loading'}
+              error={error}
+            />
+          )}
+
+          {/* Help Text */}
+          <div className="text-center mt-4">
+            <p className="text-muted small mb-2">
+              <IconifyIcon icon="mingcute:question-line" className="me-1" />
+              Need help? Contact the Ministry of Social Affairs and Housing
+            </p>
+            <Link to="/" className="text-decoration-none small">
+              <IconifyIcon icon="mingcute:arrow-left-line" className="me-1" />
+              Back to Home
+            </Link>
+          </div>
         </Container>
       </main>
 
-      {/* Footer */}
-      <footer className="py-3 border-top bg-white">
-        <Container>
-          <div className="text-center">
-            <small className="text-muted">
-              © {new Date().getFullYear()} Ministry of Social Affairs and Housing
-            </small>
-          </div>
-        </Container>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }
 
-export default StatusTrackerPlaceholder
+export default StatusTrackerPage

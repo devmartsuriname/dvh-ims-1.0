@@ -1,6 +1,7 @@
 import { Card, CardBody, Row, Col, Container, Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
+import { PublicHeader, PublicFooter } from '@/components/public'
 
 /**
  * Public Landing Page - VolksHuisvesting Suriname
@@ -12,27 +13,7 @@ import IconifyIcon from '@/components/wrapper/IconifyIcon'
 const LandingPage = () => {
   return (
     <div className="d-flex flex-column min-vh-100">
-      {/* Header */}
-      <header className="py-3 border-bottom bg-white">
-        <Container>
-          <div className="d-flex align-items-center justify-content-between">
-            <div className="d-flex align-items-center gap-3">
-              <img 
-                src="/assets/images/logo-dark.png" 
-                alt="VolksHuisvesting Logo" 
-                height="40" 
-              />
-              <div>
-                <h5 className="mb-0 fw-bold">VolksHuisvesting</h5>
-                <small className="text-muted">Ministry of Social Affairs and Housing</small>
-              </div>
-            </div>
-            <Link to="/auth/sign-in" className="btn btn-outline-primary btn-sm">
-              Staff Portal
-            </Link>
-          </div>
-        </Container>
-      </header>
+      <PublicHeader />
 
       {/* Hero Section */}
       <section className="py-5 bg-light">
@@ -140,23 +121,7 @@ const LandingPage = () => {
         </Container>
       </main>
 
-      {/* Footer */}
-      <footer className="py-4 border-top bg-white">
-        <Container>
-          <Row className="align-items-center">
-            <Col md={6} className="text-center text-md-start">
-              <small className="text-muted">
-                © {new Date().getFullYear()} Ministry of Social Affairs and Housing, Suriname
-              </small>
-            </Col>
-            <Col md={6} className="text-center text-md-end mt-2 mt-md-0">
-              <small className="text-muted">
-                VolksHuisvesting IMS v1.0
-              </small>
-            </Col>
-          </Row>
-        </Container>
-      </footer>
+      <PublicFooter />
     </div>
   )
 }

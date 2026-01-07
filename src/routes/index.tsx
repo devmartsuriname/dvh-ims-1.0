@@ -11,6 +11,11 @@ const HouseholdDetail = lazy(() => import('@/app/(admin)/households/[id]/page'))
 const SubsidyCaseList = lazy(() => import('@/app/(admin)/subsidy-cases/page'))
 const SubsidyCaseDetail = lazy(() => import('@/app/(admin)/subsidy-cases/[id]/page'))
 
+// Woning Registratie Routes
+const HousingRegistrationList = lazy(() => import('@/app/(admin)/housing-registrations/page'))
+const HousingRegistrationDetail = lazy(() => import('@/app/(admin)/housing-registrations/[id]/page'))
+const HousingWaitingList = lazy(() => import('@/app/(admin)/housing-waiting-list/page'))
+
 // Base UI Routes
 const Accordions = lazy(() => import('@/app/(admin)/base-ui/accordion/page'))
 const Alerts = lazy(() => import('@/app/(admin)/base-ui/alerts/page'))
@@ -348,10 +353,17 @@ const bouwsubsidieRoutes: RoutesProps[] = [
   { path: '/subsidy-cases/:id', name: 'Subsidy Case Detail', element: <SubsidyCaseDetail /> },
 ]
 
+const woningRegistratieRoutes: RoutesProps[] = [
+  { path: '/housing-registrations', name: 'Housing Registrations', element: <HousingRegistrationList /> },
+  { path: '/housing-registrations/:id', name: 'Registration Detail', element: <HousingRegistrationDetail /> },
+  { path: '/housing-waiting-list', name: 'Waiting List', element: <HousingWaitingList /> },
+]
+
 export const appRoutes = [
   ...initialRoutes,
   ...sharedCoreRoutes,
   ...bouwsubsidieRoutes,
+  ...woningRegistratieRoutes,
   ...baseUIRoutes,
   ...formsRoutes,
   ...generalRoutes,

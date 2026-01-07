@@ -259,6 +259,148 @@ export type Database = {
           },
         ]
       }
+      housing_registration: {
+        Row: {
+          applicant_person_id: string
+          assigned_officer_id: string | null
+          created_at: string
+          current_status: string
+          district_code: string
+          household_id: string
+          housing_type_preference: string | null
+          id: string
+          reference_number: string
+          registration_date: string
+          updated_at: string
+          urgency_score: number | null
+          waiting_list_position: number | null
+        }
+        Insert: {
+          applicant_person_id: string
+          assigned_officer_id?: string | null
+          created_at?: string
+          current_status?: string
+          district_code: string
+          household_id: string
+          housing_type_preference?: string | null
+          id?: string
+          reference_number: string
+          registration_date?: string
+          updated_at?: string
+          urgency_score?: number | null
+          waiting_list_position?: number | null
+        }
+        Update: {
+          applicant_person_id?: string
+          assigned_officer_id?: string | null
+          created_at?: string
+          current_status?: string
+          district_code?: string
+          household_id?: string
+          housing_type_preference?: string | null
+          id?: string
+          reference_number?: string
+          registration_date?: string
+          updated_at?: string
+          urgency_score?: number | null
+          waiting_list_position?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "housing_registration_applicant_person_id_fkey"
+            columns: ["applicant_person_id"]
+            isOneToOne: false
+            referencedRelation: "person"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "housing_registration_household_id_fkey"
+            columns: ["household_id"]
+            isOneToOne: false
+            referencedRelation: "household"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      housing_registration_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          from_status: string | null
+          id: string
+          reason: string | null
+          registration_id: string
+          to_status: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          from_status?: string | null
+          id?: string
+          reason?: string | null
+          registration_id: string
+          to_status: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          from_status?: string | null
+          id?: string
+          reason?: string | null
+          registration_id?: string
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "housing_registration_status_history_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "housing_registration"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      housing_urgency: {
+        Row: {
+          assessed_by: string | null
+          assessment_date: string
+          id: string
+          justification: string | null
+          registration_id: string
+          supporting_document_path: string | null
+          urgency_category: string
+          urgency_points: number
+        }
+        Insert: {
+          assessed_by?: string | null
+          assessment_date?: string
+          id?: string
+          justification?: string | null
+          registration_id: string
+          supporting_document_path?: string | null
+          urgency_category: string
+          urgency_points: number
+        }
+        Update: {
+          assessed_by?: string | null
+          assessment_date?: string
+          id?: string
+          justification?: string | null
+          registration_id?: string
+          supporting_document_path?: string | null
+          urgency_category?: string
+          urgency_points?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "housing_urgency_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "housing_registration"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       person: {
         Row: {
           created_at: string
@@ -295,6 +437,36 @@ export type Database = {
           national_id?: string
           nationality?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      public_status_access: {
+        Row: {
+          access_token_hash: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          last_accessed_at: string | null
+          reference_number: string
+        }
+        Insert: {
+          access_token_hash: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          last_accessed_at?: string | null
+          reference_number: string
+        }
+        Update: {
+          access_token_hash?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          last_accessed_at?: string | null
+          reference_number?: string
         }
         Relationships: []
       }

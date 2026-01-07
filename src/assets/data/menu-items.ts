@@ -41,6 +41,23 @@ export const MENU_ITEMS: MenuItemType[] = [
     url: '/subsidy-cases',
   },
   {
+    key: 'woning-registratie',
+    label: 'WONING REGISTRATIE',
+    isTitle: true,
+  },
+  {
+    key: 'housing-registrations',
+    label: 'Registrations',
+    icon: 'mingcute:document-line',
+    url: '/housing-registrations',
+  },
+  {
+    key: 'housing-waiting-list',
+    label: 'Waiting List',
+    icon: 'mingcute:list-ordered-line',
+    url: '/housing-waiting-list',
+  },
+  {
     key: 'auth',
     label: 'Authentication',
     icon: 'mingcute:user-3-line',

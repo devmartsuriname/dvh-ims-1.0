@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
-import { Card, CardBody, Button, Badge, Spinner } from 'react-bootstrap'
-import { Grid, html } from 'gridjs'
-import 'gridjs/dist/theme/mermaid.css'
+import { useEffect, useState, useCallback } from 'react'
+import { Card, CardBody, Button, Spinner } from 'react-bootstrap'
+import { Grid } from 'gridjs-react'
+import { html } from 'gridjs'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'react-toastify'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
@@ -45,66 +45,13 @@ const QuotaTable = () => {
     fetchQuotas()
   }, [])
 
-  useEffect(() => {
-    if (!loading && quotas.length >= 0) {
-      const gridContainer = document.getElementById('quota-grid')
-      if (gridContainer) {
-        gridContainer.innerHTML = ''
-        
-        new Grid({
-          columns: [
-            { name: 'District', width: '120px' },
-            { name: 'Period Start', width: '120px' },
-            { name: 'Period End', width: '120px' },
-            { name: 'Total Quota', width: '100px' },
-            { name: 'Allocated', width: '100px' },
-            { 
-              name: 'Remaining', 
-              width: '100px',
-              formatter: (cell) => html(`<span class="badge bg-${Number(cell) > 0 ? 'success' : 'danger'}">${cell}</span>`)
-            },
-            {
-              name: 'Actions',
-              width: '100px',
-              formatter: (_, row) => html(`
-                <button class="btn btn-sm btn-soft-primary edit-quota" data-id="${row.cells[6].data}">
-                  Edit
-                </button>
-              `)
-            }
-          ],
-          data: quotas.map(q => [
-            q.district_code,
-            new Date(q.period_start).toLocaleDateString(),
-            new Date(q.period_end).toLocaleDateString(),
-            q.total_quota,
-            q.allocated_count,
-            q.total_quota - q.allocated_count,
-            q.id
-          ]),
-          search: true,
-          pagination: { limit: 10 },
-          className: {
-            table: 'table table-hover mb-0'
-          }
-        }).render(gridContainer)
-
-        // Add click handler for edit buttons
-        gridContainer.addEventListener('click', (e) => {
-          const target = e.target as HTMLElement
-          const editBtn = target.closest('.edit-quota')
-          if (editBtn) {
-            const id = editBtn.getAttribute('data-id')
-            const quota = quotas.find(q => q.id === id)
-            if (quota) {
-              setEditingQuota(quota)
-              setShowModal(true)
-            }
-          }
-        })
-      }
+  const handleEditClick = useCallback((id: string) => {
+    const quota = quotas.find(q => q.id === id)
+    if (quota) {
+      setEditingQuota(quota)
+      setShowModal(true)
     }
-  }, [loading, quotas])
+  }, [quotas])
 
   const handleSave = async (data: {
     district_code: string
@@ -179,6 +126,17 @@ const QuotaTable = () => {
     fetchQuotas()
   }
 
+  // Prepare grid data
+  const gridData = quotas.map(q => [
+    q.district_code,
+    new Date(q.period_start).toLocaleDateString(),
+    new Date(q.period_end).toLocaleDateString(),
+    q.total_quota,
+    q.allocated_count,
+    q.total_quota - q.allocated_count,
+    q.id
+  ])
+
   return (
     <>
       <Card>
@@ -203,7 +161,35 @@ const QuotaTable = () => {
               <Spinner animation="border" variant="primary" />
             </div>
           ) : (
-            <div id="quota-grid"></div>
+            <Grid
+              data={gridData}
+              columns={[
+                { name: 'District', width: '120px' },
+                { name: 'Period Start', width: '120px' },
+                { name: 'Period End', width: '120px' },
+                { name: 'Total Quota', width: '100px' },
+                { name: 'Allocated', width: '100px' },
+                { 
+                  name: 'Remaining', 
+                  width: '100px',
+                  formatter: (cell) => html(`<span class="badge bg-${Number(cell) > 0 ? 'success' : 'danger'}">${cell}</span>`)
+                },
+                {
+                  name: 'Actions',
+                  width: '100px',
+                  formatter: (cell) => html(`
+                    <button class="btn btn-sm btn-soft-primary" onclick="window.dispatchEvent(new CustomEvent('quota-edit', {detail: '${cell}'}))">
+                      Edit
+                    </button>
+                  `)
+                }
+              ]}
+              search={true}
+              pagination={{ limit: 10 }}
+              className={{
+                table: 'table table-hover mb-0'
+              }}
+            />
           )}
         </CardBody>
       </Card>
@@ -219,6 +205,14 @@ const QuotaTable = () => {
       />
     </>
   )
+}
+
+// Global event listener for edit clicks
+if (typeof window !== 'undefined') {
+  window.addEventListener('quota-edit', ((e: CustomEvent) => {
+    const event = new CustomEvent('quota-edit-internal', { detail: e.detail })
+    window.dispatchEvent(event)
+  }) as EventListener)
 }
 
 export default QuotaTable

@@ -248,4 +248,34 @@ On new chat start:
 
 ---
 
+## 9. Phase Documentation Reference
+
+Detailed phase plans are maintained in `/phases/`:
+
+| Phase | Document |
+|-------|----------|
+| 0 | PHASE-0-Foundation-and-Governance.md |
+| 1 | PHASE-1-Shared-Core.md |
+| 2 | PHASE-2-Bouwsubsidie.md |
+| 3 | PHASE-3-Housing-Registration.md |
+| 4 | PHASE-4-Allocation-Engine.md |
+| 5 | PHASE-5-Public-Wizards.md |
+| 6 | PHASE-6-Reporting-and-Audit.md |
+| 7 | PHASE-7-Hardening-and-Go-Live.md |
+
+Each phase document contains:
+- A. Phase Objective
+- B. Explicit Scope (ALLOWED)
+- C. Explicit Out of Scope (FORBIDDEN)
+- D. Database Impact
+- E. UI Impact
+- F. Security and RLS Considerations
+- G. Verification Criteria
+- H. Restore Point (Documentation Snapshot — no execution)
+- I. Hard Stop Statement
+
+Phase documents are authoritative for execution scope.
+
+---
+
 **End of Execution Plan (EN)**

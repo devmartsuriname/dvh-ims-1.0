@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Modal, Button, Form, Alert } from 'react-bootstrap'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'react-toastify'
+import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { logAuditEvent } from '@/hooks/useAuditLog'
 
 interface RunExecutorModalProps {
@@ -149,7 +150,7 @@ const RunExecutorModal = ({ show, onHide, onSuccess }: RunExecutorModalProps) =>
               </>
             ) : (
               <>
-                <i className="bx bx-play-circle me-1"></i>
+                <IconifyIcon icon="mingcute:play-circle-line" className="me-1" />
                 Execute Run
               </>
             )}

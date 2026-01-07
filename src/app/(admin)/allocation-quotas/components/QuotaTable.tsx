@@ -4,6 +4,7 @@ import { Grid, html } from 'gridjs'
 import 'gridjs/dist/theme/mermaid.css'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'react-toastify'
+import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import QuotaFormModal from './QuotaFormModal'
 import { logAuditEvent } from '@/hooks/useAuditLog'
 
@@ -67,7 +68,7 @@ const QuotaTable = () => {
               width: '100px',
               formatter: (_, row) => html(`
                 <button class="btn btn-sm btn-soft-primary edit-quota" data-id="${row.cells[6].data}">
-                  <i class="bx bx-edit"></i>
+                  Edit
                 </button>
               `)
             }
@@ -192,7 +193,7 @@ const QuotaTable = () => {
                 setShowModal(true)
               }}
             >
-              <i className="bx bx-plus me-1"></i>
+              <IconifyIcon icon="mingcute:add-line" className="me-1" />
               New Quota
             </Button>
           </div>

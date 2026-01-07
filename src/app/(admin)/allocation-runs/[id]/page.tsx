@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Card, CardBody, Row, Col, Badge, Spinner, Tab, Tabs, Table, Button } from 'react-bootstrap'
 import PageTitle from '@/components/PageTitle'
+import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'react-toastify'
 
@@ -17,22 +18,16 @@ interface AllocationRun {
   error_message: string | null
 }
 
-interface AllocationCandidate {
+// View-model for rendering candidates (avoids mutating Supabase response)
+interface CandidateViewModel {
   id: string
-  run_id: string
   registration_id: string
   urgency_score: number
   waiting_list_position: number
   composite_rank: number
   is_selected: boolean
-  registration?: {
-    reference_number: string
-    applicant_person_id: string
-    person?: {
-      first_name: string
-      last_name: string
-    }
-  }
+  reference_number: string
+  applicant_name: string
 }
 
 interface AllocationDecision {
@@ -63,7 +58,7 @@ const AllocationRunDetail = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [run, setRun] = useState<AllocationRun | null>(null)
-  const [candidates, setCandidates] = useState<AllocationCandidate[]>([])
+  const [candidates, setCandidates] = useState<CandidateViewModel[]>([])
   const [decisions, setDecisions] = useState<AllocationDecision[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -109,27 +104,37 @@ const AllocationRunDetail = () => {
       // Fetch person names for each candidate
       const personIds = candidatesData
         .map(c => c.registration?.applicant_person_id)
-        .filter(Boolean)
+        .filter(Boolean) as string[]
 
+      let personMap = new Map<string, { first_name: string; last_name: string }>()
+      
       if (personIds.length > 0) {
         const { data: persons } = await supabase
           .from('person')
           .select('id, first_name, last_name')
           .in('id', personIds)
 
-        const personMap = new Map(persons?.map(p => [p.id, p]) || [])
-
-        candidatesData.forEach(c => {
-          if (c.registration?.applicant_person_id) {
-            const person = personMap.get(c.registration.applicant_person_id)
-            if (person) {
-              c.registration.person = person
-            }
-          }
-        })
+        personMap = new Map(persons?.map(p => [p.id, p]) || [])
       }
 
-      setCandidates(candidatesData)
+      // Map to view-model (no mutation of Supabase response)
+      const viewModels: CandidateViewModel[] = candidatesData.map(c => {
+        const person = c.registration?.applicant_person_id 
+          ? personMap.get(c.registration.applicant_person_id) 
+          : undefined
+        return {
+          id: c.id,
+          registration_id: c.registration_id,
+          urgency_score: c.urgency_score,
+          waiting_list_position: c.waiting_list_position,
+          composite_rank: c.composite_rank,
+          is_selected: c.is_selected,
+          reference_number: c.registration?.reference_number || '-',
+          applicant_name: person ? `${person.first_name} ${person.last_name}` : '-'
+        }
+      })
+
+      setCandidates(viewModels)
     }
 
     // Fetch decisions
@@ -185,7 +190,7 @@ const AllocationRunDetail = () => {
               <Badge bg={STATUS_BADGES[run.run_status]}>{run.run_status}</Badge>
             </div>
             <Button variant="secondary" size="sm" onClick={() => navigate('/allocation-runs')}>
-              <i className="bx bx-arrow-back me-1"></i>
+              <IconifyIcon icon="mingcute:arrow-left-line" className="me-1" />
               Back
             </Button>
           </div>
@@ -243,12 +248,8 @@ const AllocationRunDetail = () => {
                     candidates.map(c => (
                       <tr key={c.id}>
                         <td>{c.composite_rank}</td>
-                        <td>{c.registration?.reference_number || '-'}</td>
-                        <td>
-                          {c.registration?.person 
-                            ? `${c.registration.person.first_name} ${c.registration.person.last_name}`
-                            : '-'}
-                        </td>
+                        <td>{c.reference_number}</td>
+                        <td>{c.applicant_name}</td>
                         <td>{c.urgency_score}</td>
                         <td>{c.waiting_list_position}</td>
                         <td>

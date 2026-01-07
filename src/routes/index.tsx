@@ -343,9 +343,15 @@ const sharedCoreRoutes: RoutesProps[] = [
   { path: '/households/:id', name: 'Household Detail', element: <HouseholdDetail /> },
 ]
 
+const bouwsubsidieRoutes: RoutesProps[] = [
+  { path: '/subsidy-cases', name: 'Subsidy Cases', element: <SubsidyCaseList /> },
+  { path: '/subsidy-cases/:id', name: 'Subsidy Case Detail', element: <SubsidyCaseDetail /> },
+]
+
 export const appRoutes = [
   ...initialRoutes,
   ...sharedCoreRoutes,
+  ...bouwsubsidieRoutes,
   ...baseUIRoutes,
   ...formsRoutes,
   ...generalRoutes,

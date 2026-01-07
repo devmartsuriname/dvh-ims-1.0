@@ -4,12 +4,15 @@
  * 
  * Public page for citizens to check their application status
  * using reference number and access token.
+ * 
+ * Uses shared PublicHeader/PublicFooter for Darkone 1:1 parity.
  */
 
 import { useState } from 'react'
 import { Container } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
+import { PublicHeader, PublicFooter } from '@/components/public'
 import StatusForm from './components/StatusForm'
 import StatusResult from './components/StatusResult'
 import { 
@@ -18,44 +21,6 @@ import {
   MOCK_HOUSING_RESULT 
 } from './constants'
 import type { LookupState, StatusLookupResponse } from './types'
-
-/**
- * Public Header for Status Page
- */
-const PublicHeader = () => (
-  <header className="py-3 border-bottom bg-white">
-    <Container>
-      <div className="d-flex align-items-center gap-3">
-        <Link to="/" className="text-decoration-none">
-          <img 
-            src="/assets/images/logo-dark.png" 
-            alt="VolksHuisvesting Logo" 
-            height="36" 
-          />
-        </Link>
-        <div>
-          <h6 className="mb-0 fw-bold">Application Status</h6>
-          <small className="text-muted">VolksHuisvesting Suriname</small>
-        </div>
-      </div>
-    </Container>
-  </header>
-)
-
-/**
- * Public Footer for Status Page
- */
-const PublicFooter = () => (
-  <footer className="py-3 border-top bg-white">
-    <Container>
-      <div className="text-center">
-        <small className="text-muted">
-          © {new Date().getFullYear()} Ministry of Social Affairs and Housing
-        </small>
-      </div>
-    </Container>
-  </footer>
-)
 
 /**
  * Main Status Tracker Page Component
@@ -103,7 +68,7 @@ const StatusTrackerPage = () => {
   }
 
   return (
-    <div className="d-flex flex-column min-vh-100" data-bs-theme="light">
+    <div className="d-flex flex-column min-vh-100">
       <PublicHeader />
 
       <main className="flex-grow-1 py-5 bg-light">

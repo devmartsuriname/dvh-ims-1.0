@@ -46,6 +46,10 @@ src/
 | Date | Component | Change |
 |------|-----------|--------|
 | 2026-01-07 | useSignIn.ts | Default post-login redirect: `/` → `/dashboards` |
+| 2026-01-07 | PublicHeader.tsx | Logo import changed to ES6 module for proper asset resolution |
+| 2026-01-07 | status/page.tsx | Refactored to use shared PublicHeader/PublicFooter |
+| 2026-01-07 | landing/page.tsx | Hero section enhanced with background image + dark overlay |
+| 2026-01-07 | StatusForm.tsx | Button icon alignment fixed with flexbox centering |
 
 ### Technology Stack
 
@@ -53,3 +57,17 @@ src/
 - **Styling**: Darkone Admin Template, Bootstrap 5, SCSS
 - **Backend**: Supabase (Auth, Database, RLS)
 - **Routing**: React Router DOM v6
+
+### Public Page Design Standards
+
+**Darkone 1:1 Compliance:**
+- All public pages use `react-bootstrap` components
+- Shared header/footer from `src/components/public/`
+- Icons via `@iconify/react` (mingcute set)
+- Light theme applied via `PublicLayout` wrapper
+- Premium government visual tone (no playful elements)
+
+**Asset Management:**
+- Images imported as ES6 modules (not static paths)
+- Logo from `src/assets/images/logo-dark.png`
+- Background patterns from `src/assets/images/`

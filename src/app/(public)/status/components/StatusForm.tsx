@@ -128,6 +128,7 @@ const StatusForm = ({ onSubmit, isLoading, error }: StatusFormProps) => {
               type="submit" 
               size="lg"
               disabled={isLoading}
+              className="d-flex align-items-center justify-content-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -137,14 +138,13 @@ const StatusForm = ({ onSubmit, isLoading, error }: StatusFormProps) => {
                     size="sm"
                     role="status"
                     aria-hidden="true"
-                    className="me-2"
                   />
-                  Checking Status...
+                  <span>Checking Status...</span>
                 </>
               ) : (
                 <>
-                  <IconifyIcon icon="mingcute:search-line" className="me-2" />
-                  Check Status
+                  <IconifyIcon icon="mingcute:search-line" />
+                  <span>Check Status</span>
                 </>
               )}
             </Button>

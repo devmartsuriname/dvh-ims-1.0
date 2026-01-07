@@ -1,5 +1,6 @@
 import { Container } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+import logoDark from '@/assets/images/logo-dark.png'
 
 /**
  * PublicHeader - Reusable header for public pages
@@ -14,7 +15,7 @@ const PublicHeader = () => {
         <div className="d-flex align-items-center justify-content-between">
           <Link to="/" className="d-flex align-items-center gap-3 text-decoration-none">
             <img 
-              src="/assets/images/logo-dark.png" 
+              src={logoDark} 
               alt="VolksHuisvesting Logo" 
               height="40" 
             />

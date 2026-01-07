@@ -126,3 +126,212 @@ import { createClient } from '@supabase/supabase-js'
 | Date | Change | Reason |
 |------|--------|--------|
 | 2026-01-07 | Added deno.json with import map, replaced esm.sh | Build stability - esm.sh 522 errors |
+
+---
+
+## Edge Functions Security Checklist
+
+All Edge Functions MUST implement the following security controls:
+
+### 1. Authorization (REQUIRED)
+
+```typescript
+// Authorization header required
+const authHeader = req.headers.get('Authorization')
+if (!authHeader) {
+  return new Response(
+    JSON.stringify({ success: false, error: 'Missing authorization header', code: 'AUTH_MISSING' }),
+    { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+
+// JWT validation via getUser()
+const token = authHeader.replace('Bearer ', '')
+const { data: { user }, error: userError } = await supabase.auth.getUser(token)
+```
+
+### 2. Allowlist/Role Check (REQUIRED for Phase 1)
+
+```typescript
+// Current Phase 1: Single email allowlist
+if (user.email !== 'info@devmart.sr') {
+  return new Response(
+    JSON.stringify({ success: false, error: 'Unauthorized', code: 'AUTH_FORBIDDEN' }),
+    { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+```
+
+### 3. Input Validation (REQUIRED)
+
+```typescript
+// UUID validation
+function isValidUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  return uuidRegex.test(str)
+}
+
+// Validate before processing
+if (!isValidUUID(run_id)) {
+  return new Response(
+    JSON.stringify({ success: false, error: 'Invalid run_id format', code: 'VALIDATION_UUID' }),
+    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  )
+}
+```
+
+### 4. Error Response Standards (REQUIRED)
+
+- Return structured JSON with `success`, `error`, and `code` fields
+- Never expose internal stack traces or system details
+- Use generic error messages for security-sensitive failures
+
+```typescript
+// CORRECT - Safe error response
+return new Response(
+  JSON.stringify({ success: false, error: 'Processing error', code: 'INTERNAL_ERROR' }),
+  { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+)
+
+// FORBIDDEN - Exposes internal details
+return new Response(JSON.stringify({ error: error.stack }), ...)
+```
+
+### 5. Logging Standards (REQUIRED)
+
+```typescript
+// CORRECT - Sanitized logs, no PII
+console.log(`Allocation run started: run=${run_id.substring(0, 8)}...`)
+console.error('Auth validation failed')
+
+// FORBIDDEN - Exposes PII or secrets
+console.error('User validation failed:', userError)
+console.log(`User email: ${user.email}`)
+```
+
+### 6. Environment Variables (REQUIRED)
+
+```typescript
+// CORRECT - Check for undefined, use safe defaults
+const supabaseUrl = Deno.env.get('SUPABASE_URL')
+if (!supabaseUrl) {
+  return new Response(
+    JSON.stringify({ success: false, error: 'Server configuration error', code: 'CONFIG_ERROR' }),
+    { status: 500, ... }
+  )
+}
+
+// FORBIDDEN - Non-null assertion without check
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+```
+
+### 7. Audit Logging (REQUIRED for state changes)
+
+```typescript
+// All state-changing operations must log to audit_event
+await supabase.from('audit_event').insert({
+  actor_user_id: user.id,
+  entity_type: 'allocation_run',
+  entity_id: run_id,
+  action: 'CREATE',
+  metadata_json: { /* safe metadata only */ }
+})
+```
+
+---
+
+## Audit Logging Governance
+
+### Schema: `audit_event`
+
+| Column | Type | Purpose |
+|--------|------|---------|
+| `actor_user_id` | UUID | Who performed the action |
+| `action` | TEXT | What action (CREATE, UPDATE, etc.) |
+| `entity_type` | TEXT | Which entity type |
+| `entity_id` | UUID | Which entity instance |
+| `occurred_at` | TIMESTAMPTZ | When (auto-populated) |
+| `metadata_json` | JSONB | Safe metadata only |
+| `reason` | TEXT | Optional context |
+| `actor_role` | TEXT | Role at time of action |
+
+### Rules (MANDATORY)
+
+1. **All create/update operations MUST call `logAuditEvent()`** (via `useAuditLog` hook)
+2. **Audit records are append-only** — No UPDATE or DELETE allowed
+3. **Admin read access deferred** — SELECT denied; use Supabase Dashboard for now
+4. **Edge Functions must audit state-changing operations** directly via INSERT
+
+### RLS Protection
+
+```sql
+-- INSERT only for allowlist users, must match actor_user_id
+CREATE POLICY "Allowlist users can insert audit_event" 
+ON public.audit_event 
+FOR INSERT 
+WITH CHECK (
+  (actor_user_id = auth.uid()) AND 
+  (((current_setting('request.jwt.claims'::text, true))::json ->> 'email'::text) = 'info@devmart.sr'::text)
+);
+
+-- No SELECT, UPDATE, DELETE policies
+```
+
+### Usage (Frontend)
+
+```typescript
+import { useAuditLog } from '@/hooks/useAuditLog'
+
+const { logAuditEvent } = useAuditLog()
+
+await logAuditEvent({
+  action: 'CREATE',
+  entityType: 'subsidy_case',
+  entityId: newCase.id,
+  metadata: { status: 'received' }
+})
+```
+
+---
+
+## Security Model Overview (Phase 1)
+
+### Current Posture: Single-Email Allowlist
+
+| Attribute | Value |
+|-----------|-------|
+| Security Model | Allowlist (Phase 1) |
+| Allowed Email | `info@devmart.sr` |
+| RLS Enforcement | All 23 tables |
+| Default Access | Deny all |
+
+### Design Decisions
+
+1. **No anonymous access** — All data operations require authentication
+2. **Single allowlist email** — Simplifies Phase 1; RBAC deferred
+3. **Append-only history tables** — No UPDATE/DELETE for audit trail
+4. **No DELETE on core tables** — Immutable records for compliance
+
+### Action Items (Outside Codebase)
+
+| Item | Location | Status |
+|------|----------|--------|
+| Enable Leaked Password Protection | Supabase Dashboard > Auth > Security | PENDING |
+| Enable MFA (future) | Supabase Dashboard > Auth > MFA | DEFERRED |
+
+### Deferred to Future Phases
+
+- Role-Based Access Control (RBAC)
+- District-level access scoping
+- Admin read access to audit_event
+- Public wizard anonymous submission
+
+---
+
+## Change History
+
+| Date | Change | Reason |
+|------|--------|--------|
+| 2026-01-07 | Phase 8 security documentation added | Security + Audit Readiness |
+| 2026-01-07 | Edge Functions Security Checklist | Standardize security controls |
+| 2026-01-07 | Audit Logging Governance | Document append-only pattern |

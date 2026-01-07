@@ -34,7 +34,7 @@ const ResetPassword = () => {
                     <div className="text-center">
                       <div className="mx-auto mb-4 text-center auth-logo">
                         <Link to="/dashboards">
-                          <img src={logoSozavo} height={48} alt="VolksHuisvesting" />
+                          <img src={logoSozavo} style={{ height: '56px', width: 'auto' }} alt="VolksHuisvesting" />
                         </Link>
                       </div>
                       <h4 className="fw-bold text-dark mb-2">Reset Password</h4>

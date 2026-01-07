@@ -11,12 +11,12 @@ const LogoBox = () => {
   return (
     <div className="logo-box">
       <Link to="/dashboards" className="logo-dark">
-        <img height={28} src={logoSozavo} className="logo-sm" alt="VolksHuisvesting" />
-        <img height={32} src={logoSozavo} className="logo-lg" alt="VolksHuisvesting" />
+        <img style={{ height: '28px', width: 'auto' }} src={logoSozavo} className="logo-sm" alt="VolksHuisvesting" />
+        <img style={{ height: '32px', width: 'auto' }} src={logoSozavo} className="logo-lg" alt="VolksHuisvesting" />
       </Link>
       <Link to="/dashboards" className="logo-light">
-        <img height={28} src={logoSozavo} className="logo-sm" alt="VolksHuisvesting" />
-        <img height={32} src={logoSozavo} className="logo-lg" alt="VolksHuisvesting" />
+        <img style={{ height: '28px', width: 'auto' }} src={logoSozavo} className="logo-sm" alt="VolksHuisvesting" />
+        <img style={{ height: '32px', width: 'auto' }} src={logoSozavo} className="logo-lg" alt="VolksHuisvesting" />
       </Link>
     </div>
   )

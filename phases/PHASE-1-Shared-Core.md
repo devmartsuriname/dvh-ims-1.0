@@ -1,19 +1,21 @@
 # Phase 1 — Shared Core
 
 **Project:** VolksHuisvesting IMS (DVH-IMS-1.0)  
-**Status:** Documentation Only  
+**Status:** APPROVED FOR EXECUTION  
 **Authority:** Delroy (Final)
 
 ---
 
 ## A. Phase Objective
 
-Build the shared data foundation used by both Bouwsubsidie and Woning Registratie & Allocatie modules:
-- Create Person entity with full lifecycle
-- Create Household entity with membership management
-- Create Contact Point and Address entities
-- Implement role-based access control
+Build the shared data STRUCTURE used by both Bouwsubsidie and Woning Registratie & Allocatie modules:
+- Create Person entity (structural only)
+- Create Household entity (structural only)
+- Create Contact Point and Address entities (structural only)
 - Build Admin UI for Person/Household management
+- **NO role system**
+- **NO authorization logic**
+- **NO district-based filtering**
 
 ---
 
@@ -26,9 +28,8 @@ Build the shared data foundation used by both Bouwsubsidie and Woning Registrati
 | Database | Create `household_member` table |
 | Database | Create `contact_point` table |
 | Database | Create `address` table |
-| Database | Add `role` column to `app_user_profile` |
-| Database | Create RLS policies for all new tables |
-| Database | Create audit triggers for status changes |
+| Database | Create RLS policies (allowlist model) |
+| Database | Create audit triggers for changes |
 | UI | Create Person list page (Admin) |
 | UI | Create Person detail page (Admin) |
 | UI | Create Household list page (Admin) |
@@ -41,6 +42,11 @@ Build the shared data foundation used by both Bouwsubsidie and Woning Registrati
 
 | Category | Forbidden Actions |
 |----------|-------------------|
+| Database | `app_role` enum |
+| Database | `user_roles` table |
+| Database | Role helper functions |
+| Database | Role column on `app_user_profile` |
+| Database | District-based RLS logic |
 | Modules | Bouwsubsidie tables or logic |
 | Modules | Housing Registration tables or logic |
 | Modules | Allocation tables or logic |
@@ -54,7 +60,7 @@ Build the shared data foundation used by both Bouwsubsidie and Woning Registrati
 
 ---
 
-## D. Database Impact (DOCUMENTATION ONLY)
+## D. Database Impact
 
 ### Tables to Create
 
@@ -112,48 +118,83 @@ Build the shared data foundation used by both Bouwsubsidie and Woning Registrati
 | is_current | boolean | NO | true | Current address flag |
 | created_at | timestamptz | NO | now() | Creation timestamp |
 
-### Modification to Existing Table
+---
 
-#### `app_user_profile` — Add Role Column
-| Column | Type | Nullable | Default | Description |
-|--------|------|----------|---------|-------------|
-| role | text | YES | - | User role identifier |
+## E. Security Model — Allowlist (Phase 1 ONLY)
 
-### RLS Policy Matrix
+### Temporary Allowlist Security
 
-| Table | Policy | Operation | Expression |
-|-------|--------|-----------|------------|
-| person | District users can read | SELECT | District match or national role |
-| person | Authorized users can insert | INSERT | Role-based check |
-| person | Authorized users can update | UPDATE | Role-based check |
-| household | District users can read | SELECT | District match or national role |
-| household | Authorized users can insert | INSERT | Role-based check |
-| household | Authorized users can update | UPDATE | Role-based check |
-| household_member | District users can read | SELECT | Via household district |
-| contact_point | District users can read | SELECT | Via person access |
-| address | District users can read | SELECT | Via household access |
+Phase 1 implements a **TEMPORARY allowlist model**:
+- Access restricted to ONLY: `info@devmart.sr`
+- No role system
+- No district filtering
+- JWT email claim validation
+
+### RLS Implementation Pattern
+
+For ALL Phase 1 tables:
+1. RLS ENABLED
+2. FORCE RLS ENABLED
+3. Deny-all by default
+4. Allow SELECT/INSERT/UPDATE only when JWT email = `info@devmart.sr`
+
+### RLS Policy Pattern (Applied to All Tables)
+
+```sql
+-- Allowlist check using JWT email claim
+CREATE POLICY "Allowlist users can read [table]"
+ON public.[table] FOR SELECT
+TO authenticated
+USING (
+  current_setting('request.jwt.claims', true)::json->>'email' = 'info@devmart.sr'
+);
+
+CREATE POLICY "Allowlist users can insert [table]"
+ON public.[table] FOR INSERT
+TO authenticated
+WITH CHECK (
+  current_setting('request.jwt.claims', true)::json->>'email' = 'info@devmart.sr'
+);
+
+CREATE POLICY "Allowlist users can update [table]"
+ON public.[table] FOR UPDATE
+TO authenticated
+USING (
+  current_setting('request.jwt.claims', true)::json->>'email' = 'info@devmart.sr'
+);
+```
+
+### DELETE Operations
+
+DELETE is NOT permitted (audit-first governance).
+
+### Authorization Note
+
+**Role-based access control will be introduced in a LATER phase (to be specified and authorized separately).**
+
+Phase 1 provides ONLY structural tables with allowlist access for the designated admin account.
 
 ---
 
-## E. UI Impact (DOCUMENTATION ONLY)
+## F. UI Impact
 
 ### Admin Pages (Darkone 1:1)
 
 | Page | Route | Description |
 |------|-------|-------------|
-| Person List | `/admin/persons` | Searchable, filterable list |
-| Person Detail | `/admin/persons/:id` | View/edit person details |
-| Household List | `/admin/households` | Searchable, filterable list |
-| Household Detail | `/admin/households/:id` | View/edit with member management |
+| Person List | `/persons` | Searchable, filterable list |
+| Person Detail | `/persons/:id` | View/edit person details |
+| Household List | `/households` | Searchable, filterable list |
+| Household Detail | `/households/:id` | View/edit with member management |
 
 ### Components to Create
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
-| PersonList | `src/app/admin/persons/` | Person list with search |
-| PersonDetail | `src/app/admin/persons/[id]/` | Person detail view |
-| HouseholdList | `src/app/admin/households/` | Household list with search |
-| HouseholdDetail | `src/app/admin/households/[id]/` | Household detail view |
+| PersonList | `src/app/(admin)/persons/` | Person list with search |
+| PersonDetail | `src/app/(admin)/persons/[id]/` | Person detail view |
+| HouseholdList | `src/app/(admin)/households/` | Household list with search |
+| HouseholdDetail | `src/app/(admin)/households/[id]/` | Household detail view |
 | HouseholdMemberForm | `src/components/shared/` | Add/edit household member |
 
 ### Public UI
@@ -166,27 +207,7 @@ All new pages MUST use existing Darkone Admin components (tables, forms, cards, 
 
 ---
 
-## F. Security & RLS Considerations
-
-### Role-Based Access
-
-| Role | Person Access | Household Access |
-|------|---------------|------------------|
-| Minister | National (read) | National (read) |
-| Project Leader | National (full) | National (full) |
-| Frontdesk Officer | District (read/write) | District (read/write) |
-| Administrative Staff | District (read/write) | District (read/write) |
-| Social Field Worker | District (read) | District (read) |
-| Technical Inspector | District (read) | District (read) |
-| Audit | National (read) | National (read) |
-
-### District Isolation
-
-- Operational roles (Frontdesk, Admin Staff, Field Workers) are restricted to their assigned district
-- District code stored in `app_user_profile.district_code`
-- RLS policies filter by district match
-
-### Audit Trail
+## G. Audit Trail
 
 - All create/update operations logged to `audit_event`
 - Actor identification via `auth.uid()`
@@ -194,16 +215,18 @@ All new pages MUST use existing Darkone Admin components (tables, forms, cards, 
 
 ---
 
-## G. Verification Criteria
+## H. Verification Criteria
 
 ### Database Verification
 
-- [ ] All 5 new tables created
-- [ ] RLS enabled on all tables
-- [ ] FORCE RLS applied on all tables
+- [ ] `person` table created with RLS + FORCE RLS
+- [ ] `household` table created with RLS + FORCE RLS
+- [ ] `household_member` table created with RLS + FORCE RLS
+- [ ] `contact_point` table created with RLS + FORCE RLS
+- [ ] `address` table created with RLS + FORCE RLS
 - [ ] Foreign key constraints valid
-- [ ] Role column added to `app_user_profile`
-- [ ] Audit triggers functional
+- [ ] `updated_at` triggers functional
+- [ ] Audit logging works
 
 ### UI Verification
 
@@ -217,11 +240,13 @@ All new pages MUST use existing Darkone Admin components (tables, forms, cards, 
 - [ ] Household member management works
 - [ ] Darkone 1:1 compliance verified
 
-### RLS Verification
+### RLS Verification (Allowlist)
 
-- [ ] District users cannot access other districts
-- [ ] National roles can access all districts
-- [ ] Unauthorized operations are denied
+- [ ] `info@devmart.sr` can perform CRUD on all tables
+- [ ] Other authenticated users are DENIED access
+- [ ] Unauthenticated requests are DENIED
+- [ ] No role checks exist
+- [ ] No district filtering exists
 
 ### Cross-Module Verification
 
@@ -230,12 +255,21 @@ All new pages MUST use existing Darkone Admin components (tables, forms, cards, 
 
 ---
 
-## H. Restore Point (Documentation Snapshot — no execution)
+## I. Admin Account Requirement
 
-**IMPORTANT:** This phase does not authorize execution. This document is for planning and governance purposes only. Execution requires explicit written authorization from Delroy.
+**MANDATORY:** The Supabase user `info@devmart.sr` must:
+1. Exist in auth.users
+2. Be able to sign in
+3. Pass the allowlist RLS check
+
+Verification: Confirm CRUD operations work for `info@devmart.sr` and are denied for other users.
+
+---
+
+## J. Restore Point
 
 ### Restore Point Name
-`phase-1-complete`
+`PHASE-1-COMPLETE`
 
 ### Restore Point Contents
 - All Phase 1 database migrations applied
@@ -245,14 +279,14 @@ All new pages MUST use existing Darkone Admin components (tables, forms, cards, 
 
 ### Rollback Procedure
 If Phase 1 fails verification:
-1. Revert to `phase-0-complete`
+1. Revert to `PHASE-0-COMPLETE`
 2. Drop Phase 1 tables
 3. Report failure details
 4. Await remediation instructions
 
 ---
 
-## I. Hard Stop Statement
+## K. Hard Stop Statement
 
 **MANDATORY HARD STOP AFTER PHASE 1 COMPLETION**
 

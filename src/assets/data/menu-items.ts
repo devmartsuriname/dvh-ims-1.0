@@ -13,6 +13,23 @@ export const MENU_ITEMS: MenuItemType[] = [
     url: '/dashboards',
   },
   {
+    key: 'shared-core',
+    label: 'SHARED CORE',
+    isTitle: true,
+  },
+  {
+    key: 'persons',
+    label: 'Persons',
+    icon: 'mingcute:user-4-line',
+    url: '/persons',
+  },
+  {
+    key: 'households',
+    label: 'Households',
+    icon: 'mingcute:home-4-line',
+    url: '/households',
+  },
+  {
     key: 'auth',
     label: 'Authentication',
     icon: 'mingcute:user-3-line',

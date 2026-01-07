@@ -217,6 +217,34 @@ This document must remain aligned with:
 - UX Flows (Wizard + Admin)
 - Raadvoorstel Template
 - Execution Plan
+- Phase Plan Documents (`/phases/`)
+
+---
+
+## 13. Devmart Governance
+
+This project follows strict Devmart governance rules:
+
+### Phase Gate Enforcement
+- Implementation follows phases 0-7 as documented in `/phases/`
+- Each phase requires explicit authorization before execution
+- Hard stops are mandatory after each phase completion
+- Restore points are created after each phase
+
+### Guardian Rules (Non-Negotiable)
+- Darkone Admin UI must remain 1:1
+- No Bootstrap or alternative UI frameworks
+- No custom icon libraries
+- Public frontend Light Theme only
+- RLS enforced at database level
+- Audit-first governance
+
+### Execution Discipline
+- No phase skipping
+- No scope expansion
+- No self-initiated fixes
+- Errors require STOP and REPORT
+- All deviations require explicit approval from Delroy
 
 ---
 

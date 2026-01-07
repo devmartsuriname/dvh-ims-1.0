@@ -353,4 +353,27 @@
 
 ---
 
+## 8. Phased Implementation
+
+Database changes follow the phase structure documented in `/phases/`:
+
+| Phase | Database Impact |
+|-------|-----------------|
+| 0 | Verify `app_user_profile`, `audit_event` (no new tables) |
+| 1 | Create Shared Core tables (person, household, etc.) |
+| 2 | Create Bouwsubsidie tables |
+| 3 | Create Housing Registration tables |
+| 4 | Create Allocation tables |
+| 5 | No new tables (uses existing) |
+| 6 | Create `report_snapshot` table |
+| 7 | No changes (verification only) |
+
+### RLS Enforcement
+- RLS must be enabled on ALL tables from creation
+- FORCE RLS must be applied to prevent superuser bypass
+- Deny-all default: tables without explicit policies deny all access
+- No database changes without corresponding phase authorization
+
+---
+
 **End of Database & RLS Specification (EN)**

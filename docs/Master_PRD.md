@@ -166,6 +166,7 @@ This PRD depends on and must remain aligned with:
 - UX Flows (Wizard + Admin)
 - Raadvoorstel Template (DOCX)
 - Execution Plan (Lovable)
+- Phase Plan Documents (`/phases/`)
 
 ---
 
@@ -175,6 +176,26 @@ Any change to this PRD:
 - Requires explicit approval by Delroy
 - Must be reflected in all dependent documents
 - Cannot be applied retroactively during execution
+
+---
+
+## 12. Phase Plan Reference
+
+Implementation follows a strict phased approach as documented in `/phases/`:
+
+| Phase | Document | Description |
+|-------|----------|-------------|
+| 0 | PHASE-0-Foundation-and-Governance.md | Foundation, auth, governance baseline |
+| 1 | PHASE-1-Shared-Core.md | Person/Household shared data layer |
+| 2 | PHASE-2-Bouwsubsidie.md | Full Bouwsubsidie module |
+| 3 | PHASE-3-Housing-Registration.md | Housing registration component |
+| 4 | PHASE-4-Allocation-Engine.md | Allocation engine |
+| 5 | PHASE-5-Public-Wizards.md | Citizen-facing interfaces |
+| 6 | PHASE-6-Reporting-and-Audit.md | Reporting and audit interfaces |
+| 7 | PHASE-7-Hardening-and-Go-Live.md | Security hardening and go-live |
+
+Each phase requires explicit authorization before execution.
+No phase skipping is permitted.
 
 ---
 

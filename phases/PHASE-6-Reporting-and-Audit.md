@@ -198,7 +198,9 @@ Implement reporting and audit interfaces for government accountability:
 
 ---
 
-## H. Restore Point Definition
+## H. Restore Point (Documentation Snapshot — no execution)
+
+**IMPORTANT:** This phase does not authorize execution. This document is for planning and governance purposes only. Execution requires explicit written authorization from Delroy.
 
 ### Restore Point Name
 `phase-6-complete`

@@ -16,6 +16,13 @@ const HousingRegistrationList = lazy(() => import('@/app/(admin)/housing-registr
 const HousingRegistrationDetail = lazy(() => import('@/app/(admin)/housing-registrations/[id]/page'))
 const HousingWaitingList = lazy(() => import('@/app/(admin)/housing-waiting-list/page'))
 
+// Allocation Engine Routes
+const AllocationQuotas = lazy(() => import('@/app/(admin)/allocation-quotas/page'))
+const AllocationRuns = lazy(() => import('@/app/(admin)/allocation-runs/page'))
+const AllocationRunDetail = lazy(() => import('@/app/(admin)/allocation-runs/[id]/page'))
+const AllocationDecisions = lazy(() => import('@/app/(admin)/allocation-decisions/page'))
+const AllocationAssignments = lazy(() => import('@/app/(admin)/allocation-assignments/page'))
+
 // Base UI Routes
 const Accordions = lazy(() => import('@/app/(admin)/base-ui/accordion/page'))
 const Alerts = lazy(() => import('@/app/(admin)/base-ui/alerts/page'))
@@ -359,11 +366,20 @@ const woningRegistratieRoutes: RoutesProps[] = [
   { path: '/housing-waiting-list', name: 'Waiting List', element: <HousingWaitingList /> },
 ]
 
+const allocationRoutes: RoutesProps[] = [
+  { path: '/allocation-quotas', name: 'District Quotas', element: <AllocationQuotas /> },
+  { path: '/allocation-runs', name: 'Allocation Runs', element: <AllocationRuns /> },
+  { path: '/allocation-runs/:id', name: 'Run Detail', element: <AllocationRunDetail /> },
+  { path: '/allocation-decisions', name: 'Allocation Decisions', element: <AllocationDecisions /> },
+  { path: '/allocation-assignments', name: 'Assignment Registration', element: <AllocationAssignments /> },
+]
+
 export const appRoutes = [
   ...initialRoutes,
   ...sharedCoreRoutes,
   ...bouwsubsidieRoutes,
   ...woningRegistratieRoutes,
+  ...allocationRoutes,
   ...baseUIRoutes,
   ...formsRoutes,
   ...generalRoutes,

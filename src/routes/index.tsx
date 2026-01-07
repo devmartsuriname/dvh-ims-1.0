@@ -2,7 +2,10 @@ import { lazy } from 'react'
 import { type RouteProps } from 'react-router-dom'
 
 // Public Routes (Citizen-facing, Light Theme)
-const PublicPlaceholder = lazy(() => import('@/app/(public)/placeholder/page'))
+const LandingPage = lazy(() => import('@/app/(public)/landing/page'))
+const BouwsubsidieWizard = lazy(() => import('@/app/(public)/bouwsubsidie/apply/page'))
+const HousingWizard = lazy(() => import('@/app/(public)/housing/register/page'))
+const StatusTracker = lazy(() => import('@/app/(public)/status/page'))
 
 const Dashboards = lazy(() => import('@/app/(admin)/dashboards/page'))
 
@@ -99,7 +102,10 @@ export type RoutesProps = {
  * NO authentication required
  */
 export const publicRoutes: RoutesProps[] = [
-  { path: '/', name: 'Landing', element: <PublicPlaceholder /> },
+  { path: '/', name: 'Landing', element: <LandingPage /> },
+  { path: '/bouwsubsidie/apply', name: 'Bouwsubsidie Wizard', element: <BouwsubsidieWizard /> },
+  { path: '/housing/register', name: 'Housing Wizard', element: <HousingWizard /> },
+  { path: '/status', name: 'Status Tracker', element: <StatusTracker /> },
 ]
 
 /**

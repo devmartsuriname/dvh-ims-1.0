@@ -25,3 +25,27 @@
 - Admin routes protected via `ProtectedRoute` wrapper
 - Public routes accessible without authentication
 - Staff Portal button redirects to `/auth/sign-in?redirectTo=/dashboards`
+
+---
+
+## Phase 5 - CP6 Quality Gate (2026-01-07)
+
+### Public Pages Asset Resolution
+
+**Issue Fixed:** Logo images were not rendering on public pages due to incorrect path reference.
+
+**Solution:** Changed from static path (`/assets/images/logo-dark.png`) to ES6 module import (`import logoDark from '@/assets/images/logo-dark.png'`).
+
+**Files Modified:**
+- `src/components/public/PublicHeader.tsx` - Logo import fix
+
+### Shared Component Usage
+
+All public pages now use the centralized `PublicHeader` and `PublicFooter` components from `src/components/public/` for Darkone 1:1 parity.
+
+| Page | Route | Shared Components |
+|------|-------|-------------------|
+| Landing | `/` | PublicHeader, PublicFooter |
+| Status Tracker | `/status` | PublicHeader, PublicFooter |
+| Bouwsubsidie Wizard | `/bouwsubsidie/apply` | PublicHeader, PublicFooter |
+| Housing Wizard | `/housing/register` | PublicHeader, PublicFooter |

@@ -2,7 +2,8 @@
 
 **Project:** VolksHuisvesting IMS (DVH-IMS-1.0)  
 **Status:** APPROVED FOR EXECUTION  
-**Authority:** Delroy (Final)
+**Authority:** Delroy (Final)  
+**Restore Point:** PHASE-1-DOCS-SNAPSHOT (Documentation Sync)
 
 ---
 
@@ -19,7 +20,22 @@ Build the shared data STRUCTURE used by both Bouwsubsidie and Woning Registratie
 
 ---
 
-## B. Explicit Scope (ALLOWED)
+## B. Framework & Routing (Confirmed)
+
+| Item | Value |
+|------|-------|
+| Framework | Vite + React SPA |
+| Routing | React Router DOM v6 |
+| Route Registration | `src/routes/index.tsx` |
+| Menu Config | `src/assets/data/menu-items.ts` |
+| Page Pattern | `page.tsx` in folder (Darkone convention) |
+| UI Baseline | Darkone Admin 1:1 |
+
+**Note:** This is NOT Next.js App Router. The `src/app/(admin)/` folder structure and `page.tsx` naming follows Darkone Admin conventions, not Next.js conventions.
+
+---
+
+## C. Explicit Scope (ALLOWED)
 
 | Category | Allowed Actions |
 |----------|-----------------|
@@ -30,6 +46,7 @@ Build the shared data STRUCTURE used by both Bouwsubsidie and Woning Registratie
 | Database | Create `address` table |
 | Database | Create RLS policies (allowlist model) |
 | Database | Create audit triggers for changes |
+| Database | Fix `audit_event` INSERT policy (allowlist) |
 | UI | Create Person list page (Admin) |
 | UI | Create Person detail page (Admin) |
 | UI | Create Household list page (Admin) |
@@ -38,7 +55,7 @@ Build the shared data STRUCTURE used by both Bouwsubsidie and Woning Registratie
 
 ---
 
-## C. Explicit Out of Scope (FORBIDDEN)
+## D. Explicit Out of Scope (FORBIDDEN)
 
 | Category | Forbidden Actions |
 |----------|-------------------|
@@ -53,14 +70,16 @@ Build the shared data STRUCTURE used by both Bouwsubsidie and Woning Registratie
 | UI | Public-facing pages |
 | UI | Wizard components |
 | UI | Layout modifications |
-| UI | SCSS changes |
+| UI | Custom SCSS changes |
+| UI | New icon libraries |
+| UI | Custom Bootstrap extensions |
 | Integration | Edge Functions |
 | Integration | Storage buckets |
 | Integration | External API integrations |
 
 ---
 
-## D. Database Impact
+## E. Database Impact
 
 ### Tables to Create
 
@@ -120,7 +139,7 @@ Build the shared data STRUCTURE used by both Bouwsubsidie and Woning Registratie
 
 ---
 
-## E. Security Model — Allowlist (Phase 1 ONLY)
+## F. Security Model — Allowlist (Phase 1 ONLY)
 
 ### Temporary Allowlist Security
 
@@ -164,6 +183,29 @@ USING (
 );
 ```
 
+### Audit Event Policy (Allowlist)
+
+The existing overly-permissive `audit_event` INSERT policy will be replaced:
+
+```sql
+-- Drop existing policy
+DROP POLICY IF EXISTS "Authenticated users can insert audit events" ON public.audit_event;
+
+-- Create allowlist INSERT policy
+CREATE POLICY "Allowlist users can insert audit_event"
+ON public.audit_event FOR INSERT
+TO authenticated
+WITH CHECK (
+  actor_user_id = auth.uid()
+  AND current_setting('request.jwt.claims', true)::json->>'email' = 'info@devmart.sr'
+);
+```
+
+**Notes:**
+- Maintains actor_user_id validation (must match auth.uid())
+- Adds allowlist email check
+- SELECT remains denied (append-only)
+
 ### DELETE Operations
 
 DELETE is NOT permitted (audit-first governance).
@@ -176,7 +218,25 @@ Phase 1 provides ONLY structural tables with allowlist access for the designated
 
 ---
 
-## F. UI Impact
+## G. Audit Trail
+
+### Phase 1 Audit Model (Allowlist)
+
+- All create/update operations logged to `audit_event` via application layer
+- Actor identification via `auth.uid()`
+- Audit INSERT restricted to `info@devmart.sr` only (allowlist)
+- Audit SELECT denied (append-only, no read access)
+- Metadata includes: entity_type, entity_id, action, changed fields
+
+### Application Layer Audit Utility
+
+**File:** `src/hooks/useAuditLog.ts`
+
+Provides `logAuditEvent()` function for application-layer audit writes after successful CRUD operations on Person/Household entities.
+
+---
+
+## H. UI Impact
 
 ### Admin Pages (Darkone 1:1)
 
@@ -187,15 +247,109 @@ Phase 1 provides ONLY structural tables with allowlist access for the designated
 | Household List | `/households` | Searchable, filterable list |
 | Household Detail | `/households/:id` | View/edit with member management |
 
+### File Structure
+
+```
+src/app/(admin)/
+├── persons/
+│   ├── page.tsx                    (Person list page)
+│   └── components/
+│       ├── PersonTable.tsx         (Grid.js table component)
+│       └── PersonFormModal.tsx     (Create/Edit modal)
+├── persons/[id]/
+│   └── page.tsx                    (Person detail page)
+├── households/
+│   ├── page.tsx                    (Household list page)
+│   └── components/
+│       ├── HouseholdTable.tsx      (Grid.js table component)
+│       └── HouseholdFormModal.tsx  (Create/Edit modal)
+└── households/[id]/
+    └── page.tsx                    (Household detail with members)
+```
+
+### Route Registration
+
+**File:** `src/routes/index.tsx`
+
+```typescript
+// Shared Core Routes
+const PersonList = lazy(() => import('@/app/(admin)/persons/page'))
+const PersonDetail = lazy(() => import('@/app/(admin)/persons/[id]/page'))
+const HouseholdList = lazy(() => import('@/app/(admin)/households/page'))
+const HouseholdDetail = lazy(() => import('@/app/(admin)/households/[id]/page'))
+
+const sharedCoreRoutes: RoutesProps[] = [
+  { path: '/persons', name: 'Persons', element: <PersonList /> },
+  { path: '/persons/:id', name: 'Person Detail', element: <PersonDetail /> },
+  { path: '/households', name: 'Households', element: <HouseholdList /> },
+  { path: '/households/:id', name: 'Household Detail', element: <HouseholdDetail /> },
+]
+```
+
+### Menu Configuration
+
+**File:** `src/assets/data/menu-items.ts`
+
+```typescript
+{
+  key: 'shared-core',
+  label: 'SHARED CORE',
+  isTitle: true,
+},
+{
+  key: 'persons',
+  label: 'Persons',
+  icon: 'mingcute:user-4-line',   // DARKONE_ASSET_MAP verified
+  url: '/persons',
+},
+{
+  key: 'households',
+  label: 'Households',
+  icon: 'mingcute:home-4-line',   // DARKONE_ASSET_MAP verified
+  url: '/households',
+},
+```
+
+### DARKONE_ASSET_MAP Icon Compliance
+
+| Menu Item | Icon Key | Source |
+|-----------|----------|--------|
+| Persons | `mingcute:user-4-line` | DARKONE_ASSET_MAP Section 2.2 |
+| Households | `mingcute:home-4-line` | DARKONE_ASSET_MAP Section 2.2 |
+
 ### Components to Create
 
 | Component | Location | Purpose |
 |-----------|----------|---------|
-| PersonList | `src/app/(admin)/persons/` | Person list with search |
-| PersonDetail | `src/app/(admin)/persons/[id]/` | Person detail view |
-| HouseholdList | `src/app/(admin)/households/` | Household list with search |
-| HouseholdDetail | `src/app/(admin)/households/[id]/` | Household detail view |
-| HouseholdMemberForm | `src/components/shared/` | Add/edit household member |
+| PersonList | `src/app/(admin)/persons/page.tsx` | Person list with search |
+| PersonDetail | `src/app/(admin)/persons/[id]/page.tsx` | Person detail view |
+| HouseholdList | `src/app/(admin)/households/page.tsx` | Household list with search |
+| HouseholdDetail | `src/app/(admin)/households/[id]/page.tsx` | Household detail view |
+| PersonTable | `src/app/(admin)/persons/components/PersonTable.tsx` | Grid.js table |
+| PersonFormModal | `src/app/(admin)/persons/components/PersonFormModal.tsx` | Create/Edit modal |
+| HouseholdTable | `src/app/(admin)/households/components/HouseholdTable.tsx` | Grid.js table |
+| HouseholdFormModal | `src/app/(admin)/households/components/HouseholdFormModal.tsx` | Create/Edit modal |
+
+### Darkone Component Baseline (Allowed)
+
+**From react-bootstrap (Darkone baseline):**
+- `Card`, `CardBody`, `CardHeader`, `CardTitle`
+- `Row`, `Col`
+- `Modal`, `ModalHeader`, `ModalBody`, `ModalFooter`
+- `Button`
+- `FormControl`, `FormSelect`, `FormLabel`, `FormGroup`
+
+**From existing Darkone wrappers:**
+- `PageTitle` (src/components/PageTitle.tsx)
+- `IconifyIcon` (src/components/wrapper/IconifyIcon.tsx)
+- `TextFormInput`, `TextAreaFormInput` (src/components/from/)
+
+**From existing Darkone hooks:**
+- `useToggle` (src/hooks/useToggle.ts)
+- `useModal` (src/hooks/useModal.ts)
+
+**From external libraries (Darkone baseline):**
+- `Grid` from `gridjs-react`
 
 ### Public UI
 
@@ -203,19 +357,11 @@ Phase 1 provides ONLY structural tables with allowlist access for the designated
 
 ### Darkone 1:1 Compliance Statement
 
-All new pages MUST use existing Darkone Admin components (tables, forms, cards, tabs). No custom styling or layout modifications.
+All new pages MUST use existing Darkone Admin components. No custom styling, no layout modifications, no new icon libraries.
 
 ---
 
-## G. Audit Trail
-
-- All create/update operations logged to `audit_event`
-- Actor identification via `auth.uid()`
-- Metadata includes changed fields
-
----
-
-## H. Verification Criteria
+## I. Verification Criteria
 
 ### Database Verification
 
@@ -226,27 +372,41 @@ All new pages MUST use existing Darkone Admin components (tables, forms, cards, 
 - [ ] `address` table created with RLS + FORCE RLS
 - [ ] Foreign key constraints valid
 - [ ] `updated_at` triggers functional
-- [ ] Audit logging works
-
-### UI Verification
-
-- [ ] Person list displays correctly
-- [ ] Person search works
-- [ ] Person detail loads
-- [ ] Person create/edit works
-- [ ] Household list displays correctly
-- [ ] Household search works
-- [ ] Household detail loads
-- [ ] Household member management works
-- [ ] Darkone 1:1 compliance verified
+- [ ] `audit_event` INSERT policy is allowlist (info@devmart.sr only)
 
 ### RLS Verification (Allowlist)
 
-- [ ] `info@devmart.sr` can perform CRUD on all tables
+- [ ] `info@devmart.sr` can SELECT/INSERT/UPDATE all Phase 1 tables
+- [ ] `info@devmart.sr` can INSERT to `audit_event`
 - [ ] Other authenticated users are DENIED access
 - [ ] Unauthenticated requests are DENIED
 - [ ] No role checks exist
 - [ ] No district filtering exists
+
+### UI Verification
+
+- [ ] `/persons` route loads PersonList page
+- [ ] `/persons/:id` route loads PersonDetail page
+- [ ] `/households` route loads HouseholdList page
+- [ ] `/households/:id` route loads HouseholdDetail page
+- [ ] Menu shows Shared Core section with correct icons
+- [ ] Person list displays correctly with search
+- [ ] Person create/edit works with audit logging
+- [ ] Person detail loads
+- [ ] Household list displays correctly with search
+- [ ] Household create/edit works with audit logging
+- [ ] Household detail loads with member management
+- [ ] Grid.js tables render with search/sort/pagination
+- [ ] Modals use react-bootstrap Modal pattern
+- [ ] Forms use TextFormInput pattern
+
+### Guardian Rule Compliance
+
+- [ ] Darkone 1:1 compliance verified
+- [ ] NO custom CSS added
+- [ ] NO new icon libraries added
+- [ ] NO layout modifications
+- [ ] DARKONE_ASSET_MAP icons only (mingcute:*)
 
 ### Cross-Module Verification
 
@@ -255,7 +415,7 @@ All new pages MUST use existing Darkone Admin components (tables, forms, cards, 
 
 ---
 
-## I. Admin Account Requirement
+## J. Admin Account Requirement
 
 **MANDATORY:** The Supabase user `info@devmart.sr` must:
 1. Exist in auth.users
@@ -266,12 +426,17 @@ Verification: Confirm CRUD operations work for `info@devmart.sr` and are denied 
 
 ---
 
-## J. Restore Point
+## K. Restore Points
 
-### Restore Point Name
-`PHASE-1-COMPLETE`
+### Documentation Snapshot
+**Identifier:** `PHASE-1-DOCS-SNAPSHOT`  
+**Type:** Documentation Sync  
+**Contents:** Phase 1 plan with corrected framework/routing/UI structure
 
-### Restore Point Contents
+### Execution Restore Point
+**Identifier:** `PHASE-1-COMPLETE`  
+**Type:** Full Implementation  
+**Contents:**
 - All Phase 1 database migrations applied
 - All Phase 1 UI components created
 - Verification checklist completed
@@ -286,7 +451,7 @@ If Phase 1 fails verification:
 
 ---
 
-## K. Hard Stop Statement
+## L. Hard Stop Statement
 
 **MANDATORY HARD STOP AFTER PHASE 1 COMPLETION**
 
@@ -297,6 +462,20 @@ Upon completing Phase 1:
 4. Await explicit written authorization from Delroy
 
 **NO AUTO-PROCEED TO PHASE 2**
+
+---
+
+## M. Governance References
+
+This phase document aligns with:
+- `/docs/Master_PRD.md` — Section 12 (Phase Plan Reference)
+- `/docs/Architecture_Security.md` — Section 13 (Devmart Governance)
+- `/docs/Database_RLS.md` — Section 8 (Phased Implementation)
+- `/docs/Execution_Plan.md` — Phase 1 definition and Section 9 (Phase Documentation Reference)
+
+Guardian Rules are defined in:
+- `/docs/Architecture_Security.md` — Section 11, Section 13.2
+- Project Instructions (Custom Knowledge)
 
 ---
 

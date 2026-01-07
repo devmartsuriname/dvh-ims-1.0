@@ -374,6 +374,24 @@ Database changes follow the phase structure documented in `/phases/`:
 - Deny-all default: tables without explicit policies deny all access
 - No database changes without corresponding phase authorization
 
+### Phase 1 Allowlist Model
+Phase 1 uses a temporary allowlist security model:
+- Access restricted to `info@devmart.sr` only
+- JWT email claim validation: `current_setting('request.jwt.claims', true)::json->>'email'`
+- No role system (deferred to later phase)
+- No district-based filtering (deferred to later phase)
+- `audit_event` INSERT policy restricted to allowlist user
+
+---
+
+## 9. Governance References
+
+This specification aligns with:
+- `/docs/Master_PRD.md` — Section 12 (Phase Plan Reference)
+- `/docs/Architecture_Security.md` — Section 13 (Devmart Governance)
+- `/docs/Execution_Plan.md` — Phase structure and documentation reference
+- `/phases/PHASE-1-Shared-Core.md` — Phase 1 specific implementation
+
 ---
 
 **End of Database & RLS Specification (EN)**

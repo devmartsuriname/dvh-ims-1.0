@@ -5,7 +5,7 @@ import { Dropdown, DropdownHeader, DropdownItem, DropdownMenu, DropdownToggle } 
 import { Link } from 'react-router-dom'
 
 const ProfileDropdown = () => {
-  const { removeSession } = useAuthContext()
+  const { signOut } = useAuthContext()
 
   return (
     <Dropdown className=" topbar-item">
@@ -45,9 +45,9 @@ const ProfileDropdown = () => {
           <span className="align-middle">Lock screen</span>
         </DropdownItem>
         <div className="dropdown-divider my-1" />
-        <DropdownItem as={Link} className=" text-danger" to="/auth/sign-in">
+        <DropdownItem className=" text-danger" onClick={signOut} style={{ cursor: 'pointer' }}>
           <IconifyIcon icon="solar:logout-3-outline" className="align-middle me-2 fs-18" />
-          <span className="align-middle" onClick={removeSession}>
+          <span className="align-middle">
             Logout
           </span>
         </DropdownItem>

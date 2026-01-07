@@ -1,4 +1,5 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import DarkLogo from '@/assets/images/logo-dark.png'
 import LightLogo from '@/assets/images/logo-light.png'
 import TextFormInput from '@/components/from/TextFormInput'
@@ -7,8 +8,14 @@ import { useForm } from 'react-hook-form'
 import * as yup from 'yup'
 import { Card, CardBody, Col, Row } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+import { supabase } from '@/integrations/supabase/client'
+import { useNotificationContext } from '@/context/useNotificationContext'
 
 const SignUp = () => {
+  const navigate = useNavigate()
+  const { showNotification } = useNotificationContext()
+  const [loading, setLoading] = useState(false)
+
   useEffect(() => {
     document.body.classList.add('authentication-bg')
     return () => {
@@ -19,12 +26,52 @@ const SignUp = () => {
   const messageSchema = yup.object({
     name: yup.string().required('Please enter Name'),
     email: yup.string().email().required('Please enter Email'),
-    password: yup.string().required('Please enter password'),
+    password: yup.string().min(6, 'Password must be at least 6 characters').required('Please enter password'),
   })
 
   const { handleSubmit, control } = useForm({
     resolver: yupResolver(messageSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+    },
   })
+
+  const onSubmit = handleSubmit(async (values) => {
+    setLoading(true)
+    try {
+      const redirectUrl = `${window.location.origin}/`
+      
+      const { error } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: values.name,
+          },
+        },
+      })
+
+      if (error) {
+        showNotification({ message: error.message, variant: 'danger' })
+        return
+      }
+
+      showNotification({ 
+        message: 'Account created successfully! Please check your email to confirm your account.', 
+        variant: 'success' 
+      })
+      navigate('/auth/sign-in')
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'An unexpected error occurred'
+      showNotification({ message: errorMessage, variant: 'danger' })
+    } finally {
+      setLoading(false)
+    }
+  })
+
   return (
     <>
       <div className="">
@@ -46,7 +93,7 @@ const SignUp = () => {
                       <h4 className="fw-bold text-dark mb-2">Sign Up</h4>
                       <p className="text-muted">New to our platform? Sign up now! It only takes a minute.</p>
                     </div>
-                    <form onSubmit={handleSubmit(() => {})} className="mt-4">
+                    <form onSubmit={onSubmit} className="mt-4">
                       <div className="mb-3">
                         <TextFormInput control={control} name="name" placeholder="Enter your Name" className="form-control" label="Name" />
                       </div>
@@ -60,6 +107,7 @@ const SignUp = () => {
                           placeholder="Enter your password"
                           className="form-control"
                           label="Password"
+                          type="password"
                         />
                       </div>
                       <div className="mb-3">
@@ -71,8 +119,8 @@ const SignUp = () => {
                         </div>
                       </div>
                       <div className="mb-1 text-center d-grid">
-                        <button className="btn btn-dark btn-lg fw-medium" type="submit">
-                          Sign Up
+                        <button className="btn btn-dark btn-lg fw-medium" type="submit" disabled={loading}>
+                          {loading ? 'Creating Account...' : 'Sign Up'}
                         </button>
                       </div>
                     </form>

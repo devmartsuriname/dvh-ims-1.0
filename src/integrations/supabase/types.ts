@@ -52,6 +52,142 @@ export type Database = {
           },
         ]
       }
+      allocation_candidate: {
+        Row: {
+          composite_rank: number
+          id: string
+          is_selected: boolean
+          registration_id: string
+          run_id: string
+          urgency_score: number
+          waiting_list_position: number
+        }
+        Insert: {
+          composite_rank: number
+          id?: string
+          is_selected?: boolean
+          registration_id: string
+          run_id: string
+          urgency_score: number
+          waiting_list_position: number
+        }
+        Update: {
+          composite_rank?: number
+          id?: string
+          is_selected?: boolean
+          registration_id?: string
+          run_id?: string
+          urgency_score?: number
+          waiting_list_position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allocation_candidate_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "housing_registration"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_candidate_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_run"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      allocation_decision: {
+        Row: {
+          candidate_id: string
+          decided_at: string
+          decided_by: string
+          decision: string
+          decision_reason: string | null
+          id: string
+          registration_id: string
+          run_id: string
+        }
+        Insert: {
+          candidate_id: string
+          decided_at?: string
+          decided_by: string
+          decision: string
+          decision_reason?: string | null
+          id?: string
+          registration_id: string
+          run_id: string
+        }
+        Update: {
+          candidate_id?: string
+          decided_at?: string
+          decided_by?: string
+          decision?: string
+          decision_reason?: string | null
+          id?: string
+          registration_id?: string
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "allocation_decision_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_candidate"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_decision_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "housing_registration"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "allocation_decision_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_run"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      allocation_run: {
+        Row: {
+          allocations_count: number | null
+          candidates_count: number | null
+          completed_at: string | null
+          district_code: string
+          error_message: string | null
+          executed_by: string
+          id: string
+          run_date: string
+          run_status: string
+        }
+        Insert: {
+          allocations_count?: number | null
+          candidates_count?: number | null
+          completed_at?: string | null
+          district_code: string
+          error_message?: string | null
+          executed_by: string
+          id?: string
+          run_date?: string
+          run_status?: string
+        }
+        Update: {
+          allocations_count?: number | null
+          candidates_count?: number | null
+          completed_at?: string | null
+          district_code?: string
+          error_message?: string | null
+          executed_by?: string
+          id?: string
+          run_date?: string
+          run_status?: string
+        }
+        Relationships: []
+      }
       app_user_profile: {
         Row: {
           created_at: string | null
@@ -75,6 +211,57 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      assignment_record: {
+        Row: {
+          assignment_date: string
+          assignment_type: string
+          decision_id: string | null
+          housing_reference: string | null
+          id: string
+          notes: string | null
+          recorded_at: string
+          recorded_by: string
+          registration_id: string
+        }
+        Insert: {
+          assignment_date: string
+          assignment_type: string
+          decision_id?: string | null
+          housing_reference?: string | null
+          id?: string
+          notes?: string | null
+          recorded_at?: string
+          recorded_by: string
+          registration_id: string
+        }
+        Update: {
+          assignment_date?: string
+          assignment_type?: string
+          decision_id?: string | null
+          housing_reference?: string | null
+          id?: string
+          notes?: string | null
+          recorded_at?: string
+          recorded_by?: string
+          registration_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_record_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "allocation_decision"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_record_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "housing_registration"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       audit_event: {
         Row: {
@@ -146,6 +333,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      district_quota: {
+        Row: {
+          allocated_count: number
+          created_at: string
+          created_by: string
+          district_code: string
+          id: string
+          period_end: string
+          period_start: string
+          total_quota: number
+          updated_at: string
+        }
+        Insert: {
+          allocated_count?: number
+          created_at?: string
+          created_by: string
+          district_code: string
+          id?: string
+          period_end: string
+          period_start: string
+          total_quota: number
+          updated_at?: string
+        }
+        Update: {
+          allocated_count?: number
+          created_at?: string
+          created_by?: string
+          district_code?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          total_quota?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       generated_document: {
         Row: {

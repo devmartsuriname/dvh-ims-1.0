@@ -58,6 +58,35 @@ export const MENU_ITEMS: MenuItemType[] = [
     url: '/housing-waiting-list',
   },
   {
+    key: 'allocation-engine',
+    label: 'ALLOCATION ENGINE',
+    isTitle: true,
+  },
+  {
+    key: 'allocation-quotas',
+    label: 'District Quotas',
+    icon: 'mingcute:chart-pie-line',
+    url: '/allocation-quotas',
+  },
+  {
+    key: 'allocation-runs',
+    label: 'Allocation Runs',
+    icon: 'mingcute:play-circle-line',
+    url: '/allocation-runs',
+  },
+  {
+    key: 'allocation-decisions',
+    label: 'Decisions',
+    icon: 'mingcute:check-2-line',
+    url: '/allocation-decisions',
+  },
+  {
+    key: 'allocation-assignments',
+    label: 'Assignments',
+    icon: 'mingcute:transfer-line',
+    url: '/allocation-assignments',
+  },
+  {
     key: 'auth',
     label: 'Authentication',
     icon: 'mingcute:user-3-line',

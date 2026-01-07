@@ -4,6 +4,7 @@ import { Grid, html } from 'gridjs'
 import 'gridjs/dist/theme/mermaid.css'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'react-toastify'
+import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import AssignmentFormModal from './AssignmentFormModal'
 
 interface AssignmentRecord {
@@ -117,7 +118,7 @@ const AssignmentTable = () => {
               size="sm"
               onClick={() => setShowModal(true)}
             >
-              <i className="bx bx-plus me-1"></i>
+              <IconifyIcon icon="mingcute:add-line" className="me-1" />
               Record Assignment
             </Button>
           </div>

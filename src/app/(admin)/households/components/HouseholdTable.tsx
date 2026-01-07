@@ -1,0 +1,121 @@
+import { useEffect, useState, useCallback } from 'react'
+import { Card, CardBody, CardHeader, CardTitle, Button, Spinner } from 'react-bootstrap'
+import { Grid } from 'gridjs-react'
+import { useNavigate } from 'react-router-dom'
+import useToggle from '@/hooks/useToggle'
+import HouseholdFormModal from './HouseholdFormModal'
+import IconifyIcon from '@/components/wrapper/IconifyIcon'
+import { supabase } from '@/integrations/supabase/client'
+
+interface Household {
+  id: string
+  primary_person_id: string
+  household_size: number
+  district_code: string
+  created_at: string
+  person?: {
+    first_name: string
+    last_name: string
+  }
+}
+
+const HouseholdTable = () => {
+  const [households, setHouseholds] = useState<Household[]>([])
+  const [loading, setLoading] = useState(true)
+  const { isTrue: isOpen, toggle } = useToggle()
+  const navigate = useNavigate()
+
+  const fetchHouseholds = useCallback(async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('household')
+      .select(`
+        *,
+        person:primary_person_id (first_name, last_name)
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching households:', error)
+    } else {
+      setHouseholds(data || [])
+    }
+    setLoading(false)
+  }, [])
+
+  useEffect(() => {
+    fetchHouseholds()
+  }, [fetchHouseholds])
+
+  const handleAdd = () => {
+    toggle()
+  }
+
+  const handleView = (id: string) => {
+    navigate(`/households/${id}`)
+  }
+
+  const handleSuccess = () => {
+    fetchHouseholds()
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardBody className="text-center py-5">
+          <Spinner animation="border" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </Spinner>
+        </CardBody>
+      </Card>
+    )
+  }
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="d-flex justify-content-between align-items-center">
+          <CardTitle as="h5">Households</CardTitle>
+          <Button variant="primary" size="sm" onClick={handleAdd}>
+            <IconifyIcon icon="mingcute:add-line" className="me-1" />
+            Add Household
+          </Button>
+        </CardHeader>
+        <CardBody>
+          {households.length === 0 ? (
+            <p className="text-muted text-center py-4">No households found. Click "Add Household" to create one.</p>
+          ) : (
+            <Grid
+              data={households.map((h) => [
+                h.person ? `${h.person.first_name} ${h.person.last_name}` : '-',
+                h.household_size,
+                h.district_code,
+                new Date(h.created_at).toLocaleDateString(),
+                h.id,
+              ])}
+              columns={[
+                { name: 'Primary Person' },
+                { name: 'Size' },
+                { name: 'District' },
+                { name: 'Created' },
+                { name: 'Actions', sort: false },
+              ]}
+              search
+              pagination={{ limit: 10 }}
+              sort
+              className={{ table: 'table table-hover mb-0' }}
+            />
+          )}
+        </CardBody>
+      </Card>
+
+      <HouseholdFormModal
+        isOpen={isOpen}
+        onClose={toggle}
+        onSuccess={handleSuccess}
+      />
+    </>
+  )
+}
+
+export default HouseholdTable

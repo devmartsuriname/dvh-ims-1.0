@@ -3,6 +3,12 @@ import { Navigate, type RouteProps } from 'react-router-dom'
 
 const Dashboards = lazy(() => import('@/app/(admin)/dashboards/page'))
 
+// Shared Core Routes
+const PersonList = lazy(() => import('@/app/(admin)/persons/page'))
+const PersonDetail = lazy(() => import('@/app/(admin)/persons/[id]/page'))
+const HouseholdList = lazy(() => import('@/app/(admin)/households/page'))
+const HouseholdDetail = lazy(() => import('@/app/(admin)/households/[id]/page'))
+
 // Base UI Routes
 const Accordions = lazy(() => import('@/app/(admin)/base-ui/accordion/page'))
 const Alerts = lazy(() => import('@/app/(admin)/base-ui/alerts/page'))
@@ -328,9 +334,16 @@ const layoutsRoutes: RoutesProps[] = [
   },
 ]
 
+const sharedCoreRoutes: RoutesProps[] = [
+  { path: '/persons', name: 'Persons', element: <PersonList /> },
+  { path: '/persons/:id', name: 'Person Detail', element: <PersonDetail /> },
+  { path: '/households', name: 'Households', element: <HouseholdList /> },
+  { path: '/households/:id', name: 'Household Detail', element: <HouseholdDetail /> },
+]
+
 export const appRoutes = [
   ...initialRoutes,
-  // ...authRoutes,
+  ...sharedCoreRoutes,
   ...baseUIRoutes,
   ...formsRoutes,
   ...generalRoutes,

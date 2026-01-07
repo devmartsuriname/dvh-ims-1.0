@@ -1,11 +1,12 @@
 import { Container } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
-import logoDark from '@/assets/images/logo-dark.png'
+import logoSozavo from '@/assets/images/logo-sozavo.png'
 
 /**
  * PublicHeader - Reusable header for public pages
  * 
  * Darkone 1:1 with react-bootstrap
+ * Official SoZaVo logo
  * English baseline
  */
 const PublicHeader = () => {
@@ -15,9 +16,9 @@ const PublicHeader = () => {
         <div className="d-flex align-items-center justify-content-between">
           <Link to="/" className="d-flex align-items-center gap-3 text-decoration-none">
             <img 
-              src={logoDark} 
-              alt="VolksHuisvesting Logo" 
-              height="40" 
+              src={logoSozavo} 
+              alt="VolksHuisvesting Suriname" 
+              height="48" 
             />
             <div>
               <h5 className="mb-0 fw-bold text-dark">VolksHuisvesting</h5>

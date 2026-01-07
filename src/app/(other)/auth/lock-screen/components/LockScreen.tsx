@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
-import DarkLogo from '@/assets/images/logo-dark.png'
-import LightLogo from '@/assets/images/logo-light.png'
+import logoSozavo from '@/assets/images/logo-sozavo.png'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm } from 'react-hook-form'
 import * as yup from 'yup'
@@ -36,11 +35,8 @@ const LockScreen = () => {
                   <CardBody className=" p-5">
                     <div className="text-center">
                       <div className="mx-auto mb-4 text-center auth-logo">
-                        <Link to="" className="logo-dark">
-                          <img src={DarkLogo} height={32} alt="logo dark" />
-                        </Link>
-                        <Link to="" className="logo-light">
-                          <img src={LightLogo} height={28} alt="logo light" />
+                        <Link to="/dashboards">
+                          <img src={logoSozavo} height={48} alt="VolksHuisvesting" />
                         </Link>
                       </div>
                       <h4 className="fw-bold text-dark mb-2">Hi ! Gaston</h4>

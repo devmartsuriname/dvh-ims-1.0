@@ -89,3 +89,40 @@ All public pages now use the centralized `PublicHeader` and `PublicFooter` compo
 2. Status: No breadcrumb, proper card footer with centered button
 3. Wizards: Consistent progress indicators, button spacing, card shadows
 4. All pages: Official SoZaVo logo, Darkone components only, no custom icons
+
+---
+
+## Edge Function Import Standards
+
+### Supabase Client Import
+
+All Edge Functions MUST use import maps via `supabase/functions/deno.json`:
+
+**deno.json configuration:**
+```json
+{
+  "imports": {
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2"
+  },
+  "nodeModulesDir": "auto"
+}
+```
+
+**Edge Function import:**
+```typescript
+// CORRECT - Uses import map, stable build
+import { createClient } from '@supabase/supabase-js'
+
+// FORBIDDEN - CDN dependency, causes 5xx build failures
+// import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
+```
+
+**Rationale:**
+- Import maps with `nodeModulesDir: "auto"` resolve npm packages natively
+- No external CDN dependency (esm.sh can return 522 errors)
+- Version pinning in deno.json ensures reproducible builds
+
+**Change History:**
+| Date | Change | Reason |
+|------|--------|--------|
+| 2026-01-07 | Added deno.json with import map, replaced esm.sh | Build stability - esm.sh 522 errors |

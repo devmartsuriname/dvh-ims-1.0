@@ -181,8 +181,8 @@ approved_for_council → council_doc_generated → finalized
 
 | Page | Route | Description |
 |------|-------|-------------|
-| Case List | `/admin/bouwsubsidie/cases` | Filterable case list |
-| Case Detail | `/admin/bouwsubsidie/cases/:id` | Tabbed detail view |
+| Case List | `/subsidy-cases` | Filterable case list |
+| Case Detail | `/subsidy-cases/:id` | Tabbed detail view |
 
 ### Case Detail Tabs
 
@@ -313,6 +313,40 @@ Upon completing Phase 2:
 4. Await explicit written authorization from Delroy
 
 **NO AUTO-PROCEED TO PHASE 3**
+
+---
+
+---
+
+## J. Route Configuration Addendum (Phase 2 Completion)
+
+**Framework:** Vite + React SPA (Option A confirmed)
+
+### Route Registration
+
+| File | Purpose |
+|------|---------|
+| `src/routes/index.tsx` | Route array definitions |
+| `src/assets/data/menu-items.ts` | Sidebar menu configuration |
+
+### Bouwsubsidie Routes
+
+| Route | Component | File |
+|-------|-----------|------|
+| `/subsidy-cases` | `SubsidyCaseList` | `src/app/(admin)/subsidy-cases/page.tsx` |
+| `/subsidy-cases/:id` | `SubsidyCaseDetail` | `src/app/(admin)/subsidy-cases/[id]/page.tsx` |
+
+### Menu Configuration
+
+| Key | Label | Icon | URL |
+|-----|-------|------|-----|
+| `subsidy-cases` | Subsidy Cases | `mingcute:file-check-line` | `/subsidy-cases` |
+
+### Deferred to Phase 5
+
+- Public/Wizard routing
+- Public-facing pages
+- Wizard components
 
 ---
 

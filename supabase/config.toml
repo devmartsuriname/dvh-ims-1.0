@@ -2,3 +2,12 @@ project_id = "okfqnqsvsesdpkpvltpr"
 
 [functions.execute-allocation-run]
 verify_jwt = false
+
+[functions.submit-bouwsubsidie-application]
+verify_jwt = false
+
+[functions.submit-housing-registration]
+verify_jwt = false
+
+[functions.lookup-public-status]
+verify_jwt = false

@@ -12,15 +12,11 @@
 import { useState } from 'react'
 import { Container, Card, CardBody, Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+import { supabase } from '@/integrations/supabase/client'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { PublicHeader, PublicFooter } from '@/components/public'
 import StatusForm from './components/StatusForm'
 import StatusResult from './components/StatusResult'
-import { 
-  getApplicationType, 
-  MOCK_BOUWSUBSIDIE_RESULT, 
-  MOCK_HOUSING_RESULT 
-} from './constants'
 import type { LookupState, StatusLookupResponse } from './types'
 
 /**
@@ -32,31 +28,26 @@ const StatusTrackerPage = () => {
   const [error, setError] = useState<string | null>(null)
 
   /**
-   * Handle status lookup (mock implementation)
+   * Handle status lookup via Edge Function
    */
-  const handleLookup = (referenceNumber: string, accessToken: string) => {
+  const handleLookup = async (referenceNumber: string, accessToken: string) => {
     setLookupState('loading')
     setError(null)
 
-    // Simulate API call with delay
-    setTimeout(() => {
-      const applicationType = getApplicationType(referenceNumber)
-      
-      if (!applicationType) {
-        setError('Invalid reference number format')
-        setLookupState('error')
-        return
-      }
+    try {
+      const response = await supabase.functions.invoke('lookup-public-status', {
+        body: { reference_number: referenceNumber, access_token: accessToken }
+      })
 
-      // Mock: For demonstration, return mock data based on application type
-      // In production, this would call the Edge Function
-      const mockResult = applicationType === 'bouwsubsidie' 
-        ? { ...MOCK_BOUWSUBSIDIE_RESULT, reference_number: referenceNumber }
-        : { ...MOCK_HOUSING_RESULT, reference_number: referenceNumber }
+      if (response.error) throw new Error(response.error.message)
+      if (!response.data?.success) throw new Error(response.data?.error || 'Lookup failed')
 
-      setResult(mockResult)
+      setResult(response.data as StatusLookupResponse)
       setLookupState('success')
-    }, 1500)
+    } catch (err: any) {
+      setError(err.message || 'Failed to lookup status. Please check your credentials.')
+      setLookupState('error')
+    }
   }
 
   /**

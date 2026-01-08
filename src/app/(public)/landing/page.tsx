@@ -1,97 +1,164 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Card, CardBody, Row, Col, Container, Button } from 'react-bootstrap'
+import { Link } from 'react-router-dom'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
-import { NeonwizardLayout, NeonwizardStep } from '@/components/public'
+import { PublicHeader, PublicFooter } from '@/components/public'
+import bgPattern from '@/assets/images/bg-pattern-1.png'
 
 /**
  * Public Landing Page - VolksHuisvesting Suriname
  * 
- * Phase 8.5: Neonwizard Layout #1 - Step 1 Service Selection
- * Renders directly as wizard Step 1 (no hero, no landing sections)
+ * Darkone 1:1 implementation with react-bootstrap
+ * Light theme scoped via PublicLayout wrapper
+ * English baseline (no Dutch)
+ * Premium government-grade visual tone
  */
-
-const services = [
-  { 
-    id: 'subsidy', 
-    title: 'Construction Subsidy', 
-    icon: 'mingcute:file-check-line', 
-    route: '/bouwsubsidie/apply' 
-  },
-  { 
-    id: 'housing', 
-    title: 'Housing Registration', 
-    icon: 'mingcute:home-4-line', 
-    route: '/housing/register' 
-  },
-  { 
-    id: 'status', 
-    title: 'Check Status', 
-    icon: 'mingcute:search-line', 
-    route: '/status' 
-  }
-]
-
-const steps: NeonwizardStep[] = [
-  { title: 'Service Selection' },
-  { title: 'Personal Information' },
-  { title: 'Application Details' },
-  { title: 'Documents' },
-  { title: 'Review & Submit' }
-]
-
 const LandingPage = () => {
-  const [selectedService, setSelectedService] = useState<string | null>(null)
-  const navigate = useNavigate()
-
-  const handleNext = () => {
-    if (selectedService) {
-      const service = services.find(s => s.id === selectedService)
-      if (service) {
-        navigate(service.route)
-      }
-    }
-  }
-
   return (
-    <NeonwizardLayout
-      steps={steps}
-      currentStep={0}
-      onNext={selectedService ? handleNext : undefined}
-      nextLabel="NEXT"
-      showActions={true}
-    >
-      {/* Step 1 Header */}
-      <div className="nw-step-header">
-        <span className="nw-step-label">Step 1</span>
-        <h2 className="nw-step-title">What service do you need?</h2>
-        <p className="nw-step-description">
-          Select the service you would like to access.
-        </p>
-      </div>
+    <div className="d-flex flex-column min-vh-100">
+      <PublicHeader />
 
-      {/* Service Selection Cards */}
-      <div className="nw-service-options">
-        {services.map(service => (
-          <label 
-            key={service.id}
-            className={`nw-service-option ${selectedService === service.id ? 'is-selected' : ''}`}
-          >
-            <input 
-              type="radio" 
-              name="service" 
-              value={service.id}
-              checked={selectedService === service.id}
-              onChange={() => setSelectedService(service.id)}
-            />
-            <span className="nw-service-option-check" />
-            <div className="nw-service-option-icon">
-              <IconifyIcon icon={service.icon} />
-            </div>
-            <span className="nw-service-option-text">{service.title}</span>
-          </label>
-        ))}
-      </div>
-    </NeonwizardLayout>
+      {/* Hero Section with Background Image + Dark Overlay */}
+      <section 
+        className="py-5 position-relative"
+        style={{
+          backgroundImage: `url(${bgPattern})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        {/* Dark overlay for readability */}
+        <div 
+          className="position-absolute top-0 start-0 w-100 h-100" 
+          style={{ backgroundColor: 'rgba(30, 41, 59, 0.85)' }}
+        />
+        
+        <Container className="position-relative">
+          <Row className="align-items-center justify-content-center text-center py-4">
+            <Col lg={8}>
+              <h1 className="display-5 fw-bold mb-3 text-white">
+                Welcome to VolksHuisvesting
+              </h1>
+              <p className="lead text-white-50 mb-0">
+                Your portal for housing services in Suriname. Apply for construction subsidies, 
+                register for social housing, or check the status of your application.
+              </p>
+            </Col>
+          </Row>
+        </Container>
+      </section>
+
+      {/* Services Section */}
+      <main className="flex-grow-1 py-5 bg-light">
+        <Container>
+          <Row className="mb-4">
+            <Col className="text-center">
+              <h2 className="fw-bold mb-2">Our Services</h2>
+              <p className="text-muted">Select a service to get started</p>
+            </Col>
+          </Row>
+
+          <Row className="g-4 justify-content-center">
+            {/* Construction Subsidy Card */}
+            <Col md={6} lg={4}>
+              <Card className="h-100 border-0 shadow">
+                <CardBody className="text-center p-4">
+                  <div className="mb-3">
+                    <span 
+                      className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10" 
+                      style={{ width: 64, height: 64 }}
+                    >
+                      <IconifyIcon 
+                        icon="mingcute:file-check-line" 
+                        className="text-primary fs-2"
+                      />
+                    </span>
+                  </div>
+                  <h5 className="fw-bold mb-2">Construction Subsidy</h5>
+                  <p className="text-muted small mb-3">
+                    Apply for financial support for home construction or renovation projects.
+                  </p>
+                  <Link to="/bouwsubsidie/apply">
+                    <Button 
+                      variant="primary" 
+                      className="w-100 d-flex align-items-center justify-content-center gap-2"
+                    >
+                      <span>Start Application</span>
+                      <IconifyIcon icon="mingcute:arrow-right-line" />
+                    </Button>
+                  </Link>
+                </CardBody>
+              </Card>
+            </Col>
+
+            {/* Housing Registration Card */}
+            <Col md={6} lg={4}>
+              <Card className="h-100 border-0 shadow">
+                <CardBody className="text-center p-4">
+                  <div className="mb-3">
+                    <span 
+                      className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10" 
+                      style={{ width: 64, height: 64 }}
+                    >
+                      <IconifyIcon 
+                        icon="mingcute:home-4-line" 
+                        className="text-success fs-2"
+                      />
+                    </span>
+                  </div>
+                  <h5 className="fw-bold mb-2">Housing Registration</h5>
+                  <p className="text-muted small mb-3">
+                    Register as a housing applicant to join the waiting list for social housing.
+                  </p>
+                  <Link to="/housing/register">
+                    <Button 
+                      variant="success" 
+                      className="w-100 d-flex align-items-center justify-content-center gap-2"
+                    >
+                      <span>Register Now</span>
+                      <IconifyIcon icon="mingcute:arrow-right-line" />
+                    </Button>
+                  </Link>
+                </CardBody>
+              </Card>
+            </Col>
+
+            {/* Status Tracking Card */}
+            <Col md={6} lg={4}>
+              <Card className="h-100 border-0 shadow">
+                <CardBody className="text-center p-4">
+                  <div className="mb-3">
+                    <span 
+                      className="d-inline-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10" 
+                      style={{ width: 64, height: 64 }}
+                    >
+                      <IconifyIcon 
+                        icon="mingcute:search-line" 
+                        className="text-info fs-2"
+                      />
+                    </span>
+                  </div>
+                  <h5 className="fw-bold mb-2">Check Status</h5>
+                  <p className="text-muted small mb-3">
+                    Track the progress of your subsidy or housing registration application.
+                  </p>
+                  <Link to="/status">
+                    <Button 
+                      variant="info" 
+                      className="w-100 d-flex align-items-center justify-content-center gap-2"
+                    >
+                      <span>View Status</span>
+                      <IconifyIcon icon="mingcute:arrow-right-line" />
+                    </Button>
+                  </Link>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </main>
+
+      <PublicFooter />
+    </div>
   )
 }
 

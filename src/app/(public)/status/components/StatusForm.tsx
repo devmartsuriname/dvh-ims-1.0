@@ -1,10 +1,10 @@
 /**
  * Status Lookup Form Component
- * Phase 5 - Checkpoint 6
+ * Phase 9B-3: Neonwizard visual language restyle
+ * NO logic changes - visual only
  */
 
 import { useState } from 'react'
-import { Card, CardBody, Form, Button, Alert, Spinner } from 'react-bootstrap'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { validateReferenceNumber, validateToken, MIN_TOKEN_LENGTH } from '../constants'
 
@@ -49,109 +49,93 @@ const StatusForm = ({ onSubmit, isLoading, error }: StatusFormProps) => {
   }
 
   return (
-    <Card className="border-0 shadow-sm">
-      <CardBody className="p-4">
-        <div className="text-center mb-4">
-          <span 
-            className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10" 
-            style={{ width: 64, height: 64 }}
-          >
-            <IconifyIcon 
-              icon="mingcute:search-line" 
-              className="text-primary"
-              style={{ fontSize: '1.75rem' }}
-            />
+    <div className="status-form-card">
+      {/* Icon Badge */}
+      <div className="form-icon-badge">
+        <IconifyIcon 
+          icon="mingcute:search-line" 
+          className="badge-icon"
+        />
+      </div>
+
+      <h2 className="form-title">Check Application Status</h2>
+      <p className="form-subtitle">
+        Enter your reference number and access token to view your application status
+      </p>
+
+      {/* Error Alert */}
+      {error && (
+        <div className="status-alert status-alert-error">
+          <IconifyIcon icon="mingcute:warning-line" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="form-inner-area status-form">
+        {/* Reference Number Field */}
+        <div className="form-field">
+          <label className="form-label">
+            Reference Number <span className="required">*</span>
+          </label>
+          <input
+            type="text"
+            placeholder="e.g., BS-2026-123456 or WR-2026-789012"
+            value={referenceNumber}
+            onChange={(e) => setReferenceNumber(e.target.value.toUpperCase())}
+            disabled={isLoading}
+            className={`form-input ${validationErrors.referenceNumber ? 'input-error' : ''}`}
+          />
+          {validationErrors.referenceNumber && (
+            <span className="field-error">{validationErrors.referenceNumber}</span>
+          )}
+          <span className="field-hint">
+            Your reference number was provided when you submitted your application
           </span>
-          <h4 className="mt-3 mb-1 fw-bold">Check Application Status</h4>
-          <p className="text-muted mb-0">
-            Enter your reference number and access token to view your application status
-          </p>
         </div>
 
-        {error && (
-          <Alert variant="danger" className="d-flex align-items-center gap-2">
-            <IconifyIcon icon="mingcute:warning-line" />
-            {error}
-          </Alert>
-        )}
+        {/* Access Token Field */}
+        <div className="form-field">
+          <label className="form-label">
+            Access Token <span className="required">*</span>
+          </label>
+          <input
+            type="text"
+            placeholder="Enter your 12-character access token"
+            value={accessToken}
+            onChange={(e) => setAccessToken(e.target.value)}
+            disabled={isLoading}
+            className={`form-input monospace ${validationErrors.accessToken ? 'input-error' : ''}`}
+          />
+          {validationErrors.accessToken && (
+            <span className="field-error">{validationErrors.accessToken}</span>
+          )}
+          <span className="field-hint">
+            The access token was shown once when your application was submitted
+          </span>
+        </div>
 
-        <Form onSubmit={handleSubmit}>
-          <Form.Group className="mb-3">
-            <Form.Label className="fw-medium">
-              Reference Number <span className="text-danger">*</span>
-            </Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="e.g., BS-2026-123456 or WR-2026-789012"
-              value={referenceNumber}
-              onChange={(e) => setReferenceNumber(e.target.value.toUpperCase())}
-              isInvalid={!!validationErrors.referenceNumber}
-              disabled={isLoading}
-              className="text-uppercase"
-            />
-            {validationErrors.referenceNumber && (
-              <div className="invalid-feedback d-block">
-                {validationErrors.referenceNumber}
-              </div>
+        {/* Submit Button */}
+        <div className="form-actions">
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            className="status-submit-btn"
+          >
+            {isLoading ? (
+              <>
+                <span className="spinner"></span>
+                <span>Checking Status...</span>
+              </>
+            ) : (
+              <>
+                <IconifyIcon icon="mingcute:search-line" />
+                <span>Check Status</span>
+              </>
             )}
-            <Form.Text className="text-muted">
-              Your reference number was provided when you submitted your application
-            </Form.Text>
-          </Form.Group>
-
-          <Form.Group className="mb-4">
-            <Form.Label className="fw-medium">
-              Access Token <span className="text-danger">*</span>
-            </Form.Label>
-            <Form.Control
-              type="text"
-              placeholder="Enter your 12-character access token"
-              value={accessToken}
-              onChange={(e) => setAccessToken(e.target.value)}
-              isInvalid={!!validationErrors.accessToken}
-              disabled={isLoading}
-              className="font-monospace"
-            />
-            {validationErrors.accessToken && (
-              <div className="invalid-feedback d-block">
-                {validationErrors.accessToken}
-              </div>
-            )}
-            <Form.Text className="text-muted">
-              The access token was shown once when your application was submitted
-            </Form.Text>
-          </Form.Group>
-
-          <div className="d-grid">
-            <Button 
-              variant="primary" 
-              type="submit" 
-              size="lg"
-              disabled={isLoading}
-              className="d-flex align-items-center justify-content-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden="true"
-                  />
-                  <span>Checking Status...</span>
-                </>
-              ) : (
-                <>
-                  <IconifyIcon icon="mingcute:search-line" />
-                  <span>Check Status</span>
-                </>
-              )}
-            </Button>
-          </div>
-        </Form>
-      </CardBody>
-    </Card>
+          </button>
+        </div>
+      </form>
+    </div>
   )
 }
 

@@ -1,19 +1,16 @@
 /**
  * Status Tracker Page
- * Phase 5 - Checkpoint 6
+ * Phase 9B-3: Restyled with Neonwizard visual language
  * 
  * Public page for citizens to check their application status
  * using reference number and access token.
  * 
- * Uses shared PublicHeader/PublicFooter for Darkone 1:1 parity.
- * NO breadcrumb per CP6 requirements.
+ * Visual-only restyle - NO logic changes
  */
 
 import { useState } from 'react'
-import { Container, Card, CardBody, Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
-import { PublicHeader, PublicFooter } from '@/components/public'
 import StatusForm from './components/StatusForm'
 import StatusResult from './components/StatusResult'
 import { 
@@ -22,6 +19,7 @@ import {
   MOCK_HOUSING_RESULT 
 } from './constants'
 import type { LookupState, StatusLookupResponse } from './types'
+import '@/assets/scss/neonwizard/style.scss'
 
 /**
  * Main Status Tracker Page Component
@@ -69,13 +67,18 @@ const StatusTrackerPage = () => {
   }
 
   return (
-    <div className="d-flex flex-column min-vh-100">
-      <PublicHeader />
+    <div className="neonwizard-scope status-page">
+      <div className="wrapper status-wrapper">
+        {/* Header Banner */}
+        <div className="status-header">
+          <div className="status-header-content">
+            <h1>Application Status</h1>
+            <p>Track your Bouwsubsidie or Housing Registration application</p>
+          </div>
+        </div>
 
-      <main className="flex-grow-1 py-5 bg-light">
-        <Container style={{ maxWidth: 700 }}>
-          {/* NO BREADCRUMB - per CP6 requirements */}
-
+        {/* Main Content */}
+        <div className="status-content">
           {/* Conditional Rendering based on state */}
           {lookupState === 'success' && result ? (
             <StatusResult result={result} onReset={handleReset} />
@@ -87,28 +90,19 @@ const StatusTrackerPage = () => {
             />
           )}
 
-          {/* Help & Navigation Card Footer - Darkone 1:1 */}
-          <Card className="border-0 shadow-sm mt-4">
-            <CardBody className="text-center py-4">
-              <p className="text-muted small mb-3 d-flex align-items-center justify-content-center gap-2">
-                <IconifyIcon icon="mingcute:question-line" />
-                <span>Need help? Contact the Ministry of Social Affairs and Housing</span>
-              </p>
-              <Link to="/">
-                <Button 
-                  variant="outline-secondary" 
-                  className="d-inline-flex align-items-center justify-content-center gap-2"
-                >
-                  <IconifyIcon icon="mingcute:arrow-left-line" />
-                  <span>Back to Home</span>
-                </Button>
-              </Link>
-            </CardBody>
-          </Card>
-        </Container>
-      </main>
-
-      <PublicFooter />
+          {/* Help & Navigation Footer */}
+          <div className="status-help-card">
+            <p className="help-text">
+              <IconifyIcon icon="mingcute:question-line" className="help-icon" />
+              <span>Need help? Contact the Ministry of Social Affairs and Housing</span>
+            </p>
+            <Link to="/" className="back-link">
+              <IconifyIcon icon="mingcute:arrow-left-line" />
+              <span>Back to Home</span>
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -2,13 +2,16 @@ import { ReactNode } from 'react'
 
 /**
  * NeonwizardLayout - 1:1 port from neonwizard-react_v2/react-package/pages/index.js
+ * Phase 9B-3: Responsive layout matching Neonwizard demo
  * 
  * Two-column layout:
  * - Left: Image holder with step indicators
  * - Right: Form content area
  * 
+ * Mobile-first: Steps overlay on image (horizontal)
+ * Desktop: Steps on right edge of image panel (vertical)
+ * 
  * NO jQuery | NO Font Awesome | NO new fonts
- * Step navigation logic deferred to later phase
  */
 
 interface NeonwizardLayoutProps {
@@ -41,6 +44,7 @@ const NeonwizardLayout = ({ children, currentStep = 1 }: NeonwizardLayoutProps) 
         <div className="image-holder">
           <img src="/assets/neonwizard/img/side-img.jpg" alt="" />
         </div>
+        {/* Steps container - positioned absolutely over image on mobile, on edge on desktop */}
         <div className="steps clearfix">
           <ul className="tablist multisteps-form__progress">
             <li className={getStepClass(1)}>

@@ -50,7 +50,7 @@ Failure to do so invalidates execution.
 ## 4. Phase Structure Overview
 
 **Current Status:** End of Phase 8 — PHASE-8-COMPLETE  
-**Next Phase:** Phase 9 (awaiting authorization)
+**Next Phase:** Phase 8.5 (awaiting authorization)
 
 | Phase | Name | Primary Output | Hard Stop | Status |
 |------|------|----------------|-----------|--------|
@@ -63,6 +63,7 @@ Failure to do so invalidates execution.
 | 6 | Reporting & Audit | KPIs + audit | YES | COMPLETE |
 | 7 | Data Validation & QA | Test data, functional validation | YES | COMPLETE |
 | 8 | Security & Audit Readiness | RLS audit, Edge hardening | YES | COMPLETE |
+| 8.5 | Public UI Theme Swap | Neonwizard visual reskin | YES | PENDING |
 | 9 | Public Wizard DB Integration | Live wizard submission | YES | PENDING |
 | 10 | Raadvoorstel DOCX Generation | Document generation | YES | PENDING |
 | 11 | RBAC & District Access | Role-based access | YES | PENDING |
@@ -271,6 +272,7 @@ Detailed phase plans are maintained in `/phases/`:
 | 6 | PHASE-6-Reporting-and-Audit.md | COMPLETE |
 | 7 | PHASE-7-Hardening-and-Go-Live.md | COMPLETE |
 | 8 | PHASE-8-Security-and-Audit-Readiness.md | COMPLETE |
+| 8.5 | PHASE-8.5-Public-UI-Theme-Swap.md | PENDING |
 | 9 | PHASE-9-Public-Wizard-Database-Integration.md | PENDING |
 | 10 | PHASE-10-Raadvoorstel-DOCX-Generation.md | PENDING |
 | 11 | PHASE-11-RBAC-and-District-Access.md | PENDING |

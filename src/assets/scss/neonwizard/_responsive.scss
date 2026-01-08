@@ -1,23 +1,292 @@
 /* ==========================================================================
    Responsive styles - Scoped to .neonwizard-scope
-   Phase 9B-3: Mobile-first responsiveness matching Neonwizard demo
-   RESTORE POINT: PHASE-9B-3-BEFORE-POLISH
+   Phase 9B-3: Template 1:1 responsive fix
+   RESTORE POINT: PHASE-9B-3-RESPONSIVE-FIX-BEFORE
+   
+   CRITICAL: These breakpoints follow the Neonwizard template EXACTLY.
+   Mobile-first priority: 390px validated first, then 768px, 1024px, 1440px
    ========================================================================== */
 
 // ==========================================================================
-// MOBILE FIRST - Primary target for landing page (460px and below)
+// DESKTOP FIRST - Base styles for 1200px+ (Vertical stepper on left)
+// Then we override for smaller screens
 // ==========================================================================
-@media screen and (max-width: 460px) {
-    .neonwizard-scope .steps-area-fixed {
+
+// Default desktop layout (1200px+)
+.neonwizard-scope .steps-area-fixed {
+    width: 420px !important;
+    position: fixed;
+    height: 100%;
+    overflow: visible;
+}
+
+.neonwizard-scope .image-holder {
+    width: 420px !important;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 79%;
+    }
+
+    // No overlay on desktop - template does not use one
+    &:after {
+        display: none;
+    }
+}
+
+.neonwizard-scope .steps-area .steps {
+    position: absolute;
+    top: 50%;
+    right: -25px;
+    transform: translateY(-50%);
+    left: auto;
+    bottom: auto;
+    z-index: 10;
+
+    .tablist {
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+        margin: 0;
+    }
+
+    li {
+        display: block;
+        margin-bottom: 60px;
+        margin-right: 0;
+        margin-left: 0;
         position: relative;
-        width: 100% !important;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        span {
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            font-size: 20px;
+            font-weight: 700;
+            background-color: #bcbdbd;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            position: relative;
+            z-index: 2;
+            text-align: center;
+
+            // Vertical connection line going UP from current step
+            &:before {
+                content: '';
+                position: absolute;
+                width: 2px;
+                height: 60px;
+                background-color: #bcbdbd;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: -1;
+            }
+
+            &:after {
+                display: none;
+            }
+        }
+
+        // First step has no line above
+        &:first-child span:before {
+            display: none;
+        }
+
+        // Hide the li:before that template doesn't use on desktop
+        &:before {
+            display: none;
+        }
+
+        // Active step styling
+        &.js-active span {
+            background-color: #6b59d3;
+        }
+        
+        &.js-active span:before {
+            background-color: #6b59d3;
+        }
+
+        // Current step
+        &.current span {
+            background-color: #6b59d3;
+        }
+
+        // Outer ring for current step
+        &.current:after {
+            content: '';
+            display: block;
+            position: absolute;
+            width: 66px;
+            height: 66px;
+            top: -8px;
+            left: -8px;
+            border-radius: 50%;
+            border: 2px solid rgba(107, 89, 211, 0.4);
+            z-index: 1;
+        }
+    }
+}
+
+.neonwizard-scope .steps-area-fixed + .multisteps-form__form {
+    margin-left: 420px;
+}
+
+.neonwizard-scope .multisteps-form__form {
+    width: calc(100% - 420px);
+    float: left;
+    min-height: 100vh;
+}
+
+.neonwizard-scope .form-content {
+    padding: 60px 80px;
+    padding-right: 15%;
+
+    h2 {
+        font-size: 45px;
+        padding: 60px 0 20px 0;
+    }
+
+    p {
+        font-size: 24px;
+    }
+}
+
+.neonwizard-scope .actions {
+    position: fixed;
+    right: 80px;
+    bottom: 50px;
+    margin-top: 0;
+    padding: 0;
+
+    ul {
+        display: flex;
+        gap: 20px;
+    }
+
+    li span,
+    li button {
+        height: 75px;
+        width: 245px;
+        line-height: 75px;
+    }
+}
+
+// ==========================================================================
+// LARGE DESKTOP (1441px and above) - Wider left panel
+// ==========================================================================
+@media screen and (min-width: 1441px) {
+    .neonwizard-scope .steps-area-fixed {
+        width: 490px !important;
     }
 
     .neonwizard-scope .image-holder {
-        width: 100%;
-        height: 200px;
-        position: relative;
-        overflow: hidden;
+        width: 490px !important;
+    }
+
+    .neonwizard-scope .steps-area-fixed + .multisteps-form__form {
+        margin-left: 490px;
+    }
+
+    .neonwizard-scope .multisteps-form__form {
+        width: calc(100% - 490px);
+    }
+
+    .neonwizard-scope .form-content {
+        padding: 80px 100px;
+        padding-right: 15%;
+
+        h2 {
+            font-size: 50px;
+            padding: 85px 0 20px 0;
+        }
+
+        p {
+            font-size: 25px;
+        }
+    }
+
+    .neonwizard-scope .actions {
+        right: 100px;
+        bottom: 60px;
+    }
+}
+
+// ==========================================================================
+// MEDIUM DESKTOP (1200px - 1440px) - Slightly narrower panel
+// ==========================================================================
+@media screen and (min-width: 1200px) and (max-width: 1440px) {
+    .neonwizard-scope .steps-area-fixed {
+        width: 400px !important;
+    }
+
+    .neonwizard-scope .image-holder {
+        width: 400px !important;
+    }
+
+    .neonwizard-scope .steps-area-fixed + .multisteps-form__form {
+        margin-left: 400px;
+    }
+
+    .neonwizard-scope .multisteps-form__form {
+        width: calc(100% - 400px);
+    }
+
+    .neonwizard-scope .form-content {
+        padding: 50px 60px;
+        padding-right: 10%;
+
+        h2 {
+            font-size: 40px;
+            padding: 50px 0 18px 0;
+        }
+
+        p {
+            font-size: 22px;
+        }
+    }
+
+    .neonwizard-scope .actions {
+        right: 60px;
+        bottom: 40px;
+    }
+}
+
+// ==========================================================================
+// LANDSCAPE TABLET / SMALL DESKTOP (992px - 1199px)
+// Switch to horizontal stepper - image becomes banner at top
+// ==========================================================================
+@media screen and (max-width: 1199px) {
+    .neonwizard-scope .wrapper {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .neonwizard-scope .steps-area-fixed {
+        position: static !important;
+        width: 100% !important;
+        height: auto;
+        overflow: visible;
+    }
+
+    .neonwizard-scope .image-holder {
+        position: relative !important;
+        width: 100% !important;
+        height: 280px;
 
         img {
             width: 100%;
@@ -26,32 +295,27 @@
             object-position: center;
         }
 
-        // Dark overlay for step visibility
+        // Add subtle gradient overlay for step visibility on tablet
         &:after {
             content: '';
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            height: 100px;
-            background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
+            height: 120px;
+            background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
+            pointer-events: none;
         }
     }
 
-    // Steps overlaid on image (demo-matching)
     .neonwizard-scope .steps-area .steps {
         position: absolute !important;
-        bottom: 25px;
-        left: 50%;
-        transform: translateX(-50%);
         top: auto;
         right: auto;
-        width: auto;
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
         z-index: 10;
-        padding: 0;
 
         .tablist {
             display: flex;
@@ -63,10 +327,12 @@
         }
 
         li {
-            display: inline-block;
-            margin-right: 10px;
-            margin-left: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             margin-bottom: 0;
+            margin-right: 80px;
+            margin-left: 0;
             position: relative;
 
             &:last-child {
@@ -74,17 +340,21 @@
             }
 
             span {
-                width: 30px;
-                height: 30px;
-                line-height: 30px;
-                font-size: 12px;
+                width: 45px;
+                height: 45px;
+                line-height: 45px;
+                font-size: 18px;
+                font-weight: 700;
                 background-color: #bcbdbd;
                 color: #fff;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 border-radius: 50%;
+                position: relative;
+                z-index: 2;
 
+                // Hide vertical lines
                 &:before,
                 &:after {
                     display: none;
@@ -95,8 +365,26 @@
                 display: none;
             }
 
-            // Active/Current step styling
-            &.js-active span,
+            // Active step styling
+            &.js-active span {
+                background-color: #6b59d3;
+            }
+
+            // Horizontal connector line (after active steps going right)
+            &.js-active:after {
+                content: '';
+                display: block;
+                position: absolute;
+                width: 80px;
+                height: 2px;
+                background-color: #6b59d3;
+                top: 50%;
+                left: 100%;
+                transform: translateY(-50%);
+                z-index: 1;
+            }
+
+            // Current step
             &.current span {
                 background-color: #6b59d3;
             }
@@ -106,29 +394,17 @@
                 content: '';
                 display: block;
                 position: absolute;
-                width: 40px;
-                height: 40px;
-                top: -5px;
-                left: -5px;
+                width: 57px;
+                height: 57px;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
                 border-radius: 50%;
                 border: 2px solid rgba(107, 89, 211, 0.4);
+                z-index: 1;
             }
 
-            // Horizontal connection line between steps
-            &.js-active:after {
-                content: '';
-                display: block;
-                position: absolute;
-                width: 60px;
-                height: 2px;
-                background-color: #6b59d3;
-                top: 50%;
-                left: 100%;
-                margin-left: 5px;
-                transform: translateY(-50%);
-            }
-
-            // Hide line after last active or current step leading to inactive
+            // Hide connector line after current step or last step
             &.current:after,
             &:last-child:after {
                 display: none;
@@ -143,14 +419,164 @@
     .neonwizard-scope .multisteps-form__form {
         width: 100%;
         float: none;
+        min-height: auto;
     }
 
     .neonwizard-scope .form-content {
-        padding: 20px 15px;
-        
+        padding: 40px 50px;
+
         h2 {
-            font-size: 24px;
-            padding: 25px 0 15px 0;
+            font-size: 34px;
+            padding: 40px 0 18px 0;
+        }
+
+        p {
+            font-size: 20px;
+        }
+    }
+
+    .neonwizard-scope .step-box-content {
+        min-height: auto;
+    }
+
+    .neonwizard-scope .actions {
+        position: static;
+        margin-top: 40px;
+        padding: 0 50px 50px;
+        float: right;
+
+        ul {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        li span,
+        li button {
+            height: 65px;
+            width: 200px;
+            line-height: 65px;
+            font-size: 20px;
+        }
+    }
+
+    .neonwizard-scope .budget-area .opti-list li {
+        margin-right: 15px;
+        margin-bottom: 15px;
+    }
+}
+
+// ==========================================================================
+// TABLET (768px - 991px)
+// ==========================================================================
+@media screen and (max-width: 991px) {
+    .neonwizard-scope .image-holder {
+        height: 260px;
+    }
+
+    .neonwizard-scope .steps-area .steps {
+        bottom: 25px;
+
+        li {
+            margin-right: 60px;
+
+            span {
+                width: 42px;
+                height: 42px;
+                line-height: 42px;
+                font-size: 16px;
+            }
+
+            &.js-active:after {
+                width: 60px;
+            }
+
+            &.current:before {
+                width: 54px;
+                height: 54px;
+            }
+        }
+    }
+
+    .neonwizard-scope .form-content {
+        padding: 35px 40px;
+
+        h2 {
+            font-size: 30px;
+            padding: 35px 0 15px 0;
+        }
+
+        p {
+            font-size: 18px;
+        }
+    }
+
+    .neonwizard-scope .actions {
+        padding: 0 40px 40px;
+
+        ul {
+            justify-content: center;
+        }
+
+        li span,
+        li button {
+            height: 60px;
+            width: 180px;
+            line-height: 60px;
+            font-size: 18px;
+        }
+    }
+
+    .neonwizard-scope .step-box-content {
+        padding: 40px 20px 30px;
+        margin-bottom: 20px;
+
+        .step-box-text {
+            font-size: 20px;
+        }
+    }
+}
+
+// ==========================================================================
+// MOBILE (max-width: 767px)
+// ==========================================================================
+@media screen and (max-width: 767px) {
+    .neonwizard-scope .image-holder {
+        height: 220px;
+    }
+
+    .neonwizard-scope .steps-area .steps {
+        bottom: 20px;
+
+        li {
+            margin-right: 30px;
+            margin-left: 30px;
+
+            span {
+                width: 38px;
+                height: 38px;
+                line-height: 38px;
+                font-size: 14px;
+            }
+
+            &.js-active:after {
+                width: 55px;
+                margin-left: 5px;
+            }
+
+            &.current:before {
+                width: 50px;
+                height: 50px;
+            }
+        }
+    }
+
+    .neonwizard-scope .form-content {
+        padding: 25px 20px;
+
+        h2 {
+            font-size: 26px;
+            padding: 30px 0 12px 0;
         }
 
         p {
@@ -159,18 +585,16 @@
 
         .step-no {
             font-size: 18px;
-            display: block;
-            margin-bottom: 20px;
         }
     }
 
     .neonwizard-scope .step-box-content {
+        padding: 30px 15px 25px;
         margin-bottom: 15px;
         min-height: auto;
-        padding: 25px 15px 20px;
 
         .step-box-text {
-            font-size: 16px;
+            font-size: 18px;
         }
     }
 
@@ -257,16 +681,74 @@
     }
 
     .neonwizard-scope .actions {
-        position: static;
+        padding: 0 20px 30px;
         margin-top: 30px;
-        padding: 0 0 30px;
-        display: flex;
-        justify-content: center;
 
         ul {
-            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        li span,
+        li button {
+            height: 55px;
+            width: 150px;
+            line-height: 55px;
+            font-size: 16px;
+        }
+    }
+}
+
+// ==========================================================================
+// SMALL MOBILE (max-width: 580px)
+// ==========================================================================
+@media screen and (max-width: 580px) {
+    .neonwizard-scope .image-holder {
+        height: 200px;
+    }
+
+    .neonwizard-scope .steps-area .steps {
+        bottom: 18px;
+
+        li {
+            margin-right: 20px;
+            margin-left: 20px;
+
+            span {
+                width: 34px;
+                height: 34px;
+                line-height: 34px;
+                font-size: 13px;
+            }
+
+            &.js-active:after {
+                width: 38px;
+            }
+
+            &.current:before {
+                width: 46px;
+                height: 46px;
+            }
+        }
+    }
+
+    .neonwizard-scope .form-content {
+        padding: 20px 15px;
+
+        h2 {
+            font-size: 24px;
+            padding: 25px 0 10px 0;
+        }
+
+        p {
+            font-size: 15px;
+        }
+    }
+
+    .neonwizard-scope .actions {
+        ul {
             flex-direction: column;
-            width: 100%;
             gap: 10px;
         }
 
@@ -286,909 +768,139 @@
 }
 
 // ==========================================================================
-// SMALL MOBILE (580px and below, 461px and above)
+// EXTRA SMALL MOBILE (max-width: 460px) - Primary target for mobile
 // ==========================================================================
-@media screen and (min-width: 461px) and (max-width: 580px) {
-    .neonwizard-scope .steps-area-fixed {
-        position: relative;
-        width: 100% !important;
-    }
-
+@media screen and (max-width: 460px) {
     .neonwizard-scope .image-holder {
-        width: 100%;
-        height: 220px;
-        position: relative;
-        overflow: hidden;
-
-        img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        &:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 100px;
-            background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);
-        }
+        height: 180px;
     }
 
     .neonwizard-scope .steps-area .steps {
-        position: absolute !important;
-        bottom: 25px;
-        left: 50%;
-        transform: translateX(-50%);
-        top: auto;
-        right: auto;
-        display: flex;
-        z-index: 10;
-
-        .tablist {
-            display: flex;
-            flex-direction: row;
-            gap: 0;
-            padding: 0;
-        }
+        bottom: 15px;
 
         li {
-            display: inline-block;
-            margin-right: 15px;
-            margin-left: 15px;
-            margin-bottom: 0;
-            position: relative;
+            margin-right: 12px;
+            margin-left: 12px;
 
             span {
-                width: 35px;
-                height: 35px;
-                line-height: 35px;
-                font-size: 14px;
-                background-color: #bcbdbd;
-                color: #fff;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-
-                &:before,
-                &:after {
-                    display: none;
-                }
-            }
-
-            &:before {
-                display: none;
-            }
-
-            &.js-active span,
-            &.current span {
-                background-color: #6b59d3;
-            }
-
-            &.current:before {
-                content: '';
-                display: block;
-                position: absolute;
-                width: 45px;
-                height: 45px;
-                top: -5px;
-                left: -5px;
-                border-radius: 50%;
-                border: 2px solid rgba(107, 89, 211, 0.4);
+                width: 30px;
+                height: 30px;
+                line-height: 30px;
+                font-size: 12px;
             }
 
             &.js-active:after {
-                content: '';
-                display: block;
-                position: absolute;
-                width: 70px;
-                height: 2px;
-                background-color: #6b59d3;
-                top: 50%;
-                left: 100%;
-                margin-left: 8px;
-                transform: translateY(-50%);
+                width: 22px;
+                margin-left: 2px;
             }
 
-            &.current:after,
-            &:last-child:after {
-                display: none;
+            &.current:before {
+                width: 42px;
+                height: 42px;
             }
         }
-    }
-
-    .neonwizard-scope .steps-area-fixed + .multisteps-form__form {
-        margin-left: 0;
-    }
-
-    .neonwizard-scope .multisteps-form__form {
-        width: 100%;
-        float: none;
     }
 
     .neonwizard-scope .form-content {
-        padding: 25px 20px;
+        padding: 20px 15px;
 
         h2 {
-            font-size: 26px;
-            padding: 30px 0 15px 0;
+            font-size: 22px;
+            padding: 20px 0 10px 0;
         }
 
         p {
-            font-size: 17px;
+            font-size: 14px;
         }
 
         .step-no {
-            font-size: 20px;
-        }
-    }
-
-    .neonwizard-scope .step-box-content {
-        margin-bottom: 20px;
-        min-height: auto;
-        padding: 30px 20px 25px;
-
-        .step-box-text {
-            font-size: 18px;
-        }
-    }
-
-    .neonwizard-scope .form-inner-area {
-        margin-top: 30px;
-
-        input {
-            height: 60px;
-            padding-left: 25px;
-        }
-    }
-
-    .neonwizard-scope .actions {
-        position: static;
-        margin-top: 40px;
-        padding: 0 0 40px;
-
-        ul {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            gap: 10px;
-        }
-
-        li {
-            width: 100%;
-
-            span,
-            button {
-                width: 100%;
-                height: 60px;
-                line-height: 60px;
-                font-size: 17px;
-            }
-        }
-    }
-}
-
-// ==========================================================================
-// TABLET (767px and below, 581px and above)
-// ==========================================================================
-@media screen and (min-width: 581px) and (max-width: 767px) {
-    .neonwizard-scope .steps-area-fixed {
-        position: relative;
-        width: 100% !important;
-    }
-
-    .neonwizard-scope .image-holder {
-        width: 100%;
-        height: 250px;
-        position: relative;
-        overflow: hidden;
-
-        img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        &:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 120px;
-            background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
-        }
-    }
-
-    .neonwizard-scope .steps-area .steps {
-        position: absolute !important;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        top: auto;
-        right: auto;
-        z-index: 10;
-
-        .tablist {
-            display: flex;
-            flex-direction: row;
-            gap: 0;
-            padding: 0;
-        }
-
-        li {
-            display: inline-block;
-            margin-right: 30px;
-            margin-left: 30px;
-            margin-bottom: 0;
-            position: relative;
-
-            span {
-                width: 40px;
-                height: 40px;
-                line-height: 40px;
-                font-size: 16px;
-                background-color: #bcbdbd;
-                color: #fff;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-
-                &:before,
-                &:after {
-                    display: none;
-                }
-            }
-
-            &:before {
-                display: none;
-            }
-
-            &.js-active span,
-            &.current span {
-                background-color: #6b59d3;
-            }
-
-            &.current:before {
-                content: '';
-                display: block;
-                position: absolute;
-                width: 50px;
-                height: 50px;
-                top: -5px;
-                left: -5px;
-                border-radius: 50%;
-                border: 2px solid rgba(107, 89, 211, 0.4);
-            }
-
-            &.js-active:after {
-                content: '';
-                display: block;
-                position: absolute;
-                width: 100px;
-                height: 2px;
-                background-color: #6b59d3;
-                top: 50%;
-                left: 100%;
-                margin-left: 10px;
-                transform: translateY(-50%);
-            }
-
-            &.current:after,
-            &:last-child:after {
-                display: none;
-            }
-        }
-    }
-
-    .neonwizard-scope .steps-area-fixed + .multisteps-form__form {
-        margin-left: 0;
-    }
-
-    .neonwizard-scope .multisteps-form__form {
-        width: 100%;
-        float: none;
-    }
-
-    .neonwizard-scope .form-content {
-        padding: 30px 25px;
-
-        h2 {
-            font-size: 28px;
-            padding: 35px 0 20px 0;
-        }
-
-        p {
-            font-size: 18px;
-        }
-
-        .step-no {
-            font-size: 22px;
-        }
-    }
-
-    .neonwizard-scope .step-box-content {
-        margin-bottom: 20px;
-        min-height: auto;
-        padding: 35px 25px 30px;
-
-        .step-box-text {
-            font-size: 20px;
-        }
-    }
-
-    .neonwizard-scope .form-inner-area {
-        margin-top: 35px;
-
-        input {
-            height: 65px;
-        }
-    }
-
-    .neonwizard-scope .budget-area .opti-list li {
-        width: 100%;
-        margin-right: 0;
-        margin-bottom: 15px;
-    }
-
-    .neonwizard-scope .plan-icon-text {
-        width: 100%;
-        margin-bottom: 20px;
-    }
-
-    .neonwizard-scope .actions {
-        position: static;
-        margin-top: 40px;
-        padding: 0 0 40px;
-
-        ul {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        li span,
-        li button {
-            height: 60px;
-            width: 180px;
-            line-height: 60px;
-        }
-    }
-}
-
-// ==========================================================================
-// SMALL TABLET / LARGE PHONE (991px and below, 768px and above)
-// ==========================================================================
-@media screen and (min-width: 768px) and (max-width: 991px) {
-    .neonwizard-scope .steps-area-fixed {
-        position: relative;
-        width: 100% !important;
-    }
-
-    .neonwizard-scope .image-holder {
-        width: 100%;
-        height: 280px;
-        position: relative;
-        overflow: hidden;
-
-        img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        &:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 120px;
-            background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
-        }
-    }
-
-    .neonwizard-scope .steps-area .steps {
-        position: absolute !important;
-        bottom: 35px;
-        left: 50%;
-        transform: translateX(-50%);
-        top: auto;
-        right: auto;
-        z-index: 10;
-
-        .tablist {
-            display: flex;
-            flex-direction: row;
-            padding: 0;
-        }
-
-        li {
-            display: inline-block;
-            margin-right: 40px;
-            margin-left: 40px;
-            margin-bottom: 0;
-            position: relative;
-
-            span {
-                width: 45px;
-                height: 45px;
-                line-height: 45px;
-                font-size: 18px;
-                background-color: #bcbdbd;
-                color: #fff;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-
-                &:before,
-                &:after {
-                    display: none;
-                }
-            }
-
-            &:before {
-                display: none;
-            }
-
-            &.js-active span,
-            &.current span {
-                background-color: #6b59d3;
-            }
-
-            &.current:before {
-                content: '';
-                display: block;
-                position: absolute;
-                width: 55px;
-                height: 55px;
-                top: -5px;
-                left: -5px;
-                border-radius: 50%;
-                border: 2px solid rgba(107, 89, 211, 0.4);
-            }
-
-            &.js-active:after {
-                content: '';
-                display: block;
-                position: absolute;
-                width: 100px;
-                height: 2px;
-                background-color: #6b59d3;
-                top: 50%;
-                left: 100%;
-                margin-left: 15px;
-                transform: translateY(-50%);
-            }
-
-            &.current:after,
-            &:last-child:after {
-                display: none;
-            }
-        }
-    }
-
-    .neonwizard-scope .steps-area-fixed + .multisteps-form__form {
-        margin-left: 0;
-    }
-
-    .neonwizard-scope .multisteps-form__form {
-        width: 100%;
-        float: none;
-    }
-
-    .neonwizard-scope .form-content {
-        padding: 40px 40px;
-
-        h2 {
-            font-size: 32px;
-            padding: 40px 0 20px 0;
-        }
-
-        p {
-            font-size: 20px;
-        }
-    }
-
-    .neonwizard-scope .step-box-content {
-        margin-bottom: 25px;
-        min-height: 200px;
-        padding: 40px 25px 30px;
-    }
-
-    .neonwizard-scope .budget-area .opti-list li {
-        margin-right: 15px;
-        margin-bottom: 15px;
-    }
-
-    .neonwizard-scope .actions {
-        position: static;
-        margin-top: 50px;
-        padding: 0 0 50px;
-
-        ul {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-        }
-
-        li span,
-        li button {
-            height: 65px;
-            width: 200px;
-            line-height: 65px;
-        }
-    }
-}
-
-// ==========================================================================
-// LANDSCAPE TABLET (1199px and below, 992px and above)
-// ==========================================================================
-@media screen and (min-width: 992px) and (max-width: 1199px) {
-    .neonwizard-scope .steps-area-fixed {
-        position: relative;
-        width: 100% !important;
-    }
-
-    .neonwizard-scope .image-holder {
-        width: 100%;
-        height: 300px;
-        position: relative;
-        overflow: hidden;
-
-        img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        &:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 130px;
-            background: linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 100%);
-        }
-    }
-
-    .neonwizard-scope .steps-area .steps {
-        position: absolute !important;
-        bottom: 40px;
-        left: 50%;
-        transform: translateX(-50%);
-        top: auto;
-        right: auto;
-        z-index: 10;
-
-        .tablist {
-            display: flex;
-            flex-direction: row;
-            padding: 0;
-        }
-
-        li {
-            display: inline-block;
-            margin-right: 50px;
-            margin-left: 50px;
-            margin-bottom: 0;
-            position: relative;
-
-            span {
-                width: 50px;
-                height: 50px;
-                line-height: 50px;
-                font-size: 20px;
-                background-color: #bcbdbd;
-                color: #fff;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-
-                &:before,
-                &:after {
-                    display: none;
-                }
-            }
-
-            &:before {
-                display: none;
-            }
-
-            &.js-active span,
-            &.current span {
-                background-color: #6b59d3;
-            }
-
-            &.current:before {
-                content: '';
-                display: block;
-                position: absolute;
-                width: 60px;
-                height: 60px;
-                top: -5px;
-                left: -5px;
-                border-radius: 50%;
-                border: 2px solid rgba(107, 89, 211, 0.4);
-            }
-
-            &.js-active:after {
-                content: '';
-                display: block;
-                position: absolute;
-                width: 120px;
-                height: 2px;
-                background-color: #6b59d3;
-                top: 50%;
-                left: 100%;
-                margin-left: 20px;
-                transform: translateY(-50%);
-            }
-
-            &.current:after,
-            &:last-child:after {
-                display: none;
-            }
-        }
-    }
-
-    .neonwizard-scope .steps-area-fixed + .multisteps-form__form {
-        margin-left: 0;
-    }
-
-    .neonwizard-scope .multisteps-form__form {
-        width: 100%;
-        float: none;
-    }
-
-    .neonwizard-scope .form-content {
-        padding: 50px 60px;
-
-        h2 {
-            font-size: 36px;
-            padding: 45px 0 20px 0;
-        }
-
-        p {
-            font-size: 22px;
-        }
-    }
-
-    .neonwizard-scope .actions {
-        position: static;
-        margin-top: 50px;
-        padding: 0 0 50px;
-
-        ul {
-            display: flex;
-            justify-content: flex-end;
-            gap: 20px;
-        }
-
-        li span,
-        li button {
-            height: 70px;
-            width: 220px;
-            line-height: 70px;
-        }
-    }
-}
-
-// ==========================================================================
-// DESKTOP (1200px and above)
-// ==========================================================================
-@media screen and (min-width: 1200px) {
-    // Vertical stepper on left - Original desktop layout
-    .neonwizard-scope .steps-area-fixed {
-        width: 420px !important;
-        position: fixed;
-        height: 100%;
-        overflow: hidden;
-    }
-
-    .neonwizard-scope .image-holder {
-        width: 420px !important;
-        height: 100%;
-        position: absolute;
-        top: 0;
-        left: 0;
-
-        img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: 79%;
-        }
-
-        &:after {
-            display: none;
-        }
-    }
-
-    .neonwizard-scope .steps-area .steps {
-        position: absolute;
-        top: 50%;
-        right: -25px;
-        transform: translateY(-50%);
-        left: auto;
-        bottom: auto;
-        z-index: 10;
-
-        .tablist {
-            display: flex;
-            flex-direction: column;
-            padding: 0;
-        }
-
-        li {
+            font-size: 16px;
             display: block;
-            margin-bottom: 30px;
-            margin-right: 0;
-            margin-left: 0;
-            position: relative;
-
-            &:last-child {
-                margin-bottom: 0;
-            }
-
-            span {
-                width: 50px;
-                height: 50px;
-                line-height: 50px;
-                font-size: 20px;
-                background-color: #bcbdbd;
-                color: #fff;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-                position: relative;
-                z-index: 2;
-
-                // Vertical connection line (before current step)
-                &:before {
-                    content: '';
-                    position: absolute;
-                    width: 2px;
-                    height: 30px;
-                    background-color: #bcbdbd;
-                    top: -30px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    z-index: -1;
-                }
-
-                // Vertical connection line (after current step)
-                &:after {
-                    display: none;
-                }
-            }
-
-            &:first-child span:before {
-                display: none;
-            }
-
-            &:before {
-                display: none;
-            }
-
-            &.js-active span,
-            &.current span {
-                background-color: #6b59d3;
-            }
-
-            // Completed step - purple connecting lines
-            &.js-active span:before {
-                background-color: #6b59d3;
-            }
-
-            // Outer ring for current step only
-            &.current:before {
-                content: '';
-                display: block;
-                position: absolute;
-                width: 60px;
-                height: 60px;
-                top: -5px;
-                left: -5px;
-                border-radius: 50%;
-                border: 2px solid rgba(107, 89, 211, 0.4);
-                z-index: 1;
-            }
-
-            // Hide horizontal lines on desktop
-            &.js-active:after {
-                display: none;
-            }
+            margin-bottom: 10px;
         }
     }
 
-    .neonwizard-scope .steps-area-fixed + .multisteps-form__form {
-        margin-left: 420px;
-    }
+    .neonwizard-scope .step-box-content {
+        padding: 25px 12px 20px;
+        margin-bottom: 12px;
 
-    .neonwizard-scope .multisteps-form__form {
-        width: calc(100% - 420px);
-        float: left;
-    }
-
-    .neonwizard-scope .form-content {
-        padding: 60px 80px;
-
-        h2 {
-            font-size: 45px;
-            padding: 60px 0 20px 0;
+        .step-box-text {
+            font-size: 16px;
         }
+    }
 
-        p {
-            font-size: 24px;
+    .neonwizard-scope .form-inner-area {
+        margin-top: 20px;
+
+        input {
+            height: 50px;
+            padding-left: 15px;
+            font-size: 13px;
         }
     }
 
     .neonwizard-scope .actions {
-        position: fixed;
-        right: 80px;
-        bottom: 50px;
-        margin-top: 0;
-        padding: 0;
-
-        ul {
-            display: flex;
-            gap: 20px;
-        }
+        padding: 0 15px 25px;
+        margin-top: 25px;
 
         li span,
         li button {
-            height: 75px;
-            width: 245px;
-            line-height: 75px;
+            height: 50px;
+            line-height: 50px;
+            font-size: 15px;
         }
     }
 }
 
 // ==========================================================================
-// LARGE DESKTOP (1441px and above)
+// EXTRA EXTRA SMALL (max-width: 375px) - iPhone SE, older phones
 // ==========================================================================
-@media screen and (min-width: 1441px) {
-    .neonwizard-scope .steps-area-fixed {
-        width: 490px !important;
-    }
-
+@media screen and (max-width: 375px) {
     .neonwizard-scope .image-holder {
-        width: 490px !important;
+        height: 160px;
     }
 
-    .neonwizard-scope .steps-area-fixed + .multisteps-form__form {
-        margin-left: 490px;
-    }
+    .neonwizard-scope .steps-area .steps {
+        bottom: 12px;
 
-    .neonwizard-scope .multisteps-form__form {
-        width: calc(100% - 490px);
+        li {
+            margin-right: 8px;
+            margin-left: 8px;
+
+            span {
+                width: 28px;
+                height: 28px;
+                line-height: 28px;
+                font-size: 11px;
+            }
+
+            &.js-active:after {
+                width: 14px;
+                margin-left: 2px;
+            }
+
+            &.current:before {
+                width: 38px;
+                height: 38px;
+            }
+        }
     }
 
     .neonwizard-scope .form-content {
-        padding: 80px 100px;
-        padding-right: 15%;
-
         h2 {
-            font-size: 50px;
-            padding: 85px 0 20px 0;
+            font-size: 20px;
         }
 
         p {
-            font-size: 25px;
+            font-size: 13px;
         }
     }
 
-    .neonwizard-scope .actions {
-        right: 100px;
-        bottom: 60px;
+    .neonwizard-scope .step-box-content {
+        padding: 20px 10px 18px;
+
+        .step-box-text {
+            font-size: 14px;
+        }
     }
 }

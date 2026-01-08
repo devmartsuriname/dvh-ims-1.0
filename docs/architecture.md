@@ -144,4 +144,53 @@ All 23 database tables have Row-Level Security (RLS) enabled with a Phase 1 allo
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-08 | Phase 9B-3 Responsiveness Fix | Mobile-first responsive polish for Neonwizard wizard layout |
 | 2026-01-07 | RLS Security Model section added | Phase 8 security audit |
+
+---
+
+## Neonwizard Public UI Architecture (Phase 9B-3)
+
+### Layout Strategy
+
+The public wizard uses a two-column layout on desktop that switches to stacked layout on mobile:
+
+**Desktop (1200px+):**
+- Fixed left panel (420-490px) with background image
+- Vertical step indicator on right edge of image
+- Form content in remaining width
+- Fixed action buttons bottom-right
+
+**Mobile/Tablet (<1199px):**
+- Full-width stacked layout
+- Image banner at top (180-280px depending on breakpoint)
+- Horizontal step indicator overlaid on image
+- Form content scrollable below
+- Static action buttons (centered or full-width)
+
+### CSS Scoping
+
+All Neonwizard styles are scoped under `.neonwizard-scope` class to prevent pollution of Darkone Admin UI.
+
+**SCSS Structure:**
+```
+src/assets/scss/neonwizard/
+├── style.scss          # Main entry, imports all partials
+├── _template.scss      # Variables (colors, fonts)
+├── _predefine.scss     # Base component styles
+├── _wizard.scss        # Wizard-specific styles
+├── _responsive.scss    # All responsive breakpoints (mobile-first)
+└── _status-page.scss   # Status page restyle
+```
+
+### Step Indicator Behavior
+
+| Viewport | Direction | Connection Lines | Current Step Ring |
+|----------|-----------|------------------|-------------------|
+| Desktop | Vertical | Vertical (#6b59d3) | 66px outer ring |
+| Tablet | Horizontal | Horizontal (#6b59d3) | 50-57px outer ring |
+| Mobile | Horizontal | Horizontal (#6b59d3) | 42-50px outer ring |
+
+### Mobile-First Priority
+
+The wizard targets mobile users primarily. Responsive SCSS is organized from smallest breakpoint up, ensuring optimal mobile experience first.

@@ -332,6 +332,43 @@ await logAuditEvent({
 
 | Date | Change | Reason |
 |------|--------|--------|
+| 2026-01-08 | Phase 9B-3 Responsiveness Fix | Mobile-first responsive polish for Neonwizard wizard layout |
 | 2026-01-07 | Phase 8 security documentation added | Security + Audit Readiness |
 | 2026-01-07 | Edge Functions Security Checklist | Standardize security controls |
 | 2026-01-07 | Audit Logging Governance | Document append-only pattern |
+
+---
+
+## Phase 9B-3 - Responsiveness Fix (2026-01-08)
+
+### Neonwizard Public UI Responsiveness
+
+**Objective:** Fix wizard responsiveness to match Neonwizard demo template exactly across all breakpoints.
+
+**Files Modified:**
+| File | Change | 
+|------|--------|
+| `src/assets/scss/neonwizard/_responsive.scss` | Complete rewrite with template-exact breakpoints |
+| `src/assets/scss/neonwizard/style.scss` | Removed problematic 100vh image-holder rule |
+
+**Breakpoint Behavior:**
+
+| Breakpoint | Image Panel | Step Indicator | Actions |
+|------------|-------------|----------------|---------|
+| 1441px+ | Fixed left 490px | Vertical right edge | Fixed bottom-right |
+| 1200-1440px | Fixed left 400px | Vertical right edge | Fixed bottom-right |
+| 992-1199px | Banner 280px | Horizontal over image | Static float-right |
+| 768-991px | Banner 260px | Horizontal over image | Static centered |
+| 580-767px | Banner 220px | Horizontal compact | Static centered |
+| 460-580px | Banner 200px | Horizontal compact | Stacked full-width |
+| <460px | Banner 180px | Horizontal minimal | Stacked full-width |
+
+**Issues Fixed:**
+1. Step indicator disappearing at certain widths
+2. NEXT button floating/drifting
+3. Grey bottom bar artifact (removed 100vh rule)
+4. Step circles cut off on desktop
+
+**Restore Points:**
+- BEFORE: `PHASE-9B-3-RESPONSIVE-FIX-BEFORE`
+- AFTER: `PHASE-9B-3-RESPONSIVE-FIX-AFTER`

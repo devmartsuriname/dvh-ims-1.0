@@ -53,7 +53,7 @@ const NeonwizardStep1 = () => {
                       <span className="step-box-icon">
                         <img src="/assets/neonwizard/img/d2.png" alt="" />
                       </span>
-                      <span className="step-box-text">Freelancing Serivces</span>
+                      <span className="step-box-text">Freelancing Services</span>
                       <span className="service-check-option">
                         <span>
                           <input

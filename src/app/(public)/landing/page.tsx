@@ -1,103 +1,97 @@
-import { Container, Row, Col } from 'react-bootstrap'
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
-import { PublicHeader, PublicFooter } from '@/components/public'
+import { NeonwizardLayout, NeonwizardStep } from '@/components/public'
 
 /**
  * Public Landing Page - VolksHuisvesting Suriname
  * 
- * Phase 8.5: Neonwizard Layout #1 styling applied
- * Light theme scoped via PublicLayout wrapper
+ * Phase 8.5: Neonwizard Layout #1 - Step 1 Service Selection
+ * Renders directly as wizard Step 1 (no hero, no landing sections)
  */
+
+const services = [
+  { 
+    id: 'subsidy', 
+    title: 'Construction Subsidy', 
+    icon: 'mingcute:file-check-line', 
+    route: '/bouwsubsidie/apply' 
+  },
+  { 
+    id: 'housing', 
+    title: 'Housing Registration', 
+    icon: 'mingcute:home-4-line', 
+    route: '/housing/register' 
+  },
+  { 
+    id: 'status', 
+    title: 'Check Status', 
+    icon: 'mingcute:search-line', 
+    route: '/status' 
+  }
+]
+
+const steps: NeonwizardStep[] = [
+  { title: 'Service Selection' },
+  { title: 'Personal Information' },
+  { title: 'Application Details' },
+  { title: 'Documents' },
+  { title: 'Review & Submit' }
+]
+
 const LandingPage = () => {
+  const [selectedService, setSelectedService] = useState<string | null>(null)
+  const navigate = useNavigate()
+
+  const handleNext = () => {
+    if (selectedService) {
+      const service = services.find(s => s.id === selectedService)
+      if (service) {
+        navigate(service.route)
+      }
+    }
+  }
+
   return (
-    <div className="nw-landing">
-      <PublicHeader />
+    <NeonwizardLayout
+      steps={steps}
+      currentStep={0}
+      onNext={selectedService ? handleNext : undefined}
+      nextLabel="NEXT"
+      showActions={true}
+    >
+      {/* Step 1 Header */}
+      <div className="nw-step-header">
+        <span className="nw-step-label">Step 1</span>
+        <h2 className="nw-step-title">What service do you need?</h2>
+        <p className="nw-step-description">
+          Select the service you would like to access.
+        </p>
+      </div>
 
-      {/* Hero Section - Neonwizard styled */}
-      <section className="nw-hero">
-        <Container>
-          <div className="nw-hero-content">
-            <h1>Welcome to VolksHuisvesting</h1>
-            <p>
-              Your portal for housing services in Suriname. Apply for construction subsidies, 
-              register for social housing, or check the status of your application.
-            </p>
-          </div>
-        </Container>
-      </section>
-
-      {/* Services Section */}
-      <section className="nw-services">
-        <Container>
-          <div className="nw-services-title">
-            <h2>Our Services</h2>
-            <p>Select a service to get started</p>
-          </div>
-
-          <Row className="g-4 justify-content-center">
-            {/* Construction Subsidy Card */}
-            <Col md={6} lg={4}>
-              <div className="nw-service-card">
-                <div className="nw-service-icon primary">
-                  <IconifyIcon icon="mingcute:file-check-line" />
-                </div>
-                <h5 className="nw-service-title">Construction Subsidy</h5>
-                <p className="nw-service-description">
-                  Apply for financial support for home construction or renovation projects.
-                </p>
-                <Link to="/bouwsubsidie/apply">
-                  <button className="nw-btn-next nw-service-btn">
-                    Start Application
-                    <span className="nw-btn-icon">→</span>
-                  </button>
-                </Link>
-              </div>
-            </Col>
-
-            {/* Housing Registration Card */}
-            <Col md={6} lg={4}>
-              <div className="nw-service-card">
-                <div className="nw-service-icon success">
-                  <IconifyIcon icon="mingcute:home-4-line" />
-                </div>
-                <h5 className="nw-service-title">Housing Registration</h5>
-                <p className="nw-service-description">
-                  Register as a housing applicant to join the waiting list for social housing.
-                </p>
-                <Link to="/housing/register">
-                  <button className="nw-btn-submit nw-service-btn">
-                    Register Now
-                    <span className="nw-btn-icon">→</span>
-                  </button>
-                </Link>
-              </div>
-            </Col>
-
-            {/* Status Tracking Card */}
-            <Col md={6} lg={4}>
-              <div className="nw-service-card">
-                <div className="nw-service-icon info">
-                  <IconifyIcon icon="mingcute:search-line" />
-                </div>
-                <h5 className="nw-service-title">Check Status</h5>
-                <p className="nw-service-description">
-                  Track the progress of your subsidy or housing registration application.
-                </p>
-                <Link to="/status">
-                  <button className="nw-btn-secondary nw-service-btn">
-                    View Status
-                    <span className="nw-btn-icon">→</span>
-                  </button>
-                </Link>
-              </div>
-            </Col>
-          </Row>
-        </Container>
-      </section>
-
-      <PublicFooter />
-    </div>
+      {/* Service Selection Cards */}
+      <div className="nw-service-options">
+        {services.map(service => (
+          <label 
+            key={service.id}
+            className={`nw-service-option ${selectedService === service.id ? 'is-selected' : ''}`}
+          >
+            <input 
+              type="radio" 
+              name="service" 
+              value={service.id}
+              checked={selectedService === service.id}
+              onChange={() => setSelectedService(service.id)}
+            />
+            <span className="nw-service-option-check" />
+            <div className="nw-service-option-icon">
+              <IconifyIcon icon={service.icon} />
+            </div>
+            <span className="nw-service-option-text">{service.title}</span>
+          </label>
+        ))}
+      </div>
+    </NeonwizardLayout>
   )
 }
 

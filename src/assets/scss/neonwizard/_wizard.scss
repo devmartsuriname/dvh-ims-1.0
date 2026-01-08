@@ -7,6 +7,15 @@
 .nw-step-header {
   margin-bottom: 35px;
   
+  .nw-step-label {
+    display: block;
+    font-size: 14px;
+    color: $nw-muted;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  
   .nw-step-title {
     font-size: 28px;
     font-weight: 700;
@@ -19,6 +28,99 @@
     color: $nw-muted;
     line-height: 1.6;
   }
+}
+
+// Service Selection Cards (Landing Step 1)
+.nw-service-options {
+  display: flex;
+  gap: 20px;
+  margin-top: 30px;
+  
+  @media (max-width: 767px) {
+    flex-direction: column;
+  }
+}
+
+.nw-service-option {
+  flex: 1;
+  min-height: 180px;
+  padding: 30px 20px;
+  background: $nw-white;
+  border: 2px solid $nw-border;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  position: relative;
+  @include transition-mix;
+  
+  &:hover {
+    border-color: $nw-primary;
+  }
+  
+  &.is-selected {
+    border-color: $nw-primary;
+    
+    .nw-service-option-check {
+      border-color: $nw-primary;
+      background: $nw-primary;
+      
+      &::after {
+        opacity: 1;
+      }
+    }
+  }
+  
+  input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.nw-service-option-check {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid $nw-border;
+  border-radius: 50%;
+  background: $nw-white;
+  @include transition-mix;
+  
+  &::after {
+    content: '';
+    @include position-absolute(50%, null, null, 50%);
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: $nw-white;
+    border-radius: 50%;
+    opacity: 0;
+    @include transition-mix;
+  }
+}
+
+.nw-service-option-icon {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 15px;
+  border-radius: 50%;
+  background: rgba($nw-primary, 0.1);
+  @include flex-center;
+  
+  svg {
+    width: 32px;
+    height: 32px;
+    color: $nw-primary;
+  }
+}
+
+.nw-service-option-text {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: $nw-body-color;
 }
 
 // Form sections

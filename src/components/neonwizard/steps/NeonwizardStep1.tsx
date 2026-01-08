@@ -1,60 +1,48 @@
 /**
  * NeonwizardStep1 - Service Selection
- * Phase 9B-1: Interactive with state management
+ * Phase 9B-2: IMS Logic Adapter (NO DB)
  * 
  * Features:
- * - Service selection (radio buttons)
- * - Updates context on selection
- * - Next button enabled when service selected
- * - Status selection navigates to /status
+ * - Service type selection (bouwsubsidie / housing / status)
+ * - Navigation to selected service flow
+ * - Initializes IMS form data on service selection
  * 
  * NO Supabase | NO API calls | NO jQuery
  */
 
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { useNeonwizard } from '@/hooks/useNeonwizard'
+import type { ServiceType } from '@/context/NeonwizardContext'
 
 const NeonwizardStep1 = () => {
   const { 
-    formData, 
-    updateFormData, 
+    currentStep,
+    selectedService,
+    selectService,
     handleServiceSelection,
     getError,
-    clearError,
+    setError,
+    clearAllErrors,
   } = useNeonwizard()
 
-  const selectedService = formData.service_name as string | undefined
+  // Handle service card click
+  const handleServiceClick = useCallback((service: ServiceType) => {
+    clearAllErrors()
+    selectService(service)
+  }, [selectService, clearAllErrors])
 
-  // Handle radio change
-  const handleChange = useCallback((value: string) => {
-    updateFormData({ service_name: value })
-    clearError('service_name')
-  }, [updateFormData, clearError])
-
-  // Handle Next button click
+  // Handle Next button
   const handleNext = useCallback(() => {
-    if (!selectedService) return
-
-    // Map service name to service type
-    if (selectedService === 'Corporate Services') {
-      handleServiceSelection('bouwsubsidie')
-    } else if (selectedService === 'Freelancing Services') {
-      handleServiceSelection('housing')
-    } else if (selectedService === 'Development Services') {
-      handleServiceSelection('status')
-    }
-  }, [selectedService, handleServiceSelection])
-
-  // Set default selection on mount if none selected
-  useEffect(() => {
     if (!selectedService) {
-      updateFormData({ service_name: 'Corporate Services' })
+      setError('service', 'Please select a service to continue')
+      return
     }
-  }, [])
+    handleServiceSelection(selectedService)
+  }, [selectedService, handleServiceSelection, setError])
 
-  const error = getError('service_name')
-  const isNextDisabled = !selectedService
+  // Only render if on step 1
+  if (currentStep !== 1) return null
 
   return (
     <div className="multisteps-form__panel js-active" data-animation="slideHorz">
@@ -73,20 +61,22 @@ const NeonwizardStep1 = () => {
                 <div className="row">
                   <div className="col-md-4">
                     <label 
-                      className={`step-box-content bg-white text-center relative-position ${selectedService === 'Corporate Services' ? 'active' : ''}`}
+                      className={`step-box-content bg-white text-center relative-position ${selectedService === 'bouwsubsidie' ? 'active' : ''}`}
+                      onClick={() => handleServiceClick('bouwsubsidie')}
+                      style={{ cursor: 'pointer' }}
                     >
                       <span className="step-box-icon">
-                        <img src="/assets/neonwizard/img/d1.png" alt="" />
+                        <IconifyIcon icon="mingcute:building-4-line" style={{ fontSize: '48px' }} />
                       </span>
                       <span className="step-box-text">Construction Subsidy</span>
                       <span className="service-check-option">
                         <span>
                           <input
                             type="radio"
-                            name="service_name"
-                            value="Corporate Services"
-                            checked={selectedService === 'Corporate Services'}
-                            onChange={(e) => handleChange(e.target.value)}
+                            name="service_selection"
+                            value="bouwsubsidie"
+                            checked={selectedService === 'bouwsubsidie'}
+                            onChange={() => handleServiceClick('bouwsubsidie')}
                           />
                         </span>
                       </span>
@@ -94,20 +84,22 @@ const NeonwizardStep1 = () => {
                   </div>
                   <div className="col-md-4">
                     <label 
-                      className={`step-box-content bg-white text-center relative-position ${selectedService === 'Freelancing Services' ? 'active' : ''}`}
+                      className={`step-box-content bg-white text-center relative-position ${selectedService === 'housing' ? 'active' : ''}`}
+                      onClick={() => handleServiceClick('housing')}
+                      style={{ cursor: 'pointer' }}
                     >
                       <span className="step-box-icon">
-                        <img src="/assets/neonwizard/img/d2.png" alt="" />
+                        <IconifyIcon icon="mingcute:home-3-line" style={{ fontSize: '48px' }} />
                       </span>
                       <span className="step-box-text">Housing Registration</span>
                       <span className="service-check-option">
                         <span>
                           <input
                             type="radio"
-                            name="service_name"
-                            value="Freelancing Services"
-                            checked={selectedService === 'Freelancing Services'}
-                            onChange={(e) => handleChange(e.target.value)}
+                            name="service_selection"
+                            value="housing"
+                            checked={selectedService === 'housing'}
+                            onChange={() => handleServiceClick('housing')}
                           />
                         </span>
                       </span>
@@ -115,28 +107,30 @@ const NeonwizardStep1 = () => {
                   </div>
                   <div className="col-md-4">
                     <label 
-                      className={`step-box-content bg-white text-center relative-position ${selectedService === 'Development Services' ? 'active' : ''}`}
+                      className={`step-box-content bg-white text-center relative-position ${selectedService === 'status' ? 'active' : ''}`}
+                      onClick={() => handleServiceClick('status')}
+                      style={{ cursor: 'pointer' }}
                     >
                       <span className="step-box-icon">
-                        <img src="/assets/neonwizard/img/d3.png" alt="" />
+                        <IconifyIcon icon="mingcute:search-2-line" style={{ fontSize: '48px' }} />
                       </span>
                       <span className="step-box-text">Check Status</span>
                       <span className="service-check-option">
                         <span>
                           <input
                             type="radio"
-                            name="service_name"
-                            value="Development Services"
-                            checked={selectedService === 'Development Services'}
-                            onChange={(e) => handleChange(e.target.value)}
+                            name="service_selection"
+                            value="status"
+                            checked={selectedService === 'status'}
+                            onChange={() => handleServiceClick('status')}
                           />
                         </span>
                       </span>
                     </label>
                   </div>
                 </div>
-                {error && (
-                  <div className="text-danger mt-2 text-center">{error}</div>
+                {getError('service') && (
+                  <div className="text-danger mt-2 text-center">{getError('service')}</div>
                 )}
               </div>
             </div>
@@ -151,10 +145,10 @@ const NeonwizardStep1 = () => {
             </li>
             <li>
               <span 
-                className={`js-btn-next ${isNextDisabled ? 'disabled' : ''}`} 
+                className="js-btn-next" 
                 title="NEXT"
                 onClick={handleNext}
-                style={{ cursor: isNextDisabled ? 'not-allowed' : 'pointer', opacity: isNextDisabled ? 0.5 : 1 }}
+                style={{ cursor: 'pointer' }}
               >
                 NEXT <IconifyIcon icon="mingcute:arrow-right-line" />
               </span>

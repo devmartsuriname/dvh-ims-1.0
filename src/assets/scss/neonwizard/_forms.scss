@@ -1,0 +1,93 @@
+/**
+ * Neonwizard Forms - Extended form styling
+ * Phase 8.5 - Bootstrap form overrides within scope
+ */
+
+// Override Bootstrap form controls within neonwizard scope
+.neonwizard-scope {
+  // Form control styling
+  .form-control {
+    height: 50px;
+    padding: 10px 16px;
+    font-size: 15px;
+    border: 2px solid $nw-border-input;
+    border-radius: 4px;
+    @include transition-mix;
+    
+    &:focus {
+      border-color: $nw-primary;
+      box-shadow: 0 0 0 3px rgba($nw-primary, 0.1);
+    }
+  }
+  
+  textarea.form-control {
+    height: auto;
+    min-height: 120px;
+  }
+  
+  // Form select
+  .form-select {
+    height: 50px;
+    padding: 10px 40px 10px 16px;
+    font-size: 15px;
+    border: 2px solid $nw-border-input;
+    border-radius: 4px;
+    @include transition-mix;
+    
+    &:focus {
+      border-color: $nw-primary;
+      box-shadow: 0 0 0 3px rgba($nw-primary, 0.1);
+    }
+  }
+  
+  // Form labels
+  .form-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: $nw-body-color;
+    margin-bottom: 8px;
+  }
+  
+  // Form check (checkbox/radio)
+  .form-check {
+    padding-left: 28px;
+    margin-bottom: 10px;
+    
+    .form-check-input {
+      width: 20px;
+      height: 20px;
+      margin-left: -28px;
+      margin-top: 2px;
+      border: 2px solid $nw-border-input;
+      
+      &:checked {
+        background-color: $nw-primary;
+        border-color: $nw-primary;
+      }
+      
+      &:focus {
+        box-shadow: 0 0 0 3px rgba($nw-primary, 0.1);
+      }
+    }
+    
+    .form-check-label {
+      font-size: 15px;
+      color: $nw-body-color;
+      cursor: pointer;
+    }
+  }
+  
+  // Invalid feedback
+  .invalid-feedback {
+    font-size: 13px;
+    color: #dc3545;
+    margin-top: 5px;
+  }
+  
+  // Valid feedback
+  .valid-feedback {
+    font-size: 13px;
+    color: $nw-success;
+    margin-top: 5px;
+  }
+}

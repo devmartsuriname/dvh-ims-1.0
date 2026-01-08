@@ -1,0 +1,76 @@
+/**
+ * Neonwizard Layout #1 - Full Width
+ * Phase 8.5 - Two-column layout (30% image / 70% content)
+ */
+
+// Main wrapper - full width (NOT boxed)
+.nw-wrapper {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  background-color: $nw-bg-light;
+}
+
+// Left panel - Steps area with background image
+.nw-steps-area {
+  width: $nw-steps-width;
+  min-height: 100vh;
+  position: relative;
+  background-color: #263ea5;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  flex-direction: column;
+  
+  // Overlay for readability
+  &::before {
+    content: '';
+    @include position-absolute(0, 0, 0, 0);
+    background: linear-gradient(180deg, rgba(38, 62, 165, 0.92) 0%, rgba(38, 62, 165, 0.85) 100%);
+    z-index: 1;
+  }
+}
+
+// Steps content positioned on top of overlay
+.nw-steps-content {
+  position: relative;
+  z-index: 2;
+  padding: 60px 40px 60px 50px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+// Right panel - Form content area
+.nw-content-area {
+  width: $nw-content-width;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: $nw-bg-light;
+}
+
+// Form area container
+.nw-form-area {
+  flex: 1;
+  padding: 50px 80px;
+  display: flex;
+  flex-direction: column;
+}
+
+// Step content wrapper
+.nw-step-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+// Actions footer
+.nw-actions {
+  padding: 30px 80px 40px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  border-top: 1px solid $nw-border;
+  background-color: $nw-white;
+}

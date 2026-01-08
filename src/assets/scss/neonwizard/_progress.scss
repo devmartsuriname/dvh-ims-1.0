@@ -1,0 +1,116 @@
+/**
+ * Neonwizard Vertical Progress Indicator
+ * Phase 8.5 - Layout #1 style
+ */
+
+.nw-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.nw-progress-step {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  padding-bottom: 40px;
+  
+  &:last-child {
+    padding-bottom: 0;
+    
+    .nw-step-line {
+      display: none;
+    }
+  }
+}
+
+// Step circle
+.nw-step-circle {
+  @include step-circle($nw-step-circle-size);
+  border: 2px solid $nw-step-pending;
+  color: $nw-step-pending;
+  background-color: transparent;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  @include transition-mix;
+  
+  // Active/Current state
+  &.is-active {
+    border-color: $nw-white;
+    color: $nw-white;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      width: 55px;
+      height: 55px;
+      border: 2px solid rgba($nw-white, 0.3);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+  }
+  
+  // Completed state
+  &.is-completed {
+    border-color: $nw-white;
+    color: $nw-white;
+    background-color: rgba($nw-white, 0.15);
+  }
+}
+
+// Connecting line
+.nw-step-line {
+  position: absolute;
+  left: calc($nw-step-circle-size / 2 - 1px);
+  top: $nw-step-circle-size;
+  width: 2px;
+  height: 40px;
+  background-color: $nw-step-pending;
+  z-index: 1;
+  @include transition-mix;
+  
+  &.is-completed {
+    background-color: $nw-white;
+  }
+}
+
+// Step label
+.nw-step-label {
+  margin-left: 20px;
+  padding-top: 10px;
+  
+  .nw-step-title {
+    color: $nw-step-pending;
+    font-size: 18px;
+    font-weight: 600;
+    @include transition-mix;
+    
+    &.is-active,
+    &.is-completed {
+      color: $nw-white;
+    }
+  }
+  
+  .nw-step-subtitle {
+    color: rgba($nw-white, 0.5);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+}
+
+// Pulse animation for current step
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}

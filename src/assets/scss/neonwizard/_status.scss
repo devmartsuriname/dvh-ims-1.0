@@ -1,0 +1,150 @@
+/**
+ * Neonwizard Status Page Styles
+ * Phase 8.5 - Status tracker page styling
+ */
+
+.nw-status {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: $nw-bg-light;
+}
+
+.nw-status-container {
+  flex: 1;
+  padding: 50px 0;
+}
+
+// Status lookup card
+.nw-status-card {
+  background: $nw-white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: $nw-shadow-card;
+  
+  .nw-status-header {
+    text-align: center;
+    margin-bottom: 35px;
+    
+    .nw-status-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      @include flex-center;
+      margin: 0 auto 20px;
+      font-size: 28px;
+      background-color: rgba($nw-primary, 0.1);
+      color: $nw-primary;
+    }
+    
+    h2 {
+      font-size: 26px;
+      font-weight: 700;
+      color: $nw-body-color;
+      margin-bottom: 10px;
+    }
+    
+    p {
+      font-size: 15px;
+      color: $nw-muted;
+    }
+  }
+}
+
+// Status result display
+.nw-status-result {
+  .nw-result-header {
+    text-align: center;
+    padding-bottom: 25px;
+    border-bottom: 1px solid $nw-border;
+    margin-bottom: 25px;
+    
+    .nw-result-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      
+      &.pending {
+        background-color: rgba(#ffc107, 0.15);
+        color: #b38600;
+      }
+      
+      &.approved {
+        background-color: rgba($nw-success, 0.15);
+        color: $nw-success;
+      }
+      
+      &.rejected {
+        background-color: rgba(#dc3545, 0.15);
+        color: #dc3545;
+      }
+    }
+    
+    h3 {
+      font-size: 22px;
+      font-weight: 700;
+      color: $nw-body-color;
+    }
+  }
+  
+  .nw-result-details {
+    .nw-detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid $nw-border;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      .nw-detail-label {
+        font-size: 14px;
+        color: $nw-muted;
+      }
+      
+      .nw-detail-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: $nw-body-color;
+      }
+    }
+  }
+}
+
+// Help footer
+.nw-status-help {
+  background: $nw-white;
+  border-radius: 12px;
+  padding: 25px;
+  margin-top: 25px;
+  text-align: center;
+  box-shadow: $nw-shadow-card;
+  
+  p {
+    font-size: 14px;
+    color: $nw-muted;
+    margin-bottom: 15px;
+  }
+}
+
+// Responsive
+@media (max-width: 575px) {
+  .nw-status-card {
+    padding: 25px 20px;
+    
+    .nw-status-header h2 {
+      font-size: 22px;
+    }
+  }
+  
+  .nw-result-details .nw-detail-row {
+    flex-direction: column;
+    gap: 5px;
+  }
+}

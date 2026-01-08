@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Container, Card } from 'react-bootstrap'
+import { toast } from 'react-toastify'
+import { supabase } from '@/integrations/supabase/client'
 import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
 import WizardProgress, { type WizardStep } from '@/components/public/WizardProgress'
@@ -53,21 +55,25 @@ const HousingRegistrationWizard = () => {
   const handleSubmit = async () => {
     setIsSubmitting(true)
     
-    // Mock submission delay
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Generate mock reference number (WR-YYYY-NNNNNN) and token
-    const referenceNumber = `WR-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`
-    const accessToken = crypto.randomUUID().slice(0, 12).toUpperCase()
-    
-    setSubmissionResult({
-      reference_number: referenceNumber,
-      access_token: accessToken,
-      submitted_at: new Date().toISOString()
-    })
-    
-    setCurrentStep(9)
-    setIsSubmitting(false)
+    try {
+      const response = await supabase.functions.invoke('submit-housing-registration', {
+        body: formData
+      })
+      
+      if (response.error) throw new Error(response.error.message)
+      if (!response.data?.success) throw new Error(response.data?.error || 'Submission failed')
+      
+      setSubmissionResult({
+        reference_number: response.data.reference_number,
+        access_token: response.data.access_token,
+        submitted_at: response.data.submitted_at
+      })
+      setCurrentStep(9)
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to submit registration. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const renderStep = () => {

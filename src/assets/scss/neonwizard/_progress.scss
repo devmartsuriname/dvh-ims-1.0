@@ -75,29 +75,7 @@
   }
 }
 
-// Step label
-.nw-step-label {
-  margin-left: 20px;
-  padding-top: 10px;
-  
-  .nw-step-title {
-    color: $nw-step-pending;
-    font-size: 18px;
-    font-weight: 600;
-    @include transition-mix;
-    
-    &.is-active,
-    &.is-completed {
-      color: $nw-white;
-    }
-  }
-  
-  .nw-step-subtitle {
-    color: rgba($nw-white, 0.5);
-    font-size: 13px;
-    margin-top: 2px;
-  }
-}
+// Step label (REMOVED per Layout #1 reference - circles only, no text labels)
 
 // Pulse animation for current step
 @keyframes pulse {

@@ -1,0 +1,299 @@
+/* ==========================================================================
+   Responsive styles - Scoped to .neonwizard-scope
+   ========================================================================== */
+
+// Large desktop (1441px+)
+@media (min-width: 1441px) {
+    .neonwizard-scope .form-content {
+        padding-right: 18%;
+    }
+}
+
+// Up to 1440px
+@media (max-width: 1440px) {
+    .neonwizard-scope .steps-area-fixed {
+        width: 350px !important;
+        
+        .image-holder {
+            width: 350px !important;
+        }
+    }
+    
+    .neonwizard-scope .steps-area-fixed + .multisteps-form__form {
+        margin-left: 350px;
+    }
+    
+    .neonwizard-scope .form-content {
+        h2 {
+            font-size: 40px;
+        }
+        p {
+            font-size: 20px;
+        }
+    }
+    
+    .neonwizard-scope .image-holder {
+        max-width: 350px;
+        
+        img {
+            object-fit: cover;
+            height: 100%;
+        }
+    }
+}
+
+// Up to 1280px
+@media (max-width: 1280px) {
+    .neonwizard-scope .form-content {
+        h2 {
+            font-size: 35px;
+        }
+        p {
+            font-size: 18px;
+        }
+    }
+    
+    .neonwizard-scope .budget-area .opti-list li {
+        margin-right: 15px;
+    }
+}
+
+// Up to 1199px
+@media (max-width: 1199px) {
+    .neonwizard-scope .steps-area-fixed {
+        position: static;
+        width: 100% !important;
+    }
+    
+    .neonwizard-scope .steps-area-fixed + .multisteps-form__form {
+        margin-left: 0;
+    }
+    
+    .neonwizard-scope .image-holder {
+        width: 100% !important;
+        max-width: 100%;
+        height: 200px;
+        
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+    
+    .neonwizard-scope .steps-area {
+        width: 100%;
+        max-width: 100%;
+        float: none;
+        
+        .steps {
+            position: relative;
+            top: auto;
+            right: auto;
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+            
+            li {
+                margin-bottom: 0;
+                margin-right: 40px;
+                
+                &:last-child {
+                    margin-right: 0;
+                }
+                
+                span {
+                    &:before,
+                    &:after {
+                        display: none;
+                    }
+                }
+            }
+        }
+    }
+    
+    .neonwizard-scope .multisteps-form__form {
+        width: 100%;
+        float: none;
+    }
+    
+    .neonwizard-scope .form-content {
+        padding: 30px 15px;
+    }
+    
+    .neonwizard-scope .actions {
+        position: relative;
+        right: auto;
+        float: none;
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+    }
+}
+
+// Up to 991px
+@media (max-width: 991px) {
+    .neonwizard-scope .pb-100 {
+        padding-bottom: 50px;
+    }
+    
+    .neonwizard-scope .pb-200 {
+        padding-bottom: 100px;
+    }
+    
+    .neonwizard-scope .wizard {
+        max-width: 100%;
+    }
+    
+    .neonwizard-scope .image-holder {
+        height: 150px;
+    }
+    
+    .neonwizard-scope .actions {
+        position: relative;
+        right: auto;
+    }
+    
+    .neonwizard-scope .steps {
+        position: relative;
+        top: auto;
+        right: auto;
+    }
+}
+
+// Up to 767px
+@media (max-width: 767px) {
+    .neonwizard-scope .steps-area .steps li {
+        margin-right: 20px;
+    }
+    
+    .neonwizard-scope .form-content {
+        h2 {
+            font-size: 28px;
+            padding: 40px 0 15px 0;
+        }
+        p {
+            font-size: 16px;
+        }
+        .step-no {
+            font-size: 22px;
+        }
+    }
+    
+    .neonwizard-scope .step-box-content {
+        margin-bottom: 20px;
+        min-height: auto;
+        padding: 30px 15px 25px;
+        
+        .step-box-text {
+            font-size: 18px;
+        }
+    }
+    
+    .neonwizard-scope .step-progress {
+        max-width: 100%;
+    }
+    
+    .neonwizard-scope .col-md-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    .neonwizard-scope .upload-documents {
+        .upload-araa {
+            padding: 15px;
+        }
+        
+        .upload-text {
+            max-width: 100%;
+            float: none;
+        }
+        
+        .upload-option {
+            float: none;
+            width: 100%;
+            margin-top: 15px;
+        }
+    }
+    
+    .neonwizard-scope .budget-area .opti-list li {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 10px;
+    }
+    
+    .neonwizard-scope .plan-icon-text {
+        width: 100%;
+        margin-right: 0;
+        padding: 30px;
+    }
+    
+    .neonwizard-scope .actions {
+        ul {
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        li {
+            width: 100%;
+            
+            span,
+            button {
+                width: 100%;
+                margin-left: 0;
+                margin-bottom: 10px;
+                height: 60px;
+                font-size: 18px;
+            }
+        }
+    }
+}
+
+// Up to 580px
+@media (max-width: 580px) {
+    .neonwizard-scope .steps-area .steps li {
+        margin-right: 15px;
+        
+        span {
+            width: 35px;
+            height: 35px;
+            line-height: 35px;
+            font-size: 14px;
+        }
+        
+        &.js-active span:after,
+        &.current span:after {
+            display: none;
+        }
+        
+        &:before {
+            width: 45px;
+            height: 45px;
+        }
+    }
+    
+    .neonwizard-scope .form-content {
+        padding: 20px 10px;
+    }
+}
+
+// Up to 460px
+@media (max-width: 460px) {
+    .neonwizard-scope .steps-area .steps li {
+        margin-right: 10px;
+        
+        span {
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            font-size: 12px;
+        }
+        
+        &:before {
+            width: 40px;
+            height: 40px;
+            top: -5px;
+            left: -5px;
+        }
+    }
+}

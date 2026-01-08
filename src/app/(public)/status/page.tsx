@@ -1,6 +1,6 @@
 /**
  * Status Tracker Page
- * Phase 9B-3: Restyled with Neonwizard two-column layout
+ * Phase 9B-3: Restyled with Neonwizard visual language
  * 
  * Public page for citizens to check their application status
  * using reference number and access token.
@@ -67,50 +67,39 @@ const StatusTrackerPage = () => {
   }
 
   return (
-    <div className="neonwizard-scope">
-      <div className="wrapper">
-        {/* Left Panel: Image with Title Overlay */}
-        <div className="steps-area steps-area-fixed">
-          <div className="image-holder">
-            <img src="/assets/neonwizard/img/side-img.jpg" alt="Status Background" />
-          </div>
-          {/* Title overlay instead of step indicators */}
-          <div className="status-overlay">
-            <div className="status-overlay-icon">
-              <IconifyIcon icon="mingcute:search-line" />
-            </div>
+    <div className="neonwizard-scope status-page">
+      <div className="wrapper status-wrapper">
+        {/* Header Banner */}
+        <div className="status-header">
+          <div className="status-header-content">
             <h1>Application Status</h1>
-            <p>Track your Bouwsubsidie or Housing Registration</p>
+            <p>Track your Bouwsubsidie or Housing Registration application</p>
           </div>
         </div>
 
-        {/* Right Panel: Form Area */}
-        <div className="multisteps-form__form">
-          <div className="form-area position-relative">
-            <div className="form-inner-area status-content-area">
-              {/* Conditional Rendering based on state */}
-              {lookupState === 'success' && result ? (
-                <StatusResult result={result} onReset={handleReset} />
-              ) : (
-                <StatusForm 
-                  onSubmit={handleLookup}
-                  isLoading={lookupState === 'loading'}
-                  error={error}
-                />
-              )}
+        {/* Main Content */}
+        <div className="status-content">
+          {/* Conditional Rendering based on state */}
+          {lookupState === 'success' && result ? (
+            <StatusResult result={result} onReset={handleReset} />
+          ) : (
+            <StatusForm 
+              onSubmit={handleLookup}
+              isLoading={lookupState === 'loading'}
+              error={error}
+            />
+          )}
 
-              {/* Help & Navigation Footer */}
-              <div className="status-help-card">
-                <p className="help-text">
-                  <IconifyIcon icon="mingcute:question-line" className="help-icon" />
-                  <span>Need help? Contact the Ministry of Social Affairs and Housing</span>
-                </p>
-                <Link to="/" className="back-link">
-                  <IconifyIcon icon="mingcute:arrow-left-line" />
-                  <span>Back to Home</span>
-                </Link>
-              </div>
-            </div>
+          {/* Help & Navigation Footer */}
+          <div className="status-help-card">
+            <p className="help-text">
+              <IconifyIcon icon="mingcute:question-line" className="help-icon" />
+              <span>Need help? Contact the Ministry of Social Affairs and Housing</span>
+            </p>
+            <Link to="/" className="back-link">
+              <IconifyIcon icon="mingcute:arrow-left-line" />
+              <span>Back to Home</span>
+            </Link>
           </div>
         </div>
       </div>

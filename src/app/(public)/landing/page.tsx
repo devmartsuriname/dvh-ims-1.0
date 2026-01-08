@@ -1,161 +1,100 @@
-import { Card, CardBody, Row, Col, Container, Button } from 'react-bootstrap'
+import { Container, Row, Col } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { PublicHeader, PublicFooter } from '@/components/public'
-import bgPattern from '@/assets/images/bg-pattern-1.png'
 
 /**
  * Public Landing Page - VolksHuisvesting Suriname
  * 
- * Darkone 1:1 implementation with react-bootstrap
+ * Phase 8.5: Neonwizard Layout #1 styling applied
  * Light theme scoped via PublicLayout wrapper
- * English baseline (no Dutch)
- * Premium government-grade visual tone
  */
 const LandingPage = () => {
   return (
-    <div className="d-flex flex-column min-vh-100">
+    <div className="nw-landing">
       <PublicHeader />
 
-      {/* Hero Section with Background Image + Dark Overlay */}
-      <section 
-        className="py-5 position-relative"
-        style={{
-          backgroundImage: `url(${bgPattern})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        {/* Dark overlay for readability */}
-        <div 
-          className="position-absolute top-0 start-0 w-100 h-100" 
-          style={{ backgroundColor: 'rgba(30, 41, 59, 0.85)' }}
-        />
-        
-        <Container className="position-relative">
-          <Row className="align-items-center justify-content-center text-center py-4">
-            <Col lg={8}>
-              <h1 className="display-5 fw-bold mb-3 text-white">
-                Welcome to VolksHuisvesting
-              </h1>
-              <p className="lead text-white-50 mb-0">
-                Your portal for housing services in Suriname. Apply for construction subsidies, 
-                register for social housing, or check the status of your application.
-              </p>
-            </Col>
-          </Row>
+      {/* Hero Section - Neonwizard styled */}
+      <section className="nw-hero">
+        <Container>
+          <div className="nw-hero-content">
+            <h1>Welcome to VolksHuisvesting</h1>
+            <p>
+              Your portal for housing services in Suriname. Apply for construction subsidies, 
+              register for social housing, or check the status of your application.
+            </p>
+          </div>
         </Container>
       </section>
 
       {/* Services Section */}
-      <main className="flex-grow-1 py-5 bg-light">
+      <section className="nw-services">
         <Container>
-          <Row className="mb-4">
-            <Col className="text-center">
-              <h2 className="fw-bold mb-2">Our Services</h2>
-              <p className="text-muted">Select a service to get started</p>
-            </Col>
-          </Row>
+          <div className="nw-services-title">
+            <h2>Our Services</h2>
+            <p>Select a service to get started</p>
+          </div>
 
           <Row className="g-4 justify-content-center">
             {/* Construction Subsidy Card */}
             <Col md={6} lg={4}>
-              <Card className="h-100 border-0 shadow">
-                <CardBody className="text-center p-4">
-                  <div className="mb-3">
-                    <span 
-                      className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10" 
-                      style={{ width: 64, height: 64 }}
-                    >
-                      <IconifyIcon 
-                        icon="mingcute:file-check-line" 
-                        className="text-primary fs-2"
-                      />
-                    </span>
-                  </div>
-                  <h5 className="fw-bold mb-2">Construction Subsidy</h5>
-                  <p className="text-muted small mb-3">
-                    Apply for financial support for home construction or renovation projects.
-                  </p>
-                  <Link to="/bouwsubsidie/apply">
-                    <Button 
-                      variant="primary" 
-                      className="w-100 d-flex align-items-center justify-content-center gap-2"
-                    >
-                      <span>Start Application</span>
-                      <IconifyIcon icon="mingcute:arrow-right-line" />
-                    </Button>
-                  </Link>
-                </CardBody>
-              </Card>
+              <div className="nw-service-card">
+                <div className="nw-service-icon primary">
+                  <IconifyIcon icon="mingcute:file-check-line" />
+                </div>
+                <h5 className="nw-service-title">Construction Subsidy</h5>
+                <p className="nw-service-description">
+                  Apply for financial support for home construction or renovation projects.
+                </p>
+                <Link to="/bouwsubsidie/apply">
+                  <button className="nw-btn-next nw-service-btn">
+                    Start Application
+                    <span className="nw-btn-icon">→</span>
+                  </button>
+                </Link>
+              </div>
             </Col>
 
             {/* Housing Registration Card */}
             <Col md={6} lg={4}>
-              <Card className="h-100 border-0 shadow">
-                <CardBody className="text-center p-4">
-                  <div className="mb-3">
-                    <span 
-                      className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10" 
-                      style={{ width: 64, height: 64 }}
-                    >
-                      <IconifyIcon 
-                        icon="mingcute:home-4-line" 
-                        className="text-success fs-2"
-                      />
-                    </span>
-                  </div>
-                  <h5 className="fw-bold mb-2">Housing Registration</h5>
-                  <p className="text-muted small mb-3">
-                    Register as a housing applicant to join the waiting list for social housing.
-                  </p>
-                  <Link to="/housing/register">
-                    <Button 
-                      variant="success" 
-                      className="w-100 d-flex align-items-center justify-content-center gap-2"
-                    >
-                      <span>Register Now</span>
-                      <IconifyIcon icon="mingcute:arrow-right-line" />
-                    </Button>
-                  </Link>
-                </CardBody>
-              </Card>
+              <div className="nw-service-card">
+                <div className="nw-service-icon success">
+                  <IconifyIcon icon="mingcute:home-4-line" />
+                </div>
+                <h5 className="nw-service-title">Housing Registration</h5>
+                <p className="nw-service-description">
+                  Register as a housing applicant to join the waiting list for social housing.
+                </p>
+                <Link to="/housing/register">
+                  <button className="nw-btn-submit nw-service-btn">
+                    Register Now
+                    <span className="nw-btn-icon">→</span>
+                  </button>
+                </Link>
+              </div>
             </Col>
 
             {/* Status Tracking Card */}
             <Col md={6} lg={4}>
-              <Card className="h-100 border-0 shadow">
-                <CardBody className="text-center p-4">
-                  <div className="mb-3">
-                    <span 
-                      className="d-inline-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10" 
-                      style={{ width: 64, height: 64 }}
-                    >
-                      <IconifyIcon 
-                        icon="mingcute:search-line" 
-                        className="text-info fs-2"
-                      />
-                    </span>
-                  </div>
-                  <h5 className="fw-bold mb-2">Check Status</h5>
-                  <p className="text-muted small mb-3">
-                    Track the progress of your subsidy or housing registration application.
-                  </p>
-                  <Link to="/status">
-                    <Button 
-                      variant="info" 
-                      className="w-100 d-flex align-items-center justify-content-center gap-2"
-                    >
-                      <span>View Status</span>
-                      <IconifyIcon icon="mingcute:arrow-right-line" />
-                    </Button>
-                  </Link>
-                </CardBody>
-              </Card>
+              <div className="nw-service-card">
+                <div className="nw-service-icon info">
+                  <IconifyIcon icon="mingcute:search-line" />
+                </div>
+                <h5 className="nw-service-title">Check Status</h5>
+                <p className="nw-service-description">
+                  Track the progress of your subsidy or housing registration application.
+                </p>
+                <Link to="/status">
+                  <button className="nw-btn-secondary nw-service-btn">
+                    View Status
+                    <span className="nw-btn-icon">→</span>
+                  </button>
+                </Link>
+              </div>
             </Col>
           </Row>
         </Container>
-      </main>
+      </section>
 
       <PublicFooter />
     </div>

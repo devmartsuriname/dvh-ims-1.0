@@ -1,0 +1,125 @@
+/**
+ * Neonwizard Responsive Styles
+ * Phase 8.5 - Mobile/Tablet breakpoints
+ */
+
+// Tablet breakpoint
+@media (max-width: 991px) {
+  .nw-wrapper {
+    flex-direction: column;
+  }
+  
+  .nw-steps-area {
+    width: 100%;
+    min-height: auto;
+    padding: 30px 20px;
+  }
+  
+  .nw-steps-content {
+    padding: 20px;
+  }
+  
+  // Convert vertical steps to horizontal on tablet
+  .nw-progress {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .nw-progress-step {
+    padding-bottom: 0;
+    flex-direction: column;
+    align-items: center;
+    
+    .nw-step-line {
+      display: none;
+    }
+  }
+  
+  .nw-step-label {
+    margin-left: 0;
+    margin-top: 10px;
+    text-align: center;
+    padding-top: 0;
+    
+    .nw-step-title {
+      font-size: 14px;
+    }
+    
+    .nw-step-subtitle {
+      display: none;
+    }
+  }
+  
+  .nw-content-area {
+    width: 100%;
+  }
+  
+  .nw-form-area {
+    padding: 30px 20px;
+  }
+  
+  .nw-actions {
+    padding: 20px;
+    flex-direction: column;
+    gap: 10px;
+    
+    .nw-btn {
+      width: 100%;
+    }
+  }
+}
+
+// Mobile breakpoint
+@media (max-width: 575px) {
+  .nw-steps-area {
+    padding: 20px 15px;
+  }
+  
+  .nw-progress-step {
+    .nw-step-circle {
+      width: 35px;
+      height: 35px;
+      font-size: 14px;
+    }
+  }
+  
+  .nw-step-label {
+    .nw-step-title {
+      font-size: 12px;
+      max-width: 60px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+  
+  .nw-form-area {
+    padding: 20px 15px;
+  }
+  
+  .nw-step-header {
+    .nw-step-title {
+      font-size: 22px;
+    }
+    
+    .nw-step-description {
+      font-size: 14px;
+    }
+  }
+  
+  .neonwizard-scope {
+    .form-control,
+    .form-select {
+      height: 45px;
+      font-size: 14px;
+    }
+  }
+  
+  .nw-btn {
+    height: 50px;
+    font-size: 15px;
+    min-width: auto;
+  }
+}

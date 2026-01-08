@@ -1,0 +1,167 @@
+/**
+ * Neonwizard Step Content Styling
+ * Phase 8.5 - Form and content styles
+ */
+
+// Step header/title area
+.nw-step-header {
+  margin-bottom: 35px;
+  
+  .nw-step-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: $nw-body-color;
+    margin-bottom: 10px;
+  }
+  
+  .nw-step-description {
+    font-size: 16px;
+    color: $nw-muted;
+    line-height: 1.6;
+  }
+}
+
+// Form sections
+.nw-form-section {
+  margin-bottom: 30px;
+}
+
+// Form row (label + input group)
+.nw-form-row {
+  margin-bottom: 20px;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Labels
+.nw-label {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  color: $nw-body-color;
+  margin-bottom: 8px;
+}
+
+// Inputs - styled to match Neonwizard
+.nw-input {
+  width: 100%;
+  height: 50px;
+  padding: 10px 16px;
+  font-size: 15px;
+  border: 2px solid $nw-border-input;
+  border-radius: 4px;
+  background-color: $nw-white;
+  color: $nw-body-color;
+  @include transition-mix;
+  
+  &:focus {
+    outline: none;
+    border-color: $nw-primary;
+    box-shadow: 0 0 0 3px rgba($nw-primary, 0.1);
+  }
+  
+  &::placeholder {
+    color: $nw-muted;
+  }
+}
+
+// Textarea
+.nw-textarea {
+  @extend .nw-input;
+  height: auto;
+  min-height: 120px;
+  resize: vertical;
+}
+
+// Select
+.nw-select {
+  @extend .nw-input;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23848c95' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+
+// Checkbox/Radio styling
+.nw-checkbox-group,
+.nw-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.nw-checkbox-item,
+.nw-radio-item {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  
+  input {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    cursor: pointer;
+    accent-color: $nw-primary;
+  }
+  
+  span {
+    font-size: 15px;
+    color: $nw-body-color;
+  }
+}
+
+// Divider line
+.nw-divider {
+  height: 1px;
+  background-color: $nw-border;
+  margin: 30px 0;
+}
+
+// Cards for content display
+.nw-card {
+  background-color: $nw-white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: $nw-shadow-card;
+  margin-bottom: 20px;
+}
+
+// Document/file list
+.nw-document-list {
+  .nw-document-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid $nw-border;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .nw-document-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background-color: rgba($nw-primary, 0.1);
+      @include flex-center;
+      margin-right: 15px;
+      color: $nw-primary;
+    }
+    
+    .nw-document-name {
+      flex: 1;
+      font-size: 15px;
+      color: $nw-body-color;
+    }
+    
+    .nw-document-status {
+      font-size: 13px;
+      color: $nw-muted;
+    }
+  }
+}

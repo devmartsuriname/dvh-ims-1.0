@@ -29,7 +29,7 @@ const NeonwizardProgress = ({ steps, currentStep }: NeonwizardProgressProps) => 
         
         return (
           <div key={index} className="nw-progress-step">
-            {/* Step Circle */}
+            {/* Step Circle - Numbers only, no labels (per Layout #1 reference) */}
             <div 
               className={`nw-step-circle ${isActive ? 'is-active' : ''} ${isCompleted ? 'is-completed' : ''}`}
             >
@@ -44,20 +44,6 @@ const NeonwizardProgress = ({ steps, currentStep }: NeonwizardProgressProps) => 
             <div 
               className={`nw-step-line ${isCompleted ? 'is-completed' : ''}`}
             />
-            
-            {/* Step Label */}
-            <div className="nw-step-label">
-              <div 
-                className={`nw-step-title ${isActive ? 'is-active' : ''} ${isCompleted ? 'is-completed' : ''}`}
-              >
-                {step.title}
-              </div>
-              {step.subtitle && (
-                <div className="nw-step-subtitle">
-                  {step.subtitle}
-                </div>
-              )}
-            </div>
           </div>
         )
       })}

@@ -22,11 +22,11 @@
   display: flex;
   flex-direction: column;
   
-  // Overlay for readability
+  // Subtle dark overlay for readability (image visible through)
   &::before {
     content: '';
     @include position-absolute(0, 0, 0, 0);
-    background: linear-gradient(180deg, rgba(38, 62, 165, 0.92) 0%, rgba(38, 62, 165, 0.85) 100%);
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.45) 100%);
     z-index: 1;
   }
 }
@@ -35,10 +35,11 @@
 .nw-steps-content {
   position: relative;
   z-index: 2;
-  padding: 60px 40px 60px 50px;
+  padding: 100px 40px 60px 80px;
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
 }
 
 // Right panel - Form content area

@@ -1,88 +1,87 @@
 /**
- * NeonwizardStep5 - Final Step / Review & Submit
- * Phase 9B-1: Interactive with state management
+ * NeonwizardStep5 - Review & Submit (IMS Final Step)
+ * Phase 9B-2: IMS Logic Adapter (NO DB)
  * 
- * Features:
- * - Date selection
- * - Plan selection (radio)
- * - Additional options checkboxes
- * - Final notes textarea
- * - Submit button (mock - no DB)
- * - Shows confirmation on submit
+ * Bouwsubsidie: Review all data + Declaration + Mock Submit
+ * Housing: Review all data + Declaration + Mock Submit
+ * 
+ * Displays collected IMS form data for review
  * 
  * NO Supabase | NO API calls | NO jQuery
  */
 
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { useNeonwizard } from '@/hooks/useNeonwizard'
-import { validateStep5, isValid } from '@/utils/neonwizard-validation'
+import { DISTRICTS } from '@/constants/districts'
+
+// Helper to get district name from code
+const getDistrictName = (code: string): string => {
+  const district = DISTRICTS.find(d => d.code === code)
+  return district?.name || code
+}
+
+// Helper to format labels
+const formatLabel = (value: string): string => {
+  if (!value) return '-'
+  return value
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, l => l.toUpperCase())
+}
+
+// Document type interface
+interface DocumentItem {
+  id: string
+  label: string
+  hasDocument: boolean
+}
 
 const NeonwizardStep5 = () => {
   const { 
     currentStep,
+    selectedService,
     formData, 
     updateFormData, 
-    prevStep,
-    setError,
-    clearError,
-    getError,
+    handleBack,
     handleSubmit,
     isSubmitted,
     submissionReference,
     resetWizard,
-    selectedService,
+    getProgress,
+    getError,
+    setError,
+    clearError,
   } = useNeonwizard()
 
-  // Handle input change
-  const handleChange = useCallback((field: string, value: string | boolean) => {
-    updateFormData({ [field]: value })
-    clearError(field)
+  // Handle declaration change
+  const handleDeclarationChange = useCallback((checked: boolean) => {
+    updateFormData({ declaration_accepted: checked })
+    if (checked) {
+      clearError('declaration_accepted')
+    }
   }, [updateFormData, clearError])
 
-  // Handle checkbox change
-  const handleCheckbox = useCallback((field: string, checked: boolean) => {
-    updateFormData({ [field]: checked })
-  }, [updateFormData])
-
-  // Handle form submission with validation
-  const onSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault()
+  // Handle form submission
+  const onSubmit = useCallback(() => {
+    const declarationAccepted = formData.declaration_accepted as boolean
     
-    const errors = validateStep5(formData)
-    
-    if (!isValid(errors)) {
-      Object.entries(errors).forEach(([field, message]) => {
-        setError(field, message)
-      })
+    if (!declarationAccepted) {
+      setError('declaration_accepted', 'You must accept the declaration to submit')
       return
     }
     
     handleSubmit()
-  }, [formData, handleSubmit, setError])
-
-  // Set default values on mount
-  useEffect(() => {
-    if (currentStep === 5) {
-      if (!formData.your_plan) {
-        updateFormData({ your_plan: 'Unlimited Plan' })
-      }
-      if (!formData.date) {
-        // Set default date to today
-        const today = new Date().toISOString().split('T')[0]
-        updateFormData({ date: today })
-      }
-    }
-  }, [currentStep])
+  }, [formData.declaration_accepted, handleSubmit, setError])
 
   // Only render if on step 5
   if (currentStep !== 5) return null
 
+  const progress = getProgress()
+  const isBouwsubsidie = selectedService === 'bouwsubsidie'
+
   // Show confirmation screen if submitted
   if (isSubmitted && submissionReference) {
-    const serviceLabel = selectedService === 'bouwsubsidie' 
-      ? 'Construction Subsidy' 
-      : 'Housing Registration'
+    const serviceLabel = isBouwsubsidie ? 'Construction Subsidy' : 'Housing Registration'
     
     return (
       <div className="multisteps-form__panel js-active" data-animation="slideHorz">
@@ -145,8 +144,185 @@ const NeonwizardStep5 = () => {
     )
   }
 
-  const selectedPlan = formData.your_plan as string
+  // BOUWSUBSIDIE Review
+  if (isBouwsubsidie) {
+    const documents = (formData.documents as DocumentItem[]) || []
+    const availableDocs = documents.filter(d => d.hasDocument).length
 
+    return (
+      <div className="multisteps-form__panel js-active" data-animation="slideHorz">
+        <div className="wizard-forms">
+          <div className="inner pb-100 clearfix">
+            <div className="form-content pera-content">
+              <div className="step-inner-content">
+                <span className="step-no bottom-line">Step 5</span>
+                <div className="step-progress float-right">
+                  <span>Final Review</span>
+                  <div className="step-progress-bar">
+                    <div className="progress">
+                      <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+
+                <h2>Review Your Application</h2>
+                <p>Please review your information before submitting your Construction Subsidy application.</p>
+
+                <div className="form-inner-area">
+                  {/* Personal Information */}
+                  <div className="review-section mb-4">
+                    <h5 className="border-bottom pb-2 mb-3">
+                      <IconifyIcon icon="mingcute:user-3-line" className="me-2" />
+                      Personal Information
+                    </h5>
+                    <div className="row g-2">
+                      <div className="col-md-6">
+                        <small className="text-muted">National ID:</small>
+                        <p className="mb-1 fw-medium">{formData.national_id as string || '-'}</p>
+                      </div>
+                      <div className="col-md-6">
+                        <small className="text-muted">Full Name:</small>
+                        <p className="mb-1 fw-medium">{formData.full_name as string || '-'}</p>
+                      </div>
+                      <div className="col-md-6">
+                        <small className="text-muted">Date of Birth:</small>
+                        <p className="mb-1 fw-medium">{formData.date_of_birth as string || '-'}</p>
+                      </div>
+                      <div className="col-md-6">
+                        <small className="text-muted">Gender:</small>
+                        <p className="mb-1 fw-medium">{formatLabel(formData.gender as string)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Information */}
+                  <div className="review-section mb-4">
+                    <h5 className="border-bottom pb-2 mb-3">
+                      <IconifyIcon icon="mingcute:phone-line" className="me-2" />
+                      Contact Information
+                    </h5>
+                    <div className="row g-2">
+                      <div className="col-md-6">
+                        <small className="text-muted">Phone Number:</small>
+                        <p className="mb-1 fw-medium">{formData.phone_number as string || '-'}</p>
+                      </div>
+                      <div className="col-md-6">
+                        <small className="text-muted">Email:</small>
+                        <p className="mb-1 fw-medium">{formData.email as string || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Household & Address */}
+                  <div className="review-section mb-4">
+                    <h5 className="border-bottom pb-2 mb-3">
+                      <IconifyIcon icon="mingcute:home-3-line" className="me-2" />
+                      Household & Address
+                    </h5>
+                    <div className="row g-2">
+                      <div className="col-md-6">
+                        <small className="text-muted">Household Size:</small>
+                        <p className="mb-1 fw-medium">{formData.household_size as number || 1} person(s)</p>
+                      </div>
+                      <div className="col-md-6">
+                        <small className="text-muted">Dependents:</small>
+                        <p className="mb-1 fw-medium">{formData.dependents as number || 0}</p>
+                      </div>
+                      <div className="col-12">
+                        <small className="text-muted">Address:</small>
+                        <p className="mb-1 fw-medium">{formData.address_line as string || '-'}</p>
+                      </div>
+                      <div className="col-md-6">
+                        <small className="text-muted">District:</small>
+                        <p className="mb-1 fw-medium">{getDistrictName(formData.district as string)}</p>
+                      </div>
+                      <div className="col-md-6">
+                        <small className="text-muted">Ressort:</small>
+                        <p className="mb-1 fw-medium">{formData.ressort as string || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Application Details */}
+                  <div className="review-section mb-4">
+                    <h5 className="border-bottom pb-2 mb-3">
+                      <IconifyIcon icon="mingcute:file-line" className="me-2" />
+                      Application Details
+                    </h5>
+                    <div className="row g-2">
+                      <div className="col-md-6">
+                        <small className="text-muted">Reason:</small>
+                        <p className="mb-1 fw-medium">{formatLabel(formData.application_reason as string)}</p>
+                      </div>
+                      <div className="col-md-6">
+                        <small className="text-muted">Estimated Amount:</small>
+                        <p className="mb-1 fw-medium">
+                          {formData.estimated_amount ? `SRD ${formData.estimated_amount}` : '-'}
+                        </p>
+                      </div>
+                      <div className="col-12">
+                        <small className="text-muted">Emergency Application:</small>
+                        <p className="mb-1 fw-medium">
+                          {formData.is_calamity ? (
+                            <span className="badge bg-warning text-dark">Yes - Calamity</span>
+                          ) : 'No'}
+                        </p>
+                      </div>
+                      <div className="col-12">
+                        <small className="text-muted">Documents Available:</small>
+                        <p className="mb-1 fw-medium">{availableDocs} of {documents.length}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Declaration */}
+                  <div className="review-section mt-4 p-3 border rounded bg-light">
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        id="declaration_accepted"
+                        checked={(formData.declaration_accepted as boolean) || false}
+                        onChange={(e) => handleDeclarationChange(e.target.checked)}
+                      />
+                      <label className="form-check-label" htmlFor="declaration_accepted">
+                        <strong>Declaration</strong>
+                        <br />
+                        <small className="text-muted">
+                          I hereby declare that all information provided is true and accurate to the 
+                          best of my knowledge. I understand that providing false information may 
+                          result in the rejection of my application and possible legal consequences.
+                        </small>
+                      </label>
+                    </div>
+                    {getError('declaration_accepted') && (
+                      <div className="text-danger small mt-2">{getError('declaration_accepted')}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="actions">
+            <ul>
+              <li>
+                <span className="js-btn-prev" title="BACK" onClick={handleBack} style={{ cursor: 'pointer' }}>
+                  <IconifyIcon icon="mingcute:arrow-left-line" /> BACK
+                </span>
+              </li>
+              <li>
+                <button type="button" className="btn" onClick={onSubmit} style={{ cursor: 'pointer' }}>
+                  SUBMIT APPLICATION <IconifyIcon icon="mingcute:check-line" />
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // HOUSING Review
   return (
     <div className="multisteps-form__panel js-active" data-animation="slideHorz">
       <div className="wizard-forms">
@@ -155,129 +331,183 @@ const NeonwizardStep5 = () => {
             <div className="step-inner-content">
               <span className="step-no bottom-line">Step 5</span>
               <div className="step-progress float-right">
-                <span>5 of 5 completed</span>
+                <span>Final Review</span>
                 <div className="step-progress-bar">
                   <div className="progress">
-                    <div className="progress-bar" style={{ width: '100%' }}></div>
+                    <div className="progress-bar" style={{ width: `${progress}%` }}></div>
                   </div>
                 </div>
               </div>
-              <h2>Review & Submit</h2>
-              <p>
-                Please review your information and select your preferred timeline. 
-                Once submitted, you will receive a reference number to track your application.
-              </p>
-              <div className="step-content-field">
-                <div className="date-picker date datepicker">
-                  <input 
-                    type="date" 
-                    name="date" 
-                    className={`form-control ${getError('date') ? 'is-invalid' : ''}`}
-                    value={(formData.date as string) || ''}
-                    onChange={(e) => handleChange('date', e.target.value)}
-                  />
-                  <div className="input-group-append">
-                    <span>PREFERRED START DATE</span>
-                  </div>
-                  {getError('date') && (
-                    <div className="text-danger small mt-1">{getError('date')}</div>
-                  )}
-                </div>
-                <div className="plan-area">
-                  <div 
-                    className={`plan-icon-text text-center ${selectedPlan === 'Unlimited Plan' ? 'active' : ''}`}
-                    onClick={() => handleChange('your_plan', 'Unlimited Plan')}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div className="plan-icon">
-                      <IconifyIcon icon="mingcute:crown-line" />
+
+              <h2>Review Your Registration</h2>
+              <p>Please review your information before submitting your Housing Registration.</p>
+
+              <div className="form-inner-area">
+                {/* Personal Information */}
+                <div className="review-section mb-4">
+                  <h5 className="border-bottom pb-2 mb-3">
+                    <IconifyIcon icon="mingcute:user-3-line" className="me-2" />
+                    Personal Information
+                  </h5>
+                  <div className="row g-2">
+                    <div className="col-md-6">
+                      <small className="text-muted">National ID:</small>
+                      <p className="mb-1 fw-medium">{formData.national_id as string || '-'}</p>
                     </div>
-                    <div className="plan-text">
-                      <h3>Priority Processing</h3>
-                      <p>
-                        Your application will be processed with priority status. 
-                        Recommended for urgent housing needs or time-sensitive situations.
+                    <div className="col-md-6">
+                      <small className="text-muted">Full Name:</small>
+                      <p className="mb-1 fw-medium">{formData.full_name as string || '-'}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <small className="text-muted">Date of Birth:</small>
+                      <p className="mb-1 fw-medium">{formData.date_of_birth as string || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="review-section mb-4">
+                  <h5 className="border-bottom pb-2 mb-3">
+                    <IconifyIcon icon="mingcute:phone-line" className="me-2" />
+                    Contact Information
+                  </h5>
+                  <div className="row g-2">
+                    <div className="col-md-6">
+                      <small className="text-muted">Phone Number:</small>
+                      <p className="mb-1 fw-medium">{formData.phone_number as string || '-'}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <small className="text-muted">Email:</small>
+                      <p className="mb-1 fw-medium">{formData.email as string || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Living Situation */}
+                <div className="review-section mb-4">
+                  <h5 className="border-bottom pb-2 mb-3">
+                    <IconifyIcon icon="mingcute:home-3-line" className="me-2" />
+                    Current Living Situation
+                  </h5>
+                  <div className="row g-2">
+                    <div className="col-12">
+                      <small className="text-muted">Current Address:</small>
+                      <p className="mb-1 fw-medium">{formData.current_address as string || '-'}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <small className="text-muted">District:</small>
+                      <p className="mb-1 fw-medium">{getDistrictName(formData.current_district as string)}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <small className="text-muted">Housing Type:</small>
+                      <p className="mb-1 fw-medium">{formatLabel(formData.current_housing_type as string)}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <small className="text-muted">Monthly Rent:</small>
+                      <p className="mb-1 fw-medium">
+                        {formData.monthly_rent ? `SRD ${formData.monthly_rent}` : '-'}
                       </p>
-                      <input
-                        type="radio"
-                        name="your_plan"
-                        value="Unlimited Plan"
-                        checked={selectedPlan === 'Unlimited Plan'}
-                        onChange={(e) => handleChange('your_plan', e.target.value)}
-                      />
+                    </div>
+                    <div className="col-md-6">
+                      <small className="text-muted">Number of Residents:</small>
+                      <p className="mb-1 fw-medium">{formData.number_of_residents as number || 1}</p>
                     </div>
                   </div>
-                  <div 
-                    className={`plan-icon-text text-center ${selectedPlan === 'Limited Plan' ? 'active' : ''}`}
-                    onClick={() => handleChange('your_plan', 'Limited Plan')}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div className="plan-icon">
-                      <IconifyIcon icon="mingcute:cube-3d-line" />
+                </div>
+
+                {/* Housing Preference */}
+                <div className="review-section mb-4">
+                  <h5 className="border-bottom pb-2 mb-3">
+                    <IconifyIcon icon="mingcute:building-1-line" className="me-2" />
+                    Housing Preference
+                  </h5>
+                  <div className="row g-2">
+                    <div className="col-md-6">
+                      <small className="text-muted">Interest Type:</small>
+                      <p className="mb-1 fw-medium">{formatLabel(formData.interest_type as string)}</p>
                     </div>
-                    <div className="plan-text">
-                      <h3>Standard Processing</h3>
-                      <p>
-                        Your application will be processed in the standard queue. 
-                        Processing time varies based on current volume.
+                    <div className="col-md-6">
+                      <small className="text-muted">Preferred District:</small>
+                      <p className="mb-1 fw-medium">{getDistrictName(formData.preferred_district as string)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Application Details */}
+                <div className="review-section mb-4">
+                  <h5 className="border-bottom pb-2 mb-3">
+                    <IconifyIcon icon="mingcute:file-line" className="me-2" />
+                    Application Details
+                  </h5>
+                  <div className="row g-2">
+                    <div className="col-12">
+                      <small className="text-muted">Reason for Application:</small>
+                      <p className="mb-1 fw-medium">{formatLabel(formData.application_reason as string)}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <small className="text-muted">Income Source:</small>
+                      <p className="mb-1 fw-medium">{formatLabel(formData.income_source as string)}</p>
+                    </div>
+                    <div className="col-md-6">
+                      <small className="text-muted">Monthly Income:</small>
+                      <p className="mb-1 fw-medium">
+                        {formData.monthly_income_applicant ? `SRD ${formData.monthly_income_applicant}` : '-'}
                       </p>
-                      <input 
-                        type="radio" 
-                        name="your_plan" 
-                        value="Limited Plan"
-                        checked={selectedPlan === 'Limited Plan'}
-                        onChange={(e) => handleChange('your_plan', e.target.value)}
-                      />
                     </div>
                   </div>
-                  {getError('your_plan') && (
-                    <div className="text-danger small mt-1">{getError('your_plan')}</div>
-                  )}
                 </div>
-                <div className="budget-area">
-                  <p>Additional Preferences</p>
-                  <div className="opti-list">
-                    <ul className="d-md-flex">
-                      <li className={`bg-white ${formData.pref_opti1 ? 'active' : ''}`}>
-                        <input
-                          type="checkbox"
-                          name="pref_opti1"
-                          value="Email notifications"
-                          checked={!!formData.pref_opti1}
-                          onChange={(e) => handleCheckbox('pref_opti1', e.target.checked)}
-                        />
-                        Email notifications
-                      </li>
-                      <li className={`bg-white ${formData.pref_opti2 ? 'active' : ''}`}>
-                        <input 
-                          type="checkbox" 
-                          name="pref_opti2" 
-                          value="SMS updates"
-                          checked={!!formData.pref_opti2}
-                          onChange={(e) => handleCheckbox('pref_opti2', e.target.checked)}
-                        />
-                        SMS updates
-                      </li>
-                      <li className={`bg-white ${formData.pref_opti3 ? 'active' : ''}`}>
-                        <input
-                          type="checkbox"
-                          name="pref_opti3"
-                          value="Newsletter"
-                          checked={!!formData.pref_opti3}
-                          onChange={(e) => handleCheckbox('pref_opti3', e.target.checked)}
-                        />
-                        Newsletter
-                      </li>
-                    </ul>
+
+                {/* Urgency */}
+                {(formData.has_disability || formData.has_emergency) && (
+                  <div className="review-section mb-4">
+                    <h5 className="border-bottom pb-2 mb-3">
+                      <IconifyIcon icon="mingcute:warning-line" className="me-2" />
+                      Special Circumstances
+                    </h5>
+                    <div className="row g-2">
+                      {formData.has_disability && (
+                        <div className="col-12">
+                          <span className="badge bg-info me-2">Disability/Medical Needs</span>
+                        </div>
+                      )}
+                      {formData.has_emergency && (
+                        <div className="col-12">
+                          <span className="badge bg-warning text-dark me-2">Emergency Situation</span>
+                        </div>
+                      )}
+                      {formData.urgency_details && (
+                        <div className="col-12 mt-2">
+                          <small className="text-muted">Details:</small>
+                          <p className="mb-1">{formData.urgency_details as string}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="comment-box">
-                  <textarea 
-                    name="extra-message" 
-                    placeholder="Any final notes or special requests..."
-                    value={(formData['extra-message'] as string) || ''}
-                    onChange={(e) => handleChange('extra-message', e.target.value)}
-                  ></textarea>
+                )}
+
+                {/* Declaration */}
+                <div className="review-section mt-4 p-3 border rounded bg-light">
+                  <div className="form-check">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      id="declaration_accepted"
+                      checked={(formData.declaration_accepted as boolean) || false}
+                      onChange={(e) => handleDeclarationChange(e.target.checked)}
+                    />
+                    <label className="form-check-label" htmlFor="declaration_accepted">
+                      <strong>Declaration</strong>
+                      <br />
+                      <small className="text-muted">
+                        I hereby declare that all information provided is true and accurate to the 
+                        best of my knowledge. I understand that providing false information may 
+                        result in the rejection of my registration and possible legal consequences.
+                      </small>
+                    </label>
+                  </div>
+                  {getError('declaration_accepted') && (
+                    <div className="text-danger small mt-2">{getError('declaration_accepted')}</div>
+                  )}
                 </div>
               </div>
             </div>
@@ -286,13 +516,13 @@ const NeonwizardStep5 = () => {
         <div className="actions">
           <ul>
             <li>
-              <span className="js-btn-prev" title="BACK" onClick={prevStep} style={{ cursor: 'pointer' }}>
-                <IconifyIcon icon="mingcute:arrow-left-line" /> BACK{' '}
+              <span className="js-btn-prev" title="BACK" onClick={handleBack} style={{ cursor: 'pointer' }}>
+                <IconifyIcon icon="mingcute:arrow-left-line" /> BACK
               </span>
             </li>
             <li>
-              <button type="button" title="SUBMIT" onClick={onSubmit}>
-                SUBMIT <IconifyIcon icon="mingcute:arrow-right-line" />
+              <button type="button" className="btn" onClick={onSubmit} style={{ cursor: 'pointer' }}>
+                SUBMIT REGISTRATION <IconifyIcon icon="mingcute:check-line" />
               </button>
             </li>
           </ul>

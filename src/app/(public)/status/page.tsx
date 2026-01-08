@@ -6,10 +6,11 @@
  * using reference number and access token.
  * 
  * Uses shared PublicHeader/PublicFooter for Darkone 1:1 parity.
+ * NO breadcrumb per CP6 requirements.
  */
 
 import { useState } from 'react'
-import { Container } from 'react-bootstrap'
+import { Container, Card, CardBody, Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { PublicHeader, PublicFooter } from '@/components/public'
@@ -73,18 +74,7 @@ const StatusTrackerPage = () => {
 
       <main className="flex-grow-1 py-5 bg-light">
         <Container style={{ maxWidth: 700 }}>
-          {/* Breadcrumb */}
-          <nav className="mb-4">
-            <ol className="breadcrumb mb-0">
-              <li className="breadcrumb-item">
-                <Link to="/" className="text-decoration-none">
-                  <IconifyIcon icon="mingcute:home-4-line" className="me-1" />
-                  Home
-                </Link>
-              </li>
-              <li className="breadcrumb-item active">Status Tracker</li>
-            </ol>
-          </nav>
+          {/* NO BREADCRUMB - per CP6 requirements */}
 
           {/* Conditional Rendering based on state */}
           {lookupState === 'success' && result ? (
@@ -97,17 +87,24 @@ const StatusTrackerPage = () => {
             />
           )}
 
-          {/* Help Text */}
-          <div className="text-center mt-4">
-            <p className="text-muted small mb-2">
-              <IconifyIcon icon="mingcute:question-line" className="me-1" />
-              Need help? Contact the Ministry of Social Affairs and Housing
-            </p>
-            <Link to="/" className="text-decoration-none small">
-              <IconifyIcon icon="mingcute:arrow-left-line" className="me-1" />
-              Back to Home
-            </Link>
-          </div>
+          {/* Help & Navigation Card Footer - Darkone 1:1 */}
+          <Card className="border-0 shadow-sm mt-4">
+            <CardBody className="text-center py-4">
+              <p className="text-muted small mb-3 d-flex align-items-center justify-content-center gap-2">
+                <IconifyIcon icon="mingcute:question-line" />
+                <span>Need help? Contact the Ministry of Social Affairs and Housing</span>
+              </p>
+              <Link to="/">
+                <Button 
+                  variant="outline-secondary" 
+                  className="d-inline-flex align-items-center justify-content-center gap-2"
+                >
+                  <IconifyIcon icon="mingcute:arrow-left-line" />
+                  <span>Back to Home</span>
+                </Button>
+              </Link>
+            </CardBody>
+          </Card>
         </Container>
       </main>
 

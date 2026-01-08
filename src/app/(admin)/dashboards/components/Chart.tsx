@@ -3,24 +3,40 @@ import ReactApexChart from 'react-apexcharts'
 import CountryMap from './CountryMap'
 import { Card, CardBody, CardHeader, Col, Row } from 'react-bootstrap'
 import SaleChart from './SaleChart'
+import { useMonthlyTrends } from '../hooks/useDashboardData'
 
 const Chart = () => {
+  const { data: monthlyData, loading } = useMonthlyTrends()
+
+  // Extract series data from monthly trends
+  const registrationsSeries = loading 
+    ? [34, 65, 46, 68, 49, 61, 42, 44, 78, 52, 63, 67]
+    : monthlyData.map(m => m.registrations)
+  
+  const subsidySeries = loading
+    ? [8, 12, 7, 17, 21, 11, 5, 9, 7, 29, 12, 35]
+    : monthlyData.map(m => m.subsidyCases)
+  
+  const allocationsSeries = loading
+    ? [12, 16, 11, 22, 28, 25, 15, 29, 35, 45, 42, 48]
+    : monthlyData.map(m => m.allocations)
+
   const salesChart: ApexOptions = {
     series: [
       {
-        name: 'Page Views',
+        name: 'Housing Registrations',
         type: 'bar',
-        data: [34, 65, 46, 68, 49, 61, 42, 44, 78, 52, 63, 67],
+        data: registrationsSeries,
       },
       {
-        name: 'Clicks',
+        name: 'Subsidy Cases',
         type: 'area',
-        data: [8, 12, 7, 17, 21, 11, 5, 9, 7, 29, 12, 35],
+        data: subsidySeries,
       },
       {
-        name: 'Revenue',
+        name: 'Allocations',
         type: 'area',
-        data: [12, 16, 11, 22, 28, 25, 15, 29, 35, 45, 42, 48],
+        data: allocationsSeries,
       },
     ],
     chart: {
@@ -117,7 +133,7 @@ const Chart = () => {
         {
           formatter: function (y) {
             if (typeof y !== 'undefined') {
-              return y.toFixed(1) + 'k'
+              return y.toFixed(0) + ' cases'
             }
             return y
           },
@@ -125,7 +141,15 @@ const Chart = () => {
         {
           formatter: function (y) {
             if (typeof y !== 'undefined') {
-              return y.toFixed(1) + 'k'
+              return y.toFixed(0) + ' cases'
+            }
+            return y
+          },
+        },
+        {
+          formatter: function (y) {
+            if (typeof y !== 'undefined') {
+              return y.toFixed(0) + ' allocations'
             }
             return y
           },
@@ -140,7 +164,7 @@ const Chart = () => {
         <Col lg={4}>
           <Card className=" card-height-100 ">
             <CardHeader className="d-flex align-items-center justify-content-between gap-2">
-              <h4 className=" mb-0 flex-grow-1 mb-0">Revenue</h4>
+              <h4 className=" mb-0 flex-grow-1 mb-0">Monthly Trends</h4>
               <div>
                 <button type="button" className="btn btn-sm btn-outline-light">
                   ALL

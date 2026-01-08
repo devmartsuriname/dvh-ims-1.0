@@ -2,7 +2,8 @@ import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { ApexOptions } from 'apexcharts'
 import ReactApexChart from 'react-apexcharts'
 import { Card, CardBody, Col, Row } from 'react-bootstrap'
-import { cardsData, CardsType } from '../data'
+import { cardsData, CardsType, createCardsData } from '../data'
+import { useDashboardKPIs } from '../hooks/useDashboardData'
 
 const StatCard = ({ count, icon, series, title }: CardsType) => {
   const salesChart: ApexOptions = {
@@ -79,10 +80,22 @@ const StatCard = ({ count, icon, series, title }: CardsType) => {
 }
 
 const Cards = () => {
+  const kpis = useDashboardKPIs()
+  
+  // Use real data when loaded, fallback to static during loading
+  const displayData = kpis.loading 
+    ? cardsData 
+    : createCardsData({
+        totalRegistrations: kpis.totalRegistrations,
+        totalSubsidyCases: kpis.totalSubsidyCases,
+        pendingApplications: kpis.pendingApplications,
+        approvedApplications: kpis.approvedApplications,
+      })
+
   return (
     <>
       <Row>
-        {cardsData.map((item, idx) => (
+        {displayData.map((item, idx) => (
           <Col md={6} xl={3} key={idx}>
             <StatCard {...item} />
           </Col>

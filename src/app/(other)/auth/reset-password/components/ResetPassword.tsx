@@ -1,5 +1,4 @@
-import DarkLogo from '@/assets/images/logo-dark.png'
-import LightLogo from '@/assets/images/logo-light.png'
+import logoSozavo from '@/assets/images/logo-sozavo.png'
 import * as yup from 'yup'
 import TextFormInput from '@/components/from/TextFormInput'
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -34,11 +33,8 @@ const ResetPassword = () => {
                   <CardBody className=" p-5">
                     <div className="text-center">
                       <div className="mx-auto mb-4 text-center auth-logo">
-                        <Link to="/dashboards" className="logo-dark">
-                          <img src={DarkLogo} height={32} alt="logo dark" />
-                        </Link>
-                        <Link to="/dashboards" className="logo-light">
-                          <img src={LightLogo} height={28} alt="logo light" />
+                        <Link to="/dashboards" className="d-inline-block">
+                          <img src={logoSozavo} style={{ height: '56px', width: 'auto' }} alt="VolksHuisvesting" />
                         </Link>
                       </div>
                       <h4 className="fw-bold text-dark mb-2">Reset Password</h4>

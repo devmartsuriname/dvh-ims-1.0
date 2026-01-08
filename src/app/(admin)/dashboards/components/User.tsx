@@ -1,21 +1,33 @@
 import avatar2 from '@/assets/images/users/avatar-2.jpg'
-import avatar3 from '@/assets/images/users/avatar-3.jpg'
-import avatar4 from '@/assets/images/users/avatar-4.jpg'
-import avatar5 from '@/assets/images/users/avatar-5.jpg'
-import avatar6 from '@/assets/images/users/avatar-6.jpg'
 import { Card, CardBody, CardHeader, Col, Row } from 'react-bootstrap'
-import { currentYear } from '@/context/constants'
 import { Link } from 'react-router-dom'
+import { useRecentCases, useRecentRegistrations } from '../hooks/useDashboardData'
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+const getStatusBadge = (status: string) => {
+  const s = status.toLowerCase()
+  if (s === 'approved' || s === 'allocated') return 'badge-soft-success'
+  if (s === 'rejected' || s === 'cancelled') return 'badge-soft-danger'
+  if (s === 'received' || s === 'pending') return 'badge-soft-warning'
+  return 'badge-soft-primary'
+}
 
 const User = () => {
+  const { data: recentCases, loading: loadingCases } = useRecentCases()
+  const { data: recentRegistrations, loading: loadingRegistrations } = useRecentRegistrations()
+
   return (
     <>
       <Row>
         <Col xl={6}>
           <Card>
             <CardHeader className=" d-flex justify-content-between align-items-center">
-              <h4 className="card-title mb-0">New Accounts</h4>
-              <Link to="" className="btn btn-sm btn-light">
+              <h4 className="card-title mb-0">Recent Subsidy Cases</h4>
+              <Link to="/bouwsubsidie/cases" className="btn btn-sm btn-light">
                 View All
               </Link>
             </CardHeader>
@@ -25,74 +37,42 @@ const User = () => {
                 <table className="table table-hover mb-0 table-centered">
                   <thead>
                     <tr>
-                      <th className="py-1">ID</th>
+                      <th className="py-1">Case #</th>
                       <th className="py-1">Date</th>
-                      <th className="py-1">User</th>
-                      <th className="py-1">Account</th>
-                      <th className="py-1">Username</th>
+                      <th className="py-1">Applicant</th>
+                      <th className="py-1">Status</th>
+                      <th className="py-1">District</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>#US523</td>
-                      <td>24 April, {currentYear}</td>
-                      <td>
-                        <img src={avatar2} alt="avatar-2" className="img-fluid avatar-xs rounded-circle" />
-                        <span className="align-middle ms-1">Dan Adrick</span>
-                      </td>
-                      <td>
-                        <span className="badge badge-soft-success">Verified</span>
-                      </td>
-                      <td>@omions</td>
-                    </tr>
-                    <tr>
-                      <td>#US652</td>
-                      <td>24 April, {currentYear}</td>
-                      <td>
-                        <img src={avatar3} alt="avatar-2" className="img-fluid avatar-xs rounded-circle" />
-                        <span className="align-middle ms-1">Daniel Olsen</span>
-                      </td>
-                      <td>
-                        <span className="badge badge-soft-success">Verified</span>
-                      </td>
-                      <td>@alliates</td>
-                    </tr>
-                    <tr>
-                      <td>#US862</td>
-                      <td>20 April, {currentYear}</td>
-                      <td>
-                        <img src={avatar4} alt="avatar-2" className="img-fluid avatar-xs rounded-circle" />
-                        <span className="align-middle ms-1">Jack Roldan</span>
-                      </td>
-                      <td>
-                        <span className="badge badge-soft-warning">Pending</span>
-                      </td>
-                      <td>@griys</td>
-                    </tr>
-                    <tr>
-                      <td>#US756</td>
-                      <td>18 April, {currentYear}</td>
-                      <td>
-                        <img src={avatar5} alt="avatar-2" className="img-fluid avatar-xs rounded-circle" />
-                        <span className="align-middle ms-1">Betty Cox</span>
-                      </td>
-                      <td>
-                        <span className="badge badge-soft-success">Verified</span>
-                      </td>
-                      <td>@reffon</td>
-                    </tr>
-                    <tr>
-                      <td>#US420</td>
-                      <td>18 April, {currentYear}</td>
-                      <td>
-                        <img src={avatar6} alt="avatar-2" className="img-fluid avatar-xs rounded-circle" />
-                        <span className="align-middle ms-1">Carlos Johnson</span>
-                      </td>
-                      <td>
-                        <span className="badge badge-soft-danger">Blocked</span>
-                      </td>
-                      <td>@bebo</td>
-                    </tr>
+                    {loadingCases ? (
+                      <tr>
+                        <td colSpan={5} className="text-center text-muted">Loading...</td>
+                      </tr>
+                    ) : recentCases.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center text-muted">No recent cases</td>
+                      </tr>
+                    ) : (
+                      recentCases.map((caseItem) => (
+                        <tr key={caseItem.id}>
+                          <td>{caseItem.case_number}</td>
+                          <td>{formatDate(caseItem.created_at)}</td>
+                          <td>
+                            <img src={avatar2} alt="avatar" className="img-fluid avatar-xs rounded-circle" />
+                            <span className="align-middle ms-1">
+                              {caseItem.person?.first_name} {caseItem.person?.last_name}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`badge ${getStatusBadge(caseItem.status)}`}>
+                              {caseItem.status.charAt(0).toUpperCase() + caseItem.status.slice(1)}
+                            </span>
+                          </td>
+                          <td>{caseItem.district_code}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -102,8 +82,8 @@ const User = () => {
         <Col xl={6}>
           <Card>
             <CardHeader className="d-flex justify-content-between align-items-center">
-              <h4 className="card-title mb-0">Recent Transactions</h4>
-              <Link to="" className="btn btn-sm btn-light">
+              <h4 className="card-title mb-0">Recent Housing Registrations</h4>
+              <Link to="/woning/registrations" className="btn btn-sm btn-light">
                 View All
               </Link>
             </CardHeader>
@@ -112,59 +92,42 @@ const User = () => {
                 <table className="table table-hover mb-0 table-centered">
                   <thead>
                     <tr>
-                      <th className="py-1">ID</th>
+                      <th className="py-1">Ref #</th>
                       <th className="py-1">Date</th>
-                      <th className="py-1">Amount</th>
+                      <th className="py-1">Applicant</th>
                       <th className="py-1">Status</th>
-                      <th className="py-1">Description</th>
+                      <th className="py-1">District</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>#98521</td>
-                      <td>24 April, {currentYear}</td>
-                      <td>$120.55</td>
-                      <td>
-                        <span className="badge bg-success">Cr</span>
-                      </td>
-                      <td>Commisions</td>
-                    </tr>
-                    <tr>
-                      <td>#20158</td>
-                      <td>24 April, {currentYear}</td>
-                      <td>$9.68</td>
-                      <td>
-                        <span className="badge bg-success">Cr</span>
-                      </td>
-                      <td>Affiliates</td>
-                    </tr>
-                    <tr>
-                      <td>#36589</td>
-                      <td>20 April, {currentYear}</td>
-                      <td>$105.22</td>
-                      <td>
-                        <span className="badge bg-danger">Dr</span>
-                      </td>
-                      <td>Grocery</td>
-                    </tr>
-                    <tr>
-                      <td>#95362</td>
-                      <td>18 April, {currentYear}</td>
-                      <td>$80.59</td>
-                      <td>
-                        <span className="badge bg-success">Cr</span>
-                      </td>
-                      <td>Refunds</td>
-                    </tr>
-                    <tr>
-                      <td>#75214</td>
-                      <td>18 April, {currentYear}</td>
-                      <td>$750.95</td>
-                      <td>
-                        <span className="badge bg-danger">Dr</span>
-                      </td>
-                      <td>Bill Payments</td>
-                    </tr>
+                    {loadingRegistrations ? (
+                      <tr>
+                        <td colSpan={5} className="text-center text-muted">Loading...</td>
+                      </tr>
+                    ) : recentRegistrations.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center text-muted">No recent registrations</td>
+                      </tr>
+                    ) : (
+                      recentRegistrations.map((reg) => (
+                        <tr key={reg.id}>
+                          <td>{reg.reference_number}</td>
+                          <td>{formatDate(reg.created_at)}</td>
+                          <td>
+                            <img src={avatar2} alt="avatar" className="img-fluid avatar-xs rounded-circle" />
+                            <span className="align-middle ms-1">
+                              {reg.person?.first_name} {reg.person?.last_name}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`badge ${getStatusBadge(reg.current_status)}`}>
+                              {reg.current_status.charAt(0).toUpperCase() + reg.current_status.slice(1)}
+                            </span>
+                          </td>
+                          <td>{reg.district_code}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

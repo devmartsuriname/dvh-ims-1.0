@@ -1,0 +1,54 @@
+/*----------------------------------------------------
+  Neonwizard Layout #1 - Scoped Styles
+  
+  CRITICAL: All styles wrapped under .neonwizard-scope
+  to prevent leakage to Darkone Admin UI
+  
+  NO jQuery | NO Font Awesome | NO external fonts
+=====================================================================*/
+
+@import "template";
+
+/*global area*/
+/*----------------------------------------------------*/
+@import "predefine";
+/*---------------------------------------------------- */
+
+/*wizard area*/
+/*----------------------------------------------------*/
+@import "wizard";
+/*---------------------------------------------------- */
+
+/*responsive area*/
+/*----------------------------------------------------*/
+@import "responsive";
+/*---------------------------------------------------- */
+
+/* Image holder - left panel with background */
+.neonwizard-scope .image-holder {
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+    
+    img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    /* Dark overlay for better step visibility */
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.3) 0%,
+            rgba(0, 0, 0, 0.4) 100%
+        );
+        pointer-events: none;
+    }
+}

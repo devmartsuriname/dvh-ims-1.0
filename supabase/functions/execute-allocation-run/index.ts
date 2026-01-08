@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,17 +17,6 @@ interface AllocationCandidate {
   composite_rank: number
 }
 
-// UUID validation helper for input sanitization
-function isValidUUID(str: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  return uuidRegex.test(str)
-}
-
-// District code validation (alphanumeric, max 20 chars)
-function isValidDistrictCode(str: string): boolean {
-  return /^[A-Za-z0-9_-]{1,20}$/.test(str)
-}
-
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -36,15 +25,8 @@ Deno.serve(async (req) => {
 
   try {
     // Initialize Supabase client with service role for admin operations
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Server configuration error', code: 'CONFIG_ERROR' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
@@ -52,7 +34,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Missing authorization header', code: 'AUTH_MISSING' }),
+        JSON.stringify({ success: false, error: 'Missing authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -62,20 +44,18 @@ Deno.serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
     if (userError || !user) {
-      // Sanitized log - no token or user details exposed
-      console.error('Auth validation failed')
+      console.error('User validation failed:', userError)
       return new Response(
-        JSON.stringify({ success: false, error: 'Invalid authorization token', code: 'AUTH_INVALID' }),
+        JSON.stringify({ success: false, error: 'Invalid authorization token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
     // Validate allowlist (only info@devmart.sr can execute)
     if (user.email !== 'info@devmart.sr') {
-      // Sanitized log - no email exposed
-      console.error('Allowlist check failed')
+      console.error('User not in allowlist:', user.email)
       return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized: User not in allowlist', code: 'AUTH_FORBIDDEN' }),
+        JSON.stringify({ success: false, error: 'Unauthorized: User not in allowlist' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -84,32 +64,14 @@ Deno.serve(async (req) => {
     const body: AllocationRunRequest = await req.json()
     const { run_id, district_code } = body
 
-    // Validate required fields presence
     if (!run_id || !district_code) {
       return new Response(
-        JSON.stringify({ success: false, error: 'Missing required fields: run_id, district_code', code: 'VALIDATION_MISSING' }),
+        JSON.stringify({ success: false, error: 'Missing required fields: run_id, district_code' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Validate UUID format for run_id
-    if (!isValidUUID(run_id)) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Invalid run_id format', code: 'VALIDATION_UUID' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Validate district_code format
-    if (!isValidDistrictCode(district_code)) {
-      return new Response(
-        JSON.stringify({ success: false, error: 'Invalid district_code format', code: 'VALIDATION_DISTRICT' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Sanitized operational log - no PII
-    console.log(`Allocation run started: run=${run_id.substring(0, 8)}...`)
+    console.log(`Starting allocation run: ${run_id} for district: ${district_code}`)
 
     // 1. Update run status to 'running'
     const { error: updateStartError } = await supabase
@@ -140,7 +102,7 @@ Deno.serve(async (req) => {
       ? quotaData.total_quota - quotaData.allocated_count 
       : 0
 
-    console.log(`Quota check complete: available=${availableQuota}`)
+    console.log(`Available quota for ${district_code}: ${availableQuota}`)
 
     // 3. Fetch eligible candidates from waiting list
     // Eligible: status = 'waiting_list' and district matches
@@ -156,7 +118,7 @@ Deno.serve(async (req) => {
       throw new Error('Failed to fetch eligible registrations')
     }
 
-    console.log(`Eligible registrations found: count=${registrations?.length || 0}`)
+    console.log(`Found ${registrations?.length || 0} eligible registrations`)
 
     // 4. Calculate composite rank for each candidate
     // Composite rank = urgency_score (higher is better) + inverse waiting position
@@ -244,7 +206,7 @@ Deno.serve(async (req) => {
       }
     })
 
-    console.log(`Allocation run completed: candidates=${candidates.length}, selected=${selectedCount}`)
+    console.log(`Allocation run ${run_id} completed successfully`)
 
     return new Response(
       JSON.stringify({
@@ -257,9 +219,8 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
-    // Sanitized error - only safe message exposed
-    const errorMessage = error instanceof Error ? error.message : 'Processing error'
-    console.error('Allocation run failed')
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    console.error('Allocation run failed:', errorMessage)
 
     // Try to update run status to failed
     try {

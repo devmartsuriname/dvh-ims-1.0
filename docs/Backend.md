@@ -1,374 +1,258 @@
-# Backend Documentation
+# VolksHuisvesting IMS – Backend Specification
 
-## VolksHuisvesting IMS - DVH-IMS-1.0
-
-### Authentication Flow
-
-**Post-Login Redirect Logic** (`src/app/(other)/auth/sign-in/useSignIn.ts`)
-
-- If `redirectTo` query parameter exists → navigate to that URL
-- If no `redirectTo` parameter → navigate to `/dashboards` (Admin Dashboard)
-
-**Change History:**
-| Date | Change | Reason |
-|------|--------|--------|
-| 2026-01-07 | Default redirect changed from `/` to `/dashboards` | Phase 5 introduced public landing at `/`, admin dashboard moved to `/dashboards` |
-
-### Supabase Integration
-
-- Authentication: `supabase.auth.signInWithPassword()`
-- Session management via Supabase Auth
-- RLS policies enforced at database level
-
-### Route Protection
-
-- Admin routes protected via `ProtectedRoute` wrapper
-- Public routes accessible without authentication
-- Staff Portal button redirects to `/auth/sign-in?redirectTo=/dashboards`
+**Status:** Reference document for Phase 0+
+**Platform:** Lovable Cloud (Supabase)
+**Governance:** Government Grade, RLS-first, Audit-first
 
 ---
 
-## Phase 5 - CP6 Quality Gate (2026-01-07)
+## 1. Platform Overview
 
-### Public Pages Asset Resolution
+The VolksHuisvesting IMS backend is powered by **Lovable Cloud**, which provides:
 
-**Issue Fixed:** Logo images were not rendering on public pages due to incorrect path reference.
-
-**Solution:** Changed from static path (`/assets/images/logo-dark.png`) to ES6 module import (`import logoDark from '@/assets/images/logo-dark.png'`).
-
-**Files Modified:**
-- `src/components/public/PublicHeader.tsx` - Logo import fix
-
-### Shared Component Usage
-
-All public pages now use the centralized `PublicHeader` and `PublicFooter` components from `src/components/public/` for Darkone 1:1 parity.
-
-| Page | Route | Shared Components |
-|------|-------|-------------------|
-| Landing | `/` | PublicHeader, PublicFooter |
-| Status Tracker | `/status` | PublicHeader, PublicFooter |
-| Bouwsubsidie Wizard | `/bouwsubsidie/apply` | PublicHeader, PublicFooter |
-| Housing Wizard | `/housing/register` | PublicHeader, PublicFooter |
+- **PostgreSQL Database** - All persistent data storage
+- **Row Level Security (RLS)** - Access control at database level
+- **Authentication** - Staff authentication via Supabase Auth
+- **Edge Functions** - Serverless logic for workflows
+- **Storage** - Document and file storage
 
 ---
 
-## Phase 5 - CP6 Quality Gate Fix (2026-01-07)
+## 2. Authentication Configuration
 
-### Official Logo Replacement
+### 2.1 Staff Authentication
+- Method: Email + Password
+- Provider: Supabase Auth
+- Session: JWT-based
 
-**Change:** Replaced Darkone default logo with official SoZaVo (VolksHuisvesting) logo across all pages.
+### 2.2 Citizen Access (No Authentication)
+- Citizens do not log in
+- Access via reference number + secure token
+- Token stored as hash only
 
-**Logo Asset:** `src/assets/images/logo-sozavo.png`
-
-**Files Updated:**
-| File | Component | Description |
-|------|-----------|-------------|
-| `src/components/public/PublicHeader.tsx` | PublicHeader | Public pages header logo |
-| `src/components/wrapper/LogoBox.tsx` | LogoBox | Admin sidebar logo |
-| `src/app/(other)/auth/sign-in/components/SignIn.tsx` | SignIn | Login page logo |
-| `src/app/(other)/auth/sign-up/components/SignUp.tsx` | SignUp | Registration page logo |
-| `src/app/(other)/auth/reset-password/components/ResetPassword.tsx` | ResetPassword | Password reset logo |
-| `src/app/(other)/auth/lock-screen/components/LockScreen.tsx` | LockScreen | Lock screen logo |
-
-### Status Page Darkone 1:1 Fixes
-
-**Issues Fixed:**
-1. **Breadcrumb Removed** - Status page no longer displays breadcrumb per CP6 requirements
-2. **Button Alignment Fixed** - "Back to Home" now uses proper Darkone Button component with centered icon/label
-3. **Help Text Alignment** - Moved into Card footer with proper flex centering
-
-**Root Cause of Live URL vs Editor Mismatch:**
-- **Cause:** Deployment cache - Live URL was serving stale build artifacts
-- **Not a code issue** - Editor View renders correct components
-- **Fix:** User must click "Publish" and hard refresh browser to propagate latest build
-
-### WGA Polish Plan (Public Pages)
-
-**Government-Grade Visual Standards:**
-1. Landing: Hero with dark overlay, no gradients, clean typography hierarchy
-2. Status: No breadcrumb, proper card footer with centered button
-3. Wizards: Consistent progress indicators, button spacing, card shadows
-4. All pages: Official SoZaVo logo, Darkone components only, no custom icons
+### 2.3 Auth Configuration Checklist
+- [ ] Enable email/password authentication
+- [ ] Disable social providers (not required for v1.0)
+- [ ] Configure password requirements
+- [ ] Set up email templates (optional for v1.0)
 
 ---
 
-## Edge Function Import Standards
+## 3. Database Configuration
 
-### Supabase Client Import
+### 3.1 Schema Structure
+All tables are created in the `public` schema.
 
-All Edge Functions MUST use import maps via `supabase/functions/deno.json`:
+### 3.2 Required Extensions
+- `uuid-ossp` - UUID generation
+- `pgcrypto` - Token hashing
 
-**deno.json configuration:**
-```json
-{
-  "imports": {
-    "@supabase/supabase-js": "npm:@supabase/supabase-js@2"
-  },
-  "nodeModulesDir": "auto"
-}
-```
+### 3.3 Table Creation Order (Dependencies)
 
-**Edge Function import:**
-```typescript
-// CORRECT - Uses import map, stable build
-import { createClient } from '@supabase/supabase-js'
+**Phase 0:**
+1. app_user_profile
+2. audit_event
 
-// FORBIDDEN - CDN dependency, causes 5xx build failures
-// import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1'
-```
+**Phase 1 (Shared Core):**
+1. person
+2. household
+3. household_member
+4. contact_point
+5. address
 
-**Rationale:**
-- Import maps with `nodeModulesDir: "auto"` resolve npm packages natively
-- No external CDN dependency (esm.sh can return 522 errors)
-- Version pinning in deno.json ensures reproducible builds
+**Phase 2 (Bouwsubsidie):**
+1. subsidy_case
+2. subsidy_case_status_history
+3. subsidy_document_requirement
+4. subsidy_document_upload
+5. social_report
+6. technical_report
+7. generated_document
 
-**Change History:**
-| Date | Change | Reason |
-|------|--------|--------|
-| 2026-01-07 | Added deno.json with import map, replaced esm.sh | Build stability - esm.sh 522 errors |
+**Phase 3 (Housing Registration):**
+1. housing_registration
+2. housing_registration_status_history
+3. housing_urgency
+4. public_status_access
 
----
+**Phase 4 (Allocation):**
+1. district_quota
+2. allocation_run
+3. allocation_candidate
+4. allocation_decision
+5. assignment_record
 
-## Edge Functions Security Checklist
-
-All Edge Functions MUST implement the following security controls:
-
-### 1. Authorization (REQUIRED)
-
-```typescript
-// Authorization header required
-const authHeader = req.headers.get('Authorization')
-if (!authHeader) {
-  return new Response(
-    JSON.stringify({ success: false, error: 'Missing authorization header', code: 'AUTH_MISSING' }),
-    { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
-}
-
-// JWT validation via getUser()
-const token = authHeader.replace('Bearer ', '')
-const { data: { user }, error: userError } = await supabase.auth.getUser(token)
-```
-
-### 2. Allowlist/Role Check (REQUIRED for Phase 1)
-
-```typescript
-// Current Phase 1: Single email allowlist
-if (user.email !== 'info@devmart.sr') {
-  return new Response(
-    JSON.stringify({ success: false, error: 'Unauthorized', code: 'AUTH_FORBIDDEN' }),
-    { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
-}
-```
-
-### 3. Input Validation (REQUIRED)
-
-```typescript
-// UUID validation
-function isValidUUID(str: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  return uuidRegex.test(str)
-}
-
-// Validate before processing
-if (!isValidUUID(run_id)) {
-  return new Response(
-    JSON.stringify({ success: false, error: 'Invalid run_id format', code: 'VALIDATION_UUID' }),
-    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-  )
-}
-```
-
-### 4. Error Response Standards (REQUIRED)
-
-- Return structured JSON with `success`, `error`, and `code` fields
-- Never expose internal stack traces or system details
-- Use generic error messages for security-sensitive failures
-
-```typescript
-// CORRECT - Safe error response
-return new Response(
-  JSON.stringify({ success: false, error: 'Processing error', code: 'INTERNAL_ERROR' }),
-  { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-)
-
-// FORBIDDEN - Exposes internal details
-return new Response(JSON.stringify({ error: error.stack }), ...)
-```
-
-### 5. Logging Standards (REQUIRED)
-
-```typescript
-// CORRECT - Sanitized logs, no PII
-console.log(`Allocation run started: run=${run_id.substring(0, 8)}...`)
-console.error('Auth validation failed')
-
-// FORBIDDEN - Exposes PII or secrets
-console.error('User validation failed:', userError)
-console.log(`User email: ${user.email}`)
-```
-
-### 6. Environment Variables (REQUIRED)
-
-```typescript
-// CORRECT - Check for undefined, use safe defaults
-const supabaseUrl = Deno.env.get('SUPABASE_URL')
-if (!supabaseUrl) {
-  return new Response(
-    JSON.stringify({ success: false, error: 'Server configuration error', code: 'CONFIG_ERROR' }),
-    { status: 500, ... }
-  )
-}
-
-// FORBIDDEN - Non-null assertion without check
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-```
-
-### 7. Audit Logging (REQUIRED for state changes)
-
-```typescript
-// All state-changing operations must log to audit_event
-await supabase.from('audit_event').insert({
-  actor_user_id: user.id,
-  entity_type: 'allocation_run',
-  entity_id: run_id,
-  action: 'CREATE',
-  metadata_json: { /* safe metadata only */ }
-})
-```
+**Phase 6 (Reporting):**
+1. report_snapshot
 
 ---
 
-## Audit Logging Governance
+## 4. Row Level Security (RLS)
 
-### Schema: `audit_event`
+### 4.1 Core Principles
+- **Deny-all default** - No access without explicit policy
+- **Least privilege** - Minimum required access per role
+- **District scoping** - Operational roles filtered by district
 
-| Column | Type | Purpose |
-|--------|------|---------|
-| `actor_user_id` | UUID | Who performed the action |
-| `action` | TEXT | What action (CREATE, UPDATE, etc.) |
-| `entity_type` | TEXT | Which entity type |
-| `entity_id` | UUID | Which entity instance |
-| `occurred_at` | TIMESTAMPTZ | When (auto-populated) |
-| `metadata_json` | JSONB | Safe metadata only |
-| `reason` | TEXT | Optional context |
-| `actor_role` | TEXT | Role at time of action |
-
-### Rules (MANDATORY)
-
-1. **All create/update operations MUST call `logAuditEvent()`** (via `useAuditLog` hook)
-2. **Audit records are append-only** — No UPDATE or DELETE allowed
-3. **Admin read access deferred** — SELECT denied; use Supabase Dashboard for now
-4. **Edge Functions must audit state-changing operations** directly via INSERT
-
-### RLS Protection
+### 4.2 RLS Policy Template
 
 ```sql
--- INSERT only for allowlist users, must match actor_user_id
-CREATE POLICY "Allowlist users can insert audit_event" 
-ON public.audit_event 
-FOR INSERT 
-WITH CHECK (
-  (actor_user_id = auth.uid()) AND 
-  (((current_setting('request.jwt.claims'::text, true))::json ->> 'email'::text) = 'info@devmart.sr'::text)
+-- Enable RLS on table
+ALTER TABLE table_name ENABLE ROW LEVEL SECURITY;
+
+-- Force RLS for table owner
+ALTER TABLE table_name FORCE ROW LEVEL SECURITY;
+
+-- Example policy structure
+CREATE POLICY "policy_name" ON table_name
+  FOR SELECT  -- or INSERT, UPDATE, DELETE
+  TO authenticated
+  USING (
+    -- Access condition based on user role and scope
+    EXISTS (
+      SELECT 1 FROM app_user_profile
+      WHERE user_id = auth.uid()
+      AND is_active = true
+      AND role IN ('allowed_role_1', 'allowed_role_2')
+    )
+  );
+```
+
+### 4.3 Role-Based Access Summary
+
+| Role | Scope | Read | Write | Special |
+|------|-------|------|-------|---------|
+| Minister | National | All | Approvals only | Raadvoorstel approval |
+| Project Leader | National | All | All | Allocation execution |
+| Frontdesk | District | Limited | Create intake | No evaluation |
+| Administrative Staff | District | Cases | Screening | Urgency entry |
+| Social Field Worker | Own reports | Own | Submit report | Immutable after submit |
+| Technical Inspector | Own reports | Own | Submit report | Immutable after submit |
+| Audit | National | All | None | Read-only |
+
+---
+
+## 5. Edge Functions
+
+### 5.1 Planned Edge Functions
+
+| Function | Phase | Purpose |
+|----------|-------|---------|
+| generate-raadvoorstel | 2 | Generate DOCX from case data |
+| execute-allocation-run | 4 | Run allocation algorithm |
+| generate-reference-number | 5 | Create unique BS/WR reference |
+| hash-access-token | 5 | Securely hash citizen tokens |
+| validate-status-transition | 2+ | Enforce valid status changes |
+
+### 5.2 Edge Function Guidelines
+- All functions must log to audit_event
+- No direct database writes without audit
+- Error handling must be explicit
+- No silent failures
+
+---
+
+## 6. Storage Configuration
+
+### 6.1 Storage Buckets
+
+| Bucket | Purpose | Access |
+|--------|---------|--------|
+| case-documents | Uploaded case documents | Authenticated staff |
+| generated-documents | System-generated DOCX | Authenticated staff |
+
+### 6.2 Storage Policies
+- Files linked to case/registration via database record
+- No direct public access
+- Access controlled via RLS on linking table
+
+---
+
+## 7. Secrets Management
+
+### 7.1 Required Secrets
+- None required for v1.0 (no external integrations)
+
+### 7.2 Future Secrets (Post v1.0)
+- Email service API key (if email notifications added)
+- External system integration keys
+
+---
+
+## 8. Environment Configuration
+
+### 8.1 Lovable Cloud Settings
+- Instance size: Default (upgrade if performance issues)
+- Region: Default
+
+### 8.2 Database Settings
+- Connection pooling: Enabled
+- Statement timeout: Default
+
+---
+
+## 9. Audit Event Logging
+
+### 9.1 Mandatory Audit Points
+Every significant action MUST create an audit_event:
+
+- Record creation (case, registration, person, etc.)
+- Status transitions
+- Document uploads
+- Urgency assessments
+- Quota changes
+- Allocation runs
+- Allocation decisions
+- Raadvoorstel generation
+- Raadvoorstel approval
+
+### 9.2 Audit Event Structure
+
+```sql
+INSERT INTO audit_event (
+  actor_user_id,
+  actor_role,
+  action,
+  entity_type,
+  entity_id,
+  occurred_at,
+  reason,
+  metadata_json
+) VALUES (
+  auth.uid(),
+  'role_name',
+  'action_name',
+  'entity_type',
+  'entity_uuid',
+  now(),
+  'reason_text',
+  '{"key": "value"}'::jsonb
 );
-
--- No SELECT, UPDATE, DELETE policies
-```
-
-### Usage (Frontend)
-
-```typescript
-import { useAuditLog } from '@/hooks/useAuditLog'
-
-const { logAuditEvent } = useAuditLog()
-
-await logAuditEvent({
-  action: 'CREATE',
-  entityType: 'subsidy_case',
-  entityId: newCase.id,
-  metadata: { status: 'received' }
-})
 ```
 
 ---
 
-## Security Model Overview (Phase 1)
+## 10. Error Handling
 
-### Current Posture: Single-Email Allowlist
+### 10.1 Database Errors
+- All database errors must be caught
+- Errors must be reported, not silently swallowed
+- Failed transactions must be rolled back
 
-| Attribute | Value |
-|-----------|-------|
-| Security Model | Allowlist (Phase 1) |
-| Allowed Email | `info@devmart.sr` |
-| RLS Enforcement | All 23 tables |
-| Default Access | Deny all |
-
-### Design Decisions
-
-1. **No anonymous access** — All data operations require authentication
-2. **Single allowlist email** — Simplifies Phase 1; RBAC deferred
-3. **Append-only history tables** — No UPDATE/DELETE for audit trail
-4. **No DELETE on core tables** — Immutable records for compliance
-
-### Action Items (Outside Codebase)
-
-| Item | Location | Status |
-|------|----------|--------|
-| Enable Leaked Password Protection | Supabase Dashboard > Auth > Security | PENDING |
-| Enable MFA (future) | Supabase Dashboard > Auth > MFA | DEFERRED |
-
-### Deferred to Future Phases
-
-- Role-Based Access Control (RBAC)
-- District-level access scoping
-- Admin read access to audit_event
-- Public wizard anonymous submission
+### 10.2 Edge Function Errors
+- Return explicit error responses
+- Log errors to audit_event with error details
+- Never expose internal error details to clients
 
 ---
 
-## Change History
+## 11. Dependencies
 
-| Date | Change | Reason |
-|------|--------|--------|
-| 2026-01-08 | Phase 9B-3 Responsiveness Fix | Mobile-first responsive polish for Neonwizard wizard layout |
-| 2026-01-07 | Phase 8 security documentation added | Security + Audit Readiness |
-| 2026-01-07 | Edge Functions Security Checklist | Standardize security controls |
-| 2026-01-07 | Audit Logging Governance | Document append-only pattern |
+This document must remain aligned with:
+- Database & RLS Specification
+- Architecture & Security
+- Execution Plan
 
 ---
 
-## Phase 9B-3 - Responsiveness Fix (2026-01-08)
-
-### Neonwizard Public UI Responsiveness
-
-**Objective:** Fix wizard responsiveness to match Neonwizard demo template exactly across all breakpoints.
-
-**Files Modified:**
-| File | Change | 
-|------|--------|
-| `src/assets/scss/neonwizard/_responsive.scss` | Complete rewrite with template-exact breakpoints |
-| `src/assets/scss/neonwizard/style.scss` | Removed problematic 100vh image-holder rule |
-
-**Breakpoint Behavior:**
-
-| Breakpoint | Image Panel | Step Indicator | Actions |
-|------------|-------------|----------------|---------|
-| 1441px+ | Fixed left 490px | Vertical right edge | Fixed bottom-right |
-| 1200-1440px | Fixed left 400px | Vertical right edge | Fixed bottom-right |
-| 992-1199px | Banner 280px | Horizontal over image | Static float-right |
-| 768-991px | Banner 260px | Horizontal over image | Static centered |
-| 580-767px | Banner 220px | Horizontal compact | Static centered |
-| 460-580px | Banner 200px | Horizontal compact | Stacked full-width |
-| <460px | Banner 180px | Horizontal minimal | Stacked full-width |
-
-**Issues Fixed:**
-1. Step indicator disappearing at certain widths
-2. NEXT button floating/drifting
-3. Grey bottom bar artifact (removed 100vh rule)
-4. Step circles cut off on desktop
-
-**Restore Points:**
-- BEFORE: `PHASE-9B-3-RESPONSIVE-FIX-BEFORE`
-- AFTER: `PHASE-9B-3-RESPONSIVE-FIX-AFTER`
+**End of Backend Specification**

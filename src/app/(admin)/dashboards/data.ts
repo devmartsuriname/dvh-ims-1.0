@@ -5,66 +5,29 @@ export type CardsType = {
   series: number[]
 }
 
-// Default demo series for sparklines (structure preserved)
-const defaultSeries = [25, 28, 32, 38, 43, 55, 60, 48, 42, 51, 35]
-
-// Helper to create cards data from real KPIs
-export const createCardsData = (kpis: {
-  totalRegistrations: number
-  totalSubsidyCases: number
-  pendingApplications: number
-  approvedApplications: number
-}): CardsType[] => [
-  {
-    title: 'Housing Registrations',
-    count: kpis.totalRegistrations.toLocaleString(),
-    icon: 'solar:home-2-broken',
-    series: defaultSeries,
-  },
-  {
-    title: 'Subsidy Applications',
-    count: kpis.totalSubsidyCases.toLocaleString(),
-    icon: 'solar:document-text-broken',
-    series: defaultSeries,
-  },
-  {
-    title: 'Pending Applications',
-    count: kpis.pendingApplications.toLocaleString(),
-    icon: 'solar:clock-circle-broken',
-    series: defaultSeries,
-  },
-  {
-    title: 'Approved Applications',
-    count: kpis.approvedApplications.toLocaleString(),
-    icon: 'solar:check-circle-broken',
-    series: defaultSeries,
-  },
-]
-
-// Fallback static data (used during loading)
 export const cardsData: CardsType[] = [
   {
-    title: 'Housing Registrations',
-    count: '—',
-    icon: 'solar:home-2-broken',
-    series: defaultSeries,
+    title: 'Total Income',
+    count: '$78.8k',
+    icon: 'solar:globus-outline',
+    series: [25, 28, 32, 38, 43, 55, 60, 48, 42, 51, 35],
   },
   {
-    title: 'Subsidy Applications',
-    count: '—',
-    icon: 'solar:document-text-broken',
-    series: defaultSeries,
+    title: 'New Users',
+    count: '2,150',
+    icon: 'solar:users-group-two-rounded-broken',
+    series: [87, 54, 4, 76, 31, 95, 70, 92, 53, 9, 6],
   },
   {
-    title: 'Pending Applications',
-    count: '—',
-    icon: 'solar:clock-circle-broken',
-    series: defaultSeries,
+    title: 'Orders',
+    count: '1,784',
+    icon: 'solar:cart-5-broken',
+    series: [41, 42, 35, 42, 6, 12, 13, 22, 42, 94, 95],
   },
   {
-    title: 'Approved Applications',
-    count: '—',
-    icon: 'solar:check-circle-broken',
-    series: defaultSeries,
+    title: 'Conversion Rate',
+    count: '12.3%',
+    icon: 'solar:pie-chart-2-broken',
+    series: [8, 41, 40, 48, 77, 35, 0, 77, 63, 100, 71],
   },
 ]

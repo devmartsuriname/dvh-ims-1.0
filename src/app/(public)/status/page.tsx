@@ -1,16 +1,18 @@
 /**
  * Status Tracker Page
- * Phase 9B-3: Restyled with Neonwizard visual language
+ * Phase 5 - Checkpoint 6
  * 
  * Public page for citizens to check their application status
  * using reference number and access token.
  * 
- * Visual-only restyle - NO logic changes
+ * Uses shared PublicHeader/PublicFooter for Darkone 1:1 parity.
  */
 
 import { useState } from 'react'
+import { Container } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
+import { PublicHeader, PublicFooter } from '@/components/public'
 import StatusForm from './components/StatusForm'
 import StatusResult from './components/StatusResult'
 import { 
@@ -19,7 +21,6 @@ import {
   MOCK_HOUSING_RESULT 
 } from './constants'
 import type { LookupState, StatusLookupResponse } from './types'
-import '@/assets/scss/neonwizard/style.scss'
 
 /**
  * Main Status Tracker Page Component
@@ -67,18 +68,24 @@ const StatusTrackerPage = () => {
   }
 
   return (
-    <div className="neonwizard-scope status-page">
-      <div className="wrapper status-wrapper">
-        {/* Header Banner */}
-        <div className="status-header">
-          <div className="status-header-content">
-            <h1>Application Status</h1>
-            <p>Track your Bouwsubsidie or Housing Registration application</p>
-          </div>
-        </div>
+    <div className="d-flex flex-column min-vh-100">
+      <PublicHeader />
 
-        {/* Main Content */}
-        <div className="status-content">
+      <main className="flex-grow-1 py-5 bg-light">
+        <Container style={{ maxWidth: 700 }}>
+          {/* Breadcrumb */}
+          <nav className="mb-4">
+            <ol className="breadcrumb mb-0">
+              <li className="breadcrumb-item">
+                <Link to="/" className="text-decoration-none">
+                  <IconifyIcon icon="mingcute:home-4-line" className="me-1" />
+                  Home
+                </Link>
+              </li>
+              <li className="breadcrumb-item active">Status Tracker</li>
+            </ol>
+          </nav>
+
           {/* Conditional Rendering based on state */}
           {lookupState === 'success' && result ? (
             <StatusResult result={result} onReset={handleReset} />
@@ -90,19 +97,21 @@ const StatusTrackerPage = () => {
             />
           )}
 
-          {/* Help & Navigation Footer */}
-          <div className="status-help-card">
-            <p className="help-text">
-              <IconifyIcon icon="mingcute:question-line" className="help-icon" />
-              <span>Need help? Contact the Ministry of Social Affairs and Housing</span>
+          {/* Help Text */}
+          <div className="text-center mt-4">
+            <p className="text-muted small mb-2">
+              <IconifyIcon icon="mingcute:question-line" className="me-1" />
+              Need help? Contact the Ministry of Social Affairs and Housing
             </p>
-            <Link to="/" className="back-link">
-              <IconifyIcon icon="mingcute:arrow-left-line" />
-              <span>Back to Home</span>
+            <Link to="/" className="text-decoration-none small">
+              <IconifyIcon icon="mingcute:arrow-left-line" className="me-1" />
+              Back to Home
             </Link>
           </div>
-        </div>
-      </div>
+        </Container>
+      </main>
+
+      <PublicFooter />
     </div>
   )
 }

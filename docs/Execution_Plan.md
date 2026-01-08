@@ -49,25 +49,16 @@ Failure to do so invalidates execution.
 
 ## 4. Phase Structure Overview
 
-**Current Status:** End of Phase 8 — PHASE-8-COMPLETE  
-**Next Phase:** Phase 8.5 (awaiting authorization)
-
-| Phase | Name | Primary Output | Hard Stop | Status |
-|------|------|----------------|-----------|--------|
-| 0 | Foundation & Governance | Repo, env, auth, RLS base | YES | COMPLETE |
-| 1 | Shared Core | Person/Household | YES | COMPLETE |
-| 2 | Bouwsubsidie Module | End-to-end flow | YES | COMPLETE |
-| 3 | Housing Registration | Registration + urgency | YES | COMPLETE |
-| 4 | Allocation Engine | Quota allocation | YES | COMPLETE |
-| 5 | Public Wizards | Intake + tracking | YES | COMPLETE |
-| 6 | Reporting & Audit | KPIs + audit | YES | COMPLETE |
-| 7 | Data Validation & QA | Test data, functional validation | YES | COMPLETE |
-| 8 | Security & Audit Readiness | RLS audit, Edge hardening | YES | COMPLETE |
-| 8.5 | Public UI Theme Swap | Neonwizard visual reskin | YES | PENDING |
-| 9 | Public Wizard DB Integration | Live wizard submission | YES | PENDING |
-| 10 | Raadvoorstel DOCX Generation | Document generation | YES | PENDING |
-| 11 | RBAC & District Access | Role-based access | YES | PENDING |
-| 12 | Final Hardening & Go-Live | Production ready | YES | PENDING |
+| Phase | Name | Primary Output | Hard Stop |
+|------|------|----------------|-----------|
+| 0 | Foundation & Governance | Repo, env, auth, RLS base | YES |
+| 1 | Shared Core | Person/Household | YES |
+| 2 | Bouwsubsidie Module | End-to-end flow | YES |
+| 3 | Housing Registration | Registration + urgency | YES |
+| 4 | Allocation Engine | Quota allocation | YES |
+| 5 | Public Wizards | Intake + tracking | YES |
+| 6 | Reporting & Audit | KPIs + audit | YES |
+| 7 | Hardening & Go-Live | Production ready | YES |
 
 ---
 
@@ -261,22 +252,16 @@ On new chat start:
 
 Detailed phase plans are maintained in `/phases/`:
 
-| Phase | Document | Status |
-|-------|----------|--------|
-| 0 | PHASE-0-Foundation-and-Governance.md | COMPLETE |
-| 1 | PHASE-1-Shared-Core.md | COMPLETE |
-| 2 | PHASE-2-Bouwsubsidie.md | COMPLETE |
-| 3 | PHASE-3-Housing-Registration.md | COMPLETE |
-| 4 | PHASE-4-Allocation-Engine.md | COMPLETE |
-| 5 | PHASE-5-Public-Wizards.md | COMPLETE |
-| 6 | PHASE-6-Reporting-and-Audit.md | COMPLETE |
-| 7 | PHASE-7-Hardening-and-Go-Live.md | COMPLETE |
-| 8 | PHASE-8-Security-and-Audit-Readiness.md | COMPLETE |
-| 8.5 | PHASE-8.5-Public-UI-Theme-Swap.md | PENDING |
-| 9 | PHASE-9-Public-Wizard-Database-Integration.md | PENDING |
-| 10 | PHASE-10-Raadvoorstel-DOCX-Generation.md | PENDING |
-| 11 | PHASE-11-RBAC-and-District-Access.md | PENDING |
-| 12 | PHASE-12-Final-Hardening-and-Go-Live.md | PENDING |
+| Phase | Document |
+|-------|----------|
+| 0 | PHASE-0-Foundation-and-Governance.md |
+| 1 | PHASE-1-Shared-Core.md |
+| 2 | PHASE-2-Bouwsubsidie.md |
+| 3 | PHASE-3-Housing-Registration.md |
+| 4 | PHASE-4-Allocation-Engine.md |
+| 5 | PHASE-5-Public-Wizards.md |
+| 6 | PHASE-6-Reporting-and-Audit.md |
+| 7 | PHASE-7-Hardening-and-Go-Live.md |
 
 Each phase document contains:
 - A. Phase Objective

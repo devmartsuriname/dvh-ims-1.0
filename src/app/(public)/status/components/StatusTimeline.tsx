@@ -1,6 +1,7 @@
 /**
  * Status Timeline Component
- * Phase 5 - Checkpoint 6
+ * Phase 9B-3: Neonwizard visual language restyle
+ * NO logic changes - visual only
  */
 
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
@@ -33,44 +34,32 @@ const StatusTimeline = ({ history }: StatusTimelineProps) => {
   const sortedHistory = [...history].reverse()
 
   return (
-    <div className="position-relative">
+    <div className="timeline">
       {sortedHistory.map((entry, index) => {
         const config = STATUS_CONFIG[entry.status] || STATUS_CONFIG.submitted
         const isLast = index === sortedHistory.length - 1
         
         return (
-          <div key={index} className="d-flex gap-3 pb-3">
+          <div key={index} className="timeline-item">
             {/* Timeline connector */}
-            <div className="d-flex flex-column align-items-center" style={{ width: 40 }}>
-              <span 
-                className={`d-inline-flex align-items-center justify-content-center rounded-circle bg-${config.variant} bg-opacity-10 flex-shrink-0`}
-                style={{ width: 40, height: 40 }}
-              >
-                <IconifyIcon 
-                  icon={config.icon} 
-                  className={`text-${config.variant}`}
-                  style={{ fontSize: '1.25rem' }}
-                />
+            <div className="timeline-marker">
+              <span className={`marker-icon marker-${config.variant}`}>
+                <IconifyIcon icon={config.icon} />
               </span>
-              {!isLast && (
-                <div 
-                  className="bg-secondary bg-opacity-25 flex-grow-1" 
-                  style={{ width: 2, minHeight: 24 }}
-                />
-              )}
+              {!isLast && <div className="timeline-line" />}
             </div>
             
             {/* Content */}
-            <div className="flex-grow-1 pb-2">
-              <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
-                <span className={`badge bg-${config.variant}`}>
+            <div className="timeline-content">
+              <div className="timeline-header">
+                <span className={`timeline-badge badge-${config.variant}`}>
                   {entry.status_label}
                 </span>
-                <small className="text-muted">
+                <span className="timeline-date">
                   {formatDate(entry.timestamp)} at {formatTime(entry.timestamp)}
-                </small>
+                </span>
               </div>
-              <p className="mb-0 text-muted small">
+              <p className="timeline-description">
                 {entry.description}
               </p>
             </div>

@@ -1,22 +1,59 @@
-import IconifyIcon from '@/components/wrapper/IconifyIcon'
-
 /**
- * NeonwizardStep2 - 1:1 port from neonwizard-react_v2/react-package/components/v1/step/step-2.js
+ * NeonwizardStep2 - Personal Information
+ * Phase 9B-1: Interactive with state management
  * 
- * Step 2: Personal information + document upload
+ * Features:
+ * - Full name, email, phone inputs
+ * - Gender selection
+ * - Document upload placeholder
+ * - Validation for required fields
+ * - Next/Back navigation
  * 
- * Changes from original:
- * - Font Awesome icons replaced with Iconify
- * - Class component converted to functional component (TypeScript)
- * - All class names, structure, and content preserved 1:1
- * 
- * NO jQuery | NO Font Awesome | NO navigation logic (deferred)
+ * NO Supabase | NO API calls | NO jQuery
  */
 
+import { useCallback } from 'react'
+import IconifyIcon from '@/components/wrapper/IconifyIcon'
+import { useNeonwizard } from '@/hooks/useNeonwizard'
+import { validateStep2, isValid } from '@/utils/neonwizard-validation'
+
 const NeonwizardStep2 = () => {
+  const { 
+    currentStep,
+    formData, 
+    updateFormData, 
+    nextStep,
+    prevStep,
+    setError,
+    clearError,
+    getError,
+  } = useNeonwizard()
+
+  // Handle input change
+  const handleChange = useCallback((field: string, value: string) => {
+    updateFormData({ [field]: value })
+    clearError(field)
+  }, [updateFormData, clearError])
+
+  // Handle Next with validation
+  const handleNext = useCallback(() => {
+    const errors = validateStep2(formData)
+    
+    if (!isValid(errors)) {
+      Object.entries(errors).forEach(([field, message]) => {
+        setError(field, message)
+      })
+      return
+    }
+    
+    nextStep()
+  }, [formData, nextStep, setError])
+
+  // Only render if on step 2
+  if (currentStep !== 2) return null
+
   return (
-    <div className="multisteps-form__panel" data-animation="slideHorz">
-      {/* div 2 */}
+    <div className="multisteps-form__panel js-active" data-animation="slideHorz">
       <div className="wizard-forms">
         <div className="inner pb-100 clearfix">
           <div className="form-content pera-content">
@@ -26,44 +63,75 @@ const NeonwizardStep2 = () => {
                 <span>2 of 5 completed</span>
                 <div className="step-progress-bar">
                   <div className="progress">
-                    <div className="progress-bar"></div>
+                    <div className="progress-bar" style={{ width: '40%' }}></div>
                   </div>
                 </div>
               </div>
 
-              <h2>What kind of services you are quiz?</h2>
+              <h2>Personal Information</h2>
               <p>
-                Tation argumentum et usu, dicit viderer evertitur te has. Eu dictas
-                concludaturque usu, facete detracto patrioque an per, lucilius
-                pertinacia eu vel.
+                Please provide your personal details. This information will be used 
+                to process your application and contact you regarding updates.
               </p>
 
               <div className="form-inner-area">
-                <input
-                  type="text"
-                  name="full_name"
-                  className="form-control required"
-                  minLength={2}
-                  placeholder="First and last name *"
-                  required
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    name="full_name"
+                    className={`form-control required ${getError('full_name') ? 'is-invalid' : ''}`}
+                    minLength={2}
+                    placeholder="First and last name *"
+                    value={(formData.full_name as string) || ''}
+                    onChange={(e) => handleChange('full_name', e.target.value)}
+                    required
+                  />
+                  {getError('full_name') && (
+                    <div className="text-danger small mt-1">{getError('full_name')}</div>
+                  )}
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="email"
+                    name="email"
+                    className={`form-control required ${getError('email') ? 'is-invalid' : ''}`}
+                    placeholder="Email Address *"
+                    value={(formData.email as string) || ''}
+                    onChange={(e) => handleChange('email', e.target.value)}
+                    required
+                  />
+                  {getError('email') && (
+                    <div className="text-danger small mt-1">{getError('email')}</div>
+                  )}
+                </div>
+                <input 
+                  type="text" 
+                  name="phone" 
+                  placeholder="Phone (optional)" 
+                  value={(formData.phone as string) || ''}
+                  onChange={(e) => handleChange('phone', e.target.value)}
                 />
-                <input
-                  type="email"
-                  name="email"
-                  className="form-control required"
-                  placeholder="Email Address *"
-                  required
-                />
-                <input type="text" name="phone" placeholder="Phone" />
               </div>
               <div className="gender-selection">
                 <h3>Gender:</h3>
                 <label>
-                  <input type="radio" name="gender" value="Male" />
+                  <input 
+                    type="radio" 
+                    name="gender" 
+                    value="Male" 
+                    checked={(formData.gender as string) === 'Male'}
+                    onChange={(e) => handleChange('gender', e.target.value)}
+                  />
                   <span className="checkmark"></span>Male
                 </label>
                 <label>
-                  <input type="radio" name="gender" value="Female" />
+                  <input 
+                    type="radio" 
+                    name="gender" 
+                    value="Female" 
+                    checked={(formData.gender as string) === 'Female'}
+                    onChange={(e) => handleChange('gender', e.target.value)}
+                  />
                   <span className="checkmark"></span>Female
                 </label>
               </div>
@@ -90,16 +158,15 @@ const NeonwizardStep2 = () => {
             </div>
           </div>
         </div>
-        {/* /.inner */}
         <div className="actions">
           <ul>
             <li>
-              <span className="js-btn-prev" title="BACK">
+              <span className="js-btn-prev" title="BACK" onClick={prevStep} style={{ cursor: 'pointer' }}>
                 <IconifyIcon icon="mingcute:arrow-left-line" /> BACK{' '}
               </span>
             </li>
             <li>
-              <span className="js-btn-next" title="NEXT">
+              <span className="js-btn-next" title="NEXT" onClick={handleNext} style={{ cursor: 'pointer' }}>
                 NEXT <IconifyIcon icon="mingcute:arrow-right-line" />
               </span>
             </li>

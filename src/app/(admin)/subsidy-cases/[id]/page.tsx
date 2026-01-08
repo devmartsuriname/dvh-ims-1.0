@@ -65,6 +65,15 @@ interface Report {
   updated_at: string
 }
 
+interface GeneratedDocument {
+  id: string
+  document_type: string
+  file_name: string
+  file_path: string
+  generated_at: string
+  generated_by: string | null
+}
+
 const STATUS_BADGES: Record<string, { bg: string; label: string }> = {
   received: { bg: 'secondary', label: 'Received' },
   screening: { bg: 'info', label: 'Screening' },
@@ -94,8 +103,10 @@ const SubsidyCaseDetail = () => {
   const [requirements, setRequirements] = useState<DocumentRequirement[]>([])
   const [socialReport, setSocialReport] = useState<Report | null>(null)
   const [technicalReport, setTechnicalReport] = useState<Report | null>(null)
+  const [generatedDocuments, setGeneratedDocuments] = useState<GeneratedDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [statusLoading, setStatusLoading] = useState(false)
+  const [generating, setGenerating] = useState(false)
   const [statusReason, setStatusReason] = useState('')
   const { logEvent } = useAuditLog()
 
@@ -104,7 +115,7 @@ const SubsidyCaseDetail = () => {
 
     setLoading(true)
     
-    const [caseRes, historyRes, docsRes, reqsRes, socialRes, technicalRes] = await Promise.all([
+    const [caseRes, historyRes, docsRes, reqsRes, socialRes, technicalRes, genDocsRes] = await Promise.all([
       supabase
         .from('subsidy_case')
         .select(`
@@ -140,7 +151,12 @@ const SubsidyCaseDetail = () => {
         .from('technical_report')
         .select('*')
         .eq('case_id', id)
-        .single()
+        .single(),
+      supabase
+        .from('generated_document')
+        .select('*')
+        .eq('case_id', id)
+        .order('generated_at', { ascending: false })
     ])
 
     if (caseRes.error) {
@@ -155,6 +171,7 @@ const SubsidyCaseDetail = () => {
     setRequirements(reqsRes.data || [])
     setSocialReport(socialRes.data)
     setTechnicalReport(technicalRes.data)
+    setGeneratedDocuments(genDocsRes.data || [])
     setLoading(false)
   }
 
@@ -523,20 +540,100 @@ const SubsidyCaseDetail = () => {
         {/* Raadvoorstel Tab */}
         <Tab eventKey="raadvoorstel" title="Raadvoorstel">
           <Card>
-            <CardHeader>
+            <CardHeader className="d-flex justify-content-between align-items-center">
               <CardTitle as="h5">Raadvoorstel Generation</CardTitle>
+              {['approved_for_council', 'council_doc_generated', 'finalized'].includes(subsidyCase.status) && (
+                <Button 
+                  variant="primary" 
+                  disabled={generating}
+                  onClick={async () => {
+                    setGenerating(true)
+                    try {
+                      const { data: { session } } = await supabase.auth.getSession()
+                      const response = await supabase.functions.invoke('generate-raadvoorstel', {
+                        body: { case_id: id }
+                      })
+                      if (response.error) throw new Error(response.error.message)
+                      if (!response.data.success) throw new Error(response.data.message || 'Generation failed')
+                      
+                      toast.success('Raadvoorstel generated successfully')
+                      if (response.data.download_url) {
+                        window.open(response.data.download_url, '_blank')
+                      }
+                      fetchCase()
+                    } catch (error: any) {
+                      toast.error(error.message || 'Failed to generate document')
+                    } finally {
+                      setGenerating(false)
+                    }
+                  }}
+                >
+                  {generating ? (
+                    <>
+                      <Spinner animation="border" size="sm" className="me-1" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <IconifyIcon icon="mingcute:file-line" className="me-1" />
+                      Generate Raadvoorstel
+                    </>
+                  )}
+                </Button>
+              )}
             </CardHeader>
             <CardBody>
-              <p className="text-muted text-center py-4">
-                Raadvoorstel document generation will be available when the case status is "Approved for Council".
-              </p>
-              {subsidyCase.status === 'approved_for_council' && (
-                <div className="text-center">
-                  <Button variant="primary" disabled>
-                    <IconifyIcon icon="mingcute:file-line" className="me-1" />
-                    Generate Raadvoorstel (Coming Soon)
-                  </Button>
-                </div>
+              {!['approved_for_council', 'council_doc_generated', 'finalized'].includes(subsidyCase.status) ? (
+                <p className="text-muted text-center py-4">
+                  Raadvoorstel generation available when case status is "Approved for Council" or later.
+                </p>
+              ) : generatedDocuments.length === 0 ? (
+                <p className="text-muted text-center py-4">
+                  No documents generated yet. Click "Generate Raadvoorstel" to create a council proposal.
+                </p>
+              ) : (
+                <Table hover responsive>
+                  <thead>
+                    <tr>
+                      <th>Document</th>
+                      <th>Type</th>
+                      <th>Generated</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {generatedDocuments.map((doc) => (
+                      <tr key={doc.id}>
+                        <td>{doc.file_name}</td>
+                        <td>{doc.document_type}</td>
+                        <td>{new Date(doc.generated_at).toLocaleString()}</td>
+                        <td><Badge bg="warning">CONCEPT</Badge></td>
+                        <td>
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                const response = await supabase.functions.invoke('get-document-download-url', {
+                                  body: { document_id: doc.id }
+                                })
+                                if (response.error) throw new Error(response.error.message)
+                                if (!response.data.success) throw new Error(response.data.message || 'Download failed')
+                                window.open(response.data.download_url, '_blank')
+                              } catch (error: any) {
+                                toast.error(error.message || 'Failed to download')
+                              }
+                            }}
+                          >
+                            <IconifyIcon icon="mingcute:download-line" className="me-1" />
+                            Download
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
               )}
             </CardBody>
           </Card>

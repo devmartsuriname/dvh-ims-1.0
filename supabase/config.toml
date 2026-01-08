@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.lookup-public-status]
 verify_jwt = false
+
+[functions.generate-raadvoorstel]
+verify_jwt = false
+
+[functions.get-document-download-url]
+verify_jwt = false

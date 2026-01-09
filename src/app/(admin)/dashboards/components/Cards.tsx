@@ -3,7 +3,7 @@ import { ApexOptions } from 'apexcharts'
 import ReactApexChart from 'react-apexcharts'
 import { Card, CardBody, Col, Row } from 'react-bootstrap'
 import { cardsData, CardsType, createCardsData } from '../data'
-import { useDashboardKPIs } from '../hooks/useDashboardData'
+import { useDashboardKPIs, useSparklineData, TimeRange } from '../hooks/useDashboardData'
 
 const StatCard = ({ count, icon, series, title }: CardsType) => {
   const salesChart: ApexOptions = {
@@ -80,17 +80,26 @@ const StatCard = ({ count, icon, series, title }: CardsType) => {
 }
 
 const Cards = () => {
+  // KPI Sparklines use a stable fixed time range ('1Y')
+  // This is decoupled from chart TimeRange controls (Monthly Trends, Cases-by-Status)
+  // Sparklines do NOT change when chart buttons are clicked
+  const SPARKLINE_TIME_RANGE: TimeRange = '1Y'
+  
   const kpis = useDashboardKPIs()
+  const sparklines = useSparklineData(SPARKLINE_TIME_RANGE)
   
   // Use real data when loaded, fallback to static during loading
-  const displayData = kpis.loading 
+  const displayData = kpis.loading || sparklines.loading
     ? cardsData 
-    : createCardsData({
-        totalRegistrations: kpis.totalRegistrations,
-        totalSubsidyCases: kpis.totalSubsidyCases,
-        pendingApplications: kpis.pendingApplications,
-        approvedApplications: kpis.approvedApplications,
-      })
+    : createCardsData(
+        {
+          totalRegistrations: kpis.totalRegistrations,
+          totalSubsidyCases: kpis.totalSubsidyCases,
+          pendingApplications: kpis.pendingApplications,
+          approvedApplications: kpis.approvedApplications,
+        },
+        sparklines.data
+      )
 
   return (
     <>

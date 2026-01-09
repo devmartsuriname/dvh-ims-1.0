@@ -1,12 +1,17 @@
+import { useState } from 'react'
 import { ApexOptions } from 'apexcharts'
 import ReactApexChart from 'react-apexcharts'
 import CountryMap from './CountryMap'
 import { Card, CardBody, CardHeader, Col, Row } from 'react-bootstrap'
 import SaleChart from './SaleChart'
-import { useMonthlyTrends } from '../hooks/useDashboardData'
+import { useMonthlyTrends, TimeRange } from '../hooks/useDashboardData'
 
 const Chart = () => {
-  const { data: monthlyData, loading } = useMonthlyTrends()
+  // Local time range state for Monthly Trends widget ONLY
+  // This is decoupled from other widgets (Cases-by-Status, KPI Sparklines)
+  const [trendsRange, setTrendsRange] = useState<TimeRange>('1Y')
+  
+  const { data: monthlyData, loading } = useMonthlyTrends(trendsRange)
 
   // Extract series data from monthly trends
   const registrationsSeries = loading 
@@ -109,11 +114,6 @@ const Chart = () => {
       horizontalAlign: 'center',
       offsetX: 0,
       offsetY: 5,
-      // markers: {
-      //     width: 9,
-      //     height: 9,
-      //     radius: 6,
-      // },
       itemMargin: {
         horizontal: 10,
         vertical: 0,
@@ -158,6 +158,9 @@ const Chart = () => {
     },
   }
 
+  // Time range options for the filter buttons
+  const timeRangeOptions: TimeRange[] = ['ALL', '1M', '6M', '1Y']
+
   return (
     <>
       <Row>
@@ -166,18 +169,16 @@ const Chart = () => {
             <CardHeader className="d-flex align-items-center justify-content-between gap-2">
               <h4 className=" mb-0 flex-grow-1 mb-0">Monthly Trends</h4>
               <div>
-                <button type="button" className="btn btn-sm btn-outline-light">
-                  ALL
-                </button>
-                <button type="button" className="btn btn-sm btn-outline-light">
-                  1M
-                </button>
-                <button type="button" className="btn btn-sm btn-outline-light">
-                  6M
-                </button>
-                <button type="button" className="btn btn-sm btn-outline-light active">
-                  1Y
-                </button>
+                {timeRangeOptions.map((range) => (
+                  <button
+                    key={range}
+                    type="button"
+                    className={`btn btn-sm btn-outline-light ${trendsRange === range ? 'active' : ''}`}
+                    onClick={() => setTrendsRange(range)}
+                  >
+                    {range}
+                  </button>
+                ))}
               </div>
             </CardHeader>
             <CardBody className="pt-0">

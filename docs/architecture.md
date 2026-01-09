@@ -186,14 +186,62 @@ All 23 database tables have Row-Level Security (RLS) enabled with a Phase 1 allo
 
 **File:** `src/app/(admin)/dashboards/hooks/useDashboardData.ts`
 
-| Hook | Purpose | Source Tables |
-|------|---------|---------------|
-| `useDashboardKPIs` | Card KPIs (totals, status counts) | `housing_registration`, `subsidy_case` |
-| `useMonthlyTrends` | Monthly chart data | `housing_registration`, `subsidy_case`, `allocation_decision` |
-| `useDistrictApplications` | District map aggregation | `housing_registration`, `subsidy_case` |
-| `useStatusBreakdown` | Status pie chart | `subsidy_case` |
-| `useRecentCases` | Recent cases table | `subsidy_case` + `person` |
-| `useRecentRegistrations` | Recent registrations table | `housing_registration` + `person` |
+| Hook | Purpose | Source Tables | Accepts TimeRange |
+|------|---------|---------------|-------------------|
+| `useDashboardKPIs` | Card KPIs (totals, status counts) | `housing_registration`, `subsidy_case` | No |
+| `useMonthlyTrends` | Monthly chart data | `housing_registration`, `subsidy_case`, `allocation_decision` | Yes |
+| `useDistrictApplications` | District map aggregation | `housing_registration`, `subsidy_case` | No |
+| `useStatusBreakdown` | Status pie chart | `subsidy_case` | Yes |
+| `useRecentCases` | Recent cases table | `subsidy_case` + `person` | No |
+| `useRecentRegistrations` | Recent registrations table | `housing_registration` + `person` | No |
+
+### Time Range Filtering (v1.1-B Step B2.2 + Decoupling Fix)
+
+**Per-Widget State Pattern (v1.1-B Bugfix):**
+
+Each widget owns its own TimeRange state. There is NO global TimeRange.
+
+```
+Dashboard Page
+    │
+    ├── Cards (KPI Sparklines)
+    │   └── SPARKLINE_TIME_RANGE: '1Y' (constant, decoupled)
+    │       └── useSparklineData('1Y')
+    │
+    ├── Chart (Monthly Trends)
+    │   ├── trendsRange: TimeRange (local state)
+    │   └── useMonthlyTrends(trendsRange)
+    │
+    └── SaleChart (Cases-by-Status)
+        ├── statusRange: TimeRange (local state)
+        └── useStatusBreakdown(statusRange)
+```
+
+**Widget State Ownership:**
+
+| Widget | State Variable | Default | Controlled By |
+|--------|----------------|---------|---------------|
+| Monthly Trends | `trendsRange` (local in Chart.tsx) | `'1Y'` | Own buttons |
+| Cases-by-Status | `statusRange` (local in SaleChart.tsx) | `'1Y'` | Own buttons |
+| KPI Sparklines | Fixed `'1Y'` constant | `'1Y'` | None (stable) |
+
+**TimeRange Type:**
+```typescript
+export type TimeRange = 'ALL' | '1M' | '6M' | '1Y'
+```
+
+**Filter Calculation:**
+- ALL = no constraint
+- 1M = `now() - 30 days`
+- 6M = `now() - 180 days`
+- 1Y = `now() - 365 days`
+
+**Query Filter Applied:**
+```typescript
+if (cutoff) {
+  query = query.gte('created_at', cutoff) // or 'decided_at' for allocation_decision
+}
+```
 
 ### KPI Calculation Logic
 
@@ -223,3 +271,58 @@ Alias mapping applied in `useDistrictApplications`:
 | PAB | PA | Para |
 | BRO | BR | Brokopondo |
 | SIP | SI | Sipaliwini |
+
+---
+
+## Dashboard Sparkline Data Layer (Admin v1.1-B Step B2.3)
+
+### useSparklineData Hook
+
+**File:** `src/app/(admin)/dashboards/hooks/useDashboardData.ts`
+
+**Purpose:** Fetch time-bucketed historical data for KPI card sparklines.
+
+**Signature:**
+```typescript
+export const useSparklineData = (timeRange: TimeRange = '1Y'): { data: SparklineData; loading: boolean }
+```
+
+### Data Flow (Per-Widget Decoupled)
+
+```
+Cards Component
+    └── SPARKLINE_TIME_RANGE: '1Y' (constant)
+         └── useSparklineData('1Y')
+              ├── registrations[] → Housing Registrations card
+              ├── subsidyCases[] → Subsidy Applications card
+              ├── pendingCases[] → Pending Applications card
+              └── approvedCases[] → Approved Applications card
+```
+
+Note: KPI sparklines are decoupled from chart TimeRange controls. They use a fixed '1Y' range.
+
+### Bucketing Algorithm
+
+| TimeRange | Bucket Type | Count | Calculation |
+|-----------|-------------|-------|-------------|
+| 1M | Daily | 30 | `new Date(year, month, day - i)` |
+| 6M | Weekly | 26 | `now - (i * 7 days)` |
+| 1Y / ALL | Monthly | 12 | `new Date(year, month - i, 1)` |
+
+### Zero-Fill Fallback
+
+If query fails or returns no data, returns arrays filled with 0 to prevent chart rendering errors:
+
+```typescript
+// On error
+setData({
+  registrations: new Array(bucketCount).fill(0),
+  subsidyCases: new Array(bucketCount).fill(0),
+  pendingCases: new Array(bucketCount).fill(0),
+  approvedCases: new Array(bucketCount).fill(0),
+})
+```
+
+### RLS Compliance
+
+All queries use the authenticated Supabase client. No service role bypass.

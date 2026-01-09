@@ -1,10 +1,15 @@
+import { useState } from 'react'
 import { ApexOptions } from 'apexcharts'
 import ReactApexChart from 'react-apexcharts'
 import { Card, CardBody, CardHeader, Col } from 'react-bootstrap'
-import { useStatusBreakdown } from '../hooks/useDashboardData'
+import { useStatusBreakdown, TimeRange } from '../hooks/useDashboardData'
 
 const SaleChart = () => {
-  const { data: statusData, loading } = useStatusBreakdown()
+  // Local time range state for Cases-by-Status widget ONLY
+  // This is decoupled from other widgets (Monthly Trends, KPI Sparklines)
+  const [statusRange, setStatusRange] = useState<TimeRange>('1Y')
+  
+  const { data: statusData, loading } = useStatusBreakdown(statusRange)
 
   // Map status data to chart series and labels
   const series = loading 
@@ -69,6 +74,9 @@ const SaleChart = () => {
     return 'badge-soft-primary'
   }
 
+  // Time range options for the filter buttons
+  const timeRangeOptions: TimeRange[] = ['ALL', '1M', '6M', '1Y']
+
   return (
     <>
       <Col lg={4}>
@@ -76,18 +84,18 @@ const SaleChart = () => {
           <CardHeader className=" d-flex align-items-center justify-content-between gap-2">
             <h4 className="card-title flex-grow-1 mb-0">Cases by Status</h4>
             <div>
-              <button type="button" className="btn btn-sm btn-outline-light">
-                ALL
-              </button>
-              <button type="button" className="btn btn-sm btn-outline-light">
-                1M
-              </button>
-              <button type="button" className="btn btn-sm btn-outline-light">
-                6M
-              </button>
-              <button type="button" className="btn btn-sm btn-outline-light active">
-                1Y
-              </button>
+              {/* Buttons now control local statusRange state */}
+              {timeRangeOptions.map((range) => (
+                <button
+                  key={range}
+                  type="button"
+                  className={`btn btn-sm btn-outline-light ${statusRange === range ? 'active' : ''}`}
+                  onClick={() => setStatusRange(range)}
+                  style={{ opacity: statusRange === range ? 1 : 0.5 }}
+                >
+                  {range}
+                </button>
+              ))}
             </div>
           </CardHeader>
           <CardBody>

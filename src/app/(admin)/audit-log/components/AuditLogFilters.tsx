@@ -1,4 +1,5 @@
 import { Row, Col, Form, Button } from 'react-bootstrap'
+import 'flatpickr/dist/flatpickr.min.css'
 import Flatpickr from 'react-flatpickr'
 import type { AuditEventFilters } from '@/hooks/useAuditEvents'
 

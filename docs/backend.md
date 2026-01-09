@@ -520,7 +520,7 @@ const DISTRICT_CODE_ALIASES: Record<string, string> = {
 
 ### Sparkline Real Data Implementation
 
-**Purpose:** Replace static placeholder sparkline series in KPI cards with real, data-derived series that react to the shared dashboard TimeRange.
+**Purpose:** Replace static placeholder sparkline series in KPI cards with real, data-derived series.
 
 **Hook Added:** `useSparklineData(timeRange: TimeRange)`
 
@@ -555,10 +555,37 @@ interface SparklineData {
 
 If data fetch fails or returns empty, the hook returns zero-filled arrays of the correct length (30/26/12 based on timeRange) to prevent NaN/undefined in charts.
 
-**Files Modified:**
-- `src/app/(admin)/dashboards/hooks/useDashboardData.ts` - Added `useSparklineData` hook
-- `src/app/(admin)/dashboards/data.ts` - Updated `createCardsData` to accept sparklines
-- `src/app/(admin)/dashboards/components/Cards.tsx` - Integrated sparkline data
-- `src/app/(admin)/dashboards/page.tsx` - Passed `timeRange` to Cards
-
 **Restore Point:** `ADMIN_V1_1_B_DASH_SPARKLINES_COMPLETE`
+
+---
+
+## Admin v1.1-B: Per-Widget TimeRange Decoupling (2026-01-09)
+
+### State Ownership (Per-Widget)
+
+**Issue Fixed:** TimeRange controls were globally shared, causing all widgets to update when any TimeRange button was clicked.
+
+**Solution:** Each widget now owns its own local TimeRange state.
+
+### Widget State Ownership
+
+| Widget | State Variable | Location | Default | Controlled By |
+|--------|----------------|----------|---------|---------------|
+| Monthly Trends | `trendsRange` | `Chart.tsx` (local state) | `'1Y'` | Own buttons |
+| Cases-by-Status | `statusRange` | `SaleChart.tsx` (local state) | `'1Y'` | Own buttons |
+| KPI Sparklines | `SPARKLINE_TIME_RANGE` | `Cards.tsx` (constant) | `'1Y'` | None (stable) |
+
+### Behavior
+
+- Clicking Monthly Trends TimeRange buttons → ONLY Monthly Trends updates
+- Clicking Cases-by-Status TimeRange buttons → ONLY Cases-by-Status updates
+- KPI card sparklines are decoupled and do NOT change when chart buttons are clicked
+
+### Files Modified
+
+- `src/app/(admin)/dashboards/page.tsx` - Removed shared `timeRange` state
+- `src/app/(admin)/dashboards/components/Chart.tsx` - Added local `trendsRange` state
+- `src/app/(admin)/dashboards/components/SaleChart.tsx` - Added local `statusRange` state
+- `src/app/(admin)/dashboards/components/Cards.tsx` - Uses fixed `'1Y'` constant for sparklines
+
+**Restore Point:** `ADMIN_V1_1_B_DASH_TIMERANGE_DECOUPLE_COMPLETE`

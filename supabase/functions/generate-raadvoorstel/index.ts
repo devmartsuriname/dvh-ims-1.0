@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Get user and verify allowlist
+// Get user
     const { data: { user }, error: userError } = await userClient.auth.getUser();
     if (userError || !user) {
       console.error("Auth error:", userError?.message);
@@ -98,9 +98,29 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Allowlist check
-    if (user.email !== "info@devmart.sr") {
-      console.error("Forbidden: User not in allowlist:", user.email);
+    // Use service role client for role check
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+
+    // RBAC: Check user roles
+    const ALLOWED_ROLES = ['system_admin', 'project_leader', 'frontdesk_bouwsubsidie', 'admin_staff'];
+    const { data: userRoles, error: rolesError } = await adminClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+
+    if (rolesError) {
+      console.error('Failed to fetch user roles');
+      return new Response(
+        JSON.stringify({ success: false, error: "AUTH_ERROR", message: "Failed to verify authorization" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const roles = userRoles?.map(r => r.role) || [];
+    const hasAccess = roles.some(role => ALLOWED_ROLES.includes(role));
+
+    if (!hasAccess) {
+      console.error("RBAC check failed - insufficient permissions");
       return new Response(
         JSON.stringify({ success: false, error: "AUTH_FORBIDDEN", message: "Access denied" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -120,8 +140,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Use service role client for data operations
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+    // adminClient already created above for role check
 
     // Fetch case with related data
     const { data: caseData, error: caseError } = await adminClient

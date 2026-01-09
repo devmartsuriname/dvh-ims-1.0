@@ -274,7 +274,16 @@ WITH CHECK (
   (((current_setting('request.jwt.claims'::text, true))::json ->> 'email'::text) = 'info@devmart.sr'::text)
 );
 
--- No SELECT, UPDATE, DELETE policies
+-- SELECT allowed for governance roles (v1.1-A)
+CREATE POLICY "role_select_audit_event" ON public.audit_event
+FOR SELECT
+TO authenticated
+USING (
+  has_role(auth.uid(), 'audit'::app_role) OR
+  has_role(auth.uid(), 'system_admin'::app_role) OR
+  has_role(auth.uid(), 'minister'::app_role) OR
+  has_role(auth.uid(), 'project_leader'::app_role)
+);
 ```
 
 ### Usage (Frontend)
@@ -335,3 +344,94 @@ await logAuditEvent({
 | 2026-01-07 | Phase 8 security documentation added | Security + Audit Readiness |
 | 2026-01-07 | Edge Functions Security Checklist | Standardize security controls |
 | 2026-01-07 | Audit Logging Governance | Document append-only pattern |
+| 2026-01-09 | Admin v1.1-A: Audit Log Interface | Read-only audit log for governance roles |
+
+---
+
+## Admin v1.1-A: Audit Log Interface (Read-Only)
+
+### Overview
+
+A read-only Audit Log interface was added for governance roles to review system activity.
+
+**Route:** `/audit-log`
+
+**Access:** `system_admin`, `minister`, `project_leader`, `audit`
+
+### Components
+
+| Component | Path | Purpose |
+|-----------|------|---------|
+| Page | `src/app/(admin)/audit-log/page.tsx` | Main page wrapper with access control |
+| Table | `src/app/(admin)/audit-log/components/AuditLogTable.tsx` | Data table with pagination |
+| Filters | `src/app/(admin)/audit-log/components/AuditLogFilters.tsx` | Date range, action, entity, actor filters |
+| Drawer | `src/app/(admin)/audit-log/components/AuditDetailDrawer.tsx` | Detail view (excludes sensitive fields) |
+| Export | `src/app/(admin)/audit-log/components/AuditExportButton.tsx` | CSV export of filtered view |
+| Hook | `src/hooks/useAuditEvents.ts` | Paginated data fetching |
+
+### Security
+
+- **RLS Enforced:** All reads go through authenticated Supabase client
+- **No Service Role Bypass:** Client uses anon key only
+- **Sensitive Field Filtering:** Metadata fields containing tokens, passwords, IPs are hidden
+- **Page-Level Access Control:** Non-authorized roles redirected to dashboard
+
+### RLS Policy Update
+
+Extended SELECT access on `audit_event` table:
+
+```sql
+CREATE POLICY "role_select_audit_event" ON public.audit_event
+FOR SELECT
+TO authenticated
+USING (
+  has_role(auth.uid(), 'audit'::app_role) OR
+  has_role(auth.uid(), 'system_admin'::app_role) OR
+  has_role(auth.uid(), 'minister'::app_role) OR
+  has_role(auth.uid(), 'project_leader'::app_role)
+);
+```
+
+---
+
+## Admin v1.1-A Minor Fixes (2026-01-09)
+
+### Households Module - View Button Fix
+
+**Issue:** Actions column in Households table was missing a View button formatter.
+
+**Fix:** Added `html` formatter with data attribute pattern and event delegation.
+
+**File:** `src/app/(admin)/households/components/HouseholdTable.tsx`
+
+### Allocation Quotas Module - Edit Button Fix
+
+**Issue:** Edit button used `window.dispatchEvent` which suffered from listener timing issues.
+
+**Fix:** Replaced with data attribute pattern (`data-quota-edit`) and document-level event delegation via useEffect.
+
+**File:** `src/app/(admin)/allocation-quotas/components/QuotaTable.tsx`
+
+### Pattern Used
+
+Both tables now use the same reliable pattern for Grid.js button actions:
+1. Button uses `data-*` attribute containing the row ID
+2. useEffect adds document click listener
+3. Event delegation via `closest()` selector
+4. Direct handler invocation
+
+---
+
+## Admin v1.1-A - Audit Log Flatpickr CSS Fix (2026-01-09)
+
+### Audit Log Module - Flatpickr Base CSS Import
+
+**Issue:** AuditLogFilters component imported `react-flatpickr` without the required base CSS, causing unstyled SVG chevrons to render at uncontrolled sizes below the Audit Log table.
+
+**Root Cause:** The Darkone SCSS (`_flatpicker.scss`) only provides theme overrides and assumes base Flatpickr CSS is already loaded. Without it, SVG elements in the calendar picker had no sizing constraints.
+
+**Fix:** Added `import 'flatpickr/dist/flatpickr.min.css'` before the Flatpickr component import.
+
+**File:** `src/app/(admin)/audit-log/components/AuditLogFilters.tsx`
+
+**Restore Point:** `ADMIN_V1_1_A_AUDITLOG_FIX_COMPLETE`

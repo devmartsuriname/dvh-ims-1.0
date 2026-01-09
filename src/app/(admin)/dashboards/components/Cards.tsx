@@ -79,13 +79,14 @@ const StatCard = ({ count, icon, series, title }: CardsType) => {
   )
 }
 
-interface CardsProps {
-  timeRange: TimeRange
-}
-
-const Cards = ({ timeRange }: CardsProps) => {
+const Cards = () => {
+  // KPI Sparklines use a stable fixed time range ('1Y')
+  // This is decoupled from chart TimeRange controls (Monthly Trends, Cases-by-Status)
+  // Sparklines do NOT change when chart buttons are clicked
+  const SPARKLINE_TIME_RANGE: TimeRange = '1Y'
+  
   const kpis = useDashboardKPIs()
-  const sparklines = useSparklineData(timeRange)
+  const sparklines = useSparklineData(SPARKLINE_TIME_RANGE)
   
   // Use real data when loaded, fallback to static during loading
   const displayData = kpis.loading || sparklines.loading

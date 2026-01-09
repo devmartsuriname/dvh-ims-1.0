@@ -1,14 +1,15 @@
+import { useState } from 'react'
 import { ApexOptions } from 'apexcharts'
 import ReactApexChart from 'react-apexcharts'
 import { Card, CardBody, CardHeader, Col } from 'react-bootstrap'
 import { useStatusBreakdown, TimeRange } from '../hooks/useDashboardData'
 
-interface SaleChartProps {
-  timeRange: TimeRange
-}
-
-const SaleChart = ({ timeRange }: SaleChartProps) => {
-  const { data: statusData, loading } = useStatusBreakdown(timeRange)
+const SaleChart = () => {
+  // Local time range state for Cases-by-Status widget ONLY
+  // This is decoupled from other widgets (Monthly Trends, KPI Sparklines)
+  const [statusRange, setStatusRange] = useState<TimeRange>('1Y')
+  
+  const { data: statusData, loading } = useStatusBreakdown(statusRange)
 
   // Map status data to chart series and labels
   const series = loading 
@@ -73,7 +74,7 @@ const SaleChart = ({ timeRange }: SaleChartProps) => {
     return 'badge-soft-primary'
   }
 
-  // Time range options - displayed as visual indicators (synced with Monthly Trends)
+  // Time range options for the filter buttons
   const timeRangeOptions: TimeRange[] = ['ALL', '1M', '6M', '1Y']
 
   return (
@@ -83,14 +84,14 @@ const SaleChart = ({ timeRange }: SaleChartProps) => {
           <CardHeader className=" d-flex align-items-center justify-content-between gap-2">
             <h4 className="card-title flex-grow-1 mb-0">Cases by Status</h4>
             <div>
-              {/* Buttons shown as visual indicators of current selection (read-only) */}
+              {/* Buttons now control local statusRange state */}
               {timeRangeOptions.map((range) => (
                 <button
                   key={range}
                   type="button"
-                  className={`btn btn-sm btn-outline-light ${timeRange === range ? 'active' : ''}`}
-                  disabled
-                  style={{ opacity: timeRange === range ? 1 : 0.5 }}
+                  className={`btn btn-sm btn-outline-light ${statusRange === range ? 'active' : ''}`}
+                  onClick={() => setStatusRange(range)}
+                  style={{ opacity: statusRange === range ? 1 : 0.5 }}
                 >
                   {range}
                 </button>

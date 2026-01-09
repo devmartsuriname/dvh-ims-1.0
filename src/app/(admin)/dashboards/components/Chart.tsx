@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { ApexOptions } from 'apexcharts'
 import ReactApexChart from 'react-apexcharts'
 import CountryMap from './CountryMap'
@@ -5,13 +6,12 @@ import { Card, CardBody, CardHeader, Col, Row } from 'react-bootstrap'
 import SaleChart from './SaleChart'
 import { useMonthlyTrends, TimeRange } from '../hooks/useDashboardData'
 
-interface ChartProps {
-  timeRange: TimeRange
-  onTimeRangeChange: (range: TimeRange) => void
-}
-
-const Chart = ({ timeRange, onTimeRangeChange }: ChartProps) => {
-  const { data: monthlyData, loading } = useMonthlyTrends(timeRange)
+const Chart = () => {
+  // Local time range state for Monthly Trends widget ONLY
+  // This is decoupled from other widgets (Cases-by-Status, KPI Sparklines)
+  const [trendsRange, setTrendsRange] = useState<TimeRange>('1Y')
+  
+  const { data: monthlyData, loading } = useMonthlyTrends(trendsRange)
 
   // Extract series data from monthly trends
   const registrationsSeries = loading 
@@ -173,8 +173,8 @@ const Chart = ({ timeRange, onTimeRangeChange }: ChartProps) => {
                   <button
                     key={range}
                     type="button"
-                    className={`btn btn-sm btn-outline-light ${timeRange === range ? 'active' : ''}`}
-                    onClick={() => onTimeRangeChange(range)}
+                    className={`btn btn-sm btn-outline-light ${trendsRange === range ? 'active' : ''}`}
+                    onClick={() => setTrendsRange(range)}
                   >
                     {range}
                   </button>
@@ -190,7 +190,7 @@ const Chart = ({ timeRange, onTimeRangeChange }: ChartProps) => {
             </CardBody>
           </Card>
         </Col>
-        <SaleChart timeRange={timeRange} />
+        <SaleChart />
         <CountryMap />
       </Row>
     </>

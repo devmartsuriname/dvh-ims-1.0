@@ -1,22 +1,21 @@
 'use client'
-import { useState } from 'react'
 import Footer from '@/components/layout/Footer'
 import Cards from './components/Cards'
 import Chart from './components/Chart'
 import User from './components/User'
 import PageTitle from '@/components/PageTitle'
-import { TimeRange } from './hooks/useDashboardData'
 
 const page = () => {
-  // Shared time range state for Monthly Trends and Cases-by-Status charts
-  // Default to '1Y' (last 365 days) as the initial view
-  const [timeRange, setTimeRange] = useState<TimeRange>('1Y')
+  // TimeRange state is now managed per-widget (not globally)
+  // - Monthly Trends: owns trendsRange (local in Chart.tsx)
+  // - Cases-by-Status: owns statusRange (local in SaleChart.tsx)
+  // - KPI Sparklines: use fixed '1Y' constant (decoupled)
 
   return (
     <>
       <PageTitle subName="Darkone" title="Dashboard" />
-      <Cards timeRange={timeRange} />
-      <Chart timeRange={timeRange} onTimeRangeChange={setTimeRange} />
+      <Cards />
+      <Chart />
       <User />
       <Footer />
     </>

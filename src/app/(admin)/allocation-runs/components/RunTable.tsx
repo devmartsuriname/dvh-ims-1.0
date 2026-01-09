@@ -53,13 +53,18 @@ const RunTable = () => {
     fetchRuns()
   }, [])
 
-  // Listen for view clicks from Grid.js
+  // Event delegation for View button clicks
   useEffect(() => {
-    const handleViewClick = (e: CustomEvent) => {
-      navigate(`/allocation-runs/${e.detail}`)
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const btn = target.closest('[data-run-view]') as HTMLElement | null
+      if (btn) {
+        const runId = btn.getAttribute('data-run-view')
+        if (runId) navigate(`/allocation-runs/${runId}`)
+      }
     }
-    window.addEventListener('run-view', handleViewClick as EventListener)
-    return () => window.removeEventListener('run-view', handleViewClick as EventListener)
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
   }, [navigate])
 
   const handleRunExecuted = () => {
@@ -119,7 +124,7 @@ const RunTable = () => {
                   name: 'Actions',
                   width: '100px',
                   formatter: (cell) => html(`
-                    <button class="btn btn-sm btn-soft-info" onclick="window.dispatchEvent(new CustomEvent('run-view', {detail: '${cell}'}))">
+                    <button class="btn btn-sm btn-soft-info" data-run-view="${cell}">
                       View
                     </button>
                   `)

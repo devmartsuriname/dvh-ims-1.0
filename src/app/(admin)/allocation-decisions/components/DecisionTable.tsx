@@ -100,17 +100,22 @@ const DecisionTable = () => {
     fetchData()
   }, [])
 
-  // Listen for decision clicks from Grid.js
+  // Event delegation for Make Decision button clicks
   useEffect(() => {
-    const handleDecisionClick = (e: CustomEvent) => {
-      const candidate = pendingCandidates.find(c => c.id === e.detail)
-      if (candidate) {
-        setSelectedCandidate(candidate)
-        setShowModal(true)
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const btn = target.closest('[data-decision-make]') as HTMLElement | null
+      if (btn) {
+        const candidateId = btn.getAttribute('data-decision-make')
+        const candidate = pendingCandidates.find(c => c.id === candidateId)
+        if (candidate) {
+          setSelectedCandidate(candidate)
+          setShowModal(true)
+        }
       }
     }
-    window.addEventListener('decision-make', handleDecisionClick as EventListener)
-    return () => window.removeEventListener('decision-make', handleDecisionClick as EventListener)
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
   }, [pendingCandidates])
 
   const handleDecisionMade = () => {
@@ -165,7 +170,7 @@ const DecisionTable = () => {
                         name: 'Action',
                         width: '120px',
                         formatter: (cell) => html(`
-                          <button class="btn btn-sm btn-primary" onclick="window.dispatchEvent(new CustomEvent('decision-make', {detail: '${cell}'}))">
+                          <button class="btn btn-sm btn-primary" data-decision-make="${cell}">
                             Make Decision
                           </button>
                         `)

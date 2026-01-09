@@ -960,15 +960,61 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_district: { Args: { _user_id: string }; Returns: string }
+      has_any_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_national_role: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "system_admin"
+        | "minister"
+        | "project_leader"
+        | "frontdesk_bouwsubsidie"
+        | "frontdesk_housing"
+        | "admin_staff"
+        | "audit"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1095,6 +1141,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "system_admin",
+        "minister",
+        "project_leader",
+        "frontdesk_bouwsubsidie",
+        "frontdesk_housing",
+        "admin_staff",
+        "audit",
+      ],
+    },
   },
 } as const

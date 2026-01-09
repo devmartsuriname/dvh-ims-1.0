@@ -28,6 +28,9 @@ function isValidDistrictCode(str: string): boolean {
   return /^[A-Za-z0-9_-]{1,20}$/.test(str)
 }
 
+// Allowed roles for this function
+const ALLOWED_ROLES = ['system_admin', 'project_leader']
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -62,7 +65,6 @@ Deno.serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
     if (userError || !user) {
-      // Sanitized log - no token or user details exposed
       console.error('Auth validation failed')
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid authorization token', code: 'AUTH_INVALID' }),
@@ -70,12 +72,27 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Validate allowlist (only info@devmart.sr can execute)
-    if (user.email !== 'info@devmart.sr') {
-      // Sanitized log - no email exposed
-      console.error('Allowlist check failed')
+    // RBAC: Check user roles
+    const { data: userRoles, error: rolesError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+
+    if (rolesError) {
+      console.error('Failed to fetch user roles')
       return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized: User not in allowlist', code: 'AUTH_FORBIDDEN' }),
+        JSON.stringify({ success: false, error: 'Failed to verify authorization', code: 'AUTH_ERROR' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const roles = userRoles?.map(r => r.role) || []
+    const hasAccess = roles.some(role => ALLOWED_ROLES.includes(role))
+
+    if (!hasAccess) {
+      console.error('RBAC check failed - insufficient permissions')
+      return new Response(
+        JSON.stringify({ success: false, error: 'Insufficient permissions', code: 'AUTH_FORBIDDEN' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -143,7 +160,6 @@ Deno.serve(async (req) => {
     console.log(`Quota check complete: available=${availableQuota}`)
 
     // 3. Fetch eligible candidates from waiting list
-    // Eligible: status = 'waiting_list' and district matches
     const { data: registrations, error: registrationError } = await supabase
       .from('housing_registration')
       .select('id, urgency_score, waiting_list_position')
@@ -159,13 +175,10 @@ Deno.serve(async (req) => {
     console.log(`Eligible registrations found: count=${registrations?.length || 0}`)
 
     // 4. Calculate composite rank for each candidate
-    // Composite rank = urgency_score (higher is better) + inverse waiting position
     const candidates: AllocationCandidate[] = (registrations || []).map((reg, index) => {
       const urgencyScore = reg.urgency_score || 0
       const waitingPosition = reg.waiting_list_position || index + 1
-      // Higher urgency = higher priority, lower position = higher priority
-      // Composite rank: lower is better (first in queue)
-      const compositeRank = index + 1 // Simple sequential ranking after sorting
+      const compositeRank = index + 1
       
       return {
         registration_id: reg.id,
@@ -190,9 +203,6 @@ Deno.serve(async (req) => {
 
     // 5. Mark top candidates as selected based on available quota
     const selectedCount = Math.min(availableQuota, candidates.length)
-    candidates.slice(0, selectedCount).forEach(c => {
-      // Mark as selected (for UI indication)
-    })
 
     // 6. Insert allocation candidates
     if (candidates.length > 0) {
@@ -234,6 +244,7 @@ Deno.serve(async (req) => {
     // 8. Log audit event
     await supabase.from('audit_event').insert({
       actor_user_id: user.id,
+      actor_role: roles[0] || 'unknown',
       entity_type: 'allocation_run',
       entity_id: run_id,
       action: 'CREATE',
@@ -257,7 +268,6 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
-    // Sanitized error - only safe message exposed
     const errorMessage = error instanceof Error ? error.message : 'Processing error'
     console.error('Allocation run failed')
 

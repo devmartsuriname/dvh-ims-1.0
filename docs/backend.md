@@ -513,3 +513,52 @@ const DISTRICT_CODE_ALIASES: Record<string, string> = {
 - `src/app/(admin)/dashboards/components/SaleChart.tsx` - Synced filter display (read-only)
 
 **Restore Point:** `ADMIN_V1_1_B_DASH_TIMEFILTERS_COMPLETE`
+
+---
+
+## Admin v1.1-B: Dashboard Sparklines (2026-01-09)
+
+### Sparkline Real Data Implementation
+
+**Purpose:** Replace static placeholder sparkline series in KPI cards with real, data-derived series that react to the shared dashboard TimeRange.
+
+**Hook Added:** `useSparklineData(timeRange: TimeRange)`
+
+**Returns:**
+```typescript
+interface SparklineData {
+  registrations: number[]   // Housing registrations over time
+  subsidyCases: number[]    // All subsidy cases over time
+  pendingCases: number[]    // Pending cases (received + pending_documents)
+  approvedCases: number[]   // Approved cases over time
+}
+```
+
+### Bucketing Rules
+
+| TimeRange | Bucket Type | Count | Description |
+|-----------|-------------|-------|-------------|
+| 1M | Daily | 30 | Day boundaries (00:00:00 - 23:59:59) |
+| 6M | Weekly | 26 | 7-day windows from current date |
+| 1Y / ALL | Monthly | 12 | Calendar month boundaries |
+
+### Data Sources
+
+| KPI Card | Source Table | Timestamp Field | Filter |
+|----------|--------------|-----------------|--------|
+| Housing Registrations | `housing_registration` | `created_at` | None |
+| Subsidy Applications | `subsidy_case` | `created_at` | None |
+| Pending Applications | `subsidy_case` | `created_at` | `status IN ('received', 'pending_documents')` |
+| Approved Applications | `subsidy_case` | `created_at` | `status = 'approved'` |
+
+### Zero-Fill Fallback Rule
+
+If data fetch fails or returns empty, the hook returns zero-filled arrays of the correct length (30/26/12 based on timeRange) to prevent NaN/undefined in charts.
+
+**Files Modified:**
+- `src/app/(admin)/dashboards/hooks/useDashboardData.ts` - Added `useSparklineData` hook
+- `src/app/(admin)/dashboards/data.ts` - Updated `createCardsData` to accept sparklines
+- `src/app/(admin)/dashboards/components/Cards.tsx` - Integrated sparkline data
+- `src/app/(admin)/dashboards/page.tsx` - Passed `timeRange` to Cards
+
+**Restore Point:** `ADMIN_V1_1_B_DASH_SPARKLINES_COMPLETE`

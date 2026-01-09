@@ -419,3 +419,19 @@ Both tables now use the same reliable pattern for Grid.js button actions:
 2. useEffect adds document click listener
 3. Event delegation via `closest()` selector
 4. Direct handler invocation
+
+---
+
+## Admin v1.1-A - Audit Log Flatpickr CSS Fix (2026-01-09)
+
+### Audit Log Module - Flatpickr Base CSS Import
+
+**Issue:** AuditLogFilters component imported `react-flatpickr` without the required base CSS, causing unstyled SVG chevrons to render at uncontrolled sizes below the Audit Log table.
+
+**Root Cause:** The Darkone SCSS (`_flatpicker.scss`) only provides theme overrides and assumes base Flatpickr CSS is already loaded. Without it, SVG elements in the calendar picker had no sizing constraints.
+
+**Fix:** Added `import 'flatpickr/dist/flatpickr.min.css'` before the Flatpickr component import.
+
+**File:** `src/app/(admin)/audit-log/components/AuditLogFilters.tsx`
+
+**Restore Point:** `ADMIN_V1_1_A_AUDITLOG_FIX_COMPLETE`

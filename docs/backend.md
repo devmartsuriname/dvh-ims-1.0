@@ -274,7 +274,16 @@ WITH CHECK (
   (((current_setting('request.jwt.claims'::text, true))::json ->> 'email'::text) = 'info@devmart.sr'::text)
 );
 
--- No SELECT, UPDATE, DELETE policies
+-- SELECT allowed for governance roles (v1.1-A)
+CREATE POLICY "role_select_audit_event" ON public.audit_event
+FOR SELECT
+TO authenticated
+USING (
+  has_role(auth.uid(), 'audit'::app_role) OR
+  has_role(auth.uid(), 'system_admin'::app_role) OR
+  has_role(auth.uid(), 'minister'::app_role) OR
+  has_role(auth.uid(), 'project_leader'::app_role)
+);
 ```
 
 ### Usage (Frontend)
@@ -335,3 +344,50 @@ await logAuditEvent({
 | 2026-01-07 | Phase 8 security documentation added | Security + Audit Readiness |
 | 2026-01-07 | Edge Functions Security Checklist | Standardize security controls |
 | 2026-01-07 | Audit Logging Governance | Document append-only pattern |
+| 2026-01-09 | Admin v1.1-A: Audit Log Interface | Read-only audit log for governance roles |
+
+---
+
+## Admin v1.1-A: Audit Log Interface (Read-Only)
+
+### Overview
+
+A read-only Audit Log interface was added for governance roles to review system activity.
+
+**Route:** `/audit-log`
+
+**Access:** `system_admin`, `minister`, `project_leader`, `audit`
+
+### Components
+
+| Component | Path | Purpose |
+|-----------|------|---------|
+| Page | `src/app/(admin)/audit-log/page.tsx` | Main page wrapper with access control |
+| Table | `src/app/(admin)/audit-log/components/AuditLogTable.tsx` | Data table with pagination |
+| Filters | `src/app/(admin)/audit-log/components/AuditLogFilters.tsx` | Date range, action, entity, actor filters |
+| Drawer | `src/app/(admin)/audit-log/components/AuditDetailDrawer.tsx` | Detail view (excludes sensitive fields) |
+| Export | `src/app/(admin)/audit-log/components/AuditExportButton.tsx` | CSV export of filtered view |
+| Hook | `src/hooks/useAuditEvents.ts` | Paginated data fetching |
+
+### Security
+
+- **RLS Enforced:** All reads go through authenticated Supabase client
+- **No Service Role Bypass:** Client uses anon key only
+- **Sensitive Field Filtering:** Metadata fields containing tokens, passwords, IPs are hidden
+- **Page-Level Access Control:** Non-authorized roles redirected to dashboard
+
+### RLS Policy Update
+
+Extended SELECT access on `audit_event` table:
+
+```sql
+CREATE POLICY "role_select_audit_event" ON public.audit_event
+FOR SELECT
+TO authenticated
+USING (
+  has_role(auth.uid(), 'audit'::app_role) OR
+  has_role(auth.uid(), 'system_admin'::app_role) OR
+  has_role(auth.uid(), 'minister'::app_role) OR
+  has_role(auth.uid(), 'project_leader'::app_role)
+);
+```

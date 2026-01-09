@@ -103,6 +103,18 @@ export const MENU_ITEMS: MenuItemWithRoles[] = [
     allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_housing', 'admin_staff', 'audit'],
   },
   {
+    key: 'governance',
+    label: 'GOVERNANCE',
+    isTitle: true,
+  },
+  {
+    key: 'audit-log',
+    label: 'Audit Log',
+    icon: 'mingcute:file-security-line',
+    url: '/audit-log',
+    allowedRoles: ['system_admin', 'minister', 'project_leader', 'audit'],
+  },
+  {
     key: 'auth',
     label: 'Authentication',
     icon: 'mingcute:user-3-line',

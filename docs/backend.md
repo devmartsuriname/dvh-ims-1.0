@@ -435,3 +435,42 @@ Both tables now use the same reliable pattern for Grid.js button actions:
 **File:** `src/app/(admin)/audit-log/components/AuditLogFilters.tsx`
 
 **Restore Point:** `ADMIN_V1_1_A_AUDITLOG_FIX_COMPLETE`
+
+---
+
+## Admin v1.1-B: Dashboard KPI Correctness (2026-01-09)
+
+### Pending Applications KPI Fix
+
+**Issue:** "Pending Applications" KPI only counted `status = 'received'`, missing 5 cases with `status = 'pending_documents'`.
+
+**Fix:** Changed query to use `.in('status', ['received', 'pending_documents'])`.
+
+**Business Logic:** Both statuses represent applications awaiting processing.
+
+**File:** `src/app/(admin)/dashboards/hooks/useDashboardData.ts`
+
+### District Applications Aggregation Fix
+
+**Issue:** District applications map dropped records due to code mismatch between database (3-letter: PAR, WAA) and UI (2-letter: PM, WA).
+
+**Fix:** Added deterministic alias mapping in aggregation layer:
+
+```typescript
+const DISTRICT_CODE_ALIASES: Record<string, string> = {
+  'PAR': 'PM', // Paramaribo
+  'WAA': 'WA', // Wanica
+  'NIC': 'NI', // Nickerie
+  'COR': 'CO', // Coronie
+  'SAR': 'SA', // Saramacca
+  'COM': 'CM', // Commewijne
+  'MAR': 'MA', // Marowijne
+  'PAB': 'PA', // Para
+  'BRO': 'BR', // Brokopondo
+  'SIP': 'SI', // Sipaliwini
+}
+```
+
+**File:** `src/app/(admin)/dashboards/hooks/useDashboardData.ts`
+
+**Restore Point:** `ADMIN_V1_1_B_DASH_KPI_FIX_COMPLETE`

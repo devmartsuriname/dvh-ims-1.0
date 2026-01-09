@@ -1,6 +1,21 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 
+// Time range filter type for dashboard charts
+// ALL = no date constraint, 1M = last 30 days, 6M = last 180 days, 1Y = last 365 days
+export type TimeRange = 'ALL' | '1M' | '6M' | '1Y'
+
+// Calculate UTC cutoff date based on time range
+// Returns null for 'ALL' (no constraint), or ISO string for date-constrained ranges
+const getTimeRangeCutoff = (range: TimeRange): string | null => {
+  if (range === 'ALL') return null
+  
+  const now = new Date()
+  const days = range === '1M' ? 30 : range === '6M' ? 180 : 365
+  const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000)
+  return cutoff.toISOString()
+}
+
 // Suriname district coordinates for the map
 export const SURINAME_DISTRICTS = [
   { name: 'Paramaribo', coords: [5.852, -55.203], code: 'PM' },
@@ -106,27 +121,32 @@ export const useDashboardKPIs = (): DashboardKPIs => {
   return data
 }
 
-export const useMonthlyTrends = (): { data: MonthlyData[]; loading: boolean } => {
+// Monthly Trends hook with time range filtering
+// Accepts TimeRange parameter to filter data at Supabase query level
+export const useMonthlyTrends = (timeRange: TimeRange = '1Y'): { data: MonthlyData[]; loading: boolean } => {
   const [trends, setTrends] = useState<MonthlyData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchTrends = async () => {
       try {
-        // Fetch housing registrations with created_at
-        const { data: registrations } = await supabase
-          .from('housing_registration')
-          .select('created_at')
+        const cutoff = getTimeRangeCutoff(timeRange)
+        
+        // Build queries with optional date constraint
+        let regQuery = supabase.from('housing_registration').select('created_at')
+        let subQuery = supabase.from('subsidy_case').select('created_at')
+        let allocQuery = supabase.from('allocation_decision').select('decided_at')
+        
+        // Apply time range filter if not 'ALL'
+        if (cutoff) {
+          regQuery = regQuery.gte('created_at', cutoff)
+          subQuery = subQuery.gte('created_at', cutoff)
+          allocQuery = allocQuery.gte('decided_at', cutoff)
+        }
 
-        // Fetch subsidy cases with created_at
-        const { data: subsidyCases } = await supabase
-          .from('subsidy_case')
-          .select('created_at')
-
-        // Fetch allocation decisions with decided_at
-        const { data: allocations } = await supabase
-          .from('allocation_decision')
-          .select('decided_at')
+        const { data: registrations } = await regQuery
+        const { data: subsidyCases } = await subQuery
+        const { data: allocations } = await allocQuery
 
         // Group by month
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -152,7 +172,7 @@ export const useMonthlyTrends = (): { data: MonthlyData[]; loading: boolean } =>
     }
 
     fetchTrends()
-  }, [])
+  }, [timeRange]) // Re-fetch when timeRange changes
 
   return { data: trends, loading }
 }
@@ -230,17 +250,26 @@ export const useDistrictApplications = (): { data: DistrictApplications[]; loadi
   return { data: districtData, loading }
 }
 
-export const useStatusBreakdown = (): { data: StatusBreakdown[]; loading: boolean } => {
+// Status Breakdown hook with time range filtering
+// Accepts TimeRange parameter to filter subsidy cases at Supabase query level
+export const useStatusBreakdown = (timeRange: TimeRange = '1Y'): { data: StatusBreakdown[]; loading: boolean } => {
   const [statusData, setStatusData] = useState<StatusBreakdown[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchStatusBreakdown = async () => {
       try {
-        // Fetch all subsidy cases
-        const { data: cases } = await supabase
-          .from('subsidy_case')
-          .select('status')
+        const cutoff = getTimeRangeCutoff(timeRange)
+        
+        // Build query with optional date constraint
+        let query = supabase.from('subsidy_case').select('status, created_at')
+        
+        // Apply time range filter if not 'ALL'
+        if (cutoff) {
+          query = query.gte('created_at', cutoff)
+        }
+        
+        const { data: cases } = await query
 
         if (!cases || cases.length === 0) {
           setStatusData([
@@ -274,7 +303,7 @@ export const useStatusBreakdown = (): { data: StatusBreakdown[]; loading: boolea
     }
 
     fetchStatusBreakdown()
-  }, [])
+  }, [timeRange]) // Re-fetch when timeRange changes
 
   return { data: statusData, loading }
 }

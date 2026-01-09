@@ -1,10 +1,14 @@
 import { ApexOptions } from 'apexcharts'
 import ReactApexChart from 'react-apexcharts'
 import { Card, CardBody, CardHeader, Col } from 'react-bootstrap'
-import { useStatusBreakdown } from '../hooks/useDashboardData'
+import { useStatusBreakdown, TimeRange } from '../hooks/useDashboardData'
 
-const SaleChart = () => {
-  const { data: statusData, loading } = useStatusBreakdown()
+interface SaleChartProps {
+  timeRange: TimeRange
+}
+
+const SaleChart = ({ timeRange }: SaleChartProps) => {
+  const { data: statusData, loading } = useStatusBreakdown(timeRange)
 
   // Map status data to chart series and labels
   const series = loading 
@@ -69,6 +73,9 @@ const SaleChart = () => {
     return 'badge-soft-primary'
   }
 
+  // Time range options - displayed as visual indicators (synced with Monthly Trends)
+  const timeRangeOptions: TimeRange[] = ['ALL', '1M', '6M', '1Y']
+
   return (
     <>
       <Col lg={4}>
@@ -76,18 +83,18 @@ const SaleChart = () => {
           <CardHeader className=" d-flex align-items-center justify-content-between gap-2">
             <h4 className="card-title flex-grow-1 mb-0">Cases by Status</h4>
             <div>
-              <button type="button" className="btn btn-sm btn-outline-light">
-                ALL
-              </button>
-              <button type="button" className="btn btn-sm btn-outline-light">
-                1M
-              </button>
-              <button type="button" className="btn btn-sm btn-outline-light">
-                6M
-              </button>
-              <button type="button" className="btn btn-sm btn-outline-light active">
-                1Y
-              </button>
+              {/* Buttons shown as visual indicators of current selection (read-only) */}
+              {timeRangeOptions.map((range) => (
+                <button
+                  key={range}
+                  type="button"
+                  className={`btn btn-sm btn-outline-light ${timeRange === range ? 'active' : ''}`}
+                  disabled
+                  style={{ opacity: timeRange === range ? 1 : 0.5 }}
+                >
+                  {range}
+                </button>
+              ))}
             </div>
           </CardHeader>
           <CardBody>

@@ -36,6 +36,7 @@ src/
 | `/housing/*` | PublicLayout | Light | No |
 | `/dashboards` | AdminLayout | Dark | Yes |
 | `/admin/*` | AdminLayout | Dark | Yes |
+| `/audit-log` | AdminLayout | Dark | Yes (Governance) |
 | `/auth/*` | AuthLayout | Dark | No |
 
 ### Authentication Flow
@@ -145,3 +146,32 @@ All 23 database tables have Row-Level Security (RLS) enabled with a Phase 1 allo
 | Date | Change | Reason |
 |------|--------|--------|
 | 2026-01-07 | RLS Security Model section added | Phase 8 security audit |
+| 2026-01-09 | Governance routes added (/audit-log) | Admin v1.1-A Audit Log Interface |
+
+---
+
+## Governance Module (Admin v1.1-A)
+
+### Audit Log Interface
+
+**Purpose:** Read-only interface for governance roles to review system activity.
+
+**Route:** `/audit-log`
+
+**Allowed Roles:**
+- `system_admin`
+- `minister`
+- `project_leader`
+- `audit`
+
+**Features:**
+- Paginated table view (25 rows per page)
+- Filters: date range, action, entity type, actor
+- Detail drawer with safe metadata display
+- CSV export of filtered view
+
+**Security Controls:**
+- RLS-enforced SELECT on `audit_event`
+- Page-level role check with redirect for unauthorized access
+- Sensitive metadata fields (tokens, passwords, IPs) hidden from display
+- No destructive actions (read-only)

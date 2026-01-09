@@ -29,6 +29,9 @@ const AllocationRunDetail = lazy(() => import('@/app/(admin)/allocation-runs/[id
 const AllocationDecisions = lazy(() => import('@/app/(admin)/allocation-decisions/page'))
 const AllocationAssignments = lazy(() => import('@/app/(admin)/allocation-assignments/page'))
 
+// Governance Routes
+const AuditLog = lazy(() => import('@/app/(admin)/audit-log/page'))
+
 // Base UI Routes
 const Accordions = lazy(() => import('@/app/(admin)/base-ui/accordion/page'))
 const Alerts = lazy(() => import('@/app/(admin)/base-ui/alerts/page'))
@@ -389,7 +392,12 @@ const allocationRoutes: RoutesProps[] = [
   { path: '/allocation-assignments', name: 'Assignment Registration', element: <AllocationAssignments /> },
 ]
 
+const governanceRoutes: RoutesProps[] = [
+  { path: '/audit-log', name: 'Audit Log', element: <AuditLog /> },
+]
+
 export const appRoutes = [
+  ...governanceRoutes,
   ...sharedCoreRoutes,
   ...bouwsubsidieRoutes,
   ...woningRegistratieRoutes,

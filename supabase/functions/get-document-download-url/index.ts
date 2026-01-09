@@ -6,6 +6,9 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Allowed roles for document download
+const ALLOWED_ROLES = ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'admin_staff', 'audit'];
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -40,7 +43,7 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Get user and verify allowlist
+    // Get user
     const { data: { user }, error: userError } = await userClient.auth.getUser();
     if (userError || !user) {
       console.error("Auth error:", userError?.message);
@@ -50,9 +53,28 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Allowlist check
-    if (user.email !== "info@devmart.sr") {
-      console.error("Forbidden: User not in allowlist:", user.email);
+    // Use service role client for data operations
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+
+    // RBAC: Check user roles
+    const { data: userRoles, error: rolesError } = await adminClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id);
+
+    if (rolesError) {
+      console.error('Failed to fetch user roles');
+      return new Response(
+        JSON.stringify({ success: false, error: "AUTH_ERROR", message: "Failed to verify authorization" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const roles = userRoles?.map(r => r.role) || [];
+    const hasAccess = roles.some(role => ALLOWED_ROLES.includes(role));
+
+    if (!hasAccess) {
+      console.error("RBAC check failed - insufficient permissions");
       return new Response(
         JSON.stringify({ success: false, error: "AUTH_FORBIDDEN", message: "Access denied" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -71,9 +93,6 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    // Use service role client for data operations
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Fetch document record
     const { data: docRecord, error: docError } = await adminClient
@@ -109,7 +128,7 @@ Deno.serve(async (req) => {
       action: "document_downloaded",
       entity_id: document_id,
       actor_user_id: user.id,
-      actor_role: "admin",
+      actor_role: roles[0] || 'unknown',
       metadata_json: {
         case_id: docRecord.case_id,
         file_name: docRecord.file_name,

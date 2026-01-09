@@ -1,8 +1,10 @@
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { findAllParent, findMenuItem, getMenuItemFromURL } from '@/helpers/Manu'
 import { MenuItemType, SubMenus } from '@/types/menu'
+import { MenuItemWithRoles } from '@/assets/data/menu-items'
+import { useUserRole, AppRole } from '@/hooks/useUserRole'
 import clsx from 'clsx'
-import { Fragment, MouseEvent, useCallback, useEffect, useState } from 'react'
+import { Fragment, MouseEvent, useCallback, useEffect, useState, useMemo } from 'react'
 import { Collapse } from 'react-bootstrap'
 import { Link, useLocation } from 'react-router-dom'
 
@@ -94,15 +96,41 @@ const MenuItemLink = ({ item, className }: SubMenus) => {
 }
 
 type AppMenuProps = {
-  menuItems: Array<MenuItemType>
+  menuItems: Array<MenuItemWithRoles>
 }
 
 const AppMenu = ({ menuItems }: AppMenuProps) => {
   const { pathname } = useLocation()
+  const { roles, loading } = useUserRole()
 
   const [activeMenuItems, setActiveMenuItems] = useState<Array<string>>([])
+  
+  // Filter menu items based on user roles
+  const filteredMenuItems = useMemo(() => {
+    if (loading) return []
+    
+    return menuItems.filter((item) => {
+      // Always show title items if the next non-title item is visible
+      if (item.isTitle) return true
+      
+      // If no allowedRoles specified, show to everyone (e.g., auth menu)
+      if (!item.allowedRoles || item.allowedRoles.length === 0) return true
+      
+      // Check if user has any of the allowed roles
+      return item.allowedRoles.some((role) => roles.includes(role))
+    }).filter((item, index, array) => {
+      // Remove orphan title items (titles with no visible items following them)
+      if (item.isTitle) {
+        const nextItem = array[index + 1]
+        // If next item is also a title or doesn't exist, hide this title
+        if (!nextItem || nextItem.isTitle) return false
+      }
+      return true
+    })
+  }, [menuItems, roles, loading])
+
   const toggleMenu = (menuItem: MenuItemType, show: boolean) => {
-    if (show) setActiveMenuItems([menuItem.key, ...findAllParent(menuItems, menuItem)])
+    if (show) setActiveMenuItems([menuItem.key, ...findAllParent(filteredMenuItems, menuItem)])
   }
 
   const getActiveClass = useCallback(
@@ -114,12 +142,12 @@ const AppMenu = ({ menuItems }: AppMenuProps) => {
 
   const activeMenu = useCallback(() => {
     const trimmedURL = pathname?.replace('', '')
-    const matchingMenuItem = getMenuItemFromURL(menuItems, trimmedURL)
+    const matchingMenuItem = getMenuItemFromURL(filteredMenuItems, trimmedURL)
 
     if (matchingMenuItem) {
-      const activeMt = findMenuItem(menuItems, matchingMenuItem.key)
+      const activeMt = findMenuItem(filteredMenuItems, matchingMenuItem.key)
       if (activeMt) {
-        setActiveMenuItems([activeMt.key, ...findAllParent(menuItems, activeMt)])
+        setActiveMenuItems([activeMt.key, ...findAllParent(filteredMenuItems, activeMt)])
       }
 
       setTimeout(() => {
@@ -157,15 +185,23 @@ const AppMenu = ({ menuItems }: AppMenuProps) => {
         animateScroll()
       }
     }
-  }, [pathname, menuItems])
+  }, [pathname, filteredMenuItems])
 
   useEffect(() => {
-    if (menuItems && menuItems.length > 0) activeMenu()
-  }, [activeMenu, menuItems])
+    if (filteredMenuItems && filteredMenuItems.length > 0) activeMenu()
+  }, [activeMenu, filteredMenuItems])
+
+  if (loading) {
+    return (
+      <ul className="navbar-nav" id="navbar-nav">
+        <li className="menu-title">Loading...</li>
+      </ul>
+    )
+  }
 
   return (
     <ul className="navbar-nav " id="navbar-nav" style={{ textTransform: 'capitalize' }}>
-      {(menuItems || []).map((item, idx) => {
+      {(filteredMenuItems || []).map((item, idx) => {
         return (
           <Fragment key={item.key + idx}>
             {item.isTitle ? (

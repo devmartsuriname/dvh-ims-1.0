@@ -391,3 +391,31 @@ USING (
   has_role(auth.uid(), 'project_leader'::app_role)
 );
 ```
+
+---
+
+## Admin v1.1-A Minor Fixes (2026-01-09)
+
+### Households Module - View Button Fix
+
+**Issue:** Actions column in Households table was missing a View button formatter.
+
+**Fix:** Added `html` formatter with data attribute pattern and event delegation.
+
+**File:** `src/app/(admin)/households/components/HouseholdTable.tsx`
+
+### Allocation Quotas Module - Edit Button Fix
+
+**Issue:** Edit button used `window.dispatchEvent` which suffered from listener timing issues.
+
+**Fix:** Replaced with data attribute pattern (`data-quota-edit`) and document-level event delegation via useEffect.
+
+**File:** `src/app/(admin)/allocation-quotas/components/QuotaTable.tsx`
+
+### Pattern Used
+
+Both tables now use the same reliable pattern for Grid.js button actions:
+1. Button uses `data-*` attribute containing the row ID
+2. useEffect adds document click listener
+3. Event delegation via `closest()` selector
+4. Direct handler invocation

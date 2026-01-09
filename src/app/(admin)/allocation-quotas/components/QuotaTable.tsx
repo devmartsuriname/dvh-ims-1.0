@@ -53,6 +53,20 @@ const QuotaTable = () => {
     }
   }, [quotas])
 
+  // Event delegation for Edit button clicks
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const editBtn = target.closest('[data-quota-edit]') as HTMLElement
+      if (editBtn) {
+        const id = editBtn.getAttribute('data-quota-edit')
+        if (id) handleEditClick(id)
+      }
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [handleEditClick])
+
   const handleSave = async (data: {
     district_code: string
     period_start: string
@@ -178,7 +192,7 @@ const QuotaTable = () => {
                   name: 'Actions',
                   width: '100px',
                   formatter: (cell) => html(`
-                    <button class="btn btn-sm btn-soft-primary" onclick="window.dispatchEvent(new CustomEvent('quota-edit', {detail: '${cell}'}))">
+                    <button class="btn btn-sm btn-soft-primary" data-quota-edit="${cell}">
                       Edit
                     </button>
                   `)
@@ -205,14 +219,6 @@ const QuotaTable = () => {
       />
     </>
   )
-}
-
-// Global event listener for edit clicks
-if (typeof window !== 'undefined') {
-  window.addEventListener('quota-edit', ((e: CustomEvent) => {
-    const event = new CustomEvent('quota-edit-internal', { detail: e.detail })
-    window.dispatchEvent(event)
-  }) as EventListener)
 }
 
 export default QuotaTable

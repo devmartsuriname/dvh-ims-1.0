@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Card, CardBody, CardHeader, CardTitle, Button, Spinner } from 'react-bootstrap'
 import { Grid } from 'gridjs-react'
+import { html } from 'gridjs'
 import { useNavigate } from 'react-router-dom'
 import useToggle from '@/hooks/useToggle'
 import HouseholdFormModal from './HouseholdFormModal'
@@ -46,6 +47,20 @@ const HouseholdTable = () => {
   useEffect(() => {
     fetchHouseholds()
   }, [fetchHouseholds])
+
+  // Event delegation for View button clicks
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const viewBtn = target.closest('[data-household-view]') as HTMLElement
+      if (viewBtn) {
+        const id = viewBtn.getAttribute('data-household-view')
+        if (id) handleView(id)
+      }
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [])
 
   const handleAdd = () => {
     toggle()
@@ -98,7 +113,15 @@ const HouseholdTable = () => {
                 { name: 'Size' },
                 { name: 'District' },
                 { name: 'Created' },
-                { name: 'Actions', sort: false },
+                { 
+                  name: 'Actions', 
+                  sort: false,
+                  formatter: (cell) => html(`
+                    <button class="btn btn-sm btn-soft-primary" data-household-view="${cell}">
+                      View
+                    </button>
+                  `)
+                },
               ]}
               search
               pagination={{ limit: 10 }}

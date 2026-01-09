@@ -474,3 +474,118 @@ const DISTRICT_CODE_ALIASES: Record<string, string> = {
 **File:** `src/app/(admin)/dashboards/hooks/useDashboardData.ts`
 
 **Restore Point:** `ADMIN_V1_1_B_DASH_KPI_FIX_COMPLETE`
+
+---
+
+## Admin v1.1-B: Dashboard Time Range Filters (2026-01-09)
+
+### Time Range Filtering
+
+**Purpose:** Enable functional time range filtering (ALL/1M/6M/1Y) for Monthly Trends and Cases-by-Status charts.
+
+**Time Window Definitions:**
+| Filter | Calculation | Description |
+|--------|-------------|-------------|
+| ALL | No constraint | All historical data |
+| 1M | `now() - 30 days` | Last 30 days |
+| 6M | `now() - 180 days` | Last 180 days |
+| 1Y | `now() - 365 days` | Last 365 days |
+
+**Implementation:**
+- Added `TimeRange` type: `'ALL' | '1M' | '6M' | '1Y'`
+- Added `getTimeRangeCutoff()` helper using UTC timestamps
+- Updated `useMonthlyTrends(timeRange)` to accept filter parameter
+- Updated `useStatusBreakdown(timeRange)` to accept filter parameter
+- Filters applied at Supabase query level using `.gte()` on timestamp columns
+- Shared state managed at dashboard page level
+
+**Timestamp Fields Used:**
+| Table | Field |
+|-------|-------|
+| `housing_registration` | `created_at` |
+| `subsidy_case` | `created_at` |
+| `allocation_decision` | `decided_at` |
+
+**Files Modified:**
+- `src/app/(admin)/dashboards/page.tsx` - Shared timeRange state
+- `src/app/(admin)/dashboards/hooks/useDashboardData.ts` - TimeRange type and filter logic
+- `src/app/(admin)/dashboards/components/Chart.tsx` - Interactive filter buttons
+- `src/app/(admin)/dashboards/components/SaleChart.tsx` - Synced filter display (read-only)
+
+**Restore Point:** `ADMIN_V1_1_B_DASH_TIMEFILTERS_COMPLETE`
+
+---
+
+## Admin v1.1-B: Dashboard Sparklines (2026-01-09)
+
+### Sparkline Real Data Implementation
+
+**Purpose:** Replace static placeholder sparkline series in KPI cards with real, data-derived series.
+
+**Hook Added:** `useSparklineData(timeRange: TimeRange)`
+
+**Returns:**
+```typescript
+interface SparklineData {
+  registrations: number[]   // Housing registrations over time
+  subsidyCases: number[]    // All subsidy cases over time
+  pendingCases: number[]    // Pending cases (received + pending_documents)
+  approvedCases: number[]   // Approved cases over time
+}
+```
+
+### Bucketing Rules
+
+| TimeRange | Bucket Type | Count | Description |
+|-----------|-------------|-------|-------------|
+| 1M | Daily | 30 | Day boundaries (00:00:00 - 23:59:59) |
+| 6M | Weekly | 26 | 7-day windows from current date |
+| 1Y / ALL | Monthly | 12 | Calendar month boundaries |
+
+### Data Sources
+
+| KPI Card | Source Table | Timestamp Field | Filter |
+|----------|--------------|-----------------|--------|
+| Housing Registrations | `housing_registration` | `created_at` | None |
+| Subsidy Applications | `subsidy_case` | `created_at` | None |
+| Pending Applications | `subsidy_case` | `created_at` | `status IN ('received', 'pending_documents')` |
+| Approved Applications | `subsidy_case` | `created_at` | `status = 'approved'` |
+
+### Zero-Fill Fallback Rule
+
+If data fetch fails or returns empty, the hook returns zero-filled arrays of the correct length (30/26/12 based on timeRange) to prevent NaN/undefined in charts.
+
+**Restore Point:** `ADMIN_V1_1_B_DASH_SPARKLINES_COMPLETE`
+
+---
+
+## Admin v1.1-B: Per-Widget TimeRange Decoupling (2026-01-09)
+
+### State Ownership (Per-Widget)
+
+**Issue Fixed:** TimeRange controls were globally shared, causing all widgets to update when any TimeRange button was clicked.
+
+**Solution:** Each widget now owns its own local TimeRange state.
+
+### Widget State Ownership
+
+| Widget | State Variable | Location | Default | Controlled By |
+|--------|----------------|----------|---------|---------------|
+| Monthly Trends | `trendsRange` | `Chart.tsx` (local state) | `'1Y'` | Own buttons |
+| Cases-by-Status | `statusRange` | `SaleChart.tsx` (local state) | `'1Y'` | Own buttons |
+| KPI Sparklines | `SPARKLINE_TIME_RANGE` | `Cards.tsx` (constant) | `'1Y'` | None (stable) |
+
+### Behavior
+
+- Clicking Monthly Trends TimeRange buttons → ONLY Monthly Trends updates
+- Clicking Cases-by-Status TimeRange buttons → ONLY Cases-by-Status updates
+- KPI card sparklines are decoupled and do NOT change when chart buttons are clicked
+
+### Files Modified
+
+- `src/app/(admin)/dashboards/page.tsx` - Removed shared `timeRange` state
+- `src/app/(admin)/dashboards/components/Chart.tsx` - Added local `trendsRange` state
+- `src/app/(admin)/dashboards/components/SaleChart.tsx` - Added local `statusRange` state
+- `src/app/(admin)/dashboards/components/Cards.tsx` - Uses fixed `'1Y'` constant for sparklines
+
+**Restore Point:** `ADMIN_V1_1_B_DASH_TIMERANGE_DECOUPLE_COMPLETE`

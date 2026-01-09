@@ -474,3 +474,42 @@ const DISTRICT_CODE_ALIASES: Record<string, string> = {
 **File:** `src/app/(admin)/dashboards/hooks/useDashboardData.ts`
 
 **Restore Point:** `ADMIN_V1_1_B_DASH_KPI_FIX_COMPLETE`
+
+---
+
+## Admin v1.1-B: Dashboard Time Range Filters (2026-01-09)
+
+### Time Range Filtering
+
+**Purpose:** Enable functional time range filtering (ALL/1M/6M/1Y) for Monthly Trends and Cases-by-Status charts.
+
+**Time Window Definitions:**
+| Filter | Calculation | Description |
+|--------|-------------|-------------|
+| ALL | No constraint | All historical data |
+| 1M | `now() - 30 days` | Last 30 days |
+| 6M | `now() - 180 days` | Last 180 days |
+| 1Y | `now() - 365 days` | Last 365 days |
+
+**Implementation:**
+- Added `TimeRange` type: `'ALL' | '1M' | '6M' | '1Y'`
+- Added `getTimeRangeCutoff()` helper using UTC timestamps
+- Updated `useMonthlyTrends(timeRange)` to accept filter parameter
+- Updated `useStatusBreakdown(timeRange)` to accept filter parameter
+- Filters applied at Supabase query level using `.gte()` on timestamp columns
+- Shared state managed at dashboard page level
+
+**Timestamp Fields Used:**
+| Table | Field |
+|-------|-------|
+| `housing_registration` | `created_at` |
+| `subsidy_case` | `created_at` |
+| `allocation_decision` | `decided_at` |
+
+**Files Modified:**
+- `src/app/(admin)/dashboards/page.tsx` - Shared timeRange state
+- `src/app/(admin)/dashboards/hooks/useDashboardData.ts` - TimeRange type and filter logic
+- `src/app/(admin)/dashboards/components/Chart.tsx` - Interactive filter buttons
+- `src/app/(admin)/dashboards/components/SaleChart.tsx` - Synced filter display (read-only)
+
+**Restore Point:** `ADMIN_V1_1_B_DASH_TIMEFILTERS_COMPLETE`

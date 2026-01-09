@@ -186,14 +186,48 @@ All 23 database tables have Row-Level Security (RLS) enabled with a Phase 1 allo
 
 **File:** `src/app/(admin)/dashboards/hooks/useDashboardData.ts`
 
-| Hook | Purpose | Source Tables |
-|------|---------|---------------|
-| `useDashboardKPIs` | Card KPIs (totals, status counts) | `housing_registration`, `subsidy_case` |
-| `useMonthlyTrends` | Monthly chart data | `housing_registration`, `subsidy_case`, `allocation_decision` |
-| `useDistrictApplications` | District map aggregation | `housing_registration`, `subsidy_case` |
-| `useStatusBreakdown` | Status pie chart | `subsidy_case` |
-| `useRecentCases` | Recent cases table | `subsidy_case` + `person` |
-| `useRecentRegistrations` | Recent registrations table | `housing_registration` + `person` |
+| Hook | Purpose | Source Tables | Accepts TimeRange |
+|------|---------|---------------|-------------------|
+| `useDashboardKPIs` | Card KPIs (totals, status counts) | `housing_registration`, `subsidy_case` | No |
+| `useMonthlyTrends` | Monthly chart data | `housing_registration`, `subsidy_case`, `allocation_decision` | Yes |
+| `useDistrictApplications` | District map aggregation | `housing_registration`, `subsidy_case` | No |
+| `useStatusBreakdown` | Status pie chart | `subsidy_case` | Yes |
+| `useRecentCases` | Recent cases table | `subsidy_case` + `person` | No |
+| `useRecentRegistrations` | Recent registrations table | `housing_registration` + `person` | No |
+
+### Time Range Filtering (v1.1-B Step B2.2)
+
+**Shared State Pattern:**
+
+```
+Dashboard Page (state owner)
+    ├── timeRange: TimeRange
+    └── setTimeRange: (range) => void
+         │
+         ├── Chart (interactive controls)
+         │   └── useMonthlyTrends(timeRange)
+         │
+         └── SaleChart (synced display)
+             └── useStatusBreakdown(timeRange)
+```
+
+**TimeRange Type:**
+```typescript
+export type TimeRange = 'ALL' | '1M' | '6M' | '1Y'
+```
+
+**Filter Calculation:**
+- ALL = no constraint
+- 1M = `now() - 30 days`
+- 6M = `now() - 180 days`
+- 1Y = `now() - 365 days`
+
+**Query Filter Applied:**
+```typescript
+if (cutoff) {
+  query = query.gte('created_at', cutoff) // or 'decided_at' for allocation_decision
+}
+```
 
 ### KPI Calculation Logic
 

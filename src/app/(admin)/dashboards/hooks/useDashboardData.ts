@@ -67,11 +67,12 @@ export const useDashboardKPIs = (): DashboardKPIs => {
           .from('subsidy_case')
           .select('*', { count: 'exact', head: true })
 
-        // Fetch pending (status = 'received')
+        // Fetch pending (status = 'received' OR 'pending_documents')
+        // Both statuses represent cases awaiting processing
         const { count: pendingCount } = await supabase
           .from('subsidy_case')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'received')
+          .in('status', ['received', 'pending_documents'])
 
         // Fetch approved
         const { count: approvedCount } = await supabase
@@ -173,15 +174,38 @@ export const useDistrictApplications = (): { data: DistrictApplications[]; loadi
           .from('subsidy_case')
           .select('district_code')
 
-        // Combine and count by district
+        // District code alias mapping (database codes → UI codes)
+        // Database may use 3-letter codes (PAR, WAA, NIC, etc.)
+        // UI map uses 2-letter codes (PM, WA, NI, etc.)
+        const DISTRICT_CODE_ALIASES: Record<string, string> = {
+          'PAR': 'PM', // Paramaribo
+          'WAA': 'WA', // Wanica
+          'NIC': 'NI', // Nickerie
+          'COR': 'CO', // Coronie
+          'SAR': 'SA', // Saramacca
+          'COM': 'CM', // Commewijne
+          'MAR': 'MA', // Marowijne
+          'PAB': 'PA', // Para
+          'BRO': 'BR', // Brokopondo
+          'SIP': 'SI', // Sipaliwini
+        }
+
+        // Normalize district code to UI code
+        const normalizeCode = (code: string): string => {
+          return DISTRICT_CODE_ALIASES[code] || code
+        }
+
+        // Combine and count by normalized district code
         const districtCounts: Record<string, number> = {}
         
         registrations?.forEach(r => {
-          districtCounts[r.district_code] = (districtCounts[r.district_code] || 0) + 1
+          const normalizedCode = normalizeCode(r.district_code)
+          districtCounts[normalizedCode] = (districtCounts[normalizedCode] || 0) + 1
         })
         
         subsidyCases?.forEach(s => {
-          districtCounts[s.district_code] = (districtCounts[s.district_code] || 0) + 1
+          const normalizedCode = normalizeCode(s.district_code)
+          districtCounts[normalizedCode] = (districtCounts[normalizedCode] || 0) + 1
         })
 
         // Map to district data with coordinates

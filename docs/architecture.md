@@ -177,3 +177,49 @@ All 23 database tables have Row-Level Security (RLS) enabled with a Phase 1 allo
 - Page-level role check with redirect for unauthorized access
 - Sensitive metadata fields (tokens, passwords, IPs) hidden from display
 - No destructive actions (read-only)
+
+---
+
+## Dashboard KPI Data Layer (Admin v1.1-B)
+
+### Data Hooks
+
+**File:** `src/app/(admin)/dashboards/hooks/useDashboardData.ts`
+
+| Hook | Purpose | Source Tables |
+|------|---------|---------------|
+| `useDashboardKPIs` | Card KPIs (totals, status counts) | `housing_registration`, `subsidy_case` |
+| `useMonthlyTrends` | Monthly chart data | `housing_registration`, `subsidy_case`, `allocation_decision` |
+| `useDistrictApplications` | District map aggregation | `housing_registration`, `subsidy_case` |
+| `useStatusBreakdown` | Status pie chart | `subsidy_case` |
+| `useRecentCases` | Recent cases table | `subsidy_case` + `person` |
+| `useRecentRegistrations` | Recent registrations table | `housing_registration` + `person` |
+
+### KPI Calculation Logic
+
+| KPI | Calculation | Notes |
+|-----|-------------|-------|
+| Total Registrations | `COUNT(housing_registration)` | All records |
+| Total Subsidy Cases | `COUNT(subsidy_case)` | All records |
+| Pending Applications | `COUNT(subsidy_case WHERE status IN ('received', 'pending_documents'))` | v1.1-B fix |
+| Approved Applications | `COUNT(subsidy_case WHERE status = 'approved')` | |
+| Rejected Applications | `COUNT(subsidy_case WHERE status = 'rejected')` | |
+
+### District Code Normalization
+
+Database uses 3-letter codes (PAR, WAA, etc.), UI map uses 2-letter codes (PM, WA, etc.).
+
+Alias mapping applied in `useDistrictApplications`:
+
+| DB Code | UI Code | District |
+|---------|---------|----------|
+| PAR | PM | Paramaribo |
+| WAA | WA | Wanica |
+| NIC | NI | Nickerie |
+| COR | CO | Coronie |
+| SAR | SA | Saramacca |
+| COM | CM | Commewijne |
+| MAR | MA | Marowijne |
+| PAB | PA | Para |
+| BRO | BR | Brokopondo |
+| SIP | SI | Sipaliwini |

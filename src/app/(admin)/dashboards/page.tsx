@@ -15,7 +15,7 @@ const page = () => {
   return (
     <>
       <PageTitle subName="Darkone" title="Dashboard" />
-      <Cards />
+      <Cards timeRange={timeRange} />
       <Chart timeRange={timeRange} onTimeRangeChange={setTimeRange} />
       <User />
       <Footer />

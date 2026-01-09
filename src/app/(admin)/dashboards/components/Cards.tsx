@@ -3,7 +3,7 @@ import { ApexOptions } from 'apexcharts'
 import ReactApexChart from 'react-apexcharts'
 import { Card, CardBody, Col, Row } from 'react-bootstrap'
 import { cardsData, CardsType, createCardsData } from '../data'
-import { useDashboardKPIs } from '../hooks/useDashboardData'
+import { useDashboardKPIs, useSparklineData, TimeRange } from '../hooks/useDashboardData'
 
 const StatCard = ({ count, icon, series, title }: CardsType) => {
   const salesChart: ApexOptions = {
@@ -79,18 +79,26 @@ const StatCard = ({ count, icon, series, title }: CardsType) => {
   )
 }
 
-const Cards = () => {
+interface CardsProps {
+  timeRange: TimeRange
+}
+
+const Cards = ({ timeRange }: CardsProps) => {
   const kpis = useDashboardKPIs()
+  const sparklines = useSparklineData(timeRange)
   
   // Use real data when loaded, fallback to static during loading
-  const displayData = kpis.loading 
+  const displayData = kpis.loading || sparklines.loading
     ? cardsData 
-    : createCardsData({
-        totalRegistrations: kpis.totalRegistrations,
-        totalSubsidyCases: kpis.totalSubsidyCases,
-        pendingApplications: kpis.pendingApplications,
-        approvedApplications: kpis.approvedApplications,
-      })
+    : createCardsData(
+        {
+          totalRegistrations: kpis.totalRegistrations,
+          totalSubsidyCases: kpis.totalSubsidyCases,
+          pendingApplications: kpis.pendingApplications,
+          approvedApplications: kpis.approvedApplications,
+        },
+        sparklines.data
+      )
 
   return (
     <>

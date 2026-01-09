@@ -257,3 +257,65 @@ Alias mapping applied in `useDistrictApplications`:
 | PAB | PA | Para |
 | BRO | BR | Brokopondo |
 | SIP | SI | Sipaliwini |
+
+---
+
+## Dashboard Sparkline Data Layer (Admin v1.1-B Step B2.3)
+
+### useSparklineData Hook
+
+**File:** `src/app/(admin)/dashboards/hooks/useDashboardData.ts`
+
+**Purpose:** Fetch time-bucketed historical data for KPI card sparklines.
+
+**Signature:**
+```typescript
+export const useSparklineData = (timeRange: TimeRange = '1Y'): { data: SparklineData; loading: boolean }
+```
+
+### Data Flow
+
+```
+Dashboard Page (state owner)
+    ├── timeRange: TimeRange
+    └── setTimeRange: (range) => void
+         │
+         ├── Cards (receives timeRange)
+         │   └── useSparklineData(timeRange)
+         │        ├── registrations[] → Housing Registrations card
+         │        ├── subsidyCases[] → Subsidy Applications card
+         │        ├── pendingCases[] → Pending Applications card
+         │        └── approvedCases[] → Approved Applications card
+         │
+         ├── Chart (interactive controls)
+         │   └── useMonthlyTrends(timeRange)
+         │
+         └── SaleChart (synced display)
+             └── useStatusBreakdown(timeRange)
+```
+
+### Bucketing Algorithm
+
+| TimeRange | Bucket Type | Count | Calculation |
+|-----------|-------------|-------|-------------|
+| 1M | Daily | 30 | `new Date(year, month, day - i)` |
+| 6M | Weekly | 26 | `now - (i * 7 days)` |
+| 1Y / ALL | Monthly | 12 | `new Date(year, month - i, 1)` |
+
+### Zero-Fill Fallback
+
+If query fails or returns no data, returns arrays filled with 0 to prevent chart rendering errors:
+
+```typescript
+// On error
+setData({
+  registrations: new Array(bucketCount).fill(0),
+  subsidyCases: new Array(bucketCount).fill(0),
+  pendingCases: new Array(bucketCount).fill(0),
+  approvedCases: new Array(bucketCount).fill(0),
+})
+```
+
+### RLS Compliance
+
+All queries use the authenticated Supabase client. No service role bypass.

@@ -589,3 +589,29 @@ If data fetch fails or returns empty, the hook returns zero-filled arrays of the
 - `src/app/(admin)/dashboards/components/Cards.tsx` - Uses fixed `'1Y'` constant for sparklines
 
 **Restore Point:** `ADMIN_V1_1_B_DASH_TIMERANGE_DECOUPLE_COMPLETE`
+
+---
+
+## Admin v1.1-C: Global Search Bugfix (2026-01-13)
+
+### SCSS Variable Error
+
+**Issue:** Build failure due to undefined `$font-size-xs` variable in `_search-results.scss`.
+
+**Error:**
+```
+[plugin:vite:css] [sass] Undefined variable.
+60 |     font-size: $font-size-xs;
+                    ^^^^^^^^^^^^^
+src/assets/scss/components/_search-results.scss 60:14
+```
+
+**Root Cause:** The project's SCSS variables only define `$font-size-sm`, `$font-size-base`, and `$font-size-lg`. The variable `$font-size-xs` does not exist.
+
+**Fix:** Replaced `$font-size-xs` with `$font-size-sm` at lines 60 and 103.
+
+**File Modified:** `src/assets/scss/components/_search-results.scss`
+
+**Verification:** App compiles successfully, global search functions correctly.
+
+**Restore Point:** `ADMIN_V1_1_C_GLOBAL_SEARCH_BUGFIX_COMPLETE`

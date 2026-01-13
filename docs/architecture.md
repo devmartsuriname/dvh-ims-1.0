@@ -327,3 +327,17 @@ setData({
 ### RLS Compliance
 
 All queries use the authenticated Supabase client. No service role bypass.
+
+---
+
+## Admin v1.1-C: Global Search Bugfix (2026-01-13)
+
+### SCSS Variable Fix
+
+**Issue:** Build failure - undefined `$font-size-xs` in `_search-results.scss`.
+
+**Fix:** Replaced with existing `$font-size-sm` (2 occurrences: lines 60, 103).
+
+**File:** `src/assets/scss/components/_search-results.scss`
+
+**Restore Point:** `ADMIN_V1_1_C_GLOBAL_SEARCH_BUGFIX_COMPLETE`

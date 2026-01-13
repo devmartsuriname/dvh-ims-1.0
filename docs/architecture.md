@@ -71,6 +71,7 @@ src/
 | 2026-01-07 | All logos | Replaced Darkone default with official SoZaVo logo |
 | 2026-01-07 | status/page.tsx | Removed breadcrumb, fixed "Back to Home" button alignment |
 | 2026-01-09 | AuditLogFilters.tsx | Added Flatpickr base CSS import to fix oversized SVG chevrons |
+| 2026-01-13 | TopNavigationBar | Global Search integrated with RLS-safe queries across 4 entities |
 
 ### Technology Stack
 

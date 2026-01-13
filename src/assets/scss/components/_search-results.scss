@@ -1,0 +1,115 @@
+//
+// search-results.scss
+// Global Search dropdown styling - Darkone aligned
+//
+
+.search-results-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  margin-top: 4px;
+  background-color: $dropdown-bg;
+  border: 1px solid $dropdown-border-color;
+  border-radius: $border-radius;
+  box-shadow: $box-shadow-lg;
+  min-width: 320px;
+  max-width: 400px;
+  animation-name: DropDownSlide;
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+}
+
+.search-results-loading,
+.search-results-empty {
+  padding: 16px;
+  text-align: center;
+  color: $text-muted;
+  font-size: $font-size-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-results-loading {
+  .spin {
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.search-results-section {
+  border-bottom: 1px solid $dropdown-divider-bg;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.search-results-header {
+  padding: 10px 16px 6px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  background-color: rgba($gray-100, 0.5);
+
+  [data-bs-theme="dark"] & {
+    background-color: rgba($gray-800, 0.5);
+  }
+}
+
+.search-result-item {
+  display: block;
+  padding: 10px 16px;
+  text-decoration: none;
+  color: $body-color;
+  transition: background-color 0.15s ease-in-out;
+  border-left: 3px solid transparent;
+
+  &:hover {
+    background-color: $dropdown-link-hover-bg;
+    border-left-color: $primary;
+    text-decoration: none;
+  }
+
+  &:focus {
+    outline: none;
+    background-color: $dropdown-link-hover-bg;
+    border-left-color: $primary;
+  }
+}
+
+.search-result-primary {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $body-color;
+  margin-bottom: 2px;
+}
+
+.search-result-secondary {
+  font-size: $font-size-xs;
+  color: $text-muted;
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .search-results-dropdown {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    max-width: none;
+  }
+}

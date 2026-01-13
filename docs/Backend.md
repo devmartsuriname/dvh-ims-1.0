@@ -589,3 +589,78 @@ If data fetch fails or returns empty, the hook returns zero-filled arrays of the
 - `src/app/(admin)/dashboards/components/Cards.tsx` - Uses fixed `'1Y'` constant for sparklines
 
 **Restore Point:** `ADMIN_V1_1_B_DASH_TIMERANGE_DECOUPLE_COMPLETE`
+
+---
+
+## Admin v1.1-C: Global Search (2026-01-13)
+
+### Overview
+
+Global Search provides real-time, RLS-safe search across four core entities from the topbar search input.
+
+### Entity Scope
+
+| Entity | Included Fields | Excluded Fields | Route |
+|--------|-----------------|-----------------|-------|
+| Person | national_id, first_name, last_name | date_of_birth, gender, nationality | `/persons/{id}` |
+| Household | district_code, household_size | primary_person_id (internal) | `/households/{id}` |
+| Housing Registration | reference_number, current_status, district_code | urgency_score, waiting_list_position | `/housing-registrations/{id}` |
+| Subsidy Case | case_number, status, district_code | requested_amount, approved_amount, rejection_reason | `/subsidy-cases/{id}` |
+
+### Excluded Entities (v1.1-C)
+
+| Entity | Reason |
+|--------|--------|
+| Allocation Run/Decision/Candidate | Operational data, not user-facing lookup |
+| Assignment Record | Internal allocation output |
+| Audit Event | Security-sensitive, separate audit log view exists |
+| Urgency/Reports | Internal assessment data |
+
+### Query Strategy
+
+```typescript
+// RLS-safe direct Supabase queries with ilike pattern matching
+const searchTerm = `%${query}%`
+
+// Parallel queries with LIMIT 10 each
+supabase.from('person').select('id, national_id, first_name, last_name')
+  .or(`national_id.ilike.${searchTerm},first_name.ilike.${searchTerm},last_name.ilike.${searchTerm}`)
+  .limit(10)
+```
+
+### Performance Constraints
+
+| Constraint | Value | Purpose |
+|------------|-------|---------|
+| Minimum query length | 2 characters | Prevent overly broad queries |
+| Debounce delay | 300ms | Reduce query frequency |
+| Result limit per entity | 10 | Prevent result overload |
+| Parallel queries | Yes | All 4 entities queried simultaneously |
+
+### UX Placement
+
+- **Entry Point:** Topbar search input (existing Darkone element)
+- **Results Display:** Dropdown below search input
+- **Grouping:** Results grouped by entity type with section headers
+- **Navigation:** Click result → navigate to detail page (read-only)
+- **Dismiss:** Escape key or click outside to close
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `src/hooks/useGlobalSearch.ts` | Search hook with RLS-safe queries |
+| `src/components/layout/TopNavigationBar/components/SearchResults.tsx` | Results dropdown (Darkone-aligned, NO React-Bootstrap) |
+| `src/components/layout/TopNavigationBar/page.tsx` | Topbar integration with debounce |
+| `src/assets/scss/components/_search-results.scss` | Dropdown styling |
+
+### Future Index Recommendations (Not Implemented in v1.1-C)
+
+| Table | Column(s) | Index Type | Priority |
+|-------|-----------|------------|----------|
+| person | national_id | btree | High |
+| person | first_name, last_name | GIN trigram | Medium |
+| subsidy_case | case_number | btree | High |
+| housing_registration | reference_number | btree | High |
+
+**Restore Point:** `ADMIN_V1_1_C_GLOBAL_SEARCH_COMPLETE`

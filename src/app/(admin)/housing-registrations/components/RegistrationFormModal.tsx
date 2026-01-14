@@ -33,6 +33,12 @@ interface RegistrationFormModalProps {
   registration?: HousingRegistration
 }
 
+interface ValidationErrors {
+  household?: string
+  applicant?: string
+  district?: string
+}
+
 const HOUSING_TYPES = [
   { value: 'house', label: 'House' },
   { value: 'apartment', label: 'Apartment' },
@@ -50,11 +56,15 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
   const [loading, setLoading] = useState(false)
   const [loadingHouseholds, setLoadingHouseholds] = useState(true)
   const [loadingMembers, setLoadingMembers] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
+  const [validated, setValidated] = useState(false)
   const { logEvent } = useAuditLog()
 
   useEffect(() => {
     if (isOpen) {
       fetchHouseholds()
+      setValidationErrors({})
+      setValidated(false)
     }
   }, [isOpen])
 
@@ -76,11 +86,22 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
       if (household) {
         setDistrictCode(household.district_code)
       }
+      // Clear household error when selected
+      if (validated) {
+        setValidationErrors(prev => ({ ...prev, household: undefined }))
+      }
     } else {
       setMembers([])
       setSelectedApplicantId('')
     }
   }, [selectedHouseholdId, households])
+
+  useEffect(() => {
+    // Clear applicant error when selected
+    if (selectedApplicantId && validated) {
+      setValidationErrors(prev => ({ ...prev, applicant: undefined }))
+    }
+  }, [selectedApplicantId])
 
   const fetchHouseholds = async () => {
     setLoadingHouseholds(true)
@@ -126,6 +147,8 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
     setDistrictCode('')
     setHousingTypePreference('')
     setMembers([])
+    setValidationErrors({})
+    setValidated(false)
   }
 
   const generateReferenceNumber = () => {
@@ -134,11 +157,28 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
     return `WR-${year}-${random}`
   }
 
+  const validateForm = (): boolean => {
+    const errors: ValidationErrors = {}
+    
+    if (!selectedHouseholdId) {
+      errors.household = 'Household is required'
+    }
+    if (!selectedApplicantId) {
+      errors.applicant = 'Applicant is required'
+    }
+    if (!districtCode) {
+      errors.district = 'District is required'
+    }
+
+    setValidationErrors(errors)
+    setValidated(true)
+    return Object.keys(errors).length === 0
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!selectedHouseholdId || !selectedApplicantId || !districtCode) {
-      notify.error('Please fill in all required fields')
+    if (!validateForm()) {
       return
     }
 
@@ -198,7 +238,7 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
       <Modal.Header closeButton>
         <Modal.Title>{registration ? 'Edit Registration' : 'New Housing Registration'}</Modal.Title>
       </Modal.Header>
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} noValidate>
         <Modal.Body>
           {loadingHouseholds ? (
             <div className="text-center py-4">
@@ -211,7 +251,7 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
                 <Form.Select
                   value={selectedHouseholdId}
                   onChange={(e) => setSelectedHouseholdId(e.target.value)}
-                  required
+                  isInvalid={!!validationErrors.household}
                 >
                   <option value="">Select household...</option>
                   {households.map((h) => (
@@ -220,6 +260,11 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
                     </option>
                   ))}
                 </Form.Select>
+                {validationErrors.household && (
+                  <div className="invalid-feedback d-block">
+                    {validationErrors.household}
+                  </div>
+                )}
               </Form.Group>
 
               <Form.Group className="mb-3">
@@ -227,8 +272,8 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
                 <Form.Select
                   value={selectedApplicantId}
                   onChange={(e) => setSelectedApplicantId(e.target.value)}
-                  required
                   disabled={!selectedHouseholdId || loadingMembers}
+                  isInvalid={!!validationErrors.applicant}
                 >
                   <option value="">Select applicant from household...</option>
                   {members.map((p) => (
@@ -237,6 +282,11 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
                     </option>
                   ))}
                 </Form.Select>
+                {validationErrors.applicant && (
+                  <div className="invalid-feedback d-block">
+                    {validationErrors.applicant}
+                  </div>
+                )}
                 {loadingMembers && <small className="text-muted">Loading members...</small>}
               </Form.Group>
 
@@ -247,9 +297,14 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
                   value={districtCode}
                   onChange={(e) => setDistrictCode(e.target.value)}
                   placeholder="Enter district code"
-                  required
                   readOnly={!!selectedHouseholdId}
+                  isInvalid={!!validationErrors.district}
                 />
+                {validationErrors.district && (
+                  <div className="invalid-feedback d-block">
+                    {validationErrors.district}
+                  </div>
+                )}
                 <Form.Text className="text-muted">
                   Auto-filled from household
                 </Form.Text>

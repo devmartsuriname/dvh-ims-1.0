@@ -6,7 +6,7 @@ import * as yup from 'yup'
 import TextFormInput from '@/components/from/TextFormInput'
 import { supabase } from '@/integrations/supabase/client'
 import { logAuditEvent } from '@/hooks/useAuditLog'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 
 interface Person {
   id: string
@@ -84,13 +84,13 @@ const HouseholdFormModal = ({ isOpen, onClose, onSuccess }: HouseholdFormModalPr
         action: 'create',
       })
 
-      toast.success('Household created successfully')
+      notify.success('Household created successfully')
       reset()
       onSuccess()
       onClose()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An error occurred'
-      toast.error(message)
+      notify.error(message)
     }
   }
 

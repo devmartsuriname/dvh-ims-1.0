@@ -19,6 +19,11 @@ interface UrgencyAssessmentFormProps {
   onAssessmentAdded: () => void
 }
 
+interface ValidationErrors {
+  category?: string
+  points?: string
+}
+
 const URGENCY_CATEGORIES = [
   { value: 'medical', label: 'Medical Condition', defaultPoints: 50 },
   { value: 'safety', label: 'Safety Concern', defaultPoints: 40 },
@@ -35,6 +40,8 @@ const UrgencyAssessmentForm = ({ registrationId, assessments, onAssessmentAdded 
   const [points, setPoints] = useState<number | ''>('')
   const [justification, setJustification] = useState('')
   const [loading, setLoading] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
+  const [validated, setValidated] = useState(false)
   const { logEvent } = useAuditLog()
 
   const handleCategoryChange = (value: string) => {
@@ -43,13 +50,41 @@ const UrgencyAssessmentForm = ({ registrationId, assessments, onAssessmentAdded 
     if (categoryConfig) {
       setPoints(categoryConfig.defaultPoints)
     }
+    // Clear category error on change
+    if (validated) {
+      setValidationErrors(prev => ({ ...prev, category: undefined }))
+    }
+  }
+
+  const handlePointsChange = (value: string) => {
+    setPoints(value ? parseInt(value) : '')
+    // Clear points error on change
+    if (validated) {
+      setValidationErrors(prev => ({ ...prev, points: undefined }))
+    }
+  }
+
+  const validateForm = (): boolean => {
+    const errors: ValidationErrors = {}
+
+    if (!category) {
+      errors.category = 'Category is required'
+    }
+    if (points === '' || points === null || points === undefined) {
+      errors.points = 'Points is required'
+    } else if (points < 0 || points > 100) {
+      errors.points = 'Points must be between 0 and 100'
+    }
+
+    setValidationErrors(errors)
+    setValidated(true)
+    return Object.keys(errors).length === 0
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!category || points === '' || points < 0) {
-      notify.error('Please select a category and enter valid points')
+    if (!validateForm()) {
       return
     }
 
@@ -63,7 +98,7 @@ const UrgencyAssessmentForm = ({ registrationId, assessments, onAssessmentAdded 
         .insert({
           registration_id: registrationId,
           urgency_category: category,
-          urgency_points: points,
+          urgency_points: points as number,
           assessed_by: user?.id,
           justification: justification || null,
         })
@@ -73,7 +108,7 @@ const UrgencyAssessmentForm = ({ registrationId, assessments, onAssessmentAdded 
       if (error) throw error
 
       // Calculate new total urgency score
-      const totalScore = assessments.reduce((sum, a) => sum + a.urgency_points, 0) + points
+      const totalScore = assessments.reduce((sum, a) => sum + a.urgency_points, 0) + (points as number)
 
       // Update registration with new urgency score
       await supabase
@@ -92,6 +127,8 @@ const UrgencyAssessmentForm = ({ registrationId, assessments, onAssessmentAdded 
       setCategory('')
       setPoints('')
       setJustification('')
+      setValidationErrors({})
+      setValidated(false)
       onAssessmentAdded()
     } catch (error: any) {
       notify.error(error.message || 'Failed to add assessment')
@@ -121,13 +158,13 @@ const UrgencyAssessmentForm = ({ registrationId, assessments, onAssessmentAdded 
           <p className="text-muted small mb-3">
             <strong>Note:</strong> Urgency assessments are append-only. Once submitted, they cannot be modified or deleted.
           </p>
-          <Form onSubmit={handleSubmit}>
+          <Form onSubmit={handleSubmit} noValidate>
             <Form.Group className="mb-3">
               <Form.Label>Category <span className="text-danger">*</span></Form.Label>
               <Form.Select
                 value={category}
                 onChange={(e) => handleCategoryChange(e.target.value)}
-                required
+                isInvalid={!!validationErrors.category}
               >
                 <option value="">Select urgency category...</option>
                 {URGENCY_CATEGORIES.map((c) => (
@@ -136,6 +173,11 @@ const UrgencyAssessmentForm = ({ registrationId, assessments, onAssessmentAdded 
                   </option>
                 ))}
               </Form.Select>
+              {validationErrors.category && (
+                <div className="invalid-feedback d-block">
+                  {validationErrors.category}
+                </div>
+              )}
             </Form.Group>
 
             <Form.Group className="mb-3">
@@ -145,10 +187,15 @@ const UrgencyAssessmentForm = ({ registrationId, assessments, onAssessmentAdded 
                 min="0"
                 max="100"
                 value={points}
-                onChange={(e) => setPoints(e.target.value ? parseInt(e.target.value) : '')}
+                onChange={(e) => handlePointsChange(e.target.value)}
                 placeholder="Enter points"
-                required
+                isInvalid={!!validationErrors.points}
               />
+              {validationErrors.points && (
+                <div className="invalid-feedback d-block">
+                  {validationErrors.points}
+                </div>
+              )}
             </Form.Group>
 
             <Form.Group className="mb-3">

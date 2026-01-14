@@ -6,7 +6,7 @@ import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import PersonFormModal from '../components/PersonFormModal'
 import useToggle from '@/hooks/useToggle'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 
 interface Person {
   id: string
@@ -46,7 +46,7 @@ const PersonDetail = () => {
       .single()
 
     if (error) {
-      toast.error('Person not found')
+      notify.error('Person not found')
       navigate('/persons')
       return
     }

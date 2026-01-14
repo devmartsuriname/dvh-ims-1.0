@@ -389,3 +389,48 @@ Edge Function `lookup-public-status` incorrectly treated Supabase JOIN person da
 - `supabase/functions/lookup-public-status/index.ts`
 
 **Restore Point:** `RESTORE_POINT_v1.1-D_BACKEND_IMPACT_CHECK_COMPLETE`
+
+---
+
+## Admin v1.1-D: D1 — Empty State Standardization
+
+### Standard Pattern
+
+All admin module tables with GridJS follow this standardized empty state pattern:
+
+```tsx
+{loading ? (
+  <div className="text-center py-4">
+    <Spinner animation="border" variant="primary" />
+  </div>
+) : items.length === 0 ? (
+  <p className="text-muted text-center py-4">No [items] found. Click "[Action]" to create one.</p>
+) : (
+  <Grid data={gridData} ... />
+)}
+```
+
+### CSS Classes Used
+
+- `text-muted` — Subdued text color (Darkone theme compliant)
+- `text-center` — Center alignment
+- `py-4` / `py-5` — Vertical padding
+
+### Files Updated
+
+| Module | File | Empty State Message |
+|--------|------|---------------------|
+| Allocation Runs | `src/app/(admin)/allocation-runs/components/RunTable.tsx` | "No allocation runs found. Click 'Execute Run' to start one." |
+| Allocation Quotas | `src/app/(admin)/allocation-quotas/components/QuotaTable.tsx` | "No district quotas found. Click 'New Quota' to create one." |
+| Dashboard Trends | `src/app/(admin)/dashboards/components/Chart.tsx` | "No activity data available for the selected period." |
+
+### Previously Compliant Modules
+
+| Module | File | Status |
+|--------|------|--------|
+| Persons | `PersonTable.tsx` | ✓ Already compliant |
+| Households | `HouseholdTable.tsx` | ✓ Already compliant |
+| Subsidy Cases | `CaseTable.tsx` | ✓ Already compliant |
+| Housing Registrations | `RegistrationTable.tsx` | ✓ Already compliant |
+
+**Restore Point:** `RESTORE_POINT_v1.1-D_D1_EMPTY_STATE_COMPLETE`

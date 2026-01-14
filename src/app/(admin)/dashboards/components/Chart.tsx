@@ -26,6 +26,12 @@ const Chart = () => {
     ? [12, 16, 11, 22, 28, 25, 15, 29, 35, 45, 42, 48]
     : monthlyData.map(m => m.allocations)
 
+  // Check if all series have no meaningful data (all zeros)
+  const hasNoData = !loading && 
+    registrationsSeries.every(v => v === 0) && 
+    subsidySeries.every(v => v === 0) && 
+    allocationsSeries.every(v => v === 0)
+
   const salesChart: ApexOptions = {
     series: [
       {
@@ -182,11 +188,17 @@ const Chart = () => {
               </div>
             </CardHeader>
             <CardBody className="pt-0">
-              <div dir="ltr">
-                <div id="dash-performance-chart" className="apex-charts">
-                  <ReactApexChart options={salesChart} series={salesChart.series} height={313} type="area" className="apex-charts " />
+              {hasNoData ? (
+                <div className="text-center text-muted py-5">
+                  <p className="mb-0">No activity data available for the selected period.</p>
                 </div>
-              </div>
+              ) : (
+                <div dir="ltr">
+                  <div id="dash-performance-chart" className="apex-charts">
+                    <ReactApexChart options={salesChart} series={salesChart.series} height={313} type="area" className="apex-charts " />
+                  </div>
+                </div>
+              )}
             </CardBody>
           </Card>
         </Col>

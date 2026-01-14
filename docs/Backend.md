@@ -615,3 +615,75 @@ src/assets/scss/components/_search-results.scss 60:14
 **Verification:** App compiles successfully, global search functions correctly.
 
 **Restore Point:** `ADMIN_V1_1_C_GLOBAL_SEARCH_BUGFIX_COMPLETE`
+
+---
+
+## Admin v1.1-D: Bouwsubsidie Wizard Stability Fix (2026-01-14)
+
+### Root Cause
+
+Frontend wizard form data schema did not match the Edge Function (`submit-bouwsubsidie-application`) contract, causing 100% submission failure at Step 8.
+
+### Mismatches Identified
+
+| Frontend Field | Edge Function Field | Issue |
+|---------------|---------------------|-------|
+| `full_name` | `first_name`, `last_name` | Single field vs split fields |
+| `address_line` | `address_line_1` | Field name mismatch |
+| `email` | `email` | Optional vs Required |
+| `date_of_birth` | `date_of_birth` | Optional vs Required |
+| `gender` | `gender` | Optional vs Required |
+
+### Fix Applied (Option A: Align Frontend to Edge Function)
+
+**Types Updated (`types.ts`):**
+- Split `full_name` → `first_name` + `last_name`
+- Renamed `address_line` → `address_line_1`
+
+**Constants Updated (`constants.ts`):**
+- `INITIAL_FORM_DATA` aligned to new field names
+
+**Step1PersonalInfo Updated:**
+- Separate inputs for `first_name` and `last_name`
+- `date_of_birth` and `gender` now required with validation
+
+**Step2ContactInfo Updated:**
+- `email` now required with validation
+
+**Step4Address Updated:**
+- Field renamed to `address_line_1`
+
+**Step7Review Updated:**
+- Displays `first_name` and `last_name` separately
+- Displays `address_line_1`
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/(public)/bouwsubsidie/apply/types.ts` | Split full_name, rename address_line |
+| `src/app/(public)/bouwsubsidie/apply/constants.ts` | Align INITIAL_FORM_DATA |
+| `src/app/(public)/bouwsubsidie/apply/steps/Step1PersonalInfo.tsx` | Split name, require fields |
+| `src/app/(public)/bouwsubsidie/apply/steps/Step2ContactInfo.tsx` | Require email |
+| `src/app/(public)/bouwsubsidie/apply/steps/Step4Address.tsx` | Rename field |
+| `src/app/(public)/bouwsubsidie/apply/steps/Step7Review.tsx` | Update display |
+
+### Housing Registration Wizard (Smoke-Test)
+
+**Status:** SIMILAR MISMATCHES IDENTIFIED (not fixed in this task)
+
+| Frontend Field | Edge Function Field | Issue |
+|---------------|---------------------|-------|
+| `full_name` | `first_name`, `last_name` | Single field vs split fields |
+| `current_address` | `address_line_1` | Field name mismatch |
+| Missing | `gender` | Required field not collected |
+
+**Action Required:** Separate fix task required for Housing Registration wizard.
+
+### Verification
+
+- Bouwsubsidie Wizard submission now matches Edge Function contract
+- All required fields enforced in frontend validation
+- No Edge Function changes required
+
+**Restore Point:** `ADMIN_V1_1_D_BOUWSUBSIDIE_WIZARD_FIX_COMPLETE`

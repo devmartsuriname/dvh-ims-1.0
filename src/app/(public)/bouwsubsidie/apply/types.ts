@@ -2,6 +2,7 @@
  * Bouwsubsidie Wizard Form Types
  * 
  * TypeScript interfaces for the Construction Subsidy application wizard
+ * Aligned with Edge Function contract (submit-bouwsubsidie-application)
  */
 
 export interface DocumentDeclaration {
@@ -11,9 +12,10 @@ export interface DocumentDeclaration {
 }
 
 export interface BouwsubsidieFormData {
-  // Step 1 - Personal Identification
+  // Step 1 - Personal Identification (aligned with Edge Function)
   national_id: string
-  full_name: string
+  first_name: string
+  last_name: string
   date_of_birth: string
   gender: string
   
@@ -25,8 +27,8 @@ export interface BouwsubsidieFormData {
   household_size: number
   dependents: number
   
-  // Step 4 - Current Address
-  address_line: string
+  // Step 4 - Current Address (aligned with Edge Function)
+  address_line_1: string
   district: string
   ressort: string
   

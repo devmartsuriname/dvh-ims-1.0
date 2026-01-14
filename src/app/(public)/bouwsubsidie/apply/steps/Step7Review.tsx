@@ -18,6 +18,7 @@ interface Step7ReviewProps {
  * Step 7: Review & Confirmation
  * 
  * Summary of all entered data with declaration of truthfulness.
+ * Field names aligned with Edge Function contract.
  */
 const Step7Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }: Step7ReviewProps) => {
   const [accepted, setAccepted] = useState(formData.declaration_accepted)
@@ -75,7 +76,8 @@ const Step7Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }:
       {/* Personal Information */}
       <SectionCard title="Personal Information">
         <DataRow label="National ID" value={formData.national_id} />
-        <DataRow label="Full Name" value={formData.full_name} />
+        <DataRow label="First Name" value={formData.first_name} />
+        <DataRow label="Last Name" value={formData.last_name} />
         <DataRow label="Date of Birth" value={formData.date_of_birth} />
         <DataRow label="Gender" value={getGenderLabel(formData.gender)} />
       </SectionCard>
@@ -94,7 +96,7 @@ const Step7Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }:
 
       {/* Address */}
       <SectionCard title="Current Address">
-        <DataRow label="Address" value={formData.address_line} />
+        <DataRow label="Address" value={formData.address_line_1} />
         <DataRow label="District" value={getDistrictName(formData.district)} />
         <DataRow label="Ressort" value={formData.ressort} />
       </SectionCard>

@@ -2,6 +2,7 @@
  * Bouwsubsidie Wizard Constants
  * 
  * Predefined options and document requirements
+ * Aligned with Edge Function contract (submit-bouwsubsidie-application)
  */
 
 export const APPLICATION_REASONS = [
@@ -39,9 +40,10 @@ export const WIZARD_STEPS = [
 ] as const
 
 export const INITIAL_FORM_DATA = {
-  // Step 1 - Personal
+  // Step 1 - Personal (aligned with Edge Function)
   national_id: '',
-  full_name: '',
+  first_name: '',
+  last_name: '',
   date_of_birth: '',
   gender: '',
   
@@ -53,8 +55,8 @@ export const INITIAL_FORM_DATA = {
   household_size: 1,
   dependents: 0,
   
-  // Step 4 - Address
-  address_line: '',
+  // Step 4 - Address (aligned with Edge Function)
+  address_line_1: '',
   district: '',
   ressort: '',
   

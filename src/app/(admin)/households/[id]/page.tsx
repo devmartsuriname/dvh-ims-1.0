@@ -4,7 +4,7 @@ import { Card, CardBody, CardHeader, CardTitle, Row, Col, Button, Spinner, Badge
 import PageTitle from '@/components/PageTitle'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 
 interface Household {
   id: string
@@ -61,7 +61,7 @@ const HouseholdDetail = () => {
       .single()
 
     if (error) {
-      toast.error('Household not found')
+      notify.error('Household not found')
       navigate('/households')
       return
     }

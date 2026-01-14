@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Card, CardBody, CardHeader, CardTitle, Form, Button, Spinner, Table, Badge } from 'react-bootstrap'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
 
 interface UrgencyAssessment {
@@ -49,7 +49,7 @@ const UrgencyAssessmentForm = ({ registrationId, assessments, onAssessmentAdded 
     e.preventDefault()
     
     if (!category || points === '' || points < 0) {
-      toast.error('Please select a category and enter valid points')
+      notify.error('Please select a category and enter valid points')
       return
     }
 
@@ -88,13 +88,13 @@ const UrgencyAssessmentForm = ({ registrationId, assessments, onAssessmentAdded 
         reason: `Urgency assessment added: ${category} (${points} points)`,
       })
 
-      toast.success('Urgency assessment added successfully')
+      notify.success('Urgency assessment added successfully')
       setCategory('')
       setPoints('')
       setJustification('')
       onAssessmentAdded()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to add assessment')
+      notify.error(error.message || 'Failed to add assessment')
     } finally {
       setLoading(false)
     }

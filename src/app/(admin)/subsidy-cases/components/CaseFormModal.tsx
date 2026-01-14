@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Modal, Button, Form, Row, Col, Spinner } from 'react-bootstrap'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
 
 interface SubsidyCase {
@@ -116,7 +116,7 @@ const CaseFormModal = ({ isOpen, onClose, onSuccess, subsidyCase }: CaseFormModa
           reason: 'Case updated via admin UI',
         })
 
-        toast.success('Case updated successfully')
+        notify.success('Case updated successfully')
       } else {
         // Create new case
         const caseNumber = generateCaseNumber()
@@ -168,13 +168,13 @@ const CaseFormModal = ({ isOpen, onClose, onSuccess, subsidyCase }: CaseFormModa
           reason: 'Case created via admin UI',
         })
 
-        toast.success(`Case ${caseNumber} created successfully`)
+        notify.success(`Case ${caseNumber} created successfully`)
       }
 
       onSuccess()
       onClose()
     } catch (error: any) {
-      toast.error(error.message || 'An error occurred')
+      notify.error(error.message || 'An error occurred')
     } finally {
       setLoading(false)
     }

@@ -3,7 +3,7 @@ import { Card, CardBody, Button, Spinner } from 'react-bootstrap'
 import { Grid } from 'gridjs-react'
 import { html } from 'gridjs'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 import { useNavigate } from 'react-router-dom'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import RunExecutorModal from './RunExecutorModal'
@@ -41,7 +41,7 @@ const RunTable = () => {
       .order('run_date', { ascending: false })
 
     if (error) {
-      toast.error('Failed to load allocation runs')
+      notify.error('Failed to load allocation runs')
       console.error(error)
     } else {
       setRuns(data || [])

@@ -3,7 +3,7 @@ import { Card, CardBody, Button, Spinner } from 'react-bootstrap'
 import { Grid } from 'gridjs-react'
 import { html } from 'gridjs'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import AssignmentFormModal from './AssignmentFormModal'
 
@@ -45,7 +45,7 @@ const AssignmentTable = () => {
       .order('recorded_at', { ascending: false })
 
     if (error) {
-      toast.error('Failed to load assignments')
+      notify.error('Failed to load assignments')
       console.error(error)
     } else {
       setAssignments(data || [])

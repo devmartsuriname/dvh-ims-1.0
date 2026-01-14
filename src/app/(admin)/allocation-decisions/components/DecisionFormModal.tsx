@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Modal, Button, Form, Row, Col } from 'react-bootstrap'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 import { logAuditEvent } from '@/hooks/useAuditLog'
 
 interface AllocationCandidate {
@@ -39,7 +39,7 @@ const DecisionFormModal = ({ show, onHide, candidate, onSuccess }: DecisionFormM
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        toast.error('Not authenticated')
+        notify.error('Not authenticated')
         return
       }
 
@@ -93,14 +93,14 @@ const DecisionFormModal = ({ show, onHide, candidate, onSuccess }: DecisionFormM
         }
       })
 
-      toast.success(`Decision recorded: ${decision}`)
+      notify.success(`Decision recorded: ${decision}`)
       setDecision('approved')
       setReason('')
       onSuccess()
 
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to save decision'
-      toast.error(message)
+      notify.error(message)
       console.error(error)
     } finally {
       setSaving(false)

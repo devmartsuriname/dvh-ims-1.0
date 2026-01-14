@@ -4,7 +4,7 @@ import { Card, CardBody, CardHeader, CardTitle, Row, Col, Button, Spinner, Badge
 import PageTitle from '@/components/PageTitle'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
 import UrgencyAssessmentForm from '../components/UrgencyAssessmentForm'
 
@@ -109,7 +109,7 @@ const HousingRegistrationDetail = () => {
     ])
 
     if (regRes.error) {
-      toast.error('Registration not found')
+      notify.error('Registration not found')
       navigate('/housing-registrations')
       return
     }
@@ -126,7 +126,7 @@ const HousingRegistrationDetail = () => {
 
   const handleStatusChange = async (newStatus: string) => {
     if (!registration || !statusReason.trim()) {
-      toast.error('Please provide a reason for the status change')
+      notify.error('Please provide a reason for the status change')
       return
     }
 
@@ -160,11 +160,11 @@ const HousingRegistrationDetail = () => {
         reason: `Status changed from ${registration.current_status} to ${newStatus}: ${statusReason}`,
       })
 
-      toast.success(`Status changed to ${STATUS_BADGES[newStatus]?.label || newStatus}`)
+      notify.success(`Status changed to ${STATUS_BADGES[newStatus]?.label || newStatus}`)
       setStatusReason('')
       fetchRegistration()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update status')
+      notify.error(error.message || 'Failed to update status')
     } finally {
       setStatusLoading(false)
     }

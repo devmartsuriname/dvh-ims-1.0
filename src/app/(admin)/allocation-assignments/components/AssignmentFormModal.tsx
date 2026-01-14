@@ -16,6 +16,11 @@ interface AllocatedRegistration {
   district_code: string
 }
 
+interface ValidationErrors {
+  registration?: string
+  assignmentDate?: string
+}
+
 const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalProps) => {
   const [registrations, setRegistrations] = useState<AllocatedRegistration[]>([])
   const [selectedRegistration, setSelectedRegistration] = useState('')
@@ -25,10 +30,14 @@ const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalPro
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
   const [loadingRegistrations, setLoadingRegistrations] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({})
+  const [validated, setValidated] = useState(false)
 
   useEffect(() => {
     if (show) {
       fetchAllocatedRegistrations()
+      setValidationErrors({})
+      setValidated(false)
     }
   }, [show])
 
@@ -58,8 +67,34 @@ const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalPro
     setLoadingRegistrations(false)
   }
 
+  const validateForm = (): boolean => {
+    const errors: ValidationErrors = {}
+
+    if (!selectedRegistration) {
+      errors.registration = 'Registration is required'
+    }
+    if (!assignmentDate) {
+      errors.assignmentDate = 'Assignment date is required'
+    }
+
+    setValidationErrors(errors)
+    setValidated(true)
+    return Object.keys(errors).length === 0
+  }
+
+  const clearFieldError = (field: keyof ValidationErrors) => {
+    if (validated) {
+      setValidationErrors(prev => ({ ...prev, [field]: undefined }))
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
     setSaving(true)
 
     try {
@@ -124,6 +159,8 @@ const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalPro
       setAssignmentDate('')
       setHousingReference('')
       setNotes('')
+      setValidationErrors({})
+      setValidated(false)
       
       onSuccess()
 
@@ -141,15 +178,15 @@ const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalPro
       <Modal.Header closeButton>
         <Modal.Title>Record Housing Assignment</Modal.Title>
       </Modal.Header>
-      <Form onSubmit={handleSubmit}>
+      <Form onSubmit={handleSubmit} noValidate>
         <Modal.Body>
           <Form.Group className="mb-3">
-            <Form.Label>Registration</Form.Label>
+            <Form.Label>Registration <span className="text-danger">*</span></Form.Label>
             <Form.Select
               value={selectedRegistration}
-              onChange={(e) => setSelectedRegistration(e.target.value)}
-              required
+              onChange={(e) => { setSelectedRegistration(e.target.value); clearFieldError('registration') }}
               disabled={loadingRegistrations}
+              isInvalid={!!validationErrors.registration}
             >
               <option value="">
                 {loadingRegistrations ? 'Loading...' : 'Select registration...'}
@@ -160,6 +197,11 @@ const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalPro
                 </option>
               ))}
             </Form.Select>
+            {validationErrors.registration && (
+              <div className="invalid-feedback d-block">
+                {validationErrors.registration}
+              </div>
+            )}
             {registrations.length === 0 && !loadingRegistrations && (
               <Form.Text className="text-muted">
                 No allocated registrations available for assignment
@@ -192,13 +234,18 @@ const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalPro
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Assignment Date</Form.Label>
+            <Form.Label>Assignment Date <span className="text-danger">*</span></Form.Label>
             <Form.Control
               type="date"
               value={assignmentDate}
-              onChange={(e) => setAssignmentDate(e.target.value)}
-              required
+              onChange={(e) => { setAssignmentDate(e.target.value); clearFieldError('assignmentDate') }}
+              isInvalid={!!validationErrors.assignmentDate}
             />
+            {validationErrors.assignmentDate && (
+              <div className="invalid-feedback d-block">
+                {validationErrors.assignmentDate}
+              </div>
+            )}
           </Form.Group>
 
           <Form.Group className="mb-3">
@@ -229,7 +276,7 @@ const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalPro
           <Button 
             variant="primary" 
             type="submit" 
-            disabled={saving || !selectedRegistration}
+            disabled={saving}
           >
             {saving ? 'Recording...' : 'Record Assignment'}
           </Button>

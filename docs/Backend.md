@@ -592,75 +592,66 @@ If data fetch fails or returns empty, the hook returns zero-filled arrays of the
 
 ---
 
-## Admin v1.1-C: Global Search (2026-01-13)
+## Admin v1.1-C: Global Search Bugfix (2026-01-13)
 
-### Overview
+### SCSS Variable Error
 
-Global Search provides real-time, RLS-safe search across four core entities from the topbar search input.
+**Issue:** Build failure due to undefined `$font-size-xs` variable in `_search-results.scss`.
 
-### Entity Scope
-
-| Entity | Included Fields | Excluded Fields | Route |
-|--------|-----------------|-----------------|-------|
-| Person | national_id, first_name, last_name | date_of_birth, gender, nationality | `/persons/{id}` |
-| Household | district_code, household_size | primary_person_id (internal) | `/households/{id}` |
-| Housing Registration | reference_number, current_status, district_code | urgency_score, waiting_list_position | `/housing-registrations/{id}` |
-| Subsidy Case | case_number, status, district_code | requested_amount, approved_amount, rejection_reason | `/subsidy-cases/{id}` |
-
-### Excluded Entities (v1.1-C)
-
-| Entity | Reason |
-|--------|--------|
-| Allocation Run/Decision/Candidate | Operational data, not user-facing lookup |
-| Assignment Record | Internal allocation output |
-| Audit Event | Security-sensitive, separate audit log view exists |
-| Urgency/Reports | Internal assessment data |
-
-### Query Strategy
-
-```typescript
-// RLS-safe direct Supabase queries with ilike pattern matching
-const searchTerm = `%${query}%`
-
-// Parallel queries with LIMIT 10 each
-supabase.from('person').select('id, national_id, first_name, last_name')
-  .or(`national_id.ilike.${searchTerm},first_name.ilike.${searchTerm},last_name.ilike.${searchTerm}`)
-  .limit(10)
+**Error:**
+```
+[plugin:vite:css] [sass] Undefined variable.
+60 |     font-size: $font-size-xs;
+                    ^^^^^^^^^^^^^
+src/assets/scss/components/_search-results.scss 60:14
 ```
 
-### Performance Constraints
+**Root Cause:** The project's SCSS variables only define `$font-size-sm`, `$font-size-base`, and `$font-size-lg`. The variable `$font-size-xs` does not exist.
 
-| Constraint | Value | Purpose |
-|------------|-------|---------|
-| Minimum query length | 2 characters | Prevent overly broad queries |
-| Debounce delay | 300ms | Reduce query frequency |
-| Result limit per entity | 10 | Prevent result overload |
-| Parallel queries | Yes | All 4 entities queried simultaneously |
+**Fix:** Replaced `$font-size-xs` with `$font-size-sm` at lines 60 and 103.
 
-### UX Placement
+**File Modified:** `src/assets/scss/components/_search-results.scss`
 
-- **Entry Point:** Topbar search input (existing Darkone element)
-- **Results Display:** Dropdown below search input
-- **Grouping:** Results grouped by entity type with section headers
-- **Navigation:** Click result → navigate to detail page (read-only)
-- **Dismiss:** Escape key or click outside to close
+**Verification:** App compiles successfully, global search functions correctly.
 
-### Files
+**Restore Point:** `ADMIN_V1_1_C_GLOBAL_SEARCH_BUGFIX_COMPLETE`
 
-| File | Purpose |
-|------|---------|
-| `src/hooks/useGlobalSearch.ts` | Search hook with RLS-safe queries |
-| `src/components/layout/TopNavigationBar/components/SearchResults.tsx` | Results dropdown (Darkone-aligned, NO React-Bootstrap) |
-| `src/components/layout/TopNavigationBar/page.tsx` | Topbar integration with debounce |
-| `src/assets/scss/components/_search-results.scss` | Dropdown styling |
+---
 
-### Future Index Recommendations (Not Implemented in v1.1-C)
+## Admin v1.1-D: Public Status Lookup — Applicant Name Fix (2026-01-14)
 
-| Table | Column(s) | Index Type | Priority |
-|-------|-----------|------------|----------|
-| person | national_id | btree | High |
-| person | first_name, last_name | GIN trigram | Medium |
-| subsidy_case | case_number | btree | High |
-| housing_registration | reference_number | btree | High |
+### Issue
 
-**Restore Point:** `ADMIN_V1_1_C_GLOBAL_SEARCH_COMPLETE`
+The `/status` page displayed "Unknown" for applicant name despite correct database data.
+
+### Root Cause
+
+The `lookup-public-status` Edge Function incorrectly treated Supabase JOIN results as arrays:
+- Used `personData.length > 0` check on a single object
+- `.length` on an object returns `undefined`, causing fallback to "Unknown"
+
+### Fix
+
+Updated `supabase/functions/lookup-public-status/index.ts`:
+- Line 267-268: Bouwsubsidie path — treat `person` as single object
+- Line 323-324: Housing path — treat `person` as single object
+
+**Before:**
+```typescript
+const personData = caseData.person as unknown as { first_name: string; last_name: string }[] | null
+const person = personData && personData.length > 0 ? personData[0] : null
+```
+
+**After:**
+```typescript
+const person = caseData.person as unknown as { first_name: string; last_name: string } | null
+```
+
+### Verification
+
+- Housing Registration lookup: Applicant name displays correctly
+- Bouwsubsidie lookup: Applicant name displays correctly
+- No console errors on `/status` page
+- Edge Function returns HTTP 200
+
+**Restore Point:** `RESTORE_POINT_v1.1-D_BACKEND_IMPACT_CHECK_COMPLETE`

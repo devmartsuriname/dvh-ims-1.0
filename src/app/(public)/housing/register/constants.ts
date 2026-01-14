@@ -2,7 +2,12 @@
  * Housing Registration Wizard Constants
  * 
  * Predefined options and wizard configuration
- * Phase 5 - Checkpoint 5
+ * 
+ * UPDATED: Admin v1.1-D - Aligned with Edge Function contract
+ * - Changed full_name → first_name + last_name
+ * - Added gender field
+ * - Changed current_address → address_line_1
+ * - Changed current_district → district
  */
 
 export const HOUSING_TYPES = [
@@ -39,6 +44,12 @@ export const INCOME_SOURCES = [
   { value: 'none', label: 'No income' },
 ] as const
 
+export const GENDER_OPTIONS = [
+  { value: 'male', label: 'Male' },
+  { value: 'female', label: 'Female' },
+  { value: 'other', label: 'Other' },
+] as const
+
 export const WIZARD_STEPS = [
   { title: 'Introduction' },
   { title: 'Personal Info' },
@@ -53,18 +64,20 @@ export const WIZARD_STEPS = [
 ] as const
 
 export const INITIAL_FORM_DATA = {
-  // Step 1 - Personal
+  // Step 1 - Personal (aligned with Edge Function contract)
   national_id: '',
-  full_name: '',
+  first_name: '',
+  last_name: '',
   date_of_birth: '',
+  gender: '',
 
   // Step 2 - Contact
   phone_number: '',
   email: '',
 
-  // Step 3 - Living Situation
-  current_address: '',
-  current_district: '',
+  // Step 3 - Living Situation (aligned with Edge Function contract)
+  address_line_1: '',
+  district: '',
   current_housing_type: '',
   monthly_rent: '',
   number_of_residents: 1,

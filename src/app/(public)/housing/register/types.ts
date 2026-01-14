@@ -2,22 +2,30 @@
  * Housing Registration Wizard Form Types
  * 
  * TypeScript interfaces for the Housing Registration wizard
- * Phase 5 - Checkpoint 5
+ * 
+ * UPDATED: Admin v1.1-D - Aligned with Edge Function contract
+ * - Changed full_name → first_name + last_name
+ * - Added gender field (required)
+ * - Made date_of_birth, email required
+ * - Changed current_address → address_line_1
+ * - Changed current_district → district
  */
 
 export interface HousingFormData {
   // Step 1 - Personal Identification
   national_id: string
-  full_name: string
+  first_name: string
+  last_name: string
   date_of_birth: string
+  gender: string
 
   // Step 2 - Contact Information
   phone_number: string
   email: string
 
   // Step 3 - Current Living Situation
-  current_address: string
-  current_district: string
+  address_line_1: string
+  district: string
   current_housing_type: string
   monthly_rent: string
   number_of_residents: number

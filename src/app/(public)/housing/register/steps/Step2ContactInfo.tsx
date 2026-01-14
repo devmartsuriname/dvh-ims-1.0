@@ -6,6 +6,10 @@ import WizardStep from '@/components/public/WizardStep'
 import TextFormInput from '@/components/from/TextFormInput'
 import type { WizardStepProps } from '../types'
 
+/**
+ * Validation schema aligned with Edge Function contract
+ * Email is now REQUIRED per submit-housing-registration
+ */
 const schema = yup.object({
   phone_number: yup
     .string()
@@ -13,6 +17,7 @@ const schema = yup.object({
     .min(7, 'Phone number must be at least 7 digits'),
   email: yup
     .string()
+    .required('Email is required')
     .email('Please enter a valid email address'),
 })
 
@@ -21,7 +26,9 @@ type FormData = yup.InferType<typeof schema>
 /**
  * Step 2: Contact Information
  * 
- * Collects phone number (required) and email (optional).
+ * Collects phone number and email (both required).
+ * 
+ * UPDATED: Admin v1.1-D - Made email required per Edge Function contract
  */
 const Step2ContactInfo = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
@@ -73,7 +80,6 @@ const Step2ContactInfo = ({ formData, updateFormData, onNext, onBack }: WizardSt
                 {errors.email?.message && (
                   <div className="text-danger small mt-1">{String(errors.email.message)}</div>
                 )}
-                <div className="text-muted small mt-1">Optional, but recommended</div>
               </Col>
             </Row>
           </Form>

@@ -1,13 +1,13 @@
 import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useState } from 'react'
 import WizardStep from '@/components/public/WizardStep'
-import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { DISTRICTS } from '@/constants/districts'
 import { 
   HOUSING_TYPES, 
   INTEREST_TYPES, 
   APPLICATION_REASONS, 
-  INCOME_SOURCES 
+  INCOME_SOURCES,
+  GENDER_OPTIONS
 } from '../constants'
 import type { HousingFormData } from '../types'
 
@@ -23,6 +23,9 @@ interface Step8ReviewProps {
  * Step 8: Review & Confirmation
  * 
  * Summary of all entered data with declaration of truthfulness.
+ * 
+ * UPDATED: Admin v1.1-D - Updated to show first_name + last_name instead of full_name,
+ * gender field, and address_line_1/district instead of current_address/current_district
  */
 const Step8Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }: Step8ReviewProps) => {
   const [accepted, setAccepted] = useState(formData.declaration_accepted)
@@ -58,6 +61,10 @@ const Step8Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }:
     return INCOME_SOURCES.find((s) => s.value === value)?.label || value
   }
 
+  const getGenderLabel = (value: string) => {
+    return GENDER_OPTIONS.find((g) => g.value === value)?.label || value
+  }
+
   const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <Card className="mb-3">
       <Card.Header className="bg-light py-2">
@@ -88,8 +95,10 @@ const Step8Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }:
       {/* Personal Information */}
       <SectionCard title="Personal Information">
         <DataRow label="National ID" value={formData.national_id} />
-        <DataRow label="Full Name" value={formData.full_name} />
+        <DataRow label="First Name" value={formData.first_name} />
+        <DataRow label="Last Name" value={formData.last_name} />
         <DataRow label="Date of Birth" value={formData.date_of_birth} />
+        <DataRow label="Gender" value={getGenderLabel(formData.gender)} />
       </SectionCard>
 
       {/* Contact Information */}
@@ -100,8 +109,8 @@ const Step8Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }:
 
       {/* Current Living Situation */}
       <SectionCard title="Current Living Situation">
-        <DataRow label="Address" value={formData.current_address} />
-        <DataRow label="District" value={getDistrictName(formData.current_district)} />
+        <DataRow label="Address" value={formData.address_line_1} />
+        <DataRow label="District" value={getDistrictName(formData.district)} />
         <DataRow label="Housing Type" value={getHousingTypeName(formData.current_housing_type)} />
         <DataRow label="Monthly Rent" value={formData.monthly_rent ? `SRD ${formData.monthly_rent}` : undefined} />
         <DataRow label="Residents" value={formData.number_of_residents} />

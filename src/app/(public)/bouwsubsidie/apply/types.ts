@@ -2,6 +2,11 @@
  * Bouwsubsidie Wizard Form Types
  * 
  * TypeScript interfaces for the Construction Subsidy application wizard
+ * 
+ * UPDATED: Admin v1.1-D - Aligned with Edge Function contract
+ * - Changed full_name → first_name + last_name
+ * - Made gender, date_of_birth, email required
+ * - Changed address_line → address_line_1
  */
 
 export interface DocumentDeclaration {
@@ -13,7 +18,8 @@ export interface DocumentDeclaration {
 export interface BouwsubsidieFormData {
   // Step 1 - Personal Identification
   national_id: string
-  full_name: string
+  first_name: string
+  last_name: string
   date_of_birth: string
   gender: string
   
@@ -26,7 +32,7 @@ export interface BouwsubsidieFormData {
   dependents: number
   
   // Step 4 - Current Address
-  address_line: string
+  address_line_1: string
   district: string
   ressort: string
   

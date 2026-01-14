@@ -7,8 +7,12 @@ import TextFormInput from '@/components/from/TextFormInput'
 import { DISTRICTS } from '@/constants/districts'
 import type { WizardStepProps } from '../types'
 
+/**
+ * Validation schema aligned with Edge Function contract
+ * Field renamed: address_line → address_line_1
+ */
 const schema = yup.object({
-  address_line: yup
+  address_line_1: yup
     .string()
     .required('Address is required')
     .min(5, 'Address must be at least 5 characters'),
@@ -24,12 +28,14 @@ type FormData = yup.InferType<typeof schema>
  * Step 4: Current Address
  * 
  * Collects address line, district (required), and ressort (optional).
+ * 
+ * UPDATED: Admin v1.1-D - Renamed address_line to address_line_1 per Edge Function contract
  */
 const Step4Address = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
   const { control, register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
     defaultValues: {
-      address_line: formData.address_line,
+      address_line_1: formData.address_line_1,
       district: formData.district,
       ressort: formData.ressort,
     },
@@ -53,20 +59,20 @@ const Step4Address = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
             <Row className="g-3">
               <Col xs={12}>
                 <TextFormInput
-                  name="address_line"
+                  name="address_line_1"
                   label="Street Address"
                   placeholder="Enter your street address"
                   control={control}
                   containerClassName="mb-0"
                 />
-                {errors.address_line?.message && (
-                  <div className="text-danger small mt-1">{String(errors.address_line.message)}</div>
+                {errors.address_line_1?.message && (
+                  <div className="text-danger small mt-1">{String(errors.address_line_1.message)}</div>
                 )}
               </Col>
               
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>District</Form.Label>
+                  <Form.Label>District <span className="text-danger">*</span></Form.Label>
                   <Form.Select
                     {...register('district')}
                     isInvalid={!!errors.district}

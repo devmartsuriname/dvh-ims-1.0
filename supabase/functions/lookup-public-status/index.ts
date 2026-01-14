@@ -264,8 +264,8 @@ Deno.serve(async (req) => {
         description: h.reason || getStatusDescription('bouwsubsidie', h.to_status)
       }))
       
-      const personData = caseData.person as unknown as { first_name: string; last_name: string }[] | null
-      const person = personData && personData.length > 0 ? personData[0] : null
+      // Person is a single object from Supabase JOIN, not an array
+      const person = caseData.person as unknown as { first_name: string; last_name: string } | null
       
       responseData = {
         success: true,
@@ -320,8 +320,8 @@ Deno.serve(async (req) => {
         description: h.reason || getStatusDescription('housing', h.to_status)
       }))
       
-      const personData = regData.person as unknown as { first_name: string; last_name: string }[] | null
-      const person = personData && personData.length > 0 ? personData[0] : null
+      // Person is a single object from Supabase JOIN, not an array
+      const person = regData.person as unknown as { first_name: string; last_name: string } | null
       
       responseData = {
         success: true,

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Modal, Button, Form, Spinner } from 'react-bootstrap'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
 
 interface Household {
@@ -138,7 +138,7 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
     e.preventDefault()
     
     if (!selectedHouseholdId || !selectedApplicantId || !districtCode) {
-      toast.error('Please fill in all required fields')
+      notify.error('Please fill in all required fields')
       return
     }
 
@@ -182,12 +182,12 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
         reason: `Housing registration ${referenceNumber} created`,
       })
 
-      toast.success(`Registration ${referenceNumber} created successfully`)
+      notify.success(`Registration ${referenceNumber} created successfully`)
       onSuccess()
       onClose()
       resetForm()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create registration')
+      notify.error(error.message || 'Failed to create registration')
     } finally {
       setLoading(false)
     }

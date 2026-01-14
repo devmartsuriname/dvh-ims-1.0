@@ -434,3 +434,73 @@ All admin module tables with GridJS follow this standardized empty state pattern
 | Housing Registrations | `RegistrationTable.tsx` | ✓ Already compliant |
 
 **Restore Point:** `RESTORE_POINT_v1.1-D_D1_EMPTY_STATE_COMPLETE`
+
+---
+
+## Admin v1.1-D: D2 — Notification Hygiene
+
+### Standard Pattern
+
+All admin modules use the unified notification helper for consistent user feedback:
+
+**File:** `src/utils/notify.ts`
+
+```typescript
+import { notify } from '@/utils/notify'
+
+// Success notifications
+notify.success('Record created successfully')
+
+// Error notifications  
+notify.error('Failed to load data')
+
+// Info notifications
+notify.info('Processing in progress')
+
+// Warning notifications
+notify.warn('Please review before submitting')
+```
+
+### Notification Rules
+
+| Type | Use Case | Behavior |
+|------|----------|----------|
+| `success` | CRUD operations, status changes | Auto-dismiss 3s, top-right |
+| `error` | Failed operations, validation errors | Auto-dismiss 3s, top-right |
+| `info` | Informational messages | Auto-dismiss 3s, top-right |
+| `warn` | Warnings, cautionary messages | Auto-dismiss 3s, top-right |
+
+### Default Options
+
+```typescript
+{
+  position: 'top-right',
+  autoClose: 3000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  draggable: false,
+}
+```
+
+### Files Updated
+
+| Module | File | Change |
+|--------|------|--------|
+| Allocation Quotas | `QuotaTable.tsx` | `toast` → `notify` |
+| Allocation Runs | `RunTable.tsx`, `RunExecutorModal.tsx`, `[id]/page.tsx` | `toast` → `notify` |
+| Allocation Decisions | `DecisionTable.tsx`, `DecisionFormModal.tsx` | `toast` → `notify` |
+| Allocation Assignments | `AssignmentTable.tsx`, `AssignmentFormModal.tsx` | `toast` → `notify` |
+| Persons | `PersonFormModal.tsx` | `toast` → `notify` |
+| Households | `[id]/page.tsx` | `toast` → `notify` |
+| Subsidy Cases | `CaseFormModal.tsx`, `[id]/page.tsx` | `toast` → `notify` |
+| Housing Registrations | `RegistrationFormModal.tsx`, `UrgencyAssessmentForm.tsx`, `[id]/page.tsx` | `toast` → `notify` |
+
+### What Is NOT Changed
+
+- **Auth module**: SignIn/SignUp continue using `NotificationContext` (different UX context)
+- **Database**: No schema changes
+- **RLS**: No policy changes
+- **Edge Functions**: No server-side changes
+
+**Restore Point:** `RESTORE_POINT_ADMIN_v1.1_D_D2_NOTIFICATION_HYGIENE_COMPLETE`

@@ -4,7 +4,7 @@ import { Card, CardBody, CardHeader, CardTitle, Row, Col, Button, Spinner, Badge
 import PageTitle from '@/components/PageTitle'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
 
 interface SubsidyCase {
@@ -160,7 +160,7 @@ const SubsidyCaseDetail = () => {
     ])
 
     if (caseRes.error) {
-      toast.error('Case not found')
+      notify.error('Case not found')
       navigate('/subsidy-cases')
       return
     }
@@ -181,7 +181,7 @@ const SubsidyCaseDetail = () => {
 
   const handleStatusChange = async (newStatus: string) => {
     if (!subsidyCase || !statusReason.trim()) {
-      toast.error('Please provide a reason for the status change')
+      notify.error('Please provide a reason for the status change')
       return
     }
 
@@ -217,11 +217,11 @@ const SubsidyCaseDetail = () => {
         reason: `Status changed from ${subsidyCase.status} to ${newStatus}: ${statusReason}`,
       })
 
-      toast.success(`Status changed to ${STATUS_BADGES[newStatus]?.label || newStatus}`)
+      notify.success(`Status changed to ${STATUS_BADGES[newStatus]?.label || newStatus}`)
       setStatusReason('')
       fetchCase()
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update status')
+      notify.error(error.message || 'Failed to update status')
     } finally {
       setStatusLoading(false)
     }
@@ -556,13 +556,13 @@ const SubsidyCaseDetail = () => {
                       if (response.error) throw new Error(response.error.message)
                       if (!response.data.success) throw new Error(response.data.message || 'Generation failed')
                       
-                      toast.success('Raadvoorstel generated successfully')
+                      notify.success('Raadvoorstel generated successfully')
                       if (response.data.download_url) {
                         window.open(response.data.download_url, '_blank')
                       }
                       fetchCase()
                     } catch (error: any) {
-                      toast.error(error.message || 'Failed to generate document')
+                      notify.error(error.message || 'Failed to generate document')
                     } finally {
                       setGenerating(false)
                     }
@@ -622,7 +622,7 @@ const SubsidyCaseDetail = () => {
                                 if (!response.data.success) throw new Error(response.data.message || 'Download failed')
                                 window.open(response.data.download_url, '_blank')
                               } catch (error: any) {
-                                toast.error(error.message || 'Failed to download')
+                                notify.error(error.message || 'Failed to download')
                               }
                             }}
                           >

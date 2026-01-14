@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Modal, Button, Form, Alert } from 'react-bootstrap'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { logAuditEvent } from '@/hooks/useAuditLog'
 
@@ -37,7 +37,7 @@ const RunExecutorModal = ({ show, onHide, onSuccess }: RunExecutorModalProps) =>
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        toast.error('Not authenticated')
+        notify.error('Not authenticated')
         return
       }
 
@@ -77,7 +77,7 @@ const RunExecutorModal = ({ show, onHide, onSuccess }: RunExecutorModalProps) =>
           success: true,
           message: `Run completed: ${data.candidates_count} candidates processed, ${data.allocations_count} selected for allocation`
         })
-        toast.success('Allocation run completed successfully')
+        notify.success('Allocation run completed successfully')
         onSuccess()
       } else {
         throw new Error(data.error || 'Allocation run failed')
@@ -86,7 +86,7 @@ const RunExecutorModal = ({ show, onHide, onSuccess }: RunExecutorModalProps) =>
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       setResult({ success: false, message })
-      toast.error('Allocation run failed: ' + message)
+      notify.error('Allocation run failed: ' + message)
     } finally {
       setExecuting(false)
     }

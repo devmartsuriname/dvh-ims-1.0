@@ -3,7 +3,7 @@ import { Card, CardBody, Button, Spinner } from 'react-bootstrap'
 import { Grid } from 'gridjs-react'
 import { html } from 'gridjs'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import QuotaFormModal from './QuotaFormModal'
 import { logAuditEvent } from '@/hooks/useAuditLog'
@@ -33,7 +33,7 @@ const QuotaTable = () => {
       .order('period_start', { ascending: false })
 
     if (error) {
-      toast.error('Failed to load quotas')
+      notify.error('Failed to load quotas')
       console.error(error)
     } else {
       setQuotas(data || [])
@@ -75,7 +75,7 @@ const QuotaTable = () => {
   }) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      toast.error('Not authenticated')
+      notify.error('Not authenticated')
       return
     }
 
@@ -92,7 +92,7 @@ const QuotaTable = () => {
         .eq('id', editingQuota.id)
 
       if (error) {
-        toast.error('Failed to update quota')
+        notify.error('Failed to update quota')
         console.error(error)
         return
       }
@@ -104,7 +104,7 @@ const QuotaTable = () => {
         metadata: { changes: data }
       })
 
-      toast.success('Quota updated successfully')
+      notify.success('Quota updated successfully')
     } else {
       // Create new
       const { data: newQuota, error } = await supabase
@@ -120,7 +120,7 @@ const QuotaTable = () => {
         .single()
 
       if (error) {
-        toast.error('Failed to create quota')
+        notify.error('Failed to create quota')
         console.error(error)
         return
       }
@@ -132,7 +132,7 @@ const QuotaTable = () => {
         metadata: data
       })
 
-      toast.success('Quota created successfully')
+      notify.success('Quota created successfully')
     }
 
     setShowModal(false)

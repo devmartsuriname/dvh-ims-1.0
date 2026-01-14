@@ -592,98 +592,75 @@ If data fetch fails or returns empty, the hook returns zero-filled arrays of the
 
 ---
 
-## Admin v1.1-C: Global Search Bugfix (2026-01-13)
+## Admin v1.1-C: Global Search (2026-01-13)
 
-### SCSS Variable Error
+### Overview
 
-**Issue:** Build failure due to undefined `$font-size-xs` variable in `_search-results.scss`.
+Global Search provides real-time, RLS-safe search across four core entities from the topbar search input.
 
-**Error:**
+### Entity Scope
+
+| Entity | Included Fields | Excluded Fields | Route |
+|--------|-----------------|-----------------|-------|
+| Person | national_id, first_name, last_name | date_of_birth, gender, nationality | `/persons/{id}` |
+| Household | district_code, household_size | primary_person_id (internal) | `/households/{id}` |
+| Housing Registration | reference_number, current_status, district_code | urgency_score, waiting_list_position | `/housing-registrations/{id}` |
+| Subsidy Case | case_number, status, district_code | requested_amount, approved_amount, rejection_reason | `/subsidy-cases/{id}` |
+
+### Excluded Entities (v1.1-C)
+
+| Entity | Reason |
+|--------|--------|
+| Allocation Run/Decision/Candidate | Operational data, not user-facing lookup |
+| Assignment Record | Internal allocation output |
+| Audit Event | Security-sensitive, separate audit log view exists |
+| Urgency/Reports | Internal assessment data |
+
+### Query Strategy
+
+```typescript
+// RLS-safe direct Supabase queries with ilike pattern matching
+const searchTerm = `%${query}%`
+
+// Parallel queries with LIMIT 10 each
+supabase.from('person').select('id, national_id, first_name, last_name')
+  .or(`national_id.ilike.${searchTerm},first_name.ilike.${searchTerm},last_name.ilike.${searchTerm}`)
+  .limit(10)
 ```
-[plugin:vite:css] [sass] Undefined variable.
-60 |     font-size: $font-size-xs;
-                    ^^^^^^^^^^^^^
-src/assets/scss/components/_search-results.scss 60:14
-```
 
-**Root Cause:** The project's SCSS variables only define `$font-size-sm`, `$font-size-base`, and `$font-size-lg`. The variable `$font-size-xs` does not exist.
+### Performance Constraints
 
-**Fix:** Replaced `$font-size-xs` with `$font-size-sm` at lines 60 and 103.
+| Constraint | Value | Purpose |
+|------------|-------|---------|
+| Minimum query length | 2 characters | Prevent overly broad queries |
+| Debounce delay | 300ms | Reduce query frequency |
+| Result limit per entity | 10 | Prevent result overload |
+| Parallel queries | Yes | All 4 entities queried simultaneously |
 
-**File Modified:** `src/assets/scss/components/_search-results.scss`
+### UX Placement
 
-**Verification:** App compiles successfully, global search functions correctly.
+- **Entry Point:** Topbar search input (existing Darkone element)
+- **Results Display:** Dropdown below search input
+- **Grouping:** Results grouped by entity type with section headers
+- **Navigation:** Click result → navigate to detail page (read-only)
+- **Dismiss:** Escape key or click outside to close
 
-**Restore Point:** `ADMIN_V1_1_C_GLOBAL_SEARCH_BUGFIX_COMPLETE`
+### Files
 
----
+| File | Purpose |
+|------|---------|
+| `src/hooks/useGlobalSearch.ts` | Search hook with RLS-safe queries |
+| `src/components/layout/TopNavigationBar/components/SearchResults.tsx` | Results dropdown (Darkone-aligned, NO React-Bootstrap) |
+| `src/components/layout/TopNavigationBar/page.tsx` | Topbar integration with debounce |
+| `src/assets/scss/components/_search-results.scss` | Dropdown styling |
 
-## Admin v1.1-D: Bouwsubsidie Wizard Stability Fix (2026-01-14)
+### Future Index Recommendations (Not Implemented in v1.1-C)
 
-### Root Cause
+| Table | Column(s) | Index Type | Priority |
+|-------|-----------|------------|----------|
+| person | national_id | btree | High |
+| person | first_name, last_name | GIN trigram | Medium |
+| subsidy_case | case_number | btree | High |
+| housing_registration | reference_number | btree | High |
 
-Frontend wizard form data schema did not match the Edge Function (`submit-bouwsubsidie-application`) contract, causing 100% submission failure at Step 8.
-
-### Mismatches Identified
-
-| Frontend Field | Edge Function Field | Issue |
-|---------------|---------------------|-------|
-| `full_name` | `first_name`, `last_name` | Single field vs split fields |
-| `address_line` | `address_line_1` | Field name mismatch |
-| `email` | `email` | Optional vs Required |
-| `date_of_birth` | `date_of_birth` | Optional vs Required |
-| `gender` | `gender` | Optional vs Required |
-
-### Fix Applied (Option A: Align Frontend to Edge Function)
-
-**Types Updated (`types.ts`):**
-- Split `full_name` → `first_name` + `last_name`
-- Renamed `address_line` → `address_line_1`
-
-**Constants Updated (`constants.ts`):**
-- `INITIAL_FORM_DATA` aligned to new field names
-
-**Step1PersonalInfo Updated:**
-- Separate inputs for `first_name` and `last_name`
-- `date_of_birth` and `gender` now required with validation
-
-**Step2ContactInfo Updated:**
-- `email` now required with validation
-
-**Step4Address Updated:**
-- Field renamed to `address_line_1`
-
-**Step7Review Updated:**
-- Displays `first_name` and `last_name` separately
-- Displays `address_line_1`
-
-### Files Modified
-
-| File | Change |
-|------|--------|
-| `src/app/(public)/bouwsubsidie/apply/types.ts` | Split full_name, rename address_line |
-| `src/app/(public)/bouwsubsidie/apply/constants.ts` | Align INITIAL_FORM_DATA |
-| `src/app/(public)/bouwsubsidie/apply/steps/Step1PersonalInfo.tsx` | Split name, require fields |
-| `src/app/(public)/bouwsubsidie/apply/steps/Step2ContactInfo.tsx` | Require email |
-| `src/app/(public)/bouwsubsidie/apply/steps/Step4Address.tsx` | Rename field |
-| `src/app/(public)/bouwsubsidie/apply/steps/Step7Review.tsx` | Update display |
-
-### Housing Registration Wizard (Smoke-Test)
-
-**Status:** SIMILAR MISMATCHES IDENTIFIED (not fixed in this task)
-
-| Frontend Field | Edge Function Field | Issue |
-|---------------|---------------------|-------|
-| `full_name` | `first_name`, `last_name` | Single field vs split fields |
-| `current_address` | `address_line_1` | Field name mismatch |
-| Missing | `gender` | Required field not collected |
-
-**Action Required:** Separate fix task required for Housing Registration wizard.
-
-### Verification
-
-- Bouwsubsidie Wizard submission now matches Edge Function contract
-- All required fields enforced in frontend validation
-- No Edge Function changes required
-
-**Restore Point:** `ADMIN_V1_1_D_BOUWSUBSIDIE_WIZARD_FIX_COMPLETE`
+**Restore Point:** `ADMIN_V1_1_C_GLOBAL_SEARCH_COMPLETE`

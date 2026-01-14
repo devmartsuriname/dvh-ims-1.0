@@ -8,7 +8,7 @@ import { DISTRICTS } from '@/constants/districts'
 import type { WizardStepProps } from '../types'
 
 const schema = yup.object({
-  address_line_1: yup
+  address_line: yup
     .string()
     .required('Address is required')
     .min(5, 'Address must be at least 5 characters'),
@@ -23,14 +23,13 @@ type FormData = yup.InferType<typeof schema>
 /**
  * Step 4: Current Address
  * 
- * Collects address line (required), district (required), and ressort (optional).
- * Field name aligned with Edge Function contract (address_line_1).
+ * Collects address line, district (required), and ressort (optional).
  */
 const Step4Address = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
   const { control, register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
     defaultValues: {
-      address_line_1: formData.address_line_1,
+      address_line: formData.address_line,
       district: formData.district,
       ressort: formData.ressort,
     },
@@ -54,14 +53,14 @@ const Step4Address = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
             <Row className="g-3">
               <Col xs={12}>
                 <TextFormInput
-                  name="address_line_1"
+                  name="address_line"
                   label="Street Address"
                   placeholder="Enter your street address"
                   control={control}
                   containerClassName="mb-0"
                 />
-                {errors.address_line_1?.message && (
-                  <div className="text-danger small mt-1">{String(errors.address_line_1.message)}</div>
+                {errors.address_line?.message && (
+                  <div className="text-danger small mt-1">{String(errors.address_line.message)}</div>
                 )}
               </Col>
               

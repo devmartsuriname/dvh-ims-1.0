@@ -12,20 +12,12 @@ const schema = yup.object({
     .string()
     .required('National ID is required')
     .min(5, 'National ID must be at least 5 characters'),
-  first_name: yup
+  full_name: yup
     .string()
-    .required('First name is required')
-    .min(2, 'First name must be at least 2 characters'),
-  last_name: yup
-    .string()
-    .required('Last name is required')
-    .min(2, 'Last name must be at least 2 characters'),
-  date_of_birth: yup
-    .string()
-    .required('Date of birth is required'),
-  gender: yup
-    .string()
-    .required('Gender is required'),
+    .required('Full name is required')
+    .min(2, 'Full name must be at least 2 characters'),
+  date_of_birth: yup.string(),
+  gender: yup.string(),
 })
 
 type FormData = yup.InferType<typeof schema>
@@ -33,16 +25,14 @@ type FormData = yup.InferType<typeof schema>
 /**
  * Step 1: Personal Identification
  * 
- * Collects National ID, first name, last name, date of birth, and gender.
- * All fields required to match Edge Function contract.
+ * Collects National ID, full name, date of birth, and gender.
  */
 const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
-  const { control, register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
     defaultValues: {
       national_id: formData.national_id,
-      first_name: formData.first_name,
-      last_name: formData.last_name,
+      full_name: formData.full_name,
       date_of_birth: formData.date_of_birth,
       gender: formData.gender,
     },
@@ -79,27 +69,14 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
               
               <Col md={6}>
                 <TextFormInput
-                  name="first_name"
-                  label="First Name"
-                  placeholder="Enter your first name"
+                  name="full_name"
+                  label="Full Name"
+                  placeholder="Enter your full name"
                   control={control}
                   containerClassName="mb-0"
                 />
-                {errors.first_name?.message && (
-                  <div className="text-danger small mt-1">{String(errors.first_name.message)}</div>
-                )}
-              </Col>
-              
-              <Col md={6}>
-                <TextFormInput
-                  name="last_name"
-                  label="Last Name"
-                  placeholder="Enter your last name"
-                  control={control}
-                  containerClassName="mb-0"
-                />
-                {errors.last_name?.message && (
-                  <div className="text-danger small mt-1">{String(errors.last_name.message)}</div>
+                {errors.full_name?.message && (
+                  <div className="text-danger small mt-1">{String(errors.full_name.message)}</div>
                 )}
               </Col>
               
@@ -111,28 +88,23 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
                   control={control}
                   containerClassName="mb-0"
                 />
-                {errors.date_of_birth?.message && (
-                  <div className="text-danger small mt-1">{String(errors.date_of_birth.message)}</div>
-                )}
+                <div className="text-muted small mt-1">Optional</div>
               </Col>
               
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Gender <span className="text-danger">*</span></Form.Label>
+                  <Form.Label>Gender</Form.Label>
                   <Form.Select
-                    {...register('gender')}
-                    isInvalid={!!errors.gender}
+                    defaultValue={formData.gender}
+                    onChange={(e) => updateFormData({ gender: e.target.value })}
                   >
-                    <option value="">Select gender</option>
+                    <option value="">Select gender (optional)</option>
                     {GENDER_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
                     ))}
                   </Form.Select>
-                  {errors.gender?.message && (
-                    <div className="text-danger small mt-1">{String(errors.gender.message)}</div>
-                  )}
                 </Form.Group>
               </Col>
             </Row>

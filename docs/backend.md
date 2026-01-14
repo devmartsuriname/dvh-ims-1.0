@@ -615,3 +615,43 @@ src/assets/scss/components/_search-results.scss 60:14
 **Verification:** App compiles successfully, global search functions correctly.
 
 **Restore Point:** `ADMIN_V1_1_C_GLOBAL_SEARCH_BUGFIX_COMPLETE`
+
+---
+
+## Admin v1.1-D: Public Status Lookup — Applicant Name Fix (2026-01-14)
+
+### Issue
+
+The `/status` page displayed "Unknown" for applicant name despite correct database data.
+
+### Root Cause
+
+The `lookup-public-status` Edge Function incorrectly treated Supabase JOIN results as arrays:
+- Used `personData.length > 0` check on a single object
+- `.length` on an object returns `undefined`, causing fallback to "Unknown"
+
+### Fix
+
+Updated `supabase/functions/lookup-public-status/index.ts`:
+- Line 267-268: Bouwsubsidie path — treat `person` as single object
+- Line 323-324: Housing path — treat `person` as single object
+
+**Before:**
+```typescript
+const personData = caseData.person as unknown as { first_name: string; last_name: string }[] | null
+const person = personData && personData.length > 0 ? personData[0] : null
+```
+
+**After:**
+```typescript
+const person = caseData.person as unknown as { first_name: string; last_name: string } | null
+```
+
+### Verification
+
+- Housing Registration lookup: Applicant name displays correctly
+- Bouwsubsidie lookup: Applicant name displays correctly
+- No console errors on `/status` page
+- Edge Function returns HTTP 200
+
+**Restore Point:** `RESTORE_POINT_v1.1-D_BACKEND_IMPACT_CHECK_COMPLETE`

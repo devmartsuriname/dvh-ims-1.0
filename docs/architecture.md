@@ -341,3 +341,51 @@ All queries use the authenticated Supabase client. No service role bypass.
 **File:** `src/assets/scss/components/_search-results.scss`
 
 **Restore Point:** `ADMIN_V1_1_C_GLOBAL_SEARCH_BUGFIX_COMPLETE`
+
+---
+
+## Admin v1.1-D: Public Wizard Submission Fix (2026-01-14)
+
+### Frontend Schema Alignment
+
+Both public wizards had payload mismatches with their Edge Functions:
+
+| Wizard | Old Fields | New Fields |
+|--------|------------|------------|
+| Bouwsubsidie | `full_name`, `address_line` | `first_name` + `last_name`, `address_line_1` |
+| Housing | `full_name`, `current_address`, `current_district` | `first_name` + `last_name`, `address_line_1`, `district` |
+
+### Required Fields Added
+
+- `gender` (both wizards)
+- `email` (both wizards)
+- `date_of_birth` (both wizards)
+
+### Status Lookup Fix
+
+Edge Function `lookup-public-status` incorrectly treated Supabase JOIN person data as an array.
+
+**Fix:** Changed from array extraction (`personData.length > 0`) to single object cast.
+
+### Files Modified
+
+**Bouwsubsidie:**
+- `src/app/(public)/bouwsubsidie/apply/types.ts`
+- `src/app/(public)/bouwsubsidie/apply/constants.ts`
+- `src/app/(public)/bouwsubsidie/apply/steps/Step1PersonalInfo.tsx`
+- `src/app/(public)/bouwsubsidie/apply/steps/Step2ContactInfo.tsx`
+- `src/app/(public)/bouwsubsidie/apply/steps/Step4Address.tsx`
+- `src/app/(public)/bouwsubsidie/apply/steps/Step7Review.tsx`
+
+**Housing Registration:**
+- `src/app/(public)/housing/register/types.ts`
+- `src/app/(public)/housing/register/constants.ts`
+- `src/app/(public)/housing/register/steps/Step1PersonalInfo.tsx`
+- `src/app/(public)/housing/register/steps/Step2ContactInfo.tsx`
+- `src/app/(public)/housing/register/steps/Step3LivingSituation.tsx`
+- `src/app/(public)/housing/register/steps/Step8Review.tsx`
+
+**Edge Function:**
+- `supabase/functions/lookup-public-status/index.ts`
+
+**Restore Point:** `RESTORE_POINT_v1.1-D_BACKEND_IMPACT_CHECK_COMPLETE`

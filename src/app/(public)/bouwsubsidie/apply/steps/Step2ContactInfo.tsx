@@ -13,6 +13,7 @@ const schema = yup.object({
     .min(7, 'Phone number must be at least 7 digits'),
   email: yup
     .string()
+    .required('Email address is required')
     .email('Please enter a valid email address'),
 })
 
@@ -21,7 +22,8 @@ type FormData = yup.InferType<typeof schema>
 /**
  * Step 2: Contact Information
  * 
- * Collects phone number (required) and email (optional).
+ * Collects phone number (required) and email (required).
+ * Email is required to match Edge Function contract.
  */
 const Step2ContactInfo = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
@@ -74,7 +76,7 @@ const Step2ContactInfo = ({ formData, updateFormData, onNext, onBack }: WizardSt
                 {errors.email?.message && (
                   <div className="text-danger small mt-1">{String(errors.email.message)}</div>
                 )}
-                <div className="text-muted small mt-1">Optional</div>
+                <div className="text-muted small mt-1">Required for application notifications</div>
               </Col>
             </Row>
           </Form>

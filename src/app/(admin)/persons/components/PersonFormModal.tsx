@@ -5,7 +5,7 @@ import * as yup from 'yup'
 import TextFormInput from '@/components/from/TextFormInput'
 import { supabase } from '@/integrations/supabase/client'
 import { logAuditEvent } from '@/hooks/useAuditLog'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 
 interface PersonFormData {
   national_id: string
@@ -81,7 +81,7 @@ const PersonFormModal = ({ isOpen, onClose, onSuccess, person }: PersonFormModal
           metadata: { changed_fields: Object.keys(data) } as unknown as import('@/integrations/supabase/types').Json,
         })
 
-        toast.success('Person updated successfully')
+        notify.success('Person updated successfully')
       } else {
         const { data: newPerson, error } = await supabase
           .from('person')
@@ -105,7 +105,7 @@ const PersonFormModal = ({ isOpen, onClose, onSuccess, person }: PersonFormModal
           action: 'create',
         })
 
-        toast.success('Person created successfully')
+        notify.success('Person created successfully')
       }
 
       reset()
@@ -113,7 +113,7 @@ const PersonFormModal = ({ isOpen, onClose, onSuccess, person }: PersonFormModal
       onClose()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'An error occurred'
-      toast.error(message)
+      notify.error(message)
     }
   }
 

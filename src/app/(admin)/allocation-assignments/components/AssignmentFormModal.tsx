@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Modal, Button, Form } from 'react-bootstrap'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 import { logAuditEvent } from '@/hooks/useAuditLog'
 
 interface AssignmentFormModalProps {
@@ -48,7 +48,7 @@ const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalPro
       .eq('current_status', 'allocated')
 
     if (error) {
-      toast.error('Failed to load registrations')
+      notify.error('Failed to load registrations')
       console.error(error)
     } else {
       // Filter out already assigned registrations
@@ -65,7 +65,7 @@ const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalPro
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        toast.error('Not authenticated')
+        notify.error('Not authenticated')
         return
       }
 
@@ -116,7 +116,7 @@ const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalPro
         }
       })
 
-      toast.success('Assignment recorded successfully')
+      notify.success('Assignment recorded successfully')
       
       // Reset form
       setSelectedRegistration('')
@@ -129,7 +129,7 @@ const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalPro
 
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to record assignment'
-      toast.error(message)
+      notify.error(message)
       console.error(error)
     } finally {
       setSaving(false)

@@ -3,7 +3,7 @@ import { Card, CardBody, Spinner, Tab, Tabs } from 'react-bootstrap'
 import { Grid } from 'gridjs-react'
 import { html } from 'gridjs'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 import DecisionFormModal from './DecisionFormModal'
 
 interface AllocationCandidate {
@@ -83,7 +83,7 @@ const DecisionTable = () => {
       .order('composite_rank', { ascending: true })
 
     if (error) {
-      toast.error('Failed to load candidates')
+      notify.error('Failed to load candidates')
       console.error(error)
     } else {
       // Filter out already decided candidates

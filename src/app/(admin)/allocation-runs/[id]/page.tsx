@@ -4,7 +4,7 @@ import { Card, CardBody, Row, Col, Badge, Spinner, Tab, Tabs, Table, Button } fr
 import PageTitle from '@/components/PageTitle'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
-import { toast } from 'react-toastify'
+import { notify } from '@/utils/notify'
 
 interface AllocationRun {
   id: string
@@ -79,7 +79,7 @@ const AllocationRunDetail = () => {
       .single()
 
     if (runError) {
-      toast.error('Failed to load run details')
+      notify.error('Failed to load run details')
       console.error(runError)
       setLoading(false)
       return

@@ -25,6 +25,20 @@
 }
 
 
+/* Light Mode - Explicit values for public pages */
+html[data-bs-theme="light"],
+[data-bs-theme="light"] {
+    --#{$prefix}headings-color:                  #21252e;
+    --#{$prefix}secondary-color:                 #687d92;
+    --#{$prefix}body-color:                      #5d7186;
+    --#{$prefix}border-color:                    #e5e9ed;
+    --#{$prefix}light:                           #f8f9fa;
+    --#{$prefix}dark:                            #21252e;
+    --#{$prefix}light-rgb:                       248, 249, 250;
+    --#{$prefix}dark-rgb:                        33, 37, 46;
+}
+
+
 /* Dark Mode only */
 html[data-bs-theme="dark"],
 [data-bs-theme="dark"] {

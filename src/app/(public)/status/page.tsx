@@ -28,24 +28,57 @@ const StatusTrackerPage = () => {
   const [error, setError] = useState<string | null>(null)
 
   /**
+   * Maps technical errors to citizen-safe messages
+   * No internal error details are exposed to users
+   */
+  const getSafeErrorMessage = (response: any, error: any): string => {
+    // Network/offline detection
+    if (!navigator.onLine || error?.message?.toLowerCase().includes('fetch')) {
+      return 'Unable to connect to the server. Please check your internet connection and try again.'
+    }
+    
+    const status = response?.error?.status
+    const errorStr = response?.data?.error || response?.error?.message || ''
+    
+    // Rate limiting
+    if (status === 429 || errorStr.toLowerCase().includes('too many')) {
+      return 'You have submitted too many requests. Please wait one hour before trying again.'
+    }
+    
+    // Invalid credentials (specific to status lookup)
+    if (status === 401 || errorStr.toLowerCase().includes('invalid') || errorStr.toLowerCase().includes('not found')) {
+      return 'The reference number or access token you entered is incorrect. Please check and try again.'
+    }
+    
+    // Server errors
+    if (status >= 500) {
+      return 'We were unable to retrieve your status at this time. Please try again later.'
+    }
+    
+    // Generic fallback
+    return 'We were unable to check your application status. Please try again.'
+  }
+
+  /**
    * Handle status lookup via Edge Function
    */
   const handleLookup = async (referenceNumber: string, accessToken: string) => {
     setLookupState('loading')
     setError(null)
+    let response: any = null
 
     try {
-      const response = await supabase.functions.invoke('lookup-public-status', {
+      response = await supabase.functions.invoke('lookup-public-status', {
         body: { reference_number: referenceNumber, access_token: accessToken }
       })
 
-      if (response.error) throw new Error(response.error.message)
-      if (!response.data?.success) throw new Error(response.data?.error || 'Lookup failed')
+      if (response.error) throw new Error('lookup_failed')
+      if (!response.data?.success) throw new Error('lookup_failed')
 
       setResult(response.data as StatusLookupResponse)
       setLookupState('success')
     } catch (err: any) {
-      setError(err.message || 'Failed to lookup status. Please check your credentials.')
+      setError(getSafeErrorMessage(response, err))
       setLookupState('error')
     }
   }

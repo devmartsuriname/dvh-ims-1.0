@@ -7,6 +7,7 @@ import useToggle from '@/hooks/useToggle'
 import RegistrationFormModal from './RegistrationFormModal'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
+import { notify } from '@/utils/notify'
 
 interface HousingRegistration {
   id: string
@@ -61,6 +62,7 @@ const RegistrationTable = () => {
 
     if (error) {
       console.error('Error fetching registrations:', error)
+      notify.error('Failed to load registrations')
     } else {
       setRegistrations(data || [])
     }

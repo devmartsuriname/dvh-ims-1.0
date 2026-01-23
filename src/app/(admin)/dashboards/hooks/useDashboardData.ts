@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import { notify } from '@/utils/notify'
 
 // Time range filter type for dashboard charts
 // ALL = no date constraint, 1M = last 30 days, 6M = last 180 days, 1Y = last 365 days
@@ -252,6 +253,7 @@ export const useDashboardKPIs = (): DashboardKPIs => {
         })
       } catch (error) {
         console.error('Error fetching dashboard KPIs:', error)
+        notify.error('Failed to load dashboard statistics')
         setData(prev => ({ ...prev, loading: false }))
       }
     }
@@ -307,6 +309,7 @@ export const useMonthlyTrends = (timeRange: TimeRange = '1Y'): { data: MonthlyDa
         setTrends(monthlyData)
       } catch (error) {
         console.error('Error fetching monthly trends:', error)
+        notify.error('Failed to load monthly trends')
       } finally {
         setLoading(false)
       }
@@ -380,6 +383,7 @@ export const useDistrictApplications = (): { data: DistrictApplications[]; loadi
         setDistrictData(mappedData)
       } catch (error) {
         console.error('Error fetching district applications:', error)
+        notify.error('Failed to load district data')
       } finally {
         setLoading(false)
       }
@@ -438,6 +442,7 @@ export const useStatusBreakdown = (timeRange: TimeRange = '1Y'): { data: StatusB
         setStatusData(breakdown)
       } catch (error) {
         console.error('Error fetching status breakdown:', error)
+        notify.error('Failed to load status breakdown')
       } finally {
         setLoading(false)
       }
@@ -475,6 +480,7 @@ export const useRecentCases = () => {
         setCases(data || [])
       } catch (error) {
         console.error('Error fetching recent cases:', error)
+        notify.error('Failed to load recent cases')
       } finally {
         setLoading(false)
       }
@@ -512,6 +518,7 @@ export const useRecentRegistrations = () => {
         setRegistrations(data || [])
       } catch (error) {
         console.error('Error fetching recent registrations:', error)
+        notify.error('Failed to load recent registrations')
       } finally {
         setLoading(false)
       }

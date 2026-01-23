@@ -7,6 +7,7 @@ import useToggle from '@/hooks/useToggle'
 import CaseFormModal from './CaseFormModal'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
+import { notify } from '@/utils/notify'
 
 interface SubsidyCase {
   id: string
@@ -59,6 +60,7 @@ const CaseTable = () => {
 
     if (error) {
       console.error('Error fetching cases:', error)
+      notify.error('Failed to load subsidy cases')
     } else {
       setCases(data || [])
     }

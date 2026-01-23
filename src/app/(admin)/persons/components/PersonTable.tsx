@@ -7,6 +7,7 @@ import useToggle from '@/hooks/useToggle'
 import PersonFormModal from './PersonFormModal'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
+import { notify } from '@/utils/notify'
 
 interface Person {
   id: string
@@ -35,6 +36,7 @@ const PersonTable = () => {
 
     if (error) {
       console.error('Error fetching persons:', error)
+      notify.error('Failed to load persons')
     } else {
       setPersons(data || [])
     }

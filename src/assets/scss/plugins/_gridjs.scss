@@ -272,4 +272,15 @@ button {
             filter: $btn-close-white-filter;
         }
     }
+
+    // Fix: Dark theme pagination disabled buttons (ellipsis)
+    .gridjs-pagination .gridjs-pages button {
+        &:disabled,
+        &:hover:disabled,
+        &[disabled] {
+            background-color: transparent;
+            color: var(--#{$prefix}secondary-color);
+            opacity: 0.65;
+        }
+    }
 }

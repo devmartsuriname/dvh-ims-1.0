@@ -29,6 +29,8 @@ const NotificationItem = ({ from, content, icon }: NotificationType) => {
 
 const Notifications = () => {
   const notificationList = notificationsData
+  const notificationCount = notificationList.length
+
   return (
     <Dropdown className="topbar-item ">
       <DropdownToggle
@@ -40,28 +42,39 @@ const Notifications = () => {
         aria-haspopup="true"
         aria-expanded="false">
         <IconifyIcon icon="solar:bell-bing-outline" className="fs-22 align-middle " />
-        <span className="position-absolute topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">
-          5<span className="visually-hidden">unread messages</span>
-        </span>
+        {notificationCount > 0 && (
+          <span className="position-absolute topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">
+            {notificationCount}<span className="visually-hidden">unread messages</span>
+          </span>
+        )}
       </DropdownToggle>
       <DropdownMenu className="py-0 dropdown-lg dropdown-menu-end" aria-labelledby="page-header-notifications-dropdown">
         <div className="p-3 border-top-0 border-start-0 border-end-0 border-dashed border">
           <Row className="align-items-center">
             <Col>
-              <h6 className="m-0 fs-16 fw-semibold"> Notifications (5)</h6>
+              <h6 className="m-0 fs-16 fw-semibold">Notifications ({notificationCount})</h6>
             </Col>
-            <Col xs={'auto'}>
-              <Link to="" className="text-dark text-decoration-underline">
-                <small>Clear All</small>
-              </Link>
-            </Col>
+            {notificationCount > 0 && (
+              <Col xs={'auto'}>
+                <Link to="" className="text-dark text-decoration-underline">
+                  <small>Clear All</small>
+                </Link>
+              </Col>
+            )}
           </Row>
         </div>
-        <SimplebarReactClient style={{ maxHeight: 280 }}>
-          {notificationList.map((notification, idx) => (
-            <NotificationItem key={idx} {...notification} />
-          ))}
-        </SimplebarReactClient>
+        {notificationCount > 0 ? (
+          <SimplebarReactClient style={{ maxHeight: 280 }}>
+            {notificationList.map((notification, idx) => (
+              <NotificationItem key={idx} {...notification} />
+            ))}
+          </SimplebarReactClient>
+        ) : (
+          <div className="text-center py-4 text-muted">
+            <IconifyIcon icon="solar:bell-off-outline" className="fs-24 mb-2 d-block" />
+            <small>No notifications</small>
+          </div>
+        )}
         <div className="text-center py-3">
           <Link to="" className="btn btn-primary btn-sm">
             View All Notification <IconifyIcon icon="bx:right-arrow-alt" className="ms-1" />

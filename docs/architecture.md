@@ -504,3 +504,56 @@ notify.warn('Please review before submitting')
 - **Edge Functions**: No server-side changes
 
 **Restore Point:** `RESTORE_POINT_ADMIN_v1.1_D_D2_NOTIFICATION_HYGIENE_COMPLETE`
+
+---
+
+## Admin v1.1-D: D3 — Form Validation Standardization
+
+### Standard Pattern
+
+All admin CRUD forms use Bootstrap inline validation:
+
+```tsx
+<Form.Select
+  isInvalid={!!validationErrors.fieldName}
+  onChange={(e) => { handleChange(e); clearFieldError('fieldName') }}
+>
+  ...
+</Form.Select>
+{validationErrors.fieldName && (
+  <Form.Control.Feedback type="invalid">
+    {validationErrors.fieldName}
+  </Form.Control.Feedback>
+)}
+```
+
+### Validation Rules
+
+| Rule | Implementation |
+|------|----------------|
+| Validation trigger | On form submit only |
+| Error display | Inline `Form.Control.Feedback` |
+| Error clearing | On field change |
+| Backend errors | `notify.error()` only |
+| Validation scope | DB NOT NULL constraints only |
+
+### Files Updated
+
+| Module | File | Fields Validated |
+|--------|------|------------------|
+| Subsidy Cases | `CaseFormModal.tsx` | applicant, household, district, amount |
+| Housing Registrations | `RegistrationFormModal.tsx` | household, applicant, district |
+| Urgency Assessment | `UrgencyAssessmentForm.tsx` | category, points |
+| Allocation Quotas | `QuotaFormModal.tsx` | district, periodStart, periodEnd, totalQuota |
+| Allocation Assignments | `AssignmentFormModal.tsx` | registration, assignmentDate |
+| Households | `HouseholdFormModal.tsx` | headOfHousehold |
+
+### What Is NOT Changed
+
+- **PersonFormModal**: Gender select excluded (not inline validated)
+- **Auth module**: Uses NotificationContext (different UX context)
+- **Database**: No schema changes
+- **RLS**: No policy changes
+- **Edge Functions**: No server-side changes
+
+**Restore Point:** `RESTORE_POINT_ADMIN_v1.1_D_D3_FORM_VALIDATION_COMPLETE`

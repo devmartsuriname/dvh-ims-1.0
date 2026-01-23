@@ -7,6 +7,7 @@ import useToggle from '@/hooks/useToggle'
 import HouseholdFormModal from './HouseholdFormModal'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
+import { notify } from '@/utils/notify'
 
 interface Household {
   id: string
@@ -38,6 +39,7 @@ const HouseholdTable = () => {
 
     if (error) {
       console.error('Error fetching households:', error)
+      notify.error('Failed to load households')
     } else {
       setHouseholds(data || [])
     }

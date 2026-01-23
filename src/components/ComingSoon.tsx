@@ -7,7 +7,7 @@ interface ComingSoonProps {
   subName?: string
 }
 
-const ComingSoon = ({ title, subName = 'Darkone' }: ComingSoonProps) => {
+const ComingSoon = ({ title, subName = 'VolksHuisvesting IMS' }: ComingSoonProps) => {
   return (
     <>
       <PageTitle subName={subName} title={title} />

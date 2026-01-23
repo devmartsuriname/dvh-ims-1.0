@@ -2,7 +2,7 @@
 
 This folder contains governance restore point evidence for VolksHuisvesting IMS v1.1.
 
-## Files (32 restore points)
+## Files (34 restore points)
 
 - RESTORE_POINT_ADMIN_V1_1_A_START.md
 - RESTORE_POINT_ADMIN_V1_1_A_COMPLETE.md
@@ -40,3 +40,5 @@ This folder contains governance restore point evidence for VolksHuisvesting IMS 
 - RESTORE_POINT_v1.1-D5-A_COMPLETE.md
 - RESTORE_POINT_v1.1-D5-B_START.md
 - RESTORE_POINT_v1.1-D5-B_COMPLETE.md
+- RESTORE_POINT_v1.1-D5-C_START.md
+- RESTORE_POINT_v1.1-D5-C_COMPLETE.md

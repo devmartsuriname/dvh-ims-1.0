@@ -13,7 +13,7 @@ const page = () => {
 
   return (
     <>
-      <PageTitle subName="Darkone" title="Dashboard" />
+      <PageTitle subName="VolksHuisvesting IMS" title="Dashboard" />
       <Cards />
       <Chart />
       <User />

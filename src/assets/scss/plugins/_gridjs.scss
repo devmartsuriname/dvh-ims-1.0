@@ -116,8 +116,8 @@ th {
         &:disabled,
         &:hover:disabled,
         &[disabled] {
-            color: var(--#{$prefix}body-color);
-            background-color: $card-bg;
+            color: var(--#{$prefix}secondary-color);
+            background-color: var(--#{$prefix}tertiary-bg);
         }
 
         &:hover {

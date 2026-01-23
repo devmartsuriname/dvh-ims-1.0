@@ -14,10 +14,10 @@ Phase P1 successfully fixed the white ellipsis pagination button in GridJS table
 
 ### File: `src/assets/scss/plugins/_gridjs.scss`
 
-Added dark-theme pagination fix inside existing `[data-bs-theme="dark"]` block (lines 276-284):
+Added dark-theme pagination fixes inside existing `[data-bs-theme="dark"]` block:
 
 ```scss
-// Fix: Dark theme pagination disabled buttons (ellipsis)
+// Fix: Dark theme pagination disabled buttons
 .gridjs-pagination .gridjs-pages button {
     &:disabled,
     &:hover:disabled,
@@ -27,7 +27,20 @@ Added dark-theme pagination fix inside existing `[data-bs-theme="dark"]` block (
         opacity: 0.65;
     }
 }
+
+// Fix: Dark theme pagination ellipsis spread button
+.gridjs-pagination .gridjs-pages button.gridjs-spread {
+    background-color: transparent;
+    color: var(--#{$prefix}secondary-color);
+}
 ```
+
+## Fix Details
+
+| Issue | Selector | Solution |
+|-------|----------|----------|
+| Disabled buttons white bg | `:disabled`, `[disabled]` | `background-color: transparent` |
+| Ellipsis spread button white bg | `.gridjs-spread` | `background-color: transparent` |
 
 ## Modules Fixed
 
@@ -55,6 +68,6 @@ Added dark-theme pagination fix inside existing `[data-bs-theme="dark"]` block (
 ## Rollback Procedure
 
 If issues arise:
-1. Remove lines 276-284 from `_gridjs.scss`
+1. Remove `.gridjs-spread` and `:disabled` fixes from dark theme block
 2. Verify light theme pagination unchanged
 3. Return to RESTORE_POINT_v1.1-F_P1_START state

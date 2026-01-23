@@ -273,7 +273,7 @@ button {
         }
     }
 
-    // Fix: Dark theme pagination disabled buttons (ellipsis)
+    // Fix: Dark theme pagination disabled buttons
     .gridjs-pagination .gridjs-pages button {
         &:disabled,
         &:hover:disabled,
@@ -282,5 +282,11 @@ button {
             color: var(--#{$prefix}secondary-color);
             opacity: 0.65;
         }
+    }
+
+    // Fix: Dark theme pagination ellipsis spread button
+    .gridjs-pagination .gridjs-pages button.gridjs-spread {
+        background-color: transparent;
+        color: var(--#{$prefix}secondary-color);
     }
 }

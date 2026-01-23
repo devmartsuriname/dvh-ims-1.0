@@ -72,8 +72,9 @@ This section documents the **deliberate baseline behavior** of this repository:
 │   ├── routes/                   # Router configuration
 │   ├── types/                    # TypeScript declarations
 │   └── utils/                    # Utility functions
-├── docs-standard/                # Standardization documentation
-├── archive/                      # Legacy reference (do not use)
+├── restore-points/               # Governance restore point evidence
+│   ├── v1.0/                     # v1.0 phase restore points
+│   └── v1.1/                     # v1.1 phase restore points
 ├── DARKONE_ASSET_MAP.md          # Asset governance document
 └── README.md                     # This file
 ```
@@ -244,9 +245,7 @@ When ready to integrate Supabase authentication:
 | Document | Location | Purpose |
 |----------|----------|---------|
 | Asset Map | `/DARKONE_ASSET_MAP.md` | Complete asset inventory and governance |
-| Standardization Plan | `/docs-standard/DARKONE_STANDARDIZATION_PLAN.md` | Project structure decisions |
-| Standardization Tasks | `/docs-standard/DARKONE_STANDARDIZATION_TASKS.md` | Execution history and phase status |
-| Archive README | `/archive/README.md` | Legacy folder documentation |
+| Restore Points | `/restore-points/` | Governance restore point evidence |
 
 ---
 

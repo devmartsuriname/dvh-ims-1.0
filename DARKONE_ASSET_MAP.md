@@ -214,15 +214,7 @@ No duplicate assets were found within the active `/src` directory.
 
 ### Legacy Folder Status
 
-`Darkone-React_v1.0/src/assets/` contains parallel structure but is NOT referenced by build system. Pending Phase 3 decision.
-
----
-
-## 6. Archive Candidates
-
-| Asset | Location | Status |
-|-------|----------|--------|
-| `Darkone-React_v1.0/` | Root | Pending Phase 3 approval |
+Legacy `archive/` and `docs-standard/` folders have been removed. All restore points migrated to `/restore-points/`.
 
 ---
 

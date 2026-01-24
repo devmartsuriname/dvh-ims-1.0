@@ -135,6 +135,7 @@ All change requests against V1.2 planning documents are tracked here.
 | CR # | Date | Document | Description | Status | Resolution |
 |:----:|:----:|----------|-------------|:------:|------------|
 | CR-001 | 2026-01-24 | Dossier State Model | Raadvoorstel artifact clarification (Bouwsubsidie only, not a state) | ✅ INCORPORATED | Updated in document |
+| CR-002 | 2026-01-24 | Role Deprecation Registry | Legacy roles (DVH Operator, DVH Reviewer, DVH Decision Officer, DVH Supervisor) marked DEPRECATED; V1.2 harmonized roles confirmed as authoritative | ✅ INCORPORATED | New document created |
 
 ---
 

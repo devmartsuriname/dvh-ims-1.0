@@ -557,3 +557,56 @@ All admin CRUD forms use Bootstrap inline validation:
 - **Edge Functions**: No server-side changes
 
 **Restore Point:** `RESTORE_POINT_ADMIN_v1.1_D_D3_FORM_VALIDATION_COMPLETE`
+
+---
+
+## Admin v1.2: Modal UI Standards (2026-01-24)
+
+### Authoritative Modal Pattern (Darkone 1:1)
+
+All admin modals MUST follow this standardized pattern:
+
+```tsx
+<Modal show={...} onHide={...} size="lg" centered>
+  <Modal.Header closeButton>
+    <Modal.Title>...</Modal.Title>
+  </Modal.Header>
+  <Form onSubmit={...}>
+    <Modal.Body>...</Modal.Body>
+    <Modal.Footer>
+      <Button variant="secondary">Cancel</Button>
+      <Button variant="primary" type="submit">Submit</Button>
+    </Modal.Footer>
+  </Form>
+</Modal>
+```
+
+### Required Properties
+
+| Property | Value | Rationale |
+|----------|-------|-----------|
+| `size` | `"lg"` | ~800px width — optimal for 2-column form layouts |
+| `centered` | `true` | Vertical + horizontal centering for consistent UX |
+
+### Compliant Modals (8 Total)
+
+| Module | Component | Status |
+|--------|-----------|--------|
+| Persons | PersonFormModal | ✅ Compliant |
+| Households | HouseholdFormModal | ✅ Compliant |
+| Subsidy Cases | CaseFormModal | ✅ Compliant |
+| Housing Registrations | RegistrationFormModal | ✅ Compliant |
+| District Quotas | QuotaFormModal | ✅ Compliant |
+| Allocation Runs | RunExecutorModal | ✅ Compliant |
+| Allocation Decisions | DecisionFormModal | ✅ Compliant |
+| Allocation Assignments | AssignmentFormModal | ✅ Compliant |
+
+### Forbidden Practices
+
+- ❌ Custom CSS for modal sizing
+- ❌ SCSS overrides for modal positioning
+- ❌ Per-module size variants (`sm`, `xl`)
+- ❌ Top-aligned modals (missing `centered`)
+- ❌ Mixed positioning behaviors
+
+**Restore Point:** `RESTORE_POINT_MODAL_STANDARDIZATION_COMPLETE`

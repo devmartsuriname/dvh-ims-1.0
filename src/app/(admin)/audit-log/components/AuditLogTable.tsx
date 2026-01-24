@@ -103,11 +103,7 @@ const AuditLogTable = () => {
             distinctEntityTypes={distinctEntityTypes}
           />
 
-          {loading && (
-            <div className="d-flex justify-content-center py-5">
-              <Spinner animation="border" variant="primary" />
-            </div>
-          )}
+          {/* Loading state removed - route-level Suspense handles initial load */}
 
           {error && (
             <div className="alert alert-danger" role="alert">

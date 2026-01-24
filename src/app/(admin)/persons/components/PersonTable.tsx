@@ -23,12 +23,17 @@ interface Person {
 const PersonTable = () => {
   const [persons, setPersons] = useState<Person[]>([])
   const [loading, setLoading] = useState(true)
+  const [isRefetching, setIsRefetching] = useState(false)
   const [selectedPerson, setSelectedPerson] = useState<Person | undefined>()
   const { isTrue: isOpen, toggle } = useToggle()
   const navigate = useNavigate()
 
-  const fetchPersons = useCallback(async () => {
-    setLoading(true)
+  const fetchPersons = useCallback(async (isRefetch = false) => {
+    if (isRefetch) {
+      setIsRefetching(true)
+    } else {
+      setLoading(true)
+    }
     const { data, error } = await supabase
       .from('person')
       .select('*')
@@ -41,10 +46,11 @@ const PersonTable = () => {
       setPersons(data || [])
     }
     setLoading(false)
+    setIsRefetching(false)
   }, [])
 
   useEffect(() => {
-    fetchPersons()
+    fetchPersons(false)
   }, [fetchPersons])
 
   const handleAdd = () => {
@@ -62,19 +68,12 @@ const PersonTable = () => {
   }
 
   const handleSuccess = () => {
-    fetchPersons()
+    fetchPersons(true) // Refetch shows inline spinner, not full card
   }
 
+  // Initial load handled by route-level Suspense - render nothing during first load
   if (loading) {
-    return (
-      <Card>
-        <CardBody className="text-center py-5">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </Spinner>
-        </CardBody>
-      </Card>
-    )
+    return null
   }
 
   return (

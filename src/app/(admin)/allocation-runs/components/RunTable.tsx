@@ -99,11 +99,7 @@ const RunTable = () => {
             </Button>
           </div>
 
-          {loading ? (
-            <div className="text-center py-4">
-              <Spinner animation="border" variant="primary" />
-            </div>
-          ) : runs.length === 0 ? (
+          {loading ? null : runs.length === 0 ? (
             <p className="text-muted text-center py-4">No allocation runs found. Click "Execute Run" to start one.</p>
           ) : (
             <Grid

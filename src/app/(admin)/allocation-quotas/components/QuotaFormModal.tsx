@@ -114,7 +114,7 @@ const QuotaFormModal = ({ show, onHide, onSave, editingQuota }: QuotaFormModalPr
   }
 
   return (
-    <Modal show={show} onHide={onHide} centered>
+    <Modal show={show} onHide={onHide} size="lg" centered>
       <Modal.Header closeButton>
         <Modal.Title>{editingQuota ? 'Edit Quota' : 'New District Quota'}</Modal.Title>
       </Modal.Header>

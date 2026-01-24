@@ -174,7 +174,7 @@ const AssignmentFormModal = ({ show, onHide, onSuccess }: AssignmentFormModalPro
   }
 
   return (
-    <Modal show={show} onHide={onHide} centered>
+    <Modal show={show} onHide={onHide} size="lg" centered>
       <Modal.Header closeButton>
         <Modal.Title>Record Housing Assignment</Modal.Title>
       </Modal.Header>

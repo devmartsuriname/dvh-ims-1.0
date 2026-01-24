@@ -100,7 +100,7 @@ const HouseholdFormModal = ({ isOpen, onClose, onSuccess }: HouseholdFormModalPr
   }
 
   return (
-    <Modal show={isOpen} onHide={handleClose} centered>
+    <Modal show={isOpen} onHide={handleClose} size="lg" centered>
       <Modal.Header closeButton>
         <Modal.Title>Add Household</Modal.Title>
       </Modal.Header>

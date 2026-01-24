@@ -234,7 +234,7 @@ const RegistrationFormModal = ({ isOpen, onClose, onSuccess, registration }: Reg
   }
 
   return (
-    <Modal show={isOpen} onHide={onClose} centered>
+    <Modal show={isOpen} onHide={onClose} size="lg" centered>
       <Modal.Header closeButton>
         <Modal.Title>{registration ? 'Edit Registration' : 'New Housing Registration'}</Modal.Title>
       </Modal.Header>

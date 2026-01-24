@@ -230,7 +230,7 @@ const CaseFormModal = ({ isOpen, onClose, onSuccess, subsidyCase }: CaseFormModa
   }
 
   return (
-    <Modal show={isOpen} onHide={onClose} size="lg">
+    <Modal show={isOpen} onHide={onClose} size="lg" centered>
       <Modal.Header closeButton>
         <Modal.Title>{subsidyCase ? 'Edit Case' : 'New Subsidy Case'}</Modal.Title>
       </Modal.Header>

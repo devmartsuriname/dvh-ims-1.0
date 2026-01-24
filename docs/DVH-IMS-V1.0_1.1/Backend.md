@@ -655,3 +655,56 @@ const person = caseData.person as unknown as { first_name: string; last_name: st
 - Edge Function returns HTTP 200
 
 **Restore Point:** `RESTORE_POINT_v1.1-D_BACKEND_IMPACT_CHECK_COMPLETE`
+
+---
+
+## Admin v1.2: Modal Standardization (2026-01-24)
+
+### Darkone 1:1 Modal Pattern
+
+All admin modals standardized to consistent size and positioning.
+
+**Authoritative Pattern:**
+```tsx
+<Modal show={...} onHide={...} size="lg" centered>
+  <Modal.Header closeButton>
+    <Modal.Title>...</Modal.Title>
+  </Modal.Header>
+  <Form onSubmit={...}>
+    <Modal.Body>...</Modal.Body>
+    <Modal.Footer>
+      <Button variant="secondary">Cancel</Button>
+      <Button variant="primary" type="submit">Submit</Button>
+    </Modal.Footer>
+  </Form>
+</Modal>
+```
+
+### Properties (Mandatory)
+
+| Property | Value | Purpose |
+|----------|-------|---------|
+| `size` | `"lg"` | ~800px width, optimal for admin forms |
+| `centered` | `true` | Vertical and horizontal centering |
+
+### Files Updated
+
+| Modal | File | Change |
+|-------|------|--------|
+| PersonFormModal | `src/app/(admin)/persons/components/PersonFormModal.tsx` | Added `size="lg"` |
+| HouseholdFormModal | `src/app/(admin)/households/components/HouseholdFormModal.tsx` | Added `size="lg"` |
+| CaseFormModal | `src/app/(admin)/subsidy-cases/components/CaseFormModal.tsx` | Added `centered` |
+| RegistrationFormModal | `src/app/(admin)/housing-registrations/components/RegistrationFormModal.tsx` | Added `size="lg"` |
+| QuotaFormModal | `src/app/(admin)/allocation-quotas/components/QuotaFormModal.tsx` | Added `size="lg"` |
+| RunExecutorModal | `src/app/(admin)/allocation-runs/components/RunExecutorModal.tsx` | Added `size="lg"` |
+| AssignmentFormModal | `src/app/(admin)/allocation-assignments/components/AssignmentFormModal.tsx` | Added `size="lg"` |
+| DecisionFormModal | `src/app/(admin)/allocation-decisions/components/DecisionFormModal.tsx` | No change (already compliant) |
+
+### Guardian Rules Compliance
+
+- React-Bootstrap Modal props only (no custom CSS)
+- No SCSS overrides
+- No per-module size variants
+- All modals follow same Darkone pattern
+
+**Restore Point:** `RESTORE_POINT_MODAL_STANDARDIZATION_COMPLETE`

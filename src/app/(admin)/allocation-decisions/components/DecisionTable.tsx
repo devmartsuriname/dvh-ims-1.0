@@ -146,11 +146,7 @@ const DecisionTable = () => {
     <>
       <Card>
         <CardBody>
-          {loading ? (
-            <div className="text-center py-4">
-              <Spinner animation="border" variant="primary" />
-            </div>
-          ) : (
+          {loading ? null : (
             <Tabs defaultActiveKey="pending" className="mb-3">
               <Tab eventKey="pending" title={`Pending (${pendingCandidates.length})`}>
                 {pendingCandidates.length === 0 ? (

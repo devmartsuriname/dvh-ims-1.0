@@ -27,16 +27,16 @@ All core documents MUST be approved before Phase 1 implementation.
 
 | # | Document | Category | Status | Approval Date | Approver |
 |:-:|----------|----------|:------:|:-------------:|:--------:|
-| 1 | DVH-IMS-V1.2_Scope_and_Objectives.md | Governance | ☐ PENDING | __________ | __________ |
-| 2 | DVH-IMS-V1.2_Gap_Analysis_From_V1.1.md | Baseline | ☐ PENDING | __________ | __________ |
-| 3 | DVH-IMS-V1.2_Roles_and_Authority_Matrix.md | Authority | ☐ PENDING | __________ | __________ |
-| 4 | DVH-IMS-V1.2_End_to_End_Workflows.md | Workflow | ☐ PENDING | __________ | __________ |
-| 5 | DVH-IMS-V1.2_Dossier_State_Model.md | State Machine | ☐ PENDING | __________ | __________ |
-| 6 | DVH-IMS-V1.2_Audit_and_Legal_Traceability.md | Audit | ☐ PENDING | __________ | __________ |
-| 7 | DVH-IMS-V1.2_Notifications_and_Escalations.md | Notifications | ☐ PENDING | __________ | __________ |
-| 8 | DVH-IMS-V1.2_Implementation_Roadmap.md | Execution | ☐ PENDING | __________ | __________ |
-| 9 | DVH-IMS-V1.2_Services_Module_Decomposition.md | Architecture | ☐ PENDING | __________ | __________ |
-| 10 | DVH-IMS-V1.2_Architecture_Overview_Logical.md | Architecture | ☐ PENDING | __________ | __________ |
+| 1 | DVH-IMS-V1.2_Scope_and_Objectives.md | Governance | ✅ READY FOR SIGN-OFF | __________ | __________ |
+| 2 | DVH-IMS-V1.2_Gap_Analysis_From_V1.1.md | Baseline | ✅ READY FOR SIGN-OFF | __________ | __________ |
+| 3 | DVH-IMS-V1.2_Roles_and_Authority_Matrix.md | Authority | ✅ READY FOR SIGN-OFF | __________ | __________ |
+| 4 | DVH-IMS-V1.2_End_to_End_Workflows.md | Workflow | ✅ READY FOR SIGN-OFF | __________ | __________ |
+| 5 | DVH-IMS-V1.2_Dossier_State_Model.md | State Machine | ✅ READY FOR SIGN-OFF | __________ | __________ |
+| 6 | DVH-IMS-V1.2_Audit_and_Legal_Traceability.md | Audit | ✅ READY FOR SIGN-OFF | __________ | __________ |
+| 7 | DVH-IMS-V1.2_Notifications_and_Escalations.md | Notifications | ✅ READY FOR SIGN-OFF | __________ | __________ |
+| 8 | DVH-IMS-V1.2_Implementation_Roadmap.md | Execution | ✅ READY FOR SIGN-OFF | __________ | __________ |
+| 9 | DVH-IMS-V1.2_Services_Module_Decomposition.md | Architecture | ✅ READY FOR SIGN-OFF | __________ | __________ |
+| 10 | DVH-IMS-V1.2_Architecture_Overview_Logical.md | Architecture | ✅ READY FOR SIGN-OFF | __________ | __________ |
 
 ---
 

@@ -44,13 +44,14 @@
 | 9 | DVH-IMS-V1.2_Services_Module_Decomposition.md | Architecture | DRAFT |
 | 10 | DVH-IMS-V1.2_Architecture_Overview_Logical.md | Architecture | DRAFT |
 
-### Optional Planning Documents (3)
+### Optional Planning Documents (4)
 
 | # | Document | Category | Status |
 |:-:|----------|----------|--------|
 | 11 | DVH-IMS-V1.2_Tasks_and_Phases.md | Planning | DRAFT |
 | 12 | DVH-IMS-V1.2_Backend_Design_Overview.md | Design | DRAFT |
 | 13 | DVH-IMS-V1.2_ERD_Conceptual.md | Design | DRAFT |
+| 14 | DVH-IMS-V1.2_Scale_Readiness_Roadmap.md | Governance / Planning | BASELINE |
 
 ---
 

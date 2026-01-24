@@ -1,13 +1,34 @@
-# DVH-IMS-V1.2 — Phase 1: Access & Authority Foundation
+# ⛔ INVALID DOCUMENT — DO NOT USE
 
-## Planning Outline
-
-**Status:** PLANNING ONLY — Execution Not Authorized  
+**Status:** ❌ CREATED WITHOUT AUTHORIZATION — NOT VALID  
 **Created:** 2026-01-24  
-**Phase Type:** Foundation / Authority  
-**Authorization Required:** Explicit approval from Delroy (Project Owner)
+**Invalidated:** 2026-01-24  
+**Reason:** Document created without explicit Phase 1 planning authorization from Project Owner
 
 ---
+
+## Governance Violation Notice
+
+This document was created prematurely without explicit authorization from Delroy (Project Owner).
+
+**This document:**
+- Is NOT approved
+- Is NOT complete
+- Is NOT accepted
+- Must NOT be referenced
+- Must NOT be carried forward
+
+**Correct Project State:**
+- Smoke Test: CLOSED
+- V1.2 Documentation Baseline: APPROVED
+- Phase 1: NOT OPENED
+- Phase 1 Planning: NOT AUTHORIZED
+
+---
+
+## Original Content (INVALIDATED)
+
+The content below was created without authorization and is preserved for audit purposes only.
 
 ## 1. Phase Objective
 

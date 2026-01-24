@@ -25,6 +25,9 @@ DVH-IMS V1.2 builds upon the frozen V1.1 baseline to address identified gaps and
 | DVH-IMS-V1.2_Implementation_Roadmap.md | DRAFT — Awaiting Approval |
 | DVH-IMS-V1.2_Services_Module_Decomposition.md | DRAFT — Awaiting Approval |
 | DVH-IMS-V1.2_Architecture_Overview_Logical.md | DRAFT — Awaiting Approval |
+| DVH-IMS-V1.2_Tasks_and_Phases.md | DRAFT — Optional Planning |
+| DVH-IMS-V1.2_Backend_Design_Overview.md | DRAFT — Optional Planning |
+| DVH-IMS-V1.2_ERD_Conceptual.md | DRAFT — Optional Planning |
 
 ---
 

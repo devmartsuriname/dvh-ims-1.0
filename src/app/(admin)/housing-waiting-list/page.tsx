@@ -82,11 +82,7 @@ const HousingWaitingList = () => {
 
   // Initial load handled by route-level Suspense
   if (loading) {
-    return (
-      <>
-        <PageTitle subName="Woning Registratie" title="Waiting List" />
-      </>
-    )
+    return null
   }
 
   return (

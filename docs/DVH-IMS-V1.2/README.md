@@ -15,7 +15,7 @@ DVH-IMS V1.2 builds upon the frozen V1.1 baseline to address identified gaps and
 
 | Document | Status |
 |----------|--------|
-| DVH-IMS-V1.2_Scope_and_Objectives.md | PLACEHOLDER |
+| DVH-IMS-V1.2_Scope_and_Objectives.md | DRAFT — Awaiting Approval |
 | DVH-IMS-V1.2_Gap_Analysis_From_V1.1.md | PLACEHOLDER |
 | DVH-IMS-V1.2_Roles_and_Authority_Matrix.md | PLACEHOLDER |
 | DVH-IMS-V1.2_End_to_End_Workflows.md | PLACEHOLDER |

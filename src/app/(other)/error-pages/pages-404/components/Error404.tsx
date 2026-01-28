@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import error404Img from '@/assets/images/404.svg'
-import logoDark from '@/assets/images/logo-dark.png'
-import logoLight from '@/assets/images/logo-light.png'
+import logoSozavo from '@/assets/images/logo-sozavo.png'
 
 import { Card, CardBody, Col, Container, Row } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
@@ -27,13 +26,13 @@ const Error404 = () => {
                         <div className="mx-auto mb-4 text-center">
                           <div className="mx-auto text-center auth-logo">
                             <Link to="/dashboards" className="logo-dark">
-                              <img src={logoDark} height={32} alt="logo dark" />
+                              <img src={logoSozavo} height={32} alt="VolksHuisvesting IMS" />
                             </Link>
                             <Link to="/dashboards" className="logo-light">
-                              <img src={logoLight} height={28} alt="logo light" />
+                              <img src={logoSozavo} height={28} alt="VolksHuisvesting IMS" />
                             </Link>
                           </div>
-                          <img src={error404Img} alt="auth" height={250} className="mt-5 mb-3" />
+                          <img src={error404Img} alt="Page not found" height={250} className="mt-5 mb-3" />
                           <h2 className="fs-22 lh-base">Page Not Found !</h2>
                           <p className="text-muted mt-1 mb-4">
                             The page you&apos;re trying to reach seems to have gone <br /> missing in the digital wilderness.

@@ -27,7 +27,7 @@ const User = () => {
           <Card>
             <CardHeader className=" d-flex justify-content-between align-items-center">
               <h4 className="card-title mb-0">Recent Subsidy Cases</h4>
-              <Link to="/bouwsubsidie/cases" className="btn btn-sm btn-light">
+              <Link to="/subsidy-cases" className="btn btn-sm btn-light">
                 View All
               </Link>
             </CardHeader>
@@ -83,7 +83,7 @@ const User = () => {
           <Card>
             <CardHeader className="d-flex justify-content-between align-items-center">
               <h4 className="card-title mb-0">Recent Housing Registrations</h4>
-              <Link to="/woning/registrations" className="btn btn-sm btn-light">
+              <Link to="/housing-registrations" className="btn btn-sm btn-light">
                 View All
               </Link>
             </CardHeader>

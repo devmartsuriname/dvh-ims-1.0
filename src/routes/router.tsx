@@ -7,6 +7,7 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import LoadingFallback from '@/components/LoadingFallback'
 import { appRoutes, authRoutes, publicRoutes } from '@/routes/index'
 import { useAuthContext } from '@/context/useAuthContext'
+import Error404Page from '@/app/(other)/error-pages/pages-404/page'
 
 const AppRouter = (props: RouteProps) => {
   const { isAuthenticated } = useAuthContext()
@@ -47,6 +48,16 @@ const AppRouter = (props: RouteProps) => {
               }
             />
           ))}
+
+          {/* Catch-all: Force 404 for any unregistered path */}
+          <Route 
+            path="*" 
+            element={
+              <AuthLayout>
+                <Error404Page />
+              </AuthLayout>
+            } 
+          />
         </Routes>
       </Suspense>
     </ErrorBoundary>

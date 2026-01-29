@@ -1,6 +1,6 @@
 # DVH-IMS V1.2 Phase Documentation
 
-**Status:** PHASE 2 ACTIVE  
+**Status:** PHASE 2 CLOSED  
 **Created:** 2026-01-24  
 **Updated:** 2026-01-29
 
@@ -11,7 +11,7 @@
 | Phase | Status | Date Closed |
 |-------|--------|-------------|
 | Phase 1 — Access & Authority Foundation | ✅ CLOSED | 2026-01-28 |
-| Phase 2 — Workflow & Decision Integrity | 🔄 ACTIVE | — |
+| Phase 2 — Workflow & Decision Integrity | ✅ CLOSED | 2026-01-29 |
 | Phase 3 — Audit & Legal Traceability | ⏳ NOT STARTED | — |
 
 ---

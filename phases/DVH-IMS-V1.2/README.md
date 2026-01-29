@@ -1,31 +1,54 @@
 # DVH-IMS V1.2 Phase Documentation
 
-**Status:** PLANNING PHASE  
-**Created:** 2026-01-24
+**Status:** PHASE 2 ACTIVE  
+**Created:** 2026-01-24  
+**Updated:** 2026-01-29
 
 ---
 
-## Notice
+## Phase Status Overview
 
-This folder will contain phase execution documentation for DVH-IMS V1.2.
-
-Currently empty - awaiting V1.2 implementation authorization.
+| Phase | Status | Date Closed |
+|-------|--------|-------------|
+| Phase 1 — Access & Authority Foundation | ✅ CLOSED | 2026-01-28 |
+| Phase 2 — Workflow & Decision Integrity | 🔄 ACTIVE | — |
+| Phase 3 — Audit & Legal Traceability | ⏳ NOT STARTED | — |
 
 ---
 
-## Expected Structure
+## Phase Documents
 
-Phase documents will be created here once implementation is authorized:
+### Phase 1 (CLOSED)
 
-```
-/phases/DVH-IMS-V1.2/
-├── PHASE-V1.2-0-Planning.md
-├── PHASE-V1.2-1-[Feature].md
-└── ...
-```
+| File | Status | Notes |
+|------|--------|-------|
+| `PHASE-1-Access-and-Authority-Foundation.md` | ⚠️ INVALID | Historical artifact; superseded by V1.2 governance |
+
+### Phase 2 (ACTIVE)
+
+| File | Status | Notes |
+|------|--------|-------|
+| `PHASE-2-Workflow-Verification-Report.md` | ✅ COMPLETE | Tier 1 verification complete; Tier 2 fixes pending authorization |
+
+---
+
+## Governance Rules
+
+1. All phase execution artifacts MUST reside in this folder
+2. Reference documentation lives in `/docs/DVH-IMS-V1.2/`
+3. Restore points live in `/restore-points/v1.2/`
+4. No phase document may be placed in `/docs/`
 
 ---
 
 ## Reference
 
-V1.0/V1.1 phase documentation archived in: `/phases/DVH-IMS-V1.0_1.1/`
+| Location | Content |
+|----------|---------|
+| `/docs/DVH-IMS-V1.2/` | V1.2 Reference Documentation (17 files) |
+| `/restore-points/v1.2/` | V1.2 Restore Point Markers |
+| `/phases/DVH-IMS-V1.0_1.1/` | V1.0/V1.1 Phase Documentation (archived) |
+
+---
+
+**END OF INDEX**

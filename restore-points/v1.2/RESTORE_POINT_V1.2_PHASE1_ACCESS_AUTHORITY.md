@@ -1,8 +1,28 @@
 # Restore Point: V1.2 Phase 1 — Access & Authority Foundation
 
-**Created:** 2026-01-29
-**Context ID:** PHASE1-ACCESS-AUTH-2026-01-29
-**Type:** Post-Implementation Checkpoint
+**Created:** 2026-01-29  
+**Closed:** 2026-01-29  
+**Context ID:** PHASE1-ACCESS-AUTH-2026-01-29  
+**Type:** Post-Implementation Checkpoint  
+**Status:** ✅ FORMALLY CLOSED — CLIENT APPROVED
+
+---
+
+## Formal Closure Statement
+
+Phase 1 of DVH-IMS V1.2 is **FORMALLY CLOSED** per client authorization.
+
+| Verification | Status |
+|--------------|--------|
+| All scope items implemented | ✅ CONFIRMED |
+| Database authority state verified | ✅ FROZEN |
+| app_role enum unchanged | ✅ LOCKED |
+| RLS policies unchanged | ✅ ENFORCED |
+| Role-to-user mapping verified | ✅ 1:1 CONFIRMED |
+| Legacy roles inert | ✅ DOCUMENTATION ONLY |
+| Manual login testing (client) | ✅ ALL ROLES WORKING |
+
+**Governance:** No further changes permitted under Phase 1 scope. Phase 1 artifacts are now frozen and part of the V1.2 baseline.
 
 ---
 

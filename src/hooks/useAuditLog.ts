@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client'
 import type { Json } from '@/integrations/supabase/types'
 
 type AuditAction = 'create' | 'update' | 'delete' | 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE'
-type EntityType = 'person' | 'household' | 'household_member' | 'contact_point' | 'address' | 'subsidy_case' | 'subsidy_document' | 'social_report' | 'technical_report' | 'housing_registration' | 'housing_urgency' | 'district_quota' | 'allocation_run' | 'allocation_decision' | 'assignment_record'
+type EntityType = 'person' | 'household' | 'household_member' | 'contact_point' | 'address' | 'subsidy_case' | 'subsidy_document' | 'subsidy_document_upload' | 'social_report' | 'technical_report' | 'housing_registration' | 'housing_urgency' | 'district_quota' | 'allocation_run' | 'allocation_decision' | 'assignment_record'
 
 interface AuditLogParams {
   entityType?: EntityType
@@ -22,11 +22,22 @@ export async function logAuditEvent(params: AuditLogParams): Promise<void> {
     return
   }
 
+  // Fetch user's role for audit attribution
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .limit(1)
+    .single()
+
+  const actorRole = roleData?.role || 'unknown'
+
   const entityType = params.entityType || params.entity_type
   const entityId = params.entityId || params.entity_id
 
   const { error } = await supabase.from('audit_event').insert([{
     actor_user_id: user.id,
+    actor_role: actorRole,
     entity_type: entityType,
     entity_id: entityId,
     action: params.action.toUpperCase(),

@@ -17,6 +17,10 @@ This folder contains governance restore point evidence for VolksHuisvesting IMS 
 | RESTORE_POINT_V1.3_PHASE1_D01_D02_START.md | 2026-01-30 | Phase 1 Start | CREATED |
 | RESTORE_POINT_V1.3_PHASE3_START.md | 2026-01-30 | Phase 3 Start | CREATED |
 | RESTORE_POINT_V1.3_PHASE3_COMPLETE.md | 2026-01-30 | Phase 3 Complete | CREATED |
+| RESTORE_POINT_V1.3_PHASE4A_START.md | 2026-01-30 | Phase 4A Start | CREATED |
+| RESTORE_POINT_V1.3_PHASE4A_COMPLETE.md | 2026-01-30 | Phase 4A Complete | CREATED |
+| RESTORE_POINT_V1.3_PHASE4B_START.md | 2026-01-30 | Phase 4B Start | CREATED |
+| RESTORE_POINT_V1.3_PHASE4B_COMPLETE.md | 2026-01-30 | Phase 4B Complete | CREATED |
 
 ---
 
@@ -38,6 +42,8 @@ All V1.3 restore points must:
 | Phase 1 | D-01 + D-02 | CLOSED |
 | Phase 2 | S-03 | CLOSED |
 | Phase 3 | Role & Workflow Preparation | CLOSED |
+| Phase 4A | Social Field Worker Activation | CLOSED |
+| Phase 4B | Technical Inspector Activation | CLOSED |
 
 ---
 

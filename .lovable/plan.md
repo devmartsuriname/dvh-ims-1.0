@@ -1,373 +1,410 @@
 
+# DVH-IMS V1.3 — Phase 1 Scope & Execution Plan
 
-# DVH-IMS — V1.3 Strategy Input (Pre-Authorization)
-
-**Document Type:** Strategy Input — Decision Support  
+**Document Type:** Phase Scope & Execution Plan  
 **Version:** 1.0  
 **Date:** 2026-01-30  
-**Status:** PRE-AUTHORIZATION — NO EXECUTION  
-**Authority:** Pending Delroy Approval
+**Phase:** Phase 1 — Backend Enforcement + Audit Hardening  
+**Authorization Basis:** V1.3 Authorization Decision — OPTION B (APPROVED)
 
 ---
 
-## PART A — FORMAL V1.2 CLOSURE CONFIRMATION
+## 1. Authorization Confirmation
 
-### A.1 Phase Closure Status
-
-| Phase | Title | Status | Closure Date |
-|-------|-------|--------|--------------|
-| Phase 0 | Documentation Baseline | CLOSED | 2026-01-24 |
-| Phase 1 | Access & Authority Foundation | CLOSED | 2026-01-28 |
-| Phase 2 | Workflow & Decision Integrity | CLOSED | 2026-01-29 |
-| Phase 3 | Audit & Legal Traceability | CLOSED | 2026-01-30 |
-| Phase 4 | Operational Workflows | CLOSED | 2026-01-30 |
-| Phase 5 | Services Module Decomposition | CLOSED | 2026-01-30 |
-| Phase 6 | Stabilization & Readiness | CLOSED | 2026-01-30 |
-
-**CONFIRMATION:** All V1.2 phases (0-6) are CLOSED.
-
-### A.2 Implementation Status
-
-| Implementation Type | V1.2 Status |
-|---------------------|-------------|
-| Code changes | NOT EXECUTED |
-| Schema changes | NOT EXECUTED |
-| RLS policy changes | NOT EXECUTED |
-| New Edge Functions | NOT EXECUTED |
-| UI changes | NOT EXECUTED |
-| Database triggers | NOT EXECUTED |
-| Notification implementation | NOT EXECUTED |
-| Role creation | NOT EXECUTED |
-
-**CONFIRMATION:** NO implementation occurred during V1.2.
-
-### A.3 Operational Baseline
-
-**CONFIRMATION:** DVH-IMS V1.1 remains the ONLY operational baseline.
-
-| Component | Count | Status |
-|-----------|-------|--------|
-| Admin Modules | 11 | OPERATIONAL |
-| Edge Functions | 6 | DEPLOYED |
-| Database Tables | 24 | RLS ACTIVE |
-| Public Wizards | 2 | FROZEN |
+| Item | Status |
+|------|--------|
+| V1.3 Authorization Decision | OPTION B — APPROVED |
+| Authorized Scope | D-01 + D-02 |
+| Operational Baseline | DVH-IMS V1.1 |
+| Documentation Baseline | DVH-IMS V1.2 (FROZEN) |
+| Phase Status | OPEN — Awaiting Restore Point |
 
 ---
 
-## PART B — V1.2 FREEZE DECLARATION
+## 2. Phase 1 Scope Summary
 
-### B.1 Cycle Status
-
-**DVH-IMS V1.2 is hereby marked as:**
-- DOCUMENTATION COMPLETE
-- IMPLEMENTATION NOT AUTHORIZED
-
-### B.2 Frozen Locations
-
-The following locations are READ-ONLY and FROZEN:
-
-| Location | Contents | Status |
-|----------|----------|--------|
-| `/docs/DVH-IMS-V1.2/` | 17 reference documents | FROZEN |
-| `/phases/DVH-IMS-V1.2/` | 14 phase documents | FROZEN |
-| `/restore-points/v1.2/` | 11 restore points | FROZEN |
-
-**No modifications to these locations are permitted without explicit V1.3 authorization.**
-
-### B.3 Source of Truth
-
-**ACKNOWLEDGMENT:** The document `DVH-IMS V1.2 — Complete Documentation Archive` located at `/phases/DVH-IMS-V1.2/DVH-IMS-V1.2_Complete_Archive.md` is acknowledged as the single source of truth for V1.2.
-
-### B.4 Deferred Items Label
-
-**CONFIRMATION:** All deferred or future-facing items are explicitly labeled for V1.3 in the Deferred Items Manifest.
-
----
-
-## PART C — V1.3 CANDIDATE SCOPE LIST
-
-### C.1 Deferred Items Inventory
-
-All deferred items extracted from V1.2 documentation:
-
-| ID | Item | Source | Category |
-|----|------|--------|----------|
-| D-01 | Backend Transition Enforcement (DB triggers) | Phase 4 | Database/Backend |
-| D-02 | Legacy Audit Events (pre-Phase 2) | Phase 4 | Audit |
-| S-01 | Financial Assessment Service formalization | Phase 5 | Services |
-| S-02 | Subsidy Allocation formal workflow | Phase 5 | Services |
-| S-03 | Notification Orchestration Service | Phase 5 | Notifications |
-| S-04 | Reporting Aggregations (database-level) | Phase 5 | Scale |
-| SP-A | Admin Listings Server-Side Pagination | Scale Roadmap | Scale |
-| SP-B | Dashboard KPI Aggregations | Scale Roadmap | Scale |
-| SP-C | Form Selector Async Search | Scale Roadmap | Scale |
-
-### C.2 Implementation Clusters
-
-#### Cluster 1: Backend Enforcement
+### 2.1 Authorized Implementation (D-01 + D-02)
 
 | ID | Item | Description |
 |----|------|-------------|
-| D-01 | Backend Transition Enforcement | Database triggers to enforce state transitions at DB layer |
+| D-01 | Backend Transition Enforcement | Database triggers to enforce state machine at DB level |
+| D-02 | Audit Hardening | Correlation IDs, cross-entity linkage, completeness verification |
 
-**Purpose:** Move state transition enforcement from UI-only to database-enforced, preventing invalid transitions regardless of access path.
+### 2.2 Explicit Exclusions
 
-#### Cluster 2: Service Formalization
-
-| ID | Item | Description |
-|----|------|-------------|
-| S-01 | Financial Assessment Service | Formalize budget/eligibility logic for Bouwsubsidie |
-| S-02 | Subsidy Allocation Workflow | Formalize allocation flow beyond approved_amount field |
-
-**Purpose:** Convert existing informal patterns into documented, testable service logic.
-
-#### Cluster 3: Notification Orchestration
-
-| ID | Item | Description |
-|----|------|-------------|
-| S-03 | Notification Orchestration Service | Role-based notifications, reminders, escalations |
-
-**Purpose:** Implement the notification framework documented in V1.2 (currently planning-only).
-
-#### Cluster 4: Scale Optimization
-
-| ID | Item | Description |
-|----|------|-------------|
-| SP-A | Admin Listings Pagination | Server-side pagination for admin data tables |
-| SP-B | Dashboard KPI Aggregations | Database-level KPI calculations |
-| SP-C | Form Selector Async Search | Typeahead patterns for form dropdowns |
-| S-04 | Reporting Aggregations | Database-level report optimization |
-
-**Purpose:** Prepare system for high-volume operational scale (400,000+ processes/year).
-
-#### Cluster 5: Audit Gap Closure
-
-| ID | Item | Description |
-|----|------|-------------|
-| D-02 | Legacy Audit Events | Historical audit gap (pre-Phase 2) |
-
-**Status:** ACCEPTED — No remediation required. Historical gap acknowledged.
+| Item | Status |
+|------|--------|
+| Notifications (S-03) | NOT AUTHORIZED |
+| Scale/Performance (SP-A/B/C) | NOT AUTHORIZED |
+| Service refactors (S-01, S-02) | NOT AUTHORIZED |
+| UI changes | NOT AUTHORIZED |
+| Role changes | NOT AUTHORIZED |
+| Enum changes | NOT AUTHORIZED |
+| RLS policy changes | NOT AUTHORIZED |
+| Public wizard changes | NOT AUTHORIZED |
 
 ---
 
-## PART D — RISK AND DEPENDENCY OVERVIEW
+## 3. Current State Analysis
 
-### D.1 Cluster 1: Backend Enforcement (D-01)
+### 3.1 Status Transition Enforcement (D-01 Gap)
 
-| Aspect | Assessment |
-|--------|------------|
-| **Schema Dependencies** | YES — Requires DB trigger functions |
-| **RLS Dependencies** | NO — Operates below RLS layer |
-| **UI Dependencies** | NO — Backend-only change |
-| **Service Dependencies** | NO — Independent of services |
-| **Risk Level** | MEDIUM |
-| **Governance Sensitivity** | YES — Affects state machine integrity |
+**Current Implementation:**
+- UI-level validation only in `STATUS_TRANSITIONS` constant
+- `subsidy_case` uses status values: `received`, `screening`, `needs_more_docs`, `fieldwork`, `approved_for_council`, `council_doc_generated`, `finalized`, `rejected`
+- `housing_registration` uses status values: `received`, `under_review`, `urgency_assessed`, `waiting_list`, `matched`, `allocated`, `finalized`, `rejected`
+- No database-level enforcement — invalid transitions possible via direct SQL or API manipulation
 
-**Technical Requirements:**
-- PostgreSQL trigger functions on `subsidy_case` and `housing_registration` tables
-- Status transition validation logic
-- Rollback strategy for invalid transitions
+**Risk:** Invalid transitions possible without audit trail, compromising legal traceability.
 
-**Key Risks:**
-- Potential conflict with existing UI validation
-- Migration path for in-progress dossiers
+### 3.2 Audit Schema (D-02 Gap)
 
----
+**Current `audit_event` Table Schema:**
 
-### D.2 Cluster 2: Service Formalization (S-01, S-02)
+| Column | Type | Status |
+|--------|------|--------|
+| id | uuid | EXISTS |
+| actor_user_id | uuid | EXISTS |
+| actor_role | text | EXISTS |
+| action | text | EXISTS |
+| entity_type | text | EXISTS |
+| entity_id | uuid | EXISTS |
+| occurred_at | timestamptz | EXISTS |
+| reason | text | EXISTS |
+| metadata_json | jsonb | EXISTS |
+| correlation_id | uuid | **MISSING** |
 
-| Aspect | Assessment |
-|--------|------------|
-| **Schema Dependencies** | LOW — Fields already exist |
-| **RLS Dependencies** | NO — Uses existing policies |
-| **UI Dependencies** | POSSIBLE — May require form adjustments |
-| **Service Dependencies** | NO — Independent implementations |
-| **Risk Level** | LOW |
-| **Governance Sensitivity** | NO — Formalizes existing patterns |
+**Gap:** No correlation ID for grouping related audit events. Cross-entity traceability relies on manual metadata inspection.
 
-**Technical Requirements:**
-- Edge Function or client-side service layer
-- Business rule documentation
-- Integration with existing workflow
+### 3.3 Current Status Values in Production
 
-**Key Risks:**
-- Minimal — extends existing functionality
+| Table | Records | Status Values |
+|-------|---------|---------------|
+| subsidy_case | 0 | N/A (empty) |
+| housing_registration | 0 | N/A (empty) |
+
+**Migration Risk:** LOW — No existing data to validate against new state machine.
 
 ---
 
-### D.3 Cluster 3: Notification Orchestration (S-03)
+## 4. Implementation Strategy
 
-| Aspect | Assessment |
-|--------|------------|
-| **Schema Dependencies** | YES — Notification queue/log tables |
-| **RLS Dependencies** | YES — Role-based notification visibility |
-| **UI Dependencies** | YES — Notification display components |
-| **Service Dependencies** | YES — Depends on workflow states |
-| **Risk Level** | MEDIUM |
-| **Governance Sensitivity** | YES — Legal obligations for notifications |
+### 4.1 Enforcement Approach Decision
 
-**Technical Requirements:**
-- New database tables (notification_queue, notification_log)
-- RLS policies for notification access
-- Edge Function for notification dispatch
-- UI components for notification display
-- Integration with state machine events
-- Deadline tracking mechanism
+| Option | Pros | Cons | Recommendation |
+|--------|------|------|----------------|
+| Database Triggers | Bypass-proof, centralized, no code changes | Requires schema migration | **SELECTED** |
+| Edge Function Layer | Application-level control | Can be bypassed, requires refactoring | Not selected |
 
-**Key Risks:**
-- Complexity of role-based routing
-- Delivery mechanism selection (in-app vs email/SMS)
-- Escalation workflow implementation
+**Decision:** Implement as PostgreSQL `BEFORE UPDATE` triggers per D-01 Technical Specification.
 
-**Cross-Dependencies:**
-- Requires D-01 (Backend Enforcement) for reliable trigger points
-- Depends on existing audit infrastructure
+**Justification:**
+- Database triggers cannot be bypassed regardless of access path
+- Service role operations still trigger validation
+- Aligned with D-01 Technical Specification already approved
+- No changes to existing UI or Edge Functions required
 
----
+### 4.2 Implementation Phases
 
-### D.4 Cluster 4: Scale Optimization (SP-A, SP-B, SP-C, S-04)
-
-| Aspect | Assessment |
-|--------|------------|
-| **Schema Dependencies** | YES — Aggregation views, indexes |
-| **RLS Dependencies** | POSSIBLE — Query optimization |
-| **UI Dependencies** | YES — Pagination/search components |
-| **Service Dependencies** | NO — Infrastructure level |
-| **Risk Level** | MEDIUM |
-| **Governance Sensitivity** | NO — Performance optimization |
-
-**Technical Requirements:**
-- Server-side pagination patterns
-- Database views for KPI aggregation
-- Typeahead search endpoints
-- UI component updates
-
-**Key Risks:**
-- Breaking changes to existing UI patterns
-- Performance regression during transition
-- Testing at scale
-
-**Trigger for Authorization:**
-- Dataset growth beyond current thresholds
-- Noticeable performance degradation
+| Phase | Step | Description |
+|-------|------|-------------|
+| 1A | Restore Point | Create mandatory restore point |
+| 1B | Audit Schema Enhancement | Add correlation_id column to audit_event |
+| 1C | Transition Matrix Definition | Define canonical status values and transitions |
+| 1D | Trigger Functions | Create validation trigger functions |
+| 1E | Trigger Attachment | Attach triggers to tables |
+| 1F | Audit Integration | Ensure triggers log to audit_event with correlation |
+| 1G | Verification | Test valid and invalid transitions |
+| 1H | Closure | Phase closure report |
 
 ---
 
-## PART E — IMPLEMENTATION READINESS STATEMENT
+## 5. D-01: Backend Transition Enforcement
 
-### E.1 Prerequisites for V1.3 Opening
+### 5.1 Status Value Mapping
 
-To safely open V1.3 for implementation:
+Current V1.1 status values must be mapped to the canonical state machine:
 
-| Prerequisite | Description |
-|--------------|-------------|
-| V1.2 Archive Acknowledgment | Formal sign-off on Complete Archive as baseline |
-| V1.3 Scope Definition | Selection of clusters for V1.3 vs Scale Packs |
-| Phase Model Decision | Determine phase structure for V1.3 |
-| Governance Framework Extension | Confirm V1.3 adheres to same Guardian Rules |
-| Restore Point Strategy | Define V1.3 restore point requirements |
-| Rollback Strategy | Define rollback procedures for failed implementations |
+**Subsidy Case (Bouwsubsidie):**
 
-### E.2 Recommended Cluster Prioritization
+| V1.1 Status | Canonical State | Valid Transitions To |
+|-------------|-----------------|---------------------|
+| `received` | Initial | `screening`, `rejected` |
+| `screening` | Review | `needs_more_docs`, `fieldwork`, `rejected` |
+| `needs_more_docs` | Revision | `screening`, `rejected` |
+| `fieldwork` | Assessment | `approved_for_council`, `rejected` |
+| `approved_for_council` | Pre-Approval | `council_doc_generated`, `rejected` |
+| `council_doc_generated` | Approved | `finalized`, `rejected` |
+| `finalized` | Terminal | *(none)* |
+| `rejected` | Terminal | *(none)* |
 
-Based on impact and dependencies:
+**Housing Registration (Woning Registratie):**
 
-| Priority | Cluster | Rationale |
-|----------|---------|-----------|
-| 1 | Backend Enforcement (D-01) | Foundation for reliable triggers |
-| 2 | Service Formalization (S-01, S-02) | Low risk, extends existing |
-| 3 | Notification Orchestration (S-03) | Depends on D-01 |
-| — | Scale Optimization | Trigger-based, not immediate |
+| V1.1 Status | Canonical State | Valid Transitions To |
+|-------------|-----------------|---------------------|
+| `received` | Initial | `under_review`, `rejected` |
+| `under_review` | Review | `urgency_assessed`, `rejected` |
+| `urgency_assessed` | Assessed | `waiting_list`, `rejected` |
+| `waiting_list` | Queued | `matched`, `rejected` |
+| `matched` | Pre-Allocation | `allocated`, `rejected` |
+| `allocated` | Allocated | `finalized`, `rejected` |
+| `finalized` | Terminal | *(none)* |
+| `rejected` | Terminal | *(none)* |
 
-### E.3 Cluster vs Scale Pack Decision
+### 5.2 Trigger Function Design
 
-| Item | Recommendation |
-|------|----------------|
-| D-01, S-01, S-02, S-03 | V1.3 Candidate |
-| SP-A, SP-B, SP-C, S-04 | Scale Packs (trigger-based) |
-| D-02 | Accepted (no action) |
+```text
++--------------------------------------------+
+|       BEFORE UPDATE Trigger Function        |
++--------------------------------------------+
+| 1. Check if status column changed           |
+| 2. If unchanged: RETURN NEW (no validation) |
+| 3. Get allowed transitions for OLD status   |
+| 4. If NEW status in allowed list:           |
+|    - Generate correlation_id                |
+|    - RETURN NEW (proceed with update)       |
+| 5. If NOT in allowed list:                  |
+|    - Log INVALID_TRANSITION_BLOCKED audit   |
+|    - RAISE EXCEPTION (check_violation)      |
++--------------------------------------------+
+```
 
-### E.4 Minimum V1.3 Scope Options
+### 5.3 Required Database Changes
 
-**Option A: Backend + Services Core**
-- D-01: Backend Transition Enforcement
-- S-01: Financial Assessment Service
-- S-02: Subsidy Allocation Workflow
-
-**Option B: Full V1.3 (includes Notifications)**
-- D-01: Backend Transition Enforcement
-- S-01: Financial Assessment Service
-- S-02: Subsidy Allocation Workflow
-- S-03: Notification Orchestration Service
-
-**Option C: Notifications Only**
-- S-03: Notification Orchestration Service
+| Change | Type | Table/Function |
+|--------|------|----------------|
+| Create function | DDL | `validate_subsidy_case_transition()` |
+| Create function | DDL | `validate_housing_registration_transition()` |
+| Create trigger | DDL | `trg_validate_subsidy_case_transition` on `subsidy_case` |
+| Create trigger | DDL | `trg_validate_housing_registration_transition` on `housing_registration` |
 
 ---
 
-## PART F — GOVERNANCE COMPLIANCE
+## 6. D-02: Audit Hardening
 
-### F.1 Guardian Rules Status
+### 6.1 Correlation ID Implementation
+
+**Schema Change:**
+
+```sql
+ALTER TABLE public.audit_event 
+ADD COLUMN correlation_id uuid DEFAULT gen_random_uuid();
+```
+
+**Purpose:**
+- Group related audit events from a single transaction
+- Enable cross-entity traceability (dossier ↔ status history ↔ documents)
+- Support legal reconstruction of decision chains
+
+### 6.2 Correlation Strategy
+
+| Scenario | Correlation Approach |
+|----------|---------------------|
+| Status transition | Same correlation_id for UPDATE audit + status_history INSERT |
+| Blocked transition | Unique correlation_id for INVALID_TRANSITION_BLOCKED event |
+| Multi-entity operation | Shared correlation_id across all affected entities |
+
+### 6.3 Audit Completeness Verification
+
+**Enforcement Rule:** Every status transition MUST generate an audit event.
+
+**Implementation:**
+- Trigger functions log all transitions (valid and invalid)
+- UI-level audit logging remains as additional layer
+- No silent state changes possible
+
+### 6.4 Required Database Changes
+
+| Change | Type | Table |
+|--------|------|-------|
+| Add column | DDL | `audit_event.correlation_id` |
+| Add index | DDL | `idx_audit_event_correlation_id` |
+
+---
+
+## 7. Verification Matrix
+
+### 7.1 D-01 Verification Tests
+
+| Test ID | Scenario | Table | Expected Result |
+|---------|----------|-------|-----------------|
+| D01-T01 | `received` → `screening` | subsidy_case | ALLOWED |
+| D01-T02 | `received` → `finalized` | subsidy_case | BLOCKED |
+| D01-T03 | `finalized` → `received` | subsidy_case | BLOCKED |
+| D01-T04 | `screening` → `rejected` | subsidy_case | ALLOWED |
+| D01-T05 | `received` → `under_review` | housing_registration | ALLOWED |
+| D01-T06 | `received` → `allocated` | housing_registration | BLOCKED |
+| D01-T07 | `finalized` → `received` | housing_registration | BLOCKED |
+| D01-T08 | `waiting_list` → `rejected` | housing_registration | ALLOWED |
+| D01-T09 | Audit event created on block | both | audit_event record exists |
+| D01-T10 | Error message includes allowed transitions | both | Message readable |
+
+### 7.2 D-02 Verification Tests
+
+| Test ID | Scenario | Expected Result |
+|---------|----------|-----------------|
+| D02-T01 | correlation_id column exists | Column in audit_event |
+| D02-T02 | Default value is UUID | Auto-generated on INSERT |
+| D02-T03 | Index exists for correlation_id | Query performance verified |
+| D02-T04 | Related events share correlation_id | Grouping works correctly |
+| D02-T05 | Invalid transition audit has correlation_id | Not null |
+
+---
+
+## 8. Rollback Strategy
+
+### 8.1 Emergency Rollback SQL
+
+```sql
+-- Step 1: Remove triggers
+DROP TRIGGER IF EXISTS trg_validate_subsidy_case_transition 
+  ON public.subsidy_case;
+DROP TRIGGER IF EXISTS trg_validate_housing_registration_transition 
+  ON public.housing_registration;
+
+-- Step 2: Remove functions
+DROP FUNCTION IF EXISTS public.validate_subsidy_case_transition();
+DROP FUNCTION IF EXISTS public.validate_housing_registration_transition();
+
+-- Step 3: Remove correlation_id (if needed)
+-- ALTER TABLE public.audit_event DROP COLUMN IF EXISTS correlation_id;
+```
+
+### 8.2 Rollback Triggers
+
+| Trigger | Action |
+|---------|--------|
+| Production error after deployment | Execute rollback SQL |
+| Test failure | Fix before proceeding |
+| Blocker discovered | STOP + REPORT |
+
+---
+
+## 9. Non-Goals (Explicit)
+
+| Item | Reason | Status |
+|------|--------|--------|
+| Modify UI status transition logic | Not authorized | EXCLUDED |
+| Add new status values | State machine unchanged | EXCLUDED |
+| Change RLS policies | Not authorized | EXCLUDED |
+| Modify Edge Functions | Only triggers, no app code | EXCLUDED |
+| Implement notifications | Deferred (S-03) | EXCLUDED |
+| Refactor services | Deferred (S-01, S-02) | EXCLUDED |
+
+---
+
+## 10. Deliverables Checklist
+
+| # | Deliverable | Status |
+|---|-------------|--------|
+| 1 | Restore Point: `RESTORE_POINT_V1.3_PHASE1_D01_D02_START` | PENDING |
+| 2 | Database migration: correlation_id column | PENDING |
+| 3 | Trigger function: `validate_subsidy_case_transition()` | PENDING |
+| 4 | Trigger function: `validate_housing_registration_transition()` | PENDING |
+| 5 | Trigger: `trg_validate_subsidy_case_transition` | PENDING |
+| 6 | Trigger: `trg_validate_housing_registration_transition` | PENDING |
+| 7 | Backend Enforcement Verification Report | PENDING |
+| 8 | Audit Hardening Verification Report | PENDING |
+| 9 | Updated Audit Event Matrix | PENDING |
+| 10 | Phase 1 Closure Report | PENDING |
+| 11 | Confirmation: V1.1 functional behavior preserved | PENDING |
+
+---
+
+## 11. Implementation Sequence
+
+```text
+Phase 1 Execution Flow:
+
+┌──────────────────────────────────────────────────────┐
+│  STEP 1: Create Restore Point                        │
+│  RESTORE_POINT_V1.3_PHASE1_D01_D02_START             │
+└──────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────┐
+│  STEP 2: D-02 Audit Hardening (Schema)               │
+│  - Add correlation_id column to audit_event          │
+│  - Add index for correlation_id                      │
+└──────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────┐
+│  STEP 3: D-01 Backend Enforcement                    │
+│  - Create validate_subsidy_case_transition()         │
+│  - Create validate_housing_registration_transition() │
+│  - Attach BEFORE UPDATE triggers                     │
+└──────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────┐
+│  STEP 4: Verification                                │
+│  - Execute D01-T01 through D01-T10                   │
+│  - Execute D02-T01 through D02-T05                   │
+│  - Confirm V1.1 functional behavior preserved        │
+└──────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────┐
+│  STEP 5: Documentation                               │
+│  - Backend Enforcement Verification Report           │
+│  - Audit Hardening Verification Report               │
+│  - Updated Audit Event Matrix                        │
+└──────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────┐
+│  STEP 6: Phase Closure                               │
+│  - Phase 1 Closure Report                            │
+│  - Confirm all exclusions respected                  │
+└──────────────────────────────────────────────────────┘
+```
+
+---
+
+## 12. Governance Compliance Statement
 
 | Rule | Status |
 |------|--------|
-| No code changes in this document | COMPLIANT |
-| No database changes in this document | COMPLIANT |
-| No RLS changes in this document | COMPLIANT |
-| No UI changes in this document | COMPLIANT |
-| No role changes in this document | COMPLIANT |
-| No preparatory implementation | COMPLIANT |
-| No assumptions beyond documented facts | COMPLIANT |
-
-### F.2 Ambiguity Check
-
-**No ambiguities identified.** All items derive from documented V1.2 artifacts.
+| Phase-gated execution | COMPLIANT |
+| Restore point before implementation | PENDING |
+| No scope expansion beyond D-01 + D-02 | ENFORCED |
+| Every change traceable to D-01 or D-02 | ENFORCED |
+| Status reports for each sub-step | REQUIRED |
+| No UI, Role, Enum, RLS, or Public Wizard changes | ENFORCED |
 
 ---
 
-## PART G — EXPLICIT STATEMENTS
+## 13. Authorization Gate
 
-### G.1 V1.3 Status
+This Phase 1 Scope & Execution Plan requires approval before implementation may begin.
 
-**V1.3 HAS NOT BEEN STARTED.**
+**Mandatory First Step:** Create restore point before ANY code or schema changes.
 
-This document provides decision input only. It does not constitute authorization to begin V1.3 implementation.
-
-### G.2 Current System Status
-
-- **Operational Baseline:** DVH-IMS V1.1
-- **Documentation Baseline:** DVH-IMS V1.2 (FROZEN)
-- **Implementation Status:** NONE PENDING
+**Document Status:** PENDING APPROVAL
 
 ---
 
-## Summary Table
+## Files to Create/Modify
 
-| Cluster | Items | Risk | Schema | RLS | UI | Recommended Target |
-|---------|-------|------|--------|-----|----|--------------------|
-| Backend Enforcement | D-01 | MEDIUM | YES | NO | NO | V1.3 |
-| Service Formalization | S-01, S-02 | LOW | LOW | NO | POSSIBLE | V1.3 |
-| Notification Orchestration | S-03 | MEDIUM | YES | YES | YES | V1.3 |
-| Scale Optimization | SP-A, SP-B, SP-C, S-04 | MEDIUM | YES | POSSIBLE | YES | Scale Packs |
-| Audit Gap | D-02 | N/A | NO | NO | NO | Accepted |
-
----
-
-## Closing Statement
-
-This document provides the strategic input required for V1.3 authorization decisions. It consolidates all deferred items from V1.2, assesses risks and dependencies, and presents implementation cluster options.
-
-**No implementation is authorized by this document.**
-
-**Awaiting explicit authorization to open V1.3.**
+| File | Action | Purpose |
+|------|--------|---------|
+| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE1_D01_D02_START.md` | CREATE | Mandatory restore point |
+| `restore-points/v1.3/README.md` | CREATE | V1.3 restore point index |
+| Database migration | EXECUTE | Add correlation_id + triggers |
+| `phases/DVH-IMS-V1.3/PHASE-1-Scope-and-Execution-Plan.md` | CREATE | This document |
+| `phases/DVH-IMS-V1.3/README.md` | CREATE | Phase tracking index |
 
 ---
 
-*Document Author: DVH-IMS System*  
-*Date: 2026-01-30*  
-*Authority: Pending Delroy Approval*
+## 14. Final Statement
+
+**V1.3 Phase 1 is limited to Backend Enforcement and Audit Hardening only.**
+
+**No other V1.2 items are authorized.**
+
+**Any deviation requires explicit written approval.**
 
 ---
 
-**END OF DOCUMENT**
-
+**Awaiting approval to create Restore Point and begin implementation.**

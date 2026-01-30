@@ -29,6 +29,7 @@ This folder contains planning and strategy documents only. No implementation is 
 | File | Type | Status |
 |------|------|--------|
 | `DVH-IMS-V1.3_Strategy_Input.md` | Strategy Input | COMPLETE |
+| `D-01_Backend_Transition_Enforcement_Technical_Specification.md` | Technical Spec | DRAFT |
 
 ---
 

@@ -14,6 +14,7 @@
 | Phase 1 | Backend Enforcement + Audit Hardening | **CLOSED** | 2026-01-30 |
 | Phase 2 | Admin Notifications (S-03) | **CLOSED** | 2026-01-30 |
 | Phase 3 | Role & Workflow Preparation | **CLOSED** | 2026-01-30 |
+| Phase 4A | Social Field Worker Activation | **CLOSED** | 2026-01-30 |
 
 ---
 
@@ -108,6 +109,48 @@
 
 ---
 
+## Phase 4A — CLOSED
+
+**Scope:** Social Field Worker Activation (Bouwsubsidie Only)
+
+**Deliverables:**
+
+| ID | Deliverable | Status |
+|----|-------------|--------|
+| P4A-DB-1 | app_role enum extension (social_field_worker) | **FINAL** |
+| P4A-DB-2 | Updated subsidy_case transition trigger | **FINAL** |
+| P4A-DB-3 | 12 RLS policies for social_field_worker | **FINAL** |
+| P4A-TS-1 | AppRole type update | **FINAL** |
+| P4A-UI-1 | Status transitions and badges | **FINAL** |
+
+**Documentation:**
+
+| Document | Location | Status |
+|----------|----------|--------|
+| Activation Report | [PHASE-4A/PHASE-4A-ACTIVATION-REPORT.md](./PHASE-4A/PHASE-4A-ACTIVATION-REPORT.md) | FINAL |
+| Verification Checklist | [PHASE-4A/PHASE-4A-VERIFICATION-CHECKLIST.md](./PHASE-4A/PHASE-4A-VERIFICATION-CHECKLIST.md) | FINAL |
+| Risk Observations | [PHASE-4A/PHASE-4A-RISK-OBSERVATIONS.md](./PHASE-4A/PHASE-4A-RISK-OBSERVATIONS.md) | FINAL |
+
+**Restore Points:**
+- `RESTORE_POINT_V1.3_PHASE4A_START`
+- `RESTORE_POINT_V1.3_PHASE4A_COMPLETE`
+
+**Activated Role:**
+
+| Role | Enum Value | Service | Status |
+|------|------------|---------|--------|
+| Social Field Worker | social_field_worker | Bouwsubsidie Only | ✅ ACTIVE |
+
+**New Status Values (Bouwsubsidie):**
+
+| Status | Description |
+|--------|-------------|
+| in_social_review | Case in social assessment |
+| social_completed | Social assessment completed |
+| returned_to_intake | Returned to intake |
+
+---
+
 ## Explicit Exclusions (V1.3 Scope)
 
 The following remain NOT authorized for V1.3:
@@ -117,8 +160,10 @@ The following remain NOT authorized for V1.3:
 | Scale/Performance (SP-A/B/C) | NOT TOUCHED |
 | Service refactors (S-01, S-02) | NOT TOUCHED |
 | UI changes | NOT TOUCHED |
-| Role activation (enum changes) | PREPARED ONLY |
-| RLS policy activation | PREPARED ONLY |
+| Technical Inspector activation | NOT YET AUTHORIZED |
+| Director activation | NOT YET AUTHORIZED |
+| Ministerial Advisor activation | NOT YET AUTHORIZED |
+| Woningregistratie workflow changes | NOT TOUCHED |
 | Public wizard changes | NOT TOUCHED |
 
 ---
@@ -133,20 +178,21 @@ The following remain NOT authorized for V1.3:
 | Phase 1 is LOCKED from further modification | ✓ ENFORCED |
 | Phase 2 is LOCKED from further modification | ✓ ENFORCED |
 | Phase 3 is LOCKED from further modification | ✓ ENFORCED |
-| System behavior unchanged after Phase 3 | ✓ CONFIRMED |
+| Phase 4A is LOCKED from further modification | ✓ ENFORCED |
+| Woningregistratie unchanged after Phase 4A | ✓ CONFIRMED |
 
 ---
 
 ## Next Phase (Requires Authorization)
 
-**Phase 4: Role & Workflow Activation (OPTION 1)**
+**Phase 4B: Technical Inspector Activation (Bouwsubsidie Only)**
 
 Prerequisites:
 - Explicit authorization from Delroy
-- Database enum extension
+- Database enum extension (technical_inspector)
 - RLS policy creation
-- UI component updates
-- Account creation
+- TypeScript updates
+- Trigger update for technical review states
 
 **Status:** AWAITING AUTHORIZATION
 

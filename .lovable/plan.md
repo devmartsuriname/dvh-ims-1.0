@@ -1,31 +1,25 @@
 
-# DVH-IMS V1.2 — Phase 3 Planning Pack
+# DVH-IMS V1.2 — Phase 4 Planning Pack
 
-## Audit Logging & Evidence Integrity
+## Operational Workflows & Data Integrity
 
 **Version:** 1.0  
-**Date:** 2026-01-29  
-**Phase:** 3 — Audit Logging & Evidence Integrity  
+**Date:** 2026-01-30  
+**Phase:** 4 — Operational Workflows & Data Integrity  
 **Status:** PLANNING
 
 ---
 
 ## 1. Executive Summary
 
-Phase 3 focuses on strengthening the audit logging layer to ensure tamper-evident, legally traceable records of all actor actions, document state changes, and decision events.
+Phase 4 focuses on validating operational readiness of all DVH-IMS workflows with real data, ensuring all state transitions are properly enforced, audited, and role-gated.
 
-**Current State Assessment:**
-- Audit infrastructure EXISTS and is operational
-- `audit_event` table has 9 columns (append-only enforced via RLS)
-- 6 Edge Functions already log to `audit_event`
-- Client-side `logAuditEvent()` hook now populates `actor_role` (Phase 2 fix)
-- UI components exist: Table, Filters, Detail Drawer, Export
-
-**Phase 3 Focus:**
-- Verify and document complete audit coverage
-- Validate evidence integrity rules
-- Ensure UI read-only compliance
-- Document gaps for future phases
+**Key Objectives:**
+- End-to-end workflow execution validation (no demo paths)
+- State transition enforcement at UI + backend level
+- Complete audit trail coverage
+- Role-based action enforcement verification
+- Darkone UI consistency for all workflow actions
 
 ---
 
@@ -35,327 +29,308 @@ Phase 3 focuses on strengthening the audit logging layer to ensure tamper-eviden
 
 | Item | Description | Deliverable |
 |------|-------------|-------------|
-| Audit Event Model | Document canonical structure vs current schema | Audit Schema Alignment Report |
-| Capture Point Mapping | Map all audit logging calls | Capture Point Matrix |
-| Evidence Integrity | Validate append-only enforcement | Integrity Verification Report |
-| Read-Only Access | Validate UI mutation prevention | Access Verification Checklist |
-| Documentation | Phase 3 artifacts in `/phases/DVH-IMS-V1.2/` | Planning Pack |
+| Workflow Execution Validation | Validate all status flows execute correctly | Workflow Test Report |
+| Transition Enforcement | Verify UI + backend alignment | Enforcement Gap Analysis |
+| Audit Completeness | Verify all actions logged with actor_role | Audit Coverage Matrix |
+| RBAC Verification | Validate role-based access at all points | RBAC Verification Report |
+| UI Consistency | Check Darkone compliance for workflows | UI Compliance Checklist |
 
 ### 2.2 Explicit Out of Scope
 
 | Item | Reason |
 |------|--------|
-| New roles | Phase 1 frozen |
-| Permission refactor | Out of scope |
-| Workflow redesign | Out of scope |
-| UI redesign | Beyond audit views |
-| Analytics/dashboards | Planning-only if needed |
-| Correlation ID implementation | Schema change required (document only) |
+| Schema changes | Requires explicit authorization |
+| New roles | Governance constraint |
+| Demo data / routes | Explicit exclusion |
+| Public Wizard changes | Implemented, frozen |
+| /docs edits | Read-only |
 
 ---
 
 ## 3. Current State Analysis
 
-### 3.1 Audit Event Table Schema
+### 3.1 Workflow Status Flows (From Phase 2)
 
-| Column | Type | Nullable | V1.2 Requirement | Status |
-|--------|------|----------|------------------|--------|
-| id | uuid | NO | Event ID | ✅ ALIGNED |
-| occurred_at | timestamptz | NO | Timestamp | ✅ ALIGNED |
-| actor_user_id | uuid | YES | Actor | ✅ ALIGNED |
-| actor_role | text | YES | Actor Role | ✅ ALIGNED |
-| action | text | NO | Action Type | ✅ ALIGNED |
-| entity_type | text | NO | Target Entity | ✅ ALIGNED |
-| entity_id | uuid | YES | Target Entity ID | ✅ ALIGNED |
-| reason | text | YES | Rationale | ✅ ALIGNED |
-| metadata_json | jsonb | YES | Extended Data | ✅ ALIGNED |
-| — | — | — | Previous State | ❌ NOT IN SCHEMA |
-| — | — | — | New State | ❌ NOT IN SCHEMA |
-| — | — | — | Correlation ID | ❌ NOT IN SCHEMA |
-
-**Gap Analysis:**
-- Previous/New State: Available indirectly via `*_status_history` tables
-- Correlation ID: Not implemented (documented gap)
-
-### 3.2 Current Audit Capture Points
-
-| Source | Entity Types | Actions | Actor Role Capture |
-|--------|--------------|---------|-------------------|
-| Edge: execute-allocation-run | allocation_run | CREATE | ✅ From user_roles |
-| Edge: generate-raadvoorstel | generated_document | document_generated | ✅ From roles |
-| Edge: get-document-download-url | generated_document | document_downloaded | ✅ From user_roles |
-| Edge: lookup-public-status | public_status_access | status_lookup, status_lookup_failed | ✅ 'public' |
-| Edge: submit-bouwsubsidie | subsidy_case | public_submission | ✅ 'public' |
-| Edge: submit-housing-registration | housing_registration | public_submission | ✅ 'public' |
-| Client: logAuditEvent() | Multiple (16 types) | CREATE, UPDATE, STATUS_CHANGE | ✅ From user_roles |
-
-### 3.3 RLS Policy Verification
-
-| Policy | Command | Effect | Status |
-|--------|---------|--------|--------|
-| anon_can_insert_audit_event | INSERT | Public submissions | ✅ Active |
-| role_insert_audit_event | INSERT | Authenticated users | ✅ Active |
-| role_select_audit_event | SELECT | audit, system_admin, minister, project_leader | ✅ Active |
-| (none) | UPDATE | Denied | ✅ IMMUTABLE |
-| (none) | DELETE | Denied | ✅ IMMUTABLE |
-
----
-
-## 4. Audit Event Matrix
-
-### 4.1 Dossier Lifecycle Events
-
-| Event | Current Implementation | Logged? | Action Value |
-|-------|------------------------|---------|--------------|
-| Dossier created (admin) | `CaseFormModal.tsx`, `RegistrationFormModal.tsx` | ✅ | CREATE |
-| Dossier created (public) | Edge Functions | ✅ | public_submission |
-| State transition executed | Detail page `handleStatusChange()` | ✅ | STATUS_CHANGE |
-| State transition requested | Not implemented | ❌ N/A | (V1.2 future) |
-| State transition approved | Not implemented | ❌ N/A | (V1.2 future) |
-
-### 4.2 Decision Events
-
-| Event | Current Implementation | Logged? | Action Value |
-|-------|------------------------|---------|--------------|
-| Allocation decision | `DecisionFormModal.tsx` | ✅ | CREATE |
-| Assignment recorded | `AssignmentFormModal.tsx` | ✅ | CREATE |
-| Urgency assessment | `UrgencyAssessmentForm.tsx` | ✅ | CREATE |
-
-### 4.3 Governance Artifacts
-
-| Event | Current Implementation | Logged? | Action Value |
-|-------|------------------------|---------|--------------|
-| Raadvoorstel generated | Edge: generate-raadvoorstel | ✅ | document_generated |
-| Document downloaded | Edge: get-document-download-url | ✅ | document_downloaded |
-
-### 4.4 Exception & Control Events
-
-| Event | Current Implementation | Logged? | Notes |
-|-------|------------------------|---------|-------|
-| Escalation invoked | Not implemented | ❌ | V1.2 future workflow |
-| Deadline breach | Not implemented | ❌ | V1.2 future |
-| Manual override | Not implemented | ❌ | V1.2 future |
-
----
-
-## 5. Capture Point Mapping
-
-### 5.1 Client-Side Capture Points
-
-| File | Entity Type | Actions | Evidence |
-|------|-------------|---------|----------|
-| `PersonFormModal.tsx` | person | CREATE, UPDATE | logAuditEvent() call |
-| `HouseholdFormModal.tsx` | household | CREATE | logAuditEvent() call |
-| `CaseFormModal.tsx` | subsidy_case | CREATE | logAuditEvent() call |
-| `RegistrationFormModal.tsx` | housing_registration | CREATE | logAuditEvent() call |
-| `DecisionFormModal.tsx` | allocation_decision | CREATE | logAuditEvent() call |
-| `AssignmentFormModal.tsx` | assignment_record | CREATE | logAuditEvent() call |
-| `UrgencyAssessmentForm.tsx` | housing_urgency | CREATE | logAuditEvent() call |
-| `QuotaTable.tsx` | district_quota | CREATE, UPDATE | logAuditEvent() call |
-| `RunExecutorModal.tsx` | allocation_run | CREATE | logAuditEvent() call |
-| `subsidy-cases/[id]/page.tsx` | subsidy_case | STATUS_CHANGE | logAuditEvent() call |
-| `housing-registrations/[id]/page.tsx` | housing_registration | STATUS_CHANGE | logAuditEvent() call |
-
-### 5.2 Edge Function Capture Points
-
-| Function | Entity Type | Actions | Service Role |
-|----------|-------------|---------|--------------|
-| execute-allocation-run | allocation_run | CREATE | User auth |
-| generate-raadvoorstel | generated_document | document_generated | Admin client |
-| get-document-download-url | generated_document | document_downloaded | Admin client |
-| lookup-public-status | public_status_access | status_lookup, status_lookup_failed | Anon |
-| submit-bouwsubsidie-application | subsidy_case | public_submission | Anon |
-| submit-housing-registration | housing_registration | public_submission | Anon |
-
----
-
-## 6. Evidence Integrity Rules
-
-### 6.1 Append-Only Verification
-
-| Rule | Implementation | Status |
-|------|----------------|--------|
-| No UPDATE allowed | No UPDATE RLS policy exists | ✅ ENFORCED |
-| No DELETE allowed | No DELETE RLS policy exists | ✅ ENFORCED |
-| INSERT restricted | Allowlist policies (anon + role) | ✅ ENFORCED |
-
-### 6.2 Client-Side Mutation Prevention
-
-| Protection | Implementation | Status |
-|------------|----------------|--------|
-| No edit UI | AuditLogTable is read-only | ✅ VERIFIED |
-| No delete UI | No delete buttons/actions | ✅ VERIFIED |
-| Detail view read-only | AuditDetailDrawer shows data only | ✅ VERIFIED |
-
-### 6.3 API-Level Protection
-
-| Protection | Implementation | Status |
-|------------|----------------|--------|
-| RLS blocks UPDATE | No UPDATE policy | ✅ ENFORCED |
-| RLS blocks DELETE | No DELETE policy | ✅ ENFORCED |
-| Service role required | Admin client for specific ops | ✅ ENFORCED |
-
----
-
-## 7. Read-Only Audit Access Verification
-
-### 7.1 UI Components
-
-| Component | Purpose | Mutation Paths | Status |
-|-----------|---------|----------------|--------|
-| AuditLogPage | Container | None | ✅ READ-ONLY |
-| AuditLogTable | List view | None | ✅ READ-ONLY |
-| AuditLogFilters | Search/filter | None (client-side only) | ✅ READ-ONLY |
-| AuditDetailDrawer | Detail view | None | ✅ READ-ONLY |
-| AuditExportButton | CSV export | None (generates local file) | ✅ READ-ONLY |
-
-### 7.2 Role-Based Visibility
-
-| Role | Can View Audit Log | Evidence |
-|------|-------------------|----------|
-| audit | ✅ | RLS policy `role_select_audit_event` |
-| system_admin | ✅ | RLS policy + page access |
-| minister | ✅ | RLS policy + page access |
-| project_leader | ✅ | RLS policy + page access |
-| frontdesk_* | ❌ | No RLS SELECT grant |
-| admin_staff | ❌ | No RLS SELECT grant |
-
-### 7.3 Page Access Control
-
-```typescript
-// src/app/(admin)/audit-log/page.tsx
-const ALLOWED_ROLES = ['system_admin', 'minister', 'project_leader', 'audit'] as const
+**Bouwsubsidie (Construction Subsidy):**
+```
+received → screening → needs_more_docs → fieldwork → approved_for_council → council_doc_generated → finalized
+                     ↘ rejected
 ```
 
-**Status:** ✅ ALIGNED with RLS policy
+**Woning Registratie (Housing Registration):**
+```
+received → under_review → urgency_assessed → waiting_list → matched → allocated → finalized
+                                                                   ↘ rejected
+```
+
+### 3.2 Transition Enforcement Analysis
+
+| Module | UI Enforcement | Backend Enforcement | Gap |
+|--------|----------------|---------------------|-----|
+| Bouwsubsidie | STATUS_TRANSITIONS constant | RLS allows UPDATE by role | UI-only validation |
+| Housing Registration | STATUS_TRANSITIONS constant | RLS allows UPDATE by role | UI-only validation |
+| Allocation Runs | N/A (Edge Function) | RBAC in Edge Function | Fully enforced |
+
+### 3.3 Audit Coverage Analysis (From Database)
+
+| Action | Entity Type | Actor Role | Count | Status |
+|--------|-------------|------------|-------|--------|
+| status_lookup | public_status_access | public | 8 | ✅ Logged |
+| public_submission | subsidy_case | public | 7 | ✅ Logged |
+| public_submission | housing_registration | public | 6 | ✅ Logged |
+| CREATE | allocation_run | system_admin | 2 | ✅ Logged |
+| CREATE | person | NULL (legacy) | 1 | ⚠️ Pre-fix |
+| UPDATE | person | NULL (legacy) | 1 | ⚠️ Pre-fix |
+
+### 3.4 Role-Based Access Control
+
+**Current Roles (app_role enum):**
+- system_admin
+- minister
+- project_leader
+- frontdesk_bouwsubsidie
+- frontdesk_housing
+- admin_staff
+- audit
+
+**Role Verification Points:**
+1. Route access (AdminLayout + page-level ALLOWED_ROLES)
+2. RLS policies (database level)
+3. Edge Function RBAC (explicit role check)
+4. UI component visibility (useUserRole hook)
 
 ---
 
-## 8. Verification Checklist
+## 4. Phase 4 Verification Activities
 
-### 8.1 Phase 3 Pre-Implementation Checklist
+### 4.1 End-to-End Workflow Validation
 
-| # | Item | Status |
-|---|------|--------|
-| 1 | Restore point created | ⏳ PENDING |
-| 2 | Audit schema documented | ✅ Section 3 |
-| 3 | Capture points mapped | ✅ Section 5 |
-| 4 | Event matrix complete | ✅ Section 4 |
-| 5 | Evidence integrity validated | ✅ Section 6 |
-| 6 | Read-only access verified | ✅ Section 7 |
+**Test Matrix for Bouwsubsidie:**
 
-### 8.2 Implementation Verification Checklist
+| Test Case | Start State | End State | Role | Expected Result |
+|-----------|-------------|-----------|------|-----------------|
+| T1.1 | received | screening | frontdesk_bouwsubsidie | Success + Audit |
+| T1.2 | screening | fieldwork | frontdesk_bouwsubsidie | Success + Audit |
+| T1.3 | fieldwork | approved_for_council | project_leader | Success + Audit |
+| T1.4 | approved_for_council | council_doc_generated | (Edge Function) | Success + Audit |
+| T1.5 | council_doc_generated | finalized | minister | Success + Audit |
+| T1.6 | Any | rejected | Any authorized | Success + Audit |
+| T1.7 | finalized | Any | Any | Blocked (terminal) |
 
-| # | Item | Verification Method |
-|---|------|---------------------|
-| 1 | All CREATE actions logged | Query audit_event + test |
-| 2 | All STATUS_CHANGE actions logged | Query audit_event + test |
-| 3 | actor_role populated | Query audit_event for non-null |
-| 4 | No UPDATE/DELETE possible | Attempt via SQL + verify denied |
-| 5 | UI mutation paths blocked | Manual UI inspection |
-| 6 | Export functionality works | Manual test |
+**Test Matrix for Housing Registration:**
+
+| Test Case | Start State | End State | Role | Expected Result |
+|-----------|-------------|-----------|------|-----------------|
+| T2.1 | received | under_review | frontdesk_housing | Success + Audit |
+| T2.2 | under_review | urgency_assessed | frontdesk_housing | Success + Audit |
+| T2.3 | urgency_assessed | waiting_list | admin_staff | Success + Audit |
+| T2.4 | waiting_list | matched | (Edge Function) | Success + Audit |
+| T2.5 | matched | allocated | frontdesk_housing | Success + Audit |
+| T2.6 | allocated | finalized | frontdesk_housing | Success + Audit |
+| T2.7 | Any | rejected | Any authorized | Success + Audit |
+
+### 4.2 Backend Enforcement Gap Analysis
+
+**Current Gap:** Status transitions are enforced only at UI level via `STATUS_TRANSITIONS` constant. The RLS policies allow any authorized role to UPDATE the status column without validating the transition path.
+
+**Risk Assessment:**
+- Direct API calls could bypass UI validation
+- Risk: Invalid state transitions possible via direct Supabase client
+
+**Mitigation Options (Documentation Only):**
+1. Database trigger for transition validation (requires schema change)
+2. Edge Function wrapper for status changes (requires new function)
+3. Accept UI-only enforcement with audit monitoring
+
+**Recommendation:** Document gap and defer to Phase 5/6 for implementation decision.
+
+### 4.3 Audit Completeness Verification
+
+**Capture Points to Verify:**
+
+| Component | Entity | Action | Actor Role Capture |
+|-----------|--------|--------|-------------------|
+| PersonFormModal | person | CREATE/UPDATE | ✅ From user_roles (Phase 2 fix) |
+| HouseholdFormModal | household | CREATE | ✅ From user_roles |
+| CaseFormModal | subsidy_case | CREATE | ✅ From user_roles |
+| RegistrationFormModal | housing_registration | CREATE | ✅ From user_roles |
+| subsidy-cases/[id]/page | subsidy_case | STATUS_CHANGE | ✅ From user_roles |
+| housing-registrations/[id]/page | housing_registration | STATUS_CHANGE | ✅ From user_roles |
+| DecisionFormModal | allocation_decision | CREATE | ✅ From user_roles |
+| AssignmentFormModal | assignment_record | CREATE | ✅ From user_roles |
+| UrgencyAssessmentForm | housing_urgency | CREATE | ✅ From user_roles |
+| QuotaTable | district_quota | CREATE/UPDATE | ✅ From user_roles |
+| RunExecutorModal | allocation_run | CREATE | ✅ From user_roles |
+| Edge: execute-allocation-run | allocation_run | CREATE | ✅ Direct insert |
+| Edge: generate-raadvoorstel | generated_document | document_generated | ✅ Direct insert |
+| Edge: submit-bouwsubsidie | subsidy_case | public_submission | ✅ Direct insert |
+| Edge: submit-housing-registration | housing_registration | public_submission | ✅ Direct insert |
+
+### 4.4 Role-Based Action Enforcement
+
+**Verification Checklist:**
+
+| Action | Enforcement Layer | Roles Allowed | Verification Method |
+|--------|-------------------|---------------|---------------------|
+| View Dashboard | Route + RLS | All authenticated | Login as each role |
+| View Subsidy Cases | Route + RLS | frontdesk_bouwsubsidie, admin_staff, national | Query test |
+| Create Subsidy Case | RLS | frontdesk_bouwsubsidie, admin_staff (district), system_admin, project_leader | Insert test |
+| Change Subsidy Status | RLS | frontdesk_bouwsubsidie, admin_staff (district), national | Update test |
+| View Housing Registrations | Route + RLS | frontdesk_housing, admin_staff, national | Query test |
+| Execute Allocation Run | Edge + RLS | system_admin, project_leader | Edge Function call |
+| View Audit Log | Route + RLS | audit, system_admin, minister, project_leader | Query test |
+| Generate Raadvoorstel | Edge + RLS | frontdesk_bouwsubsidie, admin_staff (district) | Edge Function call |
+
+### 4.5 UI Consistency Check (Darkone)
+
+**Components to Verify:**
+
+| Component | Location | Darkone Compliance |
+|-----------|----------|-------------------|
+| Status Badge | Case/Registration detail | ✅ Bootstrap badges |
+| Transition Buttons | Change Status card | ✅ Bootstrap buttons |
+| Form Modal | All create/edit modals | ✅ Bootstrap modal |
+| Tables | List pages | ✅ Bootstrap table |
+| Tabs | Detail pages | ✅ Bootstrap tabs |
+| Alerts/Toasts | Notifications | ✅ react-toastify |
 
 ---
 
-## 9. Gap Summary
+## 5. Execution Plan
 
-### 9.1 Documented Gaps (Not Addressed in Phase 3)
+### Step 1: Create Restore Point
+- Create `RESTORE_POINT_V1.2_PHASE4_WORKFLOWS_START.md`
+- Record current state baseline
 
-| ID | Gap | Impact | Target |
-|----|-----|--------|--------|
-| G-03 | No correlation ID | Cannot link related events | Future schema change |
-| G-07 | No ESCALATED workflow | V1.2 event not loggable | Future workflow |
-| G-08 | No DRAFT initial state | V1.2 state not present | Future workflow |
-| G-09 | Previous/New state in audit | Must join status_history | Schema decision |
+### Step 2: Database Verification
+- Query audit_event for coverage
+- Verify RLS policies active
+- Check transition data exists
 
-### 9.2 Gaps Addressed in Phase 2
+### Step 3: Workflow Path Validation
+- Document all valid transition paths
+- Verify terminal states block further changes
+- Confirm audit events generated
 
-| ID | Gap | Resolution |
-|----|-----|------------|
-| G-02 | Actor role not populated | ✅ Fixed in Tier 2 |
-| G-04 | Entity type expansion | ✅ Added subsidy_document_upload |
+### Step 4: RBAC Verification
+- Test each role's access boundaries
+- Verify district isolation
+- Confirm audit role read-only
+
+### Step 5: Gap Documentation
+- Document backend enforcement gap
+- Document any missing audit points
+- Propose remediation for future phases
+
+### Step 6: Final Report
+- Generate Phase 4 Verification Report
+- Create closure statement
+- Update README
 
 ---
 
-## 10. Phase 3 Deliverables
-
-### 10.1 Required Documentation
+## 6. Deliverables
 
 | Document | Location | Status |
 |----------|----------|--------|
-| RESTORE_POINT_V1.2_PHASE3_AUDIT_START.md | `/restore-points/v1.2/` | ⏳ PENDING |
-| Phase 3 Scope & Objectives | `/phases/DVH-IMS-V1.2/` | This document |
-| Audit Event Matrix | Section 4 of this document | ✅ COMPLETE |
-| Capture Point Mapping | Section 5 of this document | ✅ COMPLETE |
-| Verification Checklist | Section 8 of this document | ✅ COMPLETE |
-
-### 10.2 Implementation Work (If Approved)
-
-| Task | Description | Complexity |
-|------|-------------|------------|
-| Verify live audit events | Query database to confirm coverage | LOW |
-| Test evidence integrity | Attempt prohibited operations | LOW |
-| Document any gaps found | Update verification report | LOW |
+| RESTORE_POINT_V1.2_PHASE4_WORKFLOWS_START.md | `/restore-points/v1.2/` | Pending |
+| Phase 4 Planning Pack | `/phases/DVH-IMS-V1.2/` | This document |
+| Workflow Validation Report | `/phases/DVH-IMS-V1.2/` | Pending |
+| RBAC Verification Report | `/phases/DVH-IMS-V1.2/` | Pending |
+| Phase 4 Closure Statement | `/phases/DVH-IMS-V1.2/` | Pending |
 
 ---
 
-## 11. Governance Compliance
+## 7. Governance Compliance
 
 | Rule | Status |
 |------|--------|
-| No new roles | ✅ Compliant |
-| No enum modifications | ✅ Compliant |
 | No schema changes | ✅ Compliant (verification only) |
-| No workflow redesign | ✅ Compliant |
-| No UI redesign | ✅ Compliant |
-| Darkone 1:1 compliance | ✅ Audit UI already Darkone-aligned |
+| No new roles | ✅ Compliant |
+| No demo data | ✅ Compliant (real data only) |
+| No /docs edits | ✅ Compliant (read-only) |
+| Darkone compliance | ✅ Verification only |
 
 ---
 
-## 12. Execution Plan
-
-### Step 1: Create Restore Point
-Create `RESTORE_POINT_V1.2_PHASE3_AUDIT_START.md` in `/restore-points/v1.2/`
-
-### Step 2: Save Planning Documentation
-Create comprehensive planning document in `/phases/DVH-IMS-V1.2/`
-
-### Step 3: Verification Activities
-- Query audit_event table to validate coverage
-- Test evidence integrity (UPDATE/DELETE denial)
-- Verify UI read-only behavior
-
-### Step 4: Final Report
-Generate Phase 3 Verification Report documenting findings
-
-### Step 5: Closure
-Upon completion, create closure statement and await Phase 4 authorization
-
----
-
-## 13. Risk Assessment
+## 8. Risk Assessment
 
 | Risk | Probability | Impact | Mitigation |
 |------|-------------|--------|------------|
-| Missing audit capture points discovered | Medium | Low | Document and defer to future phase |
-| RLS policy gap found | Low | High | STOP + REPORT immediately |
-| UI mutation path discovered | Low | High | STOP + REPORT immediately |
+| Backend enforcement gap | Known | Medium | Document + defer |
+| Missing audit coverage | Low | Medium | Verification will identify |
+| RBAC bypass found | Low | High | STOP + REPORT |
+| UI inconsistency | Low | Low | Document for future |
 
 ---
 
-## 14. Authorization Request
+## 9. Technical Scope
 
-This Planning Pack defines the scope, objectives, and verification approach for Phase 3.
+### Files to Read (Verification Only)
+
+| File | Purpose |
+|------|---------|
+| `subsidy-cases/[id]/page.tsx` | Workflow transitions |
+| `housing-registrations/[id]/page.tsx` | Workflow transitions |
+| `useAuditLog.ts` | Audit capture |
+| `useUserRole.ts` | RBAC implementation |
+| All form modals | Audit event calls |
+| All Edge Functions | Backend enforcement |
+
+### Database Queries (Read Only)
+
+```sql
+-- Audit coverage by action
+SELECT action, entity_type, actor_role, COUNT(*) 
+FROM audit_event 
+GROUP BY action, entity_type, actor_role;
+
+-- Status distribution (if data exists)
+SELECT status, COUNT(*) FROM subsidy_case GROUP BY status;
+SELECT current_status, COUNT(*) FROM housing_registration GROUP BY current_status;
+```
+
+---
+
+## 10. Authorization Request
+
+This Planning Pack defines Phase 4 scope, objectives, and verification approach.
 
 **Awaiting explicit approval to:**
-1. Create Phase 3 START restore point
-2. Execute verification activities
-3. Generate Phase 3 completion documentation
+1. Create Phase 4 START restore point
+2. Execute verification activities (database queries + code review)
+3. Generate Phase 4 completion documentation
 
-**No implementation work will occur without explicit authorization.**
+**No implementation or code changes will occur unless explicitly authorized.**
+
+---
+
+## 11. End-of-Task Report Format
+
+At completion, report will include:
+
+```
+IMPLEMENTED:
+- Items fully verified and documented
+
+PARTIAL:
+- Items with gaps requiring future work
+
+SKIPPED:
+- Items not applicable or blocked
+
+VERIFICATION:
+- All verification activities performed
+
+RESTORE POINT:
+- Reference to created restore point
+
+BLOCKERS / ERRORS:
+- NONE (if clean) or explicit description
+```
 
 ---
 
 *Document Author: DVH-IMS System*  
-*Planning Date: 2026-01-29*  
+*Planning Date: 2026-01-30*  
 *Authority: Awaiting Client Approval*

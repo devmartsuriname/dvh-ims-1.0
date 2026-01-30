@@ -52,6 +52,57 @@ export type Database = {
           },
         ]
       }
+      admin_notification: {
+        Row: {
+          correlation_id: string
+          created_at: string
+          created_by: string | null
+          district_code: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          is_read: boolean
+          message: string
+          notification_type: string
+          read_at: string | null
+          recipient_role: string | null
+          recipient_user_id: string | null
+          title: string
+        }
+        Insert: {
+          correlation_id: string
+          created_at?: string
+          created_by?: string | null
+          district_code?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_read?: boolean
+          message: string
+          notification_type: string
+          read_at?: string | null
+          recipient_role?: string | null
+          recipient_user_id?: string | null
+          title: string
+        }
+        Update: {
+          correlation_id?: string
+          created_at?: string
+          created_by?: string | null
+          district_code?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          notification_type?: string
+          read_at?: string | null
+          recipient_role?: string | null
+          recipient_user_id?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       allocation_candidate: {
         Row: {
           composite_rank: number

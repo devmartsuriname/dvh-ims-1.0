@@ -1,25 +1,25 @@
 
-# DVH-IMS V1.2 — Phase 4 Planning Pack
+# DVH-IMS V1.2 — Phase 5 Planning Pack
 
-## Operational Workflows & Data Integrity
+## Services Module Decomposition
 
 **Version:** 1.0  
 **Date:** 2026-01-30  
-**Phase:** 4 — Operational Workflows & Data Integrity  
+**Phase:** 5 — Services Module Decomposition  
 **Status:** PLANNING
 
 ---
 
 ## 1. Executive Summary
 
-Phase 4 focuses on validating operational readiness of all DVH-IMS workflows with real data, ensuring all state transitions are properly enforced, audited, and role-gated.
+Phase 5 focuses on validating alignment between the implemented service logic and the V1.2 Services Module Decomposition document. This phase verifies that existing Edge Functions, client-side service calls, and workflow handlers correctly implement the service architecture defined in the planning documents.
 
 **Key Objectives:**
-- End-to-end workflow execution validation (no demo paths)
-- State transition enforcement at UI + backend level
-- Complete audit trail coverage
-- Role-based action enforcement verification
-- Darkone UI consistency for all workflow actions
+- Map existing implementations to documented service definitions
+- Validate Bouwsubsidie-specific services (including Raadvoorstel Generation)
+- Validate Woning Registratie-specific services
+- Verify service boundaries and exclusions are respected
+- Document any gaps between specification and implementation
 
 ---
 
@@ -29,305 +29,383 @@ Phase 4 focuses on validating operational readiness of all DVH-IMS workflows wit
 
 | Item | Description | Deliverable |
 |------|-------------|-------------|
-| Workflow Execution Validation | Validate all status flows execute correctly | Workflow Test Report |
-| Transition Enforcement | Verify UI + backend alignment | Enforcement Gap Analysis |
-| Audit Completeness | Verify all actions logged with actor_role | Audit Coverage Matrix |
-| RBAC Verification | Validate role-based access at all points | RBAC Verification Report |
-| UI Consistency | Check Darkone compliance for workflows | UI Compliance Checklist |
+| Service Inventory | Map all existing service implementations | Service Implementation Matrix |
+| Service-Workflow Alignment | Verify services follow documented workflows | Alignment Report |
+| Bouwsubsidie Services | Validate Financial Assessment, Raadvoorstel, Allocation | Module Verification Report |
+| Woning Registratie Services | Validate Registration, Urgency, Allocation | Module Verification Report |
+| Cross-Cutting Services | Verify Audit, RBAC enforcement | Cross-Cut Verification |
+| Service Boundaries | Confirm exclusions are respected | Boundary Validation |
 
 ### 2.2 Explicit Out of Scope
 
 | Item | Reason |
 |------|--------|
 | Schema changes | Requires explicit authorization |
+| New Edge Functions | Beyond verification scope |
 | New roles | Governance constraint |
-| Demo data / routes | Explicit exclusion |
-| Public Wizard changes | Implemented, frozen |
-| /docs edits | Read-only |
+| Notification implementation | Documented as planning-only |
+| External integrations | Explicitly excluded in V1.2 |
 
 ---
 
-## 3. Current State Analysis
+## 3. Current Service Implementation Analysis
 
-### 3.1 Workflow Status Flows (From Phase 2)
+### 3.1 Edge Functions (Backend Services)
 
-**Bouwsubsidie (Construction Subsidy):**
-```
-received → screening → needs_more_docs → fieldwork → approved_for_council → council_doc_generated → finalized
-                     ↘ rejected
-```
+| Function | V1.2 Service Mapping | Status |
+|----------|----------------------|--------|
+| `execute-allocation-run` | Subsidy Allocation Service (Housing) | ✅ Implemented |
+| `generate-raadvoorstel` | Raadvoorstel Generation Service | ✅ Implemented |
+| `get-document-download-url` | Document Access (supporting) | ✅ Implemented |
+| `submit-bouwsubsidie-application` | Intake Service (Bouwsubsidie) | ✅ Implemented |
+| `submit-housing-registration` | Intake Service (Housing) | ✅ Implemented |
+| `lookup-public-status` | Status Lookup (supporting) | ✅ Implemented |
 
-**Woning Registratie (Housing Registration):**
-```
-received → under_review → urgency_assessed → waiting_list → matched → allocated → finalized
-                                                                   ↘ rejected
-```
+### 3.2 Client-Side Service Implementations
 
-### 3.2 Transition Enforcement Analysis
+| Component | V1.2 Service Mapping | Implementation |
+|-----------|----------------------|----------------|
+| CaseFormModal | Dossier Management Service | Direct Supabase insert |
+| RegistrationFormModal | Dossier Management Service | Direct Supabase insert |
+| PersonFormModal | Shared Core (Person management) | Direct Supabase upsert |
+| HouseholdFormModal | Shared Core (Household management) | Direct Supabase insert |
+| UrgencyAssessmentForm | Registration Validation Service | Direct Supabase insert |
+| DecisionFormModal | Decision Service | Direct Supabase insert |
+| AssignmentFormModal | Registry Recording Service | Direct Supabase insert |
+| Status Change Handlers | Review & Assessment Service | Direct Supabase update |
 
-| Module | UI Enforcement | Backend Enforcement | Gap |
-|--------|----------------|---------------------|-----|
-| Bouwsubsidie | STATUS_TRANSITIONS constant | RLS allows UPDATE by role | UI-only validation |
-| Housing Registration | STATUS_TRANSITIONS constant | RLS allows UPDATE by role | UI-only validation |
-| Allocation Runs | N/A (Edge Function) | RBAC in Edge Function | Fully enforced |
+### 3.3 V1.2 Services vs Implementation Matrix
 
-### 3.3 Audit Coverage Analysis (From Database)
+#### Shared Core Services
 
-| Action | Entity Type | Actor Role | Count | Status |
-|--------|-------------|------------|-------|--------|
-| status_lookup | public_status_access | public | 8 | ✅ Logged |
-| public_submission | subsidy_case | public | 7 | ✅ Logged |
-| public_submission | housing_registration | public | 6 | ✅ Logged |
-| CREATE | allocation_run | system_admin | 2 | ✅ Logged |
-| CREATE | person | NULL (legacy) | 1 | ⚠️ Pre-fix |
-| UPDATE | person | NULL (legacy) | 1 | ⚠️ Pre-fix |
+| Service | Documented | Implemented | Method |
+|---------|------------|-------------|--------|
+| Intake Service | ✅ | ✅ | Edge Functions (public) + Modals (admin) |
+| Dossier Management Service | ✅ | ✅ | Client-side modals + RLS |
+| Review & Assessment Service | ✅ | ✅ | Status change handlers |
+| Decision Service | ✅ | ✅ | DecisionFormModal + status handlers |
+| Audit & Traceability Service | ✅ | ✅ | useAuditLog hook + Edge direct inserts |
 
-### 3.4 Role-Based Access Control
+#### Bouwsubsidie-Specific Services
 
-**Current Roles (app_role enum):**
-- system_admin
-- minister
-- project_leader
-- frontdesk_bouwsubsidie
-- frontdesk_housing
-- admin_staff
-- audit
+| Service | Documented | Implemented | Method |
+|---------|------------|-------------|--------|
+| Financial Assessment Service | ✅ | ⚠️ Partial | Fields exist, no formal assessment logic |
+| Raadvoorstel Generation Service | ✅ | ✅ | Edge Function (generate-raadvoorstel) |
+| Subsidy Allocation Service | ✅ | ⚠️ Partial | approved_amount field, no formal allocation flow |
 
-**Role Verification Points:**
-1. Route access (AdminLayout + page-level ALLOWED_ROLES)
-2. RLS policies (database level)
-3. Edge Function RBAC (explicit role check)
-4. UI component visibility (useUserRole hook)
+#### Woning Registratie-Specific Services
 
----
+| Service | Documented | Implemented | Method |
+|---------|------------|-------------|--------|
+| Registration Validation Service | ✅ | ✅ | UrgencyAssessmentForm + status flow |
+| Registry Recording Service | ✅ | ✅ | execute-allocation-run Edge Function |
 
-## 4. Phase 4 Verification Activities
+#### Cross-Cutting Services
 
-### 4.1 End-to-End Workflow Validation
-
-**Test Matrix for Bouwsubsidie:**
-
-| Test Case | Start State | End State | Role | Expected Result |
-|-----------|-------------|-----------|------|-----------------|
-| T1.1 | received | screening | frontdesk_bouwsubsidie | Success + Audit |
-| T1.2 | screening | fieldwork | frontdesk_bouwsubsidie | Success + Audit |
-| T1.3 | fieldwork | approved_for_council | project_leader | Success + Audit |
-| T1.4 | approved_for_council | council_doc_generated | (Edge Function) | Success + Audit |
-| T1.5 | council_doc_generated | finalized | minister | Success + Audit |
-| T1.6 | Any | rejected | Any authorized | Success + Audit |
-| T1.7 | finalized | Any | Any | Blocked (terminal) |
-
-**Test Matrix for Housing Registration:**
-
-| Test Case | Start State | End State | Role | Expected Result |
-|-----------|-------------|-----------|------|-----------------|
-| T2.1 | received | under_review | frontdesk_housing | Success + Audit |
-| T2.2 | under_review | urgency_assessed | frontdesk_housing | Success + Audit |
-| T2.3 | urgency_assessed | waiting_list | admin_staff | Success + Audit |
-| T2.4 | waiting_list | matched | (Edge Function) | Success + Audit |
-| T2.5 | matched | allocated | frontdesk_housing | Success + Audit |
-| T2.6 | allocated | finalized | frontdesk_housing | Success + Audit |
-| T2.7 | Any | rejected | Any authorized | Success + Audit |
-
-### 4.2 Backend Enforcement Gap Analysis
-
-**Current Gap:** Status transitions are enforced only at UI level via `STATUS_TRANSITIONS` constant. The RLS policies allow any authorized role to UPDATE the status column without validating the transition path.
-
-**Risk Assessment:**
-- Direct API calls could bypass UI validation
-- Risk: Invalid state transitions possible via direct Supabase client
-
-**Mitigation Options (Documentation Only):**
-1. Database trigger for transition validation (requires schema change)
-2. Edge Function wrapper for status changes (requires new function)
-3. Accept UI-only enforcement with audit monitoring
-
-**Recommendation:** Document gap and defer to Phase 5/6 for implementation decision.
-
-### 4.3 Audit Completeness Verification
-
-**Capture Points to Verify:**
-
-| Component | Entity | Action | Actor Role Capture |
-|-----------|--------|--------|-------------------|
-| PersonFormModal | person | CREATE/UPDATE | ✅ From user_roles (Phase 2 fix) |
-| HouseholdFormModal | household | CREATE | ✅ From user_roles |
-| CaseFormModal | subsidy_case | CREATE | ✅ From user_roles |
-| RegistrationFormModal | housing_registration | CREATE | ✅ From user_roles |
-| subsidy-cases/[id]/page | subsidy_case | STATUS_CHANGE | ✅ From user_roles |
-| housing-registrations/[id]/page | housing_registration | STATUS_CHANGE | ✅ From user_roles |
-| DecisionFormModal | allocation_decision | CREATE | ✅ From user_roles |
-| AssignmentFormModal | assignment_record | CREATE | ✅ From user_roles |
-| UrgencyAssessmentForm | housing_urgency | CREATE | ✅ From user_roles |
-| QuotaTable | district_quota | CREATE/UPDATE | ✅ From user_roles |
-| RunExecutorModal | allocation_run | CREATE | ✅ From user_roles |
-| Edge: execute-allocation-run | allocation_run | CREATE | ✅ Direct insert |
-| Edge: generate-raadvoorstel | generated_document | document_generated | ✅ Direct insert |
-| Edge: submit-bouwsubsidie | subsidy_case | public_submission | ✅ Direct insert |
-| Edge: submit-housing-registration | housing_registration | public_submission | ✅ Direct insert |
-
-### 4.4 Role-Based Action Enforcement
-
-**Verification Checklist:**
-
-| Action | Enforcement Layer | Roles Allowed | Verification Method |
-|--------|-------------------|---------------|---------------------|
-| View Dashboard | Route + RLS | All authenticated | Login as each role |
-| View Subsidy Cases | Route + RLS | frontdesk_bouwsubsidie, admin_staff, national | Query test |
-| Create Subsidy Case | RLS | frontdesk_bouwsubsidie, admin_staff (district), system_admin, project_leader | Insert test |
-| Change Subsidy Status | RLS | frontdesk_bouwsubsidie, admin_staff (district), national | Update test |
-| View Housing Registrations | Route + RLS | frontdesk_housing, admin_staff, national | Query test |
-| Execute Allocation Run | Edge + RLS | system_admin, project_leader | Edge Function call |
-| View Audit Log | Route + RLS | audit, system_admin, minister, project_leader | Query test |
-| Generate Raadvoorstel | Edge + RLS | frontdesk_bouwsubsidie, admin_staff (district) | Edge Function call |
-
-### 4.5 UI Consistency Check (Darkone)
-
-**Components to Verify:**
-
-| Component | Location | Darkone Compliance |
-|-----------|----------|-------------------|
-| Status Badge | Case/Registration detail | ✅ Bootstrap badges |
-| Transition Buttons | Change Status card | ✅ Bootstrap buttons |
-| Form Modal | All create/edit modals | ✅ Bootstrap modal |
-| Tables | List pages | ✅ Bootstrap table |
-| Tabs | Detail pages | ✅ Bootstrap tabs |
-| Alerts/Toasts | Notifications | ✅ react-toastify |
+| Service | Documented | Implemented | Status |
+|---------|------------|-------------|--------|
+| Notification Orchestration Service | ✅ | ❌ | Documented as planning-only |
+| Reporting & Statistics Service | ✅ | ⚠️ Partial | Dashboard exists, aggregations manual |
+| Role & Authority Enforcement | ✅ | ✅ | RLS + useUserRole + Edge RBAC |
 
 ---
 
-## 5. Execution Plan
+## 4. Service-to-Workflow Mapping Verification
+
+### 4.1 Documented Mapping (from V1.2 Services Decomposition)
+
+| Workflow Phase | Primary Service | Implementation |
+|----------------|-----------------|----------------|
+| Submission | Intake Service | Edge Functions (public) / Modals (admin) |
+| Dossier Creation | Dossier Management Service | CaseFormModal / RegistrationFormModal |
+| Review | Review & Assessment Service | Status change handlers |
+| Decision | Decision Service | DecisionFormModal + status handlers |
+| Raadvoorstel | Raadvoorstel Generation Service | generate-raadvoorstel Edge Function |
+| Finalization | Subsidy Allocation / Registry Recording | Status finalization + allocation runs |
+
+### 4.2 Bouwsubsidie Workflow Coverage
+
+| Phase | Service | Edge Function | Client Component | Status |
+|-------|---------|---------------|------------------|--------|
+| Public Submission | Intake | submit-bouwsubsidie-application | (none) | ✅ |
+| Admin Creation | Dossier Mgmt | (none) | CaseFormModal | ✅ |
+| Screening | Review | (none) | Status handler | ✅ |
+| Fieldwork | Review | (none) | Status handler | ✅ |
+| Council Approval | Decision | (none) | Status handler | ✅ |
+| Raadvoorstel | Raadvoorstel Gen | generate-raadvoorstel | Generate button | ✅ |
+| Finalization | Subsidy Allocation | (none) | Status handler | ✅ |
+
+### 4.3 Woning Registratie Workflow Coverage
+
+| Phase | Service | Edge Function | Client Component | Status |
+|-------|---------|---------------|------------------|--------|
+| Public Submission | Intake | submit-housing-registration | (none) | ✅ |
+| Admin Creation | Dossier Mgmt | (none) | RegistrationFormModal | ✅ |
+| Review | Review | (none) | Status handler | ✅ |
+| Urgency Assessment | Registration Validation | (none) | UrgencyAssessmentForm | ✅ |
+| Waiting List | Registry Recording | (none) | Status handler | ✅ |
+| Matching | Registry Recording | execute-allocation-run | RunExecutorModal | ✅ |
+| Allocation | Registry Recording | (none) | Status handler | ✅ |
+| Finalization | Registry Recording | (none) | Status handler | ✅ |
+
+---
+
+## 5. Raadvoorstel Service Verification
+
+### 5.1 Service Alignment
+
+**Documented Specification (V1.2 Backend Design Overview):**
+
+| Aspect | Specification | Implementation |
+|--------|---------------|----------------|
+| Purpose | Generate Raadvoorstel after approval | ✅ Generates DOCX after approved_for_council |
+| Input | Approved Bouwsubsidie dossier | ✅ Validates status is eligible |
+| Output | Raadvoorstel document | ✅ Produces DOCX via docx library |
+| Authority | System (triggered post-approval) | ⚠️ User-triggered, not automatic |
+| Audit | Generation event logged | ✅ Logs document_generated event |
+
+### 5.2 Implementation Details
+
+**Edge Function:** `generate-raadvoorstel`
+- **RBAC:** system_admin, project_leader, frontdesk_bouwsubsidie, admin_staff
+- **Status Validation:** Must be approved_for_council, council_doc_generated, or finalized
+- **Output:** DOCX document with structured sections
+- **Audit:** Logs to audit_event with actor_role
+
+### 5.3 Module Exclusion Verification
+
+**V1.2 Requirement:** Raadvoorstel applies ONLY to Bouwsubsidie. Woning Registratie explicitly excludes this service.
+
+**Verification:**
+- generate-raadvoorstel queries `subsidy_case` table only
+- No Raadvoorstel UI in housing-registrations detail page
+- No generate-raadvoorstel references in housing module
+
+**Status:** ✅ COMPLIANT
+
+---
+
+## 6. Service Boundary Verification
+
+### 6.1 Documented Exclusions (from V1.2 Services Decomposition)
+
+| Exclusion | Requirement | Status |
+|-----------|-------------|--------|
+| No external payment services | Not implemented | ✅ COMPLIANT |
+| No automated decision engines | All decisions manual | ✅ COMPLIANT |
+| No public notification channels | Notifications not active | ✅ COMPLIANT |
+| No cross-dossier automation | Each dossier independent | ✅ COMPLIANT |
+
+### 6.2 Notification Service Status
+
+**V1.2 Note:** Notification services are documented but not implemented in V1.2.
+
+**Current State:**
+- No notification Edge Functions exist
+- No notification triggers in workflows
+- Notification documented in planning only
+
+**Status:** ✅ COMPLIANT (correctly not implemented)
+
+---
+
+## 7. Audit-First Design Verification
+
+### 7.1 Service-Level Audit Compliance
+
+| Service Implementation | Audit Event | actor_role | Status |
+|------------------------|-------------|------------|--------|
+| submit-bouwsubsidie-application | public_submission | 'public' | ✅ |
+| submit-housing-registration | public_submission | 'public' | ✅ |
+| generate-raadvoorstel | document_generated | From user_roles | ✅ |
+| execute-allocation-run | CREATE | From user_roles | ✅ |
+| get-document-download-url | document_downloaded | From user_roles | ✅ |
+| lookup-public-status | status_lookup | 'public' | ✅ |
+| Client: CaseFormModal | CREATE | Via useAuditLog | ✅ |
+| Client: Status handlers | STATUS_CHANGE | Via useAuditLog | ✅ |
+
+### 7.2 Immutability Verification
+
+**V1.2 Requirement:** Audit & Traceability Service must produce immutable logs.
+
+**Verification (from Phase 3):**
+- No UPDATE RLS policy on audit_event
+- No DELETE RLS policy on audit_event
+- UI has no edit/delete paths
+
+**Status:** ✅ VERIFIED (Phase 3 closure)
+
+---
+
+## 8. Gap Analysis
+
+### 8.1 Documented Gaps
+
+| ID | Service | Gap | Impact | Recommendation |
+|----|---------|-----|--------|----------------|
+| S-01 | Financial Assessment | No formal assessment logic | LOW | Fields exist, workflow supports manual assessment |
+| S-02 | Subsidy Allocation | No formal allocation workflow | LOW | approved_amount + finalized status sufficient |
+| S-03 | Notification Orchestration | Not implemented | EXPECTED | Documented as planning-only |
+| S-04 | Reporting & Statistics | Manual aggregations | LOW | Dashboard functional, optimization deferred |
+
+### 8.2 Design Deviations
+
+| Deviation | Documented | Implemented | Justification |
+|-----------|------------|-------------|---------------|
+| Raadvoorstel trigger | System (auto) | User (button) | User control preferred |
+| Service layer | Dedicated services | RLS + Edge + Client | Supabase architecture |
+
+---
+
+## 9. Phase 5 Verification Activities
+
+### 9.1 Pre-Verification Checklist
+
+| # | Item | Status |
+|---|------|--------|
+| 1 | Restore point created | ⏳ PENDING |
+| 2 | Edge Functions inventory | ✅ Section 3 |
+| 3 | Client service mapping | ✅ Section 3 |
+| 4 | Workflow alignment | ✅ Section 4 |
+| 5 | Raadvoorstel verification | ✅ Section 5 |
+| 6 | Boundary compliance | ✅ Section 6 |
+| 7 | Audit compliance | ✅ Section 7 |
+
+### 9.2 Verification Activities
+
+| Activity | Method | Deliverable |
+|----------|--------|-------------|
+| Edge Function code review | Read function implementations | Code alignment notes |
+| Service boundary check | Search for exclusion violations | Boundary report |
+| Workflow-to-service trace | Map each workflow step to service | Trace matrix |
+| Audit capture validation | Query audit_event by service | Coverage report |
+
+---
+
+## 10. Execution Plan
 
 ### Step 1: Create Restore Point
-- Create `RESTORE_POINT_V1.2_PHASE4_WORKFLOWS_START.md`
-- Record current state baseline
+Create `RESTORE_POINT_V1.2_PHASE5_SERVICES_START.md` in `/restore-points/v1.2/`
 
-### Step 2: Database Verification
-- Query audit_event for coverage
-- Verify RLS policies active
-- Check transition data exists
+### Step 2: Service Implementation Verification
+- Review all 6 Edge Functions for service alignment
+- Verify RBAC implementation per function
+- Confirm audit logging per function
 
-### Step 3: Workflow Path Validation
-- Document all valid transition paths
-- Verify terminal states block further changes
-- Confirm audit events generated
+### Step 3: Workflow-Service Mapping Validation
+- Trace each workflow phase to implementing service
+- Document any missing service implementations
+- Verify service boundaries respected
 
-### Step 4: RBAC Verification
-- Test each role's access boundaries
-- Verify district isolation
-- Confirm audit role read-only
+### Step 4: Module-Specific Verification
+- Bouwsubsidie: Validate Raadvoorstel flow end-to-end
+- Housing: Validate allocation run flow end-to-end
 
-### Step 5: Gap Documentation
-- Document backend enforcement gap
-- Document any missing audit points
-- Propose remediation for future phases
-
-### Step 6: Final Report
-- Generate Phase 4 Verification Report
+### Step 5: Documentation
+- Generate Phase 5 Verification Report
+- Document gaps and deferred items
 - Create closure statement
-- Update README
 
 ---
 
-## 6. Deliverables
+## 11. Deliverables
 
 | Document | Location | Status |
 |----------|----------|--------|
-| RESTORE_POINT_V1.2_PHASE4_WORKFLOWS_START.md | `/restore-points/v1.2/` | Pending |
-| Phase 4 Planning Pack | `/phases/DVH-IMS-V1.2/` | This document |
-| Workflow Validation Report | `/phases/DVH-IMS-V1.2/` | Pending |
-| RBAC Verification Report | `/phases/DVH-IMS-V1.2/` | Pending |
-| Phase 4 Closure Statement | `/phases/DVH-IMS-V1.2/` | Pending |
+| RESTORE_POINT_V1.2_PHASE5_SERVICES_START.md | `/restore-points/v1.2/` | Pending |
+| Phase 5 Planning Pack | `/phases/DVH-IMS-V1.2/` | This document |
+| Service Implementation Matrix | Section 3 | ✅ COMPLETE |
+| Workflow-Service Trace | Section 4 | ✅ COMPLETE |
+| Phase 5 Verification Report | `/phases/DVH-IMS-V1.2/` | Pending |
+| Phase 5 Closure Statement | `/phases/DVH-IMS-V1.2/` | Pending |
 
 ---
 
-## 7. Governance Compliance
+## 12. Governance Compliance
 
 | Rule | Status |
 |------|--------|
 | No schema changes | ✅ Compliant (verification only) |
+| No new Edge Functions | ✅ Compliant |
 | No new roles | ✅ Compliant |
-| No demo data | ✅ Compliant (real data only) |
 | No /docs edits | ✅ Compliant (read-only) |
-| Darkone compliance | ✅ Verification only |
+| Darkone compliance | N/A (no UI changes) |
 
 ---
 
-## 8. Risk Assessment
+## 13. Risk Assessment
 
 | Risk | Probability | Impact | Mitigation |
 |------|-------------|--------|------------|
-| Backend enforcement gap | Known | Medium | Document + defer |
-| Missing audit coverage | Low | Medium | Verification will identify |
-| RBAC bypass found | Low | High | STOP + REPORT |
-| UI inconsistency | Low | Low | Document for future |
+| Missing service implementation | Low | Medium | Document and defer |
+| Service boundary violation | Low | High | STOP + REPORT |
+| Raadvoorstel in wrong module | Low | High | Already verified negative |
+| Audit gap in service | Low | Medium | Phase 3 verified |
 
 ---
 
-## 9. Technical Scope
+## 14. Technical Summary
 
-### Files to Read (Verification Only)
+### Current Architecture
 
-| File | Purpose |
-|------|---------|
-| `subsidy-cases/[id]/page.tsx` | Workflow transitions |
-| `housing-registrations/[id]/page.tsx` | Workflow transitions |
-| `useAuditLog.ts` | Audit capture |
-| `useUserRole.ts` | RBAC implementation |
-| All form modals | Audit event calls |
-| All Edge Functions | Backend enforcement |
-
-### Database Queries (Read Only)
-
-```sql
--- Audit coverage by action
-SELECT action, entity_type, actor_role, COUNT(*) 
-FROM audit_event 
-GROUP BY action, entity_type, actor_role;
-
--- Status distribution (if data exists)
-SELECT status, COUNT(*) FROM subsidy_case GROUP BY status;
-SELECT current_status, COUNT(*) FROM housing_registration GROUP BY current_status;
+```text
++----------------------------------+
+|        PUBLIC LAYER              |
++----------------------------------+
+| Edge Functions:                  |
+| - submit-bouwsubsidie-application|
+| - submit-housing-registration    |
+| - lookup-public-status           |
++----------------------------------+
+             |
+             v
++----------------------------------+
+|      AUTHENTICATED LAYER         |
++----------------------------------+
+| Edge Functions:                  |
+| - generate-raadvoorstel          |
+| - execute-allocation-run         |
+| - get-document-download-url      |
+|                                  |
+| Client Services:                 |
+| - Form Modals (CRUD)             |
+| - Status Handlers (Transitions)  |
+| - useAuditLog (Audit capture)    |
++----------------------------------+
+             |
+             v
++----------------------------------+
+|         RLS LAYER                |
++----------------------------------+
+| - Role-based access              |
+| - District isolation             |
+| - Audit immutability             |
++----------------------------------+
+             |
+             v
++----------------------------------+
+|      PERSISTENCE LAYER           |
++----------------------------------+
+| - Dossier tables                 |
+| - Status history tables          |
+| - Audit event table              |
+| - Generated documents            |
++----------------------------------+
 ```
 
 ---
 
-## 10. Authorization Request
+## 15. Authorization Request
 
-This Planning Pack defines Phase 4 scope, objectives, and verification approach.
+This Planning Pack defines Phase 5 scope, objectives, and verification approach.
 
 **Awaiting explicit approval to:**
-1. Create Phase 4 START restore point
-2. Execute verification activities (database queries + code review)
-3. Generate Phase 4 completion documentation
+1. Create Phase 5 START restore point
+2. Execute verification activities
+3. Generate Phase 5 completion documentation
 
-**No implementation or code changes will occur unless explicitly authorized.**
-
----
-
-## 11. End-of-Task Report Format
-
-At completion, report will include:
-
-```
-IMPLEMENTED:
-- Items fully verified and documented
-
-PARTIAL:
-- Items with gaps requiring future work
-
-SKIPPED:
-- Items not applicable or blocked
-
-VERIFICATION:
-- All verification activities performed
-
-RESTORE POINT:
-- Reference to created restore point
-
-BLOCKERS / ERRORS:
-- NONE (if clean) or explicit description
-```
+**No implementation or code changes will occur.**
 
 ---
 

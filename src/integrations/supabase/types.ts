@@ -268,6 +268,7 @@ export type Database = {
           action: string
           actor_role: string | null
           actor_user_id: string | null
+          correlation_id: string | null
           entity_id: string | null
           entity_type: string
           id: string
@@ -279,6 +280,7 @@ export type Database = {
           action: string
           actor_role?: string | null
           actor_user_id?: string | null
+          correlation_id?: string | null
           entity_id?: string | null
           entity_type: string
           id?: string
@@ -290,6 +292,7 @@ export type Database = {
           action?: string
           actor_role?: string | null
           actor_user_id?: string | null
+          correlation_id?: string | null
           entity_id?: string | null
           entity_type?: string
           id?: string

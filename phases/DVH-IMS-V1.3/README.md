@@ -15,6 +15,7 @@
 | Phase 2 | Admin Notifications (S-03) | **CLOSED** | 2026-01-30 |
 | Phase 3 | Role & Workflow Preparation | **CLOSED** | 2026-01-30 |
 | Phase 4A | Social Field Worker Activation | **CLOSED** | 2026-01-30 |
+| Phase 4B | Technical Inspector Activation | **CLOSED** | 2026-01-30 |
 
 ---
 
@@ -96,17 +97,6 @@
 - `RESTORE_POINT_V1.3_PHASE3_START`
 - `RESTORE_POINT_V1.3_PHASE3_COMPLETE`
 
-**Prepared Roles (NOT ACTIVE):**
-
-| Role | Proposed Enum | Service | Status |
-|------|---------------|---------|--------|
-| Social Field Worker | social_field_worker | Both | ⏸️ PREPARED |
-| Technical Inspector | technical_inspector | Bouwsubsidie Only | ⏸️ PREPARED |
-| Director | director | Both | ⏸️ PREPARED |
-| Ministerial Advisor | ministerial_advisor | Bouwsubsidie Only | ⏸️ PREPARED |
-
-**System Behavior:** UNCHANGED — All 7 current roles remain operational.
-
 ---
 
 ## Phase 4A — CLOSED
@@ -141,13 +131,64 @@
 |------|------------|---------|--------|
 | Social Field Worker | social_field_worker | Bouwsubsidie Only | ✅ ACTIVE |
 
+---
+
+## Phase 4B — CLOSED
+
+**Scope:** Technical Inspector Activation (Bouwsubsidie Only)
+
+**Deliverables:**
+
+| ID | Deliverable | Status |
+|----|-------------|--------|
+| P4B-DB-1 | app_role enum extension (technical_inspector) | **FINAL** |
+| P4B-DB-2 | Updated subsidy_case transition trigger (technical review states) | **FINAL** |
+| P4B-DB-3 | 12 RLS policies for technical_inspector | **FINAL** |
+| P4B-TS-1 | AppRole type update | **FINAL** |
+| P4B-TS-2 | AuditAction type update | **FINAL** |
+| P4B-UI-1 | Status transitions and badges | **FINAL** |
+
+**Documentation:**
+
+| Document | Location | Status |
+|----------|----------|--------|
+| Activation Report | [PHASE-4B/PHASE-4B-ACTIVATION-REPORT.md](./PHASE-4B/PHASE-4B-ACTIVATION-REPORT.md) | FINAL |
+| Verification Checklist | [PHASE-4B/PHASE-4B-VERIFICATION-CHECKLIST.md](./PHASE-4B/PHASE-4B-VERIFICATION-CHECKLIST.md) | FINAL |
+| Risk Observations | [PHASE-4B/PHASE-4B-RISK-OBSERVATIONS.md](./PHASE-4B/PHASE-4B-RISK-OBSERVATIONS.md) | FINAL |
+
+**Restore Points:**
+- `RESTORE_POINT_V1.3_PHASE4B_START`
+- `RESTORE_POINT_V1.3_PHASE4B_COMPLETE`
+
+**Activated Role:**
+
+| Role | Enum Value | Service | Status |
+|------|------------|---------|--------|
+| Technical Inspector | technical_inspector | Bouwsubsidie Only | ✅ ACTIVE |
+
 **New Status Values (Bouwsubsidie):**
 
 | Status | Description |
 |--------|-------------|
-| in_social_review | Case in social assessment |
-| social_completed | Social assessment completed |
-| returned_to_intake | Returned to intake |
+| in_technical_review | Case in technical inspection |
+| technical_approved | Technical inspection completed |
+| returned_to_social | Returned to social field worker |
+
+---
+
+## Current Active Roles (9 Total)
+
+| Role | Enum Value | Service | Phase Activated |
+|------|------------|---------|-----------------|
+| System Admin | system_admin | Both | V1.1 |
+| Minister | minister | Both | V1.1 |
+| Project Leader | project_leader | Both | V1.1 |
+| Frontdesk Bouwsubsidie | frontdesk_bouwsubsidie | Bouwsubsidie | V1.1 |
+| Frontdesk Housing | frontdesk_housing | Woningregistratie | V1.1 |
+| Admin Staff | admin_staff | Both | V1.1 |
+| Audit | audit | Both | V1.1 |
+| Social Field Worker | social_field_worker | Bouwsubsidie Only | V1.3 Phase 4A |
+| Technical Inspector | technical_inspector | Bouwsubsidie Only | V1.3 Phase 4B |
 
 ---
 
@@ -160,7 +201,6 @@ The following remain NOT authorized for V1.3:
 | Scale/Performance (SP-A/B/C) | NOT TOUCHED |
 | Service refactors (S-01, S-02) | NOT TOUCHED |
 | UI changes | NOT TOUCHED |
-| Technical Inspector activation | NOT YET AUTHORIZED |
 | Director activation | NOT YET AUTHORIZED |
 | Ministerial Advisor activation | NOT YET AUTHORIZED |
 | Woningregistratie workflow changes | NOT TOUCHED |
@@ -179,20 +219,21 @@ The following remain NOT authorized for V1.3:
 | Phase 2 is LOCKED from further modification | ✓ ENFORCED |
 | Phase 3 is LOCKED from further modification | ✓ ENFORCED |
 | Phase 4A is LOCKED from further modification | ✓ ENFORCED |
-| Woningregistratie unchanged after Phase 4A | ✓ CONFIRMED |
+| Phase 4B is LOCKED from further modification | ✓ ENFORCED |
+| Woningregistratie unchanged after Phase 4B | ✓ CONFIRMED |
 
 ---
 
 ## Next Phase (Requires Authorization)
 
-**Phase 4B: Technical Inspector Activation (Bouwsubsidie Only)**
+**Phase 4C: Director Activation (Bouwsubsidie Only)**
 
 Prerequisites:
 - Explicit authorization from Delroy
-- Database enum extension (technical_inspector)
+- Database enum extension (director)
 - RLS policy creation
 - TypeScript updates
-- Trigger update for technical review states
+- Trigger update for director approval states
 
 **Status:** AWAITING AUTHORIZATION
 

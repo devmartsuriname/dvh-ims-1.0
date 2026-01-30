@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client'
 import type { Json } from '@/integrations/supabase/types'
 
-type AuditAction = 'create' | 'update' | 'delete' | 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'SOCIAL_ASSESSMENT_STARTED' | 'SOCIAL_ASSESSMENT_COMPLETED' | 'SOCIAL_ASSESSMENT_RETURNED'
+type AuditAction = 'create' | 'update' | 'delete' | 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'SOCIAL_ASSESSMENT_STARTED' | 'SOCIAL_ASSESSMENT_COMPLETED' | 'SOCIAL_ASSESSMENT_RETURNED' | 'TECHNICAL_INSPECTION_STARTED' | 'TECHNICAL_INSPECTION_COMPLETED' | 'TECHNICAL_INSPECTION_RETURNED'
 type EntityType = 'person' | 'household' | 'household_member' | 'contact_point' | 'address' | 'subsidy_case' | 'subsidy_document' | 'subsidy_document_upload' | 'social_report' | 'technical_report' | 'housing_registration' | 'housing_urgency' | 'district_quota' | 'allocation_run' | 'allocation_decision' | 'assignment_record' | 'admin_notification'
 
 interface AuditLogParams {

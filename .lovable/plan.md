@@ -1,11 +1,12 @@
 
-# DVH-IMS V1.3 — Phase 3 Preparation Plan
+
+# DVH-IMS V1.3 — Phase 4A Execution Plan
 
 ## Document Type: Phase Scope & Execution Plan
 ## Version: 1.0
 ## Date: 2026-01-30
-## Phase: Phase 3 — Role & Workflow Activation Preparation (STRUCTURE ONLY)
-## Authorization: OPTION 2 → OPTION 1 Path
+## Phase: Phase 4A — Social Field Worker Activation (Bouwsubsidie Only)
+## Authorization: OPTION 2 → OPTION 1 Path (First Controlled Activation)
 
 ---
 
@@ -17,475 +18,443 @@
 | DVH-IMS V1.2 | CLOSED (Documentation Only) |
 | V1.3 Phase 1 (D-01 + D-02) | CLOSED & LOCKED |
 | V1.3 Phase 2 (S-03) | CLOSED & LOCKED |
-| V1.3 Phase 3 | OPEN — PREPARATION ONLY |
+| V1.3 Phase 3 (Preparation) | CLOSED & LOCKED |
+| V1.3 Phase 4A | OPEN — First Role Activation |
 
-**Governing Principle:** No operational activation, no UI exposure, no account assignment.
-
----
-
-## 2. Current Role Inventory
-
-### 2.1 Active Roles (Current app_role Enum)
-
-| Enum Value | V1.2 Mapping | Account Exists | Service Applicability |
-|------------|--------------|----------------|----------------------|
-| `system_admin` | System Administrator | Yes | Technical Only |
-| `minister` | Minister | Yes | Bouwsubsidie (Decision) |
-| `project_leader` | Project Leader/Deputy Director | Yes | Both Services |
-| `frontdesk_bouwsubsidie` | Frontdesk (BS) | Yes | Bouwsubsidie |
-| `frontdesk_housing` | Frontdesk (WR) | Yes | Woningregistratie |
-| `admin_staff` | Administrative Officer | Yes | Both Services |
-| `audit` | Auditor | Yes | Read-Only |
-
-### 2.2 Missing Roles (V1.2 Documented, Not Instantiated)
-
-| V1.2 Role | Proposed Enum Value | Service Applicability | Decision Chain Position |
-|-----------|---------------------|----------------------|------------------------|
-| Social Field Worker | `social_field_worker` | Both (Parallel) | Step 1 (Parallel) |
-| Technical Inspector | `technical_inspector` | Bouwsubsidie Only | Step 2 |
-| Director | `director` | Both | Step 5 |
-| Ministerial Advisor | `ministerial_advisor` | Bouwsubsidie Only | Step 6 |
+**Scope Constraint:** Bouwsubsidie ONLY — Woningregistratie remains UNCHANGED
 
 ---
 
-## 3. Phase 3 Objective
+## 2. Phase 4A Objective
 
-**Prepare the structural foundation for the full V1.2 role and workflow model WITHOUT activating it.**
-
-### 3.1 What "Preparation" Means
-
-| Allowed | Not Allowed |
-|---------|-------------|
-| Define TypeScript type extensions (parallel types) | Modify existing `AppRole` type |
-| Create preparatory documentation | Modify database enum |
-| Map state transitions per role (documentation) | Add RLS policies referencing new roles |
-| Define future RBAC policy templates | Expose new roles in UI |
-| Create role-to-workflow mapping | Assign roles to accounts |
-| Document audit logging hooks | Create new user accounts |
-
-### 3.2 System Behavior Guarantee
-
-**The system MUST behave EXACTLY as before for all users after Phase 3 completion.**
-
-- No new permissions become effective
-- No new roles become selectable in admin UI
-- No existing access is reduced or expanded
-- All existing workflows function unchanged
+Activate the **Social Field Worker** role for Bouwsubsidie service ONLY, with:
+- RBAC enforcement at database level
+- Dossier state transition constraints
+- Full audit logging
+- Traceability via correlation_id
 
 ---
 
-## 4. Implementation Strategy
+## 3. Current State Analysis
 
-### 4.1 Approach: Documentation + TypeScript Definitions Only
+### 3.1 Existing Infrastructure (from Phase 1-3)
 
-Since this is PREPARATION ONLY with no operational change, the implementation will:
+| Component | Current State |
+|-----------|---------------|
+| app_role enum | 7 active values |
+| Backend triggers | V1.1 transition matrix enforced |
+| Audit logging | correlation_id enabled |
+| Admin notifications | Operational (S-03) |
+| TypeScript definitions | V1.2 roles prepared in v12-roles.ts (NOT imported) |
+| RLS policy templates | Documented in Phase 3 |
 
-1. **Create documentation** for the prepared role model
-2. **Create TypeScript type definitions** for future roles (not replacing current types)
-3. **Document RBAC policy templates** (SQL comments, not applied)
-4. **Map workflow transitions per role** (documentation only)
-5. **Document audit hooks** (not triggered)
-
-### 4.2 No Database Changes
-
-The PostgreSQL `app_role` enum will NOT be modified. New roles will be documented as "PREPARED — NOT ACTIVE" with migration scripts provided for future activation.
-
----
-
-## 5. Deliverables Structure
-
-All outputs will be placed under: `phases/DVH-IMS-V1.3/PHASE-3/`
-
-### 5.1 Required Artifacts
-
-| # | Artifact | Purpose |
-|---|----------|---------|
-| 1 | `RESTORE_POINT_V1.3_PHASE3_START.md` | Pre-phase restore point |
-| 2 | `PHASE-3-ROLE-PREPARATION.md` | Full role definition document |
-| 3 | `PHASE-3-WORKFLOW-PREPARATION.md` | Role-to-workflow mapping |
-| 4 | `PHASE-3-RISK-AND-ACTIVATION-NOTES.md` | Activation risks and prerequisites |
-| 5 | `PHASE-3-RBAC-POLICY-TEMPLATES.md` | Prepared RLS policy templates |
-| 6 | `PHASE-3-AUDIT-HOOKS-MAPPING.md` | Audit event definitions per role |
-| 7 | `RESTORE_POINT_V1.3_PHASE3_COMPLETE.md` | Post-phase restore point |
-| 8 | `PHASE-3-CLOSURE-REPORT.md` | Phase closure documentation |
-
-### 5.2 TypeScript Definitions (Non-Breaking)
-
-A new file will be created: `src/types/v12-roles.ts`
-
-This file will contain:
-- Type definitions for V1.2 roles
-- Role-to-service applicability mapping
-- Decision chain position constants
-- Workflow transition permissions
-
-**Critical:** This file will NOT be imported by any operational code. It is documentation in TypeScript form.
-
----
-
-## 6. Role Preparation Details
-
-### 6.1 Social Field Worker
-
-| Attribute | Value |
-|-----------|-------|
-| Proposed Enum | `social_field_worker` |
-| Service Applicability | Both (Bouwsubsidie + Woningregistratie) |
-| Decision Chain Position | Step 1 (Parallel with Frontdesk) |
-| Core Authority | Social assessment, household evaluation |
-| Workflow States | SUBMITTED → REVIEW_APPROVED (parallel reviewer) |
-| Audit Actions | SOCIAL_ASSESSMENT_STARTED, SOCIAL_ASSESSMENT_COMPLETED |
-| Activation Status | **PREPARED — NOT ACTIVE** |
-
-### 6.2 Technical Inspector
-
-| Attribute | Value |
-|-----------|-------|
-| Proposed Enum | `technical_inspector` |
-| Service Applicability | Bouwsubsidie Only |
-| Decision Chain Position | Step 2 |
-| Core Authority | Technical assessment, budget verification |
-| Workflow States | REVIEW_APPROVED → APPROVED (technical gate) |
-| Audit Actions | TECHNICAL_INSPECTION_STARTED, TECHNICAL_INSPECTION_COMPLETED |
-| Activation Status | **PREPARED — NOT ACTIVE** |
-
-### 6.3 Director
-
-| Attribute | Value |
-|-----------|-------|
-| Proposed Enum | `director` |
-| Service Applicability | Both Services |
-| Decision Chain Position | Step 5 |
-| Core Authority | Organizational approval, policy compliance |
-| Workflow States | (After Project Leader review) → APPROVED |
-| Audit Actions | DIRECTOR_REVIEW_STARTED, DIRECTOR_APPROVED, DIRECTOR_REJECTED |
-| Activation Status | **PREPARED — NOT ACTIVE** |
-
-### 6.4 Ministerial Advisor
-
-| Attribute | Value |
-|-----------|-------|
-| Proposed Enum | `ministerial_advisor` |
-| Service Applicability | Bouwsubsidie Only |
-| Decision Chain Position | Step 6 |
-| Core Authority | Advisory review, paraaf (initialing) |
-| Workflow States | (After Director approval) → Minister decision |
-| Audit Actions | MINISTERIAL_ADVICE_STARTED, MINISTERIAL_ADVICE_COMPLETED |
-| Activation Status | **PREPARED — NOT ACTIVE** |
-
----
-
-## 7. Service-Specific Role Chains
-
-### 7.1 Bouwsubsidie (Full Chain — 7 Steps)
+### 3.2 Current Bouwsubsidie Workflow
 
 ```text
-Step 1: Frontdesk (intake)
-        ↓
-Step 1P: Social Field Worker (parallel)
-        ↓
-Step 2: Technical Inspector (technical review)
-        ↓
-Step 3: Administrative Officer (completeness)
-        ↓
-Step 4: Project Leader / Deputy Director (policy)
-        ↓
-Step 5: Director (organizational)
-        ↓
-Step 6: Ministerial Advisor (advice + paraaf)
-        ↓
-Step 7: Minister (final decision)
+Current V1.1 State Machine (subsidy_case):
+
+received → screening → needs_more_docs/fieldwork → 
+           approved_for_council → council_doc_generated → finalized
+           (any non-terminal) → rejected
 ```
 
-### 7.2 Woningregistratie (Reduced Chain — 5 Steps)
+### 3.3 Target Workflow (Phase 4A — Social Field Worker Integration)
 
 ```text
-Step 1: Frontdesk (intake)
-        ↓
-Step 1P: Social Field Worker (parallel)
-        ↓
-Step 3: Administrative Officer (completeness)
-        ↓
-Step 4: Project Leader / Deputy Director (policy)
-        ↓
-Step 5: Director (organizational — final decision)
-```
+Target State Machine (Bouwsubsidie with Social Step):
 
-**Note:** Woningregistratie explicitly EXCLUDES:
-- Technical Inspector (no technical inspection required)
-- Ministerial Advisor (no ministerial advice required)
-- Minister final decision (Director is final authority)
+received → IN_SOCIAL_REVIEW → SOCIAL_COMPLETED → screening → 
+           needs_more_docs/fieldwork → approved_for_council → 
+           council_doc_generated → finalized
+           (any non-terminal) → rejected
+           IN_SOCIAL_REVIEW → RETURNED_TO_INTAKE
+```
 
 ---
 
-## 8. RBAC Policy Templates (Prepared, Not Applied)
+## 4. Implementation Scope
 
-### 8.1 Template Structure
+### 4.1 What Gets Activated
 
-Each new role will have prepared policy templates for:
-- `has_role()` function inclusion
-- `is_national_role()` function inclusion (if applicable)
-- Table-specific SELECT/INSERT/UPDATE policies
-- Service-specific filtering
+| Item | Action |
+|------|--------|
+| `social_field_worker` enum value | ADD to app_role |
+| Social Field Worker RLS policies | CREATE (Bouwsubsidie only) |
+| Status transitions | EXTEND for social review step |
+| Audit events | ENABLE for social_field_worker |
+| Backend trigger | UPDATE to allow new transitions |
+| TypeScript AppRole | UPDATE to include new role |
 
-### 8.2 Sample Template (Social Field Worker)
+### 4.2 What Remains UNCHANGED
+
+| Item | Status |
+|------|--------|
+| Woningregistratie workflow | NO CHANGES |
+| Housing registration trigger | NO CHANGES |
+| UI menus/dropdowns | NO CHANGES |
+| Existing 7 roles | UNCHANGED permissions |
+| Technical Inspector role | NOT ACTIVATED |
+| Director role | NOT ACTIVATED |
+| Ministerial Advisor role | NOT ACTIVATED |
+
+---
+
+## 5. Database Changes
+
+### 5.1 Enum Extension
 
 ```sql
--- PREPARED POLICY TEMPLATE — NOT APPLIED
--- Role: social_field_worker
--- Activation Phase: Future (requires explicit authorization)
-
--- Policy: SELECT on subsidy_case
--- CREATE POLICY "social_field_worker_select_subsidy_case" ON public.subsidy_case
--- FOR SELECT
--- USING (
---   has_role(auth.uid(), 'social_field_worker'::app_role)
---   AND district_code = get_user_district(auth.uid())
--- );
-
--- Policy: SELECT on housing_registration
--- CREATE POLICY "social_field_worker_select_housing_registration" ON public.housing_registration
--- FOR SELECT
--- USING (
---   has_role(auth.uid(), 'social_field_worker'::app_role)
---   AND district_code = get_user_district(auth.uid())
--- );
+-- Add social_field_worker to app_role enum
+ALTER TYPE public.app_role ADD VALUE 'social_field_worker';
 ```
 
----
+### 5.2 Status Extension (Bouwsubsidie Only)
 
-## 9. Audit Hook Mapping (Prepared, Not Triggered)
+The current subsidy_case.status is a text field, so no enum extension needed. The backend trigger will be updated to recognize the new statuses.
 
-### 9.1 New Audit Actions per Role
+### 5.3 Backend Trigger Update
 
-| Role | Audit Actions |
-|------|---------------|
-| Social Field Worker | SOCIAL_ASSESSMENT_STARTED, SOCIAL_ASSESSMENT_COMPLETED, SOCIAL_ASSESSMENT_RETURNED |
-| Technical Inspector | TECHNICAL_INSPECTION_STARTED, TECHNICAL_INSPECTION_COMPLETED, TECHNICAL_INSPECTION_FAILED |
-| Director | DIRECTOR_REVIEW_STARTED, DIRECTOR_APPROVED, DIRECTOR_REJECTED, DIRECTOR_ESCALATED |
-| Ministerial Advisor | MINISTERIAL_ADVICE_STARTED, MINISTERIAL_ADVICE_COMPLETED, MINISTERIAL_PARAAF_APPLIED |
+The `validate_subsidy_case_transition()` function will be updated to include:
 
-### 9.2 Audit Integration Pattern
+| From Status | Allowed Transitions |
+|-------------|---------------------|
+| received | IN_SOCIAL_REVIEW, rejected |
+| IN_SOCIAL_REVIEW | SOCIAL_COMPLETED, RETURNED_TO_INTAKE, rejected |
+| SOCIAL_COMPLETED | screening, rejected |
+| (remaining transitions unchanged) | ... |
 
-```typescript
-// PREPARED — NOT ACTIVE
-// These audit hooks will be activated in the future activation phase
+### 5.4 RLS Policy Creation
 
-interface AuditHookDefinition {
-  role: 'social_field_worker' | 'technical_inspector' | 'director' | 'ministerial_advisor';
-  action: string;
-  entityType: 'subsidy_case' | 'housing_registration';
-  requiredMetadata: string[];
-}
+Policies for social_field_worker role (Bouwsubsidie only):
 
-const PREPARED_AUDIT_HOOKS: AuditHookDefinition[] = [
-  // Social Field Worker
-  { role: 'social_field_worker', action: 'SOCIAL_ASSESSMENT_STARTED', entityType: 'subsidy_case', requiredMetadata: ['assessment_type'] },
-  { role: 'social_field_worker', action: 'SOCIAL_ASSESSMENT_COMPLETED', entityType: 'subsidy_case', requiredMetadata: ['assessment_result', 'recommendation'] },
-  // ... additional definitions
-];
-```
+| Table | Operation | Scope |
+|-------|-----------|-------|
+| subsidy_case | SELECT | District + status filter |
+| subsidy_case | UPDATE | District + IN_SOCIAL_REVIEW status only |
+| person | SELECT | Via case access |
+| household | SELECT | Via case access |
+| social_report | SELECT, INSERT, UPDATE | Via case access |
+| audit_event | INSERT | Own actions only |
+| admin_notification | SELECT, UPDATE | Own notifications |
 
----
+### 5.5 Security Function Update
 
-## 10. Activation Prerequisites (Future Phase)
-
-### 10.1 Database Changes Required for Activation
-
-| Change | SQL Statement | Risk Level |
-|--------|---------------|------------|
-| Extend app_role enum | `ALTER TYPE app_role ADD VALUE 'social_field_worker';` | Medium |
-| Extend app_role enum | `ALTER TYPE app_role ADD VALUE 'technical_inspector';` | Medium |
-| Extend app_role enum | `ALTER TYPE app_role ADD VALUE 'director';` | Medium |
-| Extend app_role enum | `ALTER TYPE app_role ADD VALUE 'ministerial_advisor';` | Medium |
-| Add RLS policies | Multiple CREATE POLICY statements | High |
-| Update security definer functions | ALTER has_role, has_any_role | High |
-
-### 10.2 TypeScript Changes Required for Activation
-
-| Change | File | Risk Level |
-|--------|------|------------|
-| Update AppRole type | `src/hooks/useUserRole.ts` | Medium |
-| Update Constants | `src/integrations/supabase/types.ts` | Medium |
-| Update role guards | Various UI components | Medium |
-
-### 10.3 UI Changes Required for Activation
-
-| Change | Component | Risk Level |
-|--------|-----------|------------|
-| Add role to user management | User management pages | Medium |
-| Add role-specific views | Dossier detail pages | Medium |
-| Add role-specific actions | Status change handlers | High |
+Update `is_national_role()` if needed — but `social_field_worker` is DISTRICT-SCOPED, so no change required.
 
 ---
 
-## 11. Implementation Steps
+## 6. Application Changes
 
-### Step 3A: Create Restore Point
+### 6.1 TypeScript Updates
 
-Create `RESTORE_POINT_V1.3_PHASE3_START.md` before any implementation.
+| File | Change |
+|------|--------|
+| src/hooks/useUserRole.ts | Add 'social_field_worker' to AppRole type |
+| src/integrations/supabase/types.ts | Will auto-regenerate after migration |
 
-### Step 3B: Create Phase 3 Directory Structure
+### 6.2 Audit Hook Updates
 
-```text
-phases/DVH-IMS-V1.3/PHASE-3/
-├── PHASE-3-ROLE-PREPARATION.md
-├── PHASE-3-WORKFLOW-PREPARATION.md
-├── PHASE-3-RISK-AND-ACTIVATION-NOTES.md
-├── PHASE-3-RBAC-POLICY-TEMPLATES.md
-├── PHASE-3-AUDIT-HOOKS-MAPPING.md
-└── PHASE-3-CLOSURE-REPORT.md
-```
+| File | Change |
+|------|--------|
+| src/hooks/useAuditLog.ts | Add 'social_report' to EntityType |
 
-### Step 3C: Create TypeScript Definitions
+### 6.3 Status Change Handler Updates
 
-Create `src/types/v12-roles.ts` with prepared role definitions.
-
-### Step 3D: Create Role Preparation Document
-
-Document all 4 prepared roles with complete specifications.
-
-### Step 3E: Create Workflow Preparation Document
-
-Document role-to-workflow mapping for both services.
-
-### Step 3F: Create RBAC Policy Templates
-
-Document prepared RLS policies (SQL comments, not applied).
-
-### Step 3G: Create Audit Hooks Mapping
-
-Document audit event definitions per role.
-
-### Step 3H: Create Risk and Activation Notes
-
-Document activation prerequisites and risks.
-
-### Step 3I: Verification
-
-Verify system behavior is unchanged.
-
-### Step 3J: Create Completion Restore Point
-
-Create `RESTORE_POINT_V1.3_PHASE3_COMPLETE.md`.
-
-### Step 3K: Create Closure Report
-
-Create `PHASE-3-CLOSURE-REPORT.md`.
+| File | Change |
+|------|--------|
+| src/app/(admin)/subsidy-cases/[id]/page.tsx | Add new status transitions, audit events |
 
 ---
 
-## 12. Verification Matrix
+## 7. Implementation Steps
+
+### Step 4A-1: Create Restore Point
+
+Create `RESTORE_POINT_V1.3_PHASE4A_START.md` before any implementation.
+
+### Step 4A-2: Database Migration
+
+Execute migration to:
+1. Add `social_field_worker` to `app_role` enum
+2. Update `validate_subsidy_case_transition()` function
+3. Create RLS policies for social_field_worker
+
+### Step 4A-3: TypeScript Updates
+
+1. Update `AppRole` type in `useUserRole.ts`
+2. Update `EntityType` in `useAuditLog.ts`
+
+### Step 4A-4: Status Handler Updates
+
+1. Add new status transitions to `STATUS_TRANSITIONS` constant
+2. Add new status badges to `STATUS_BADGES` constant
+3. Add audit logging for social assessment actions
+
+### Step 4A-5: Verification Testing
+
+Execute verification tests (see Section 9).
+
+### Step 4A-6: Documentation
+
+Create Phase 4A artifacts under `phases/DVH-IMS-V1.3/PHASE-4A/`.
+
+### Step 4A-7: Create Completion Restore Point
+
+Create `RESTORE_POINT_V1.3_PHASE4A_COMPLETE.md`.
+
+---
+
+## 8. Transition Matrix Update (Bouwsubsidie)
+
+### 8.1 Updated State Machine
+
+| From Status | Allowed Transitions |
+|-------------|---------------------|
+| received | IN_SOCIAL_REVIEW, rejected |
+| IN_SOCIAL_REVIEW | SOCIAL_COMPLETED, RETURNED_TO_INTAKE, rejected |
+| RETURNED_TO_INTAKE | IN_SOCIAL_REVIEW, rejected |
+| SOCIAL_COMPLETED | screening, rejected |
+| screening | needs_more_docs, fieldwork, rejected |
+| needs_more_docs | screening, rejected |
+| fieldwork | approved_for_council, rejected |
+| approved_for_council | council_doc_generated, rejected |
+| council_doc_generated | finalized, rejected |
+| finalized | (terminal) |
+| rejected | (terminal) |
+
+### 8.2 Backward Compatibility
+
+**CRITICAL:** Existing cases in states `received`, `screening`, `fieldwork`, etc. will continue to work because:
+- The trigger update adds NEW transitions without removing existing ones
+- Cases already past the social review step are unaffected
+- Only NEW cases or cases in `received` status will require the social step
+
+---
+
+## 9. Verification Matrix
 
 | Test ID | Scenario | Expected Result |
 |---------|----------|-----------------|
-| P3-T01 | app_role enum unchanged | 7 values only |
-| P3-T02 | RLS policies unchanged | No new policies |
-| P3-T03 | UI role selectors unchanged | 7 roles only |
-| P3-T04 | Existing workflows functional | All status changes work |
-| P3-T05 | New TypeScript file created | v12-roles.ts exists |
-| P3-T06 | New TypeScript file not imported | No import statements |
-| P3-T07 | Documentation complete | All artifacts created |
-| P3-T08 | No new audit events triggered | Audit log unchanged |
+| P4A-T01 | app_role enum extended | 8 values (includes social_field_worker) |
+| P4A-T02 | RLS policies created | 6+ new policies for social_field_worker |
+| P4A-T03 | Social field worker can SELECT subsidy_case in district | Access granted |
+| P4A-T04 | Social field worker can UPDATE case in IN_SOCIAL_REVIEW | Update succeeds |
+| P4A-T05 | Social field worker cannot UPDATE case in other status | Update blocked by RLS |
+| P4A-T06 | Transition received → IN_SOCIAL_REVIEW allowed | Trigger permits |
+| P4A-T07 | Transition IN_SOCIAL_REVIEW → SOCIAL_COMPLETED allowed | Trigger permits |
+| P4A-T08 | Transition received → screening blocked | Trigger rejects |
+| P4A-T09 | Audit event logged for social assessment | audit_event created |
+| P4A-T10 | Woningregistratie workflow unchanged | Housing transitions work as before |
+| P4A-T11 | Existing Bouwsubsidie roles unaffected | frontdesk_bouwsubsidie works |
+| P4A-T12 | Admin notification created on status change | Notification appears |
 
 ---
 
-## 13. Explicit Constraints
+## 10. Audit Event Definitions (Activated)
 
-### 13.1 Allowed Actions
+| Action | Entity Type | Triggered By |
+|--------|-------------|--------------|
+| SOCIAL_ASSESSMENT_STARTED | subsidy_case | Status → IN_SOCIAL_REVIEW |
+| SOCIAL_ASSESSMENT_COMPLETED | subsidy_case | Status → SOCIAL_COMPLETED |
+| SOCIAL_ASSESSMENT_RETURNED | subsidy_case | Status → RETURNED_TO_INTAKE |
+| SOCIAL_REPORT_CREATED | social_report | Report created |
+| SOCIAL_REPORT_UPDATED | social_report | Report updated |
+
+---
+
+## 11. Explicit Constraints
+
+### 11.1 Allowed Actions
 
 | Action | Authorized |
 |--------|------------|
-| Create documentation files | ✅ |
-| Create TypeScript type definitions | ✅ |
-| Create SQL template comments | ✅ |
-| Document workflow mappings | ✅ |
-| Document audit hook definitions | ✅ |
-| Create restore points | ✅ |
+| Add social_field_worker to enum | ✅ |
+| Update Bouwsubsidie trigger | ✅ |
+| Create RLS policies for social_field_worker | ✅ |
+| Update TypeScript types | ✅ |
+| Add status transitions to UI | ✅ |
+| Create audit events | ✅ |
 
-### 13.2 Forbidden Actions
+### 11.2 Forbidden Actions
 
 | Action | Status |
 |--------|--------|
-| Modify app_role database enum | ❌ FORBIDDEN |
-| Add RLS policies | ❌ FORBIDDEN |
-| Assign roles to accounts | ❌ FORBIDDEN |
-| Expose roles in UI | ❌ FORBIDDEN |
-| Import new TypeScript file in operational code | ❌ FORBIDDEN |
-| Create new user accounts | ❌ FORBIDDEN |
-| Migrate live data | ❌ FORBIDDEN |
-| Modify existing permissions | ❌ FORBIDDEN |
+| Modify Woningregistratie workflow | ❌ FORBIDDEN |
+| Activate Technical Inspector | ❌ FORBIDDEN |
+| Activate Director | ❌ FORBIDDEN |
+| Activate Ministerial Advisor | ❌ FORBIDDEN |
+| Modify UI menus/navigation | ❌ FORBIDDEN |
+| Create user accounts | ❌ FORBIDDEN |
+| Assign roles to users | ❌ FORBIDDEN |
 
 ---
 
-## 14. End-of-Phase Checklist
+## 12. Risk Mitigation
 
-### Implemented (Structure Only)
-
-- [ ] Restore Point (Start) created
-- [ ] Phase 3 directory created
-- [ ] TypeScript role definitions created
-- [ ] Role Preparation document created
-- [ ] Workflow Preparation document created
-- [ ] RBAC Policy Templates document created
-- [ ] Audit Hooks Mapping document created
-- [ ] Risk and Activation Notes document created
-- [ ] Restore Point (Complete) created
-- [ ] Closure Report created
-
-### Explicitly NOT Activated
-
-- [ ] app_role enum NOT modified
-- [ ] RLS policies NOT added
-- [ ] Roles NOT assigned to accounts
-- [ ] Roles NOT exposed in UI
-- [ ] TypeScript file NOT imported in operational code
-- [ ] No new audit events triggered
-
-### System Behavior Unchanged
-
-- [ ] All 7 current roles functional
-- [ ] All existing workflows operational
-- [ ] All existing RLS policies unchanged
-- [ ] All existing UI unchanged
-
-### Activation Ready Statement
-
-- [ ] Phase 3 is READY for controlled activation (future phase)
+| Risk | Mitigation |
+|------|------------|
+| Enum extension failure | Test in migration, rollback plan ready |
+| Trigger update breaks existing cases | Backward-compatible transitions only |
+| RLS policy conflicts | Test all role combinations |
+| TypeScript type mismatch | Regenerate Supabase types |
 
 ---
 
-## 15. Final Governance Statement
+## 13. Rollback Plan
 
-**V1.3 Phase 3 is strictly limited to PREPARATION ONLY.**
+### 13.1 Database Rollback
 
-**No operational activation is authorized.**
+```sql
+-- Drop RLS policies (if created)
+DROP POLICY IF EXISTS "social_field_worker_select_subsidy_case" ON public.subsidy_case;
+DROP POLICY IF EXISTS "social_field_worker_update_subsidy_case" ON public.subsidy_case;
+-- ... additional policy drops
 
-**The system MUST behave EXACTLY as before after Phase 3 completion.**
+-- Revert trigger to V1.1 transition matrix
+-- (Re-run original Phase 1 trigger creation)
 
-**This phase prepares the structural foundation for the full V1.2 role model.**
+-- Note: Enum value cannot be removed, but will be inert
+```
 
-**Activation requires explicit authorization (OPTION 1 — Future Phase).**
+### 13.2 Application Rollback
+
+1. Revert TypeScript changes (git)
+2. Revert status handler changes (git)
+3. Redeploy previous version
 
 ---
 
-## 16. Files to Create/Modify
+## 14. Deliverables
+
+| # | Artifact | Purpose |
+|---|----------|---------|
+| 1 | RESTORE_POINT_V1.3_PHASE4A_START.md | Pre-phase restore point |
+| 2 | Database migration (enum + trigger + RLS) | Database activation |
+| 3 | Updated useUserRole.ts | TypeScript type |
+| 4 | Updated useAuditLog.ts | Audit entity type |
+| 5 | Updated subsidy-cases/[id]/page.tsx | Status transitions |
+| 6 | PHASE-4A-ACTIVATION-REPORT.md | Implementation report |
+| 7 | PHASE-4A-VERIFICATION-CHECKLIST.md | Test results |
+| 8 | PHASE-4A-RISK-OBSERVATIONS.md | Risk notes |
+| 9 | RESTORE_POINT_V1.3_PHASE4A_COMPLETE.md | Post-phase restore point |
+
+---
+
+## 15. Files to Create/Modify
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE3_START.md` | CREATE | Pre-phase restore point |
-| `phases/DVH-IMS-V1.3/PHASE-3/PHASE-3-ROLE-PREPARATION.md` | CREATE | Role definitions |
-| `phases/DVH-IMS-V1.3/PHASE-3/PHASE-3-WORKFLOW-PREPARATION.md` | CREATE | Workflow mapping |
-| `phases/DVH-IMS-V1.3/PHASE-3/PHASE-3-RBAC-POLICY-TEMPLATES.md` | CREATE | RLS templates |
-| `phases/DVH-IMS-V1.3/PHASE-3/PHASE-3-AUDIT-HOOKS-MAPPING.md` | CREATE | Audit definitions |
-| `phases/DVH-IMS-V1.3/PHASE-3/PHASE-3-RISK-AND-ACTIVATION-NOTES.md` | CREATE | Activation notes |
-| `src/types/v12-roles.ts` | CREATE | TypeScript definitions (not imported) |
-| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE3_COMPLETE.md` | CREATE | Post-phase restore point |
-| `phases/DVH-IMS-V1.3/PHASE-3/PHASE-3-CLOSURE-REPORT.md` | CREATE | Closure documentation |
-| `phases/DVH-IMS-V1.3/README.md` | MODIFY | Add Phase 3 status |
+| restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4A_START.md | CREATE | Pre-phase restore point |
+| phases/DVH-IMS-V1.3/PHASE-4A/ | CREATE | Phase 4A directory |
+| Database migration | EXECUTE | Enum + trigger + RLS |
+| src/hooks/useUserRole.ts | MODIFY | Add social_field_worker |
+| src/hooks/useAuditLog.ts | MODIFY | Add social_report entity |
+| src/app/(admin)/subsidy-cases/[id]/page.tsx | MODIFY | Add new transitions |
+| phases/DVH-IMS-V1.3/PHASE-4A/PHASE-4A-ACTIVATION-REPORT.md | CREATE | Documentation |
+| phases/DVH-IMS-V1.3/PHASE-4A/PHASE-4A-VERIFICATION-CHECKLIST.md | CREATE | Test results |
+| phases/DVH-IMS-V1.3/PHASE-4A/PHASE-4A-RISK-OBSERVATIONS.md | CREATE | Risk notes |
+| restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4A_COMPLETE.md | CREATE | Post-phase restore point |
+| phases/DVH-IMS-V1.3/README.md | MODIFY | Add Phase 4A status |
 
 ---
 
-**PHASE 3 — PREPARATION ONLY — NO OPERATIONAL CHANGE**
+## 16. End-of-Phase Checklist
+
+### Implemented
+
+- [ ] Restore Point (Start) created
+- [ ] app_role enum extended with social_field_worker
+- [ ] Backend trigger updated for new transitions
+- [ ] RLS policies created for social_field_worker
+- [ ] TypeScript AppRole updated
+- [ ] Status transitions added to UI
+- [ ] Audit logging enabled
+
+### Explicitly NOT Activated
+
+- [ ] Technical Inspector (NOT activated)
+- [ ] Director (NOT activated)
+- [ ] Ministerial Advisor (NOT activated)
+- [ ] Woningregistratie workflow (NOT changed)
+- [ ] UI navigation/menus (NOT changed)
+
+### System Behavior Verification
+
+- [ ] Existing 7 roles functional
+- [ ] Woningregistratie workflow unchanged
+- [ ] Existing Bouwsubsidie cases processable
+- [ ] Audit trail complete
+
+### Activation Ready Statement
+
+- [ ] Phase 4A is COMPLETE
+- [ ] Social Field Worker role is ACTIVE for Bouwsubsidie
+- [ ] System ready for Phase 4B (next role activation)
+
+---
+
+## 17. Governance Statement
+
+**V1.3 Phase 4A activates ONLY the Social Field Worker role.**
+
+**Scope is strictly limited to Bouwsubsidie service.**
+
+**Woningregistratie remains completely unchanged.**
+
+**No additional roles are activated in this phase.**
+
+**STOP after Phase 4A completion and await authorization for next role.**
+
+---
+
+## 18. Technical Details
+
+### 18.1 Migration SQL Summary
+
+```sql
+-- 1. Extend app_role enum
+ALTER TYPE public.app_role ADD VALUE 'social_field_worker';
+
+-- 2. Update subsidy_case transition trigger
+CREATE OR REPLACE FUNCTION public.validate_subsidy_case_transition()
+-- (Updated transition matrix including social review states)
+
+-- 3. Create RLS policies for social_field_worker
+CREATE POLICY "social_field_worker_select_subsidy_case" ON public.subsidy_case
+FOR SELECT USING (
+  has_role(auth.uid(), 'social_field_worker'::app_role)
+  AND district_code = get_user_district(auth.uid())
+  AND status IN ('received', 'IN_SOCIAL_REVIEW')
+);
+
+-- (Additional policies for UPDATE, related tables, audit, notifications)
+```
+
+### 18.2 TypeScript Changes Summary
+
+```typescript
+// useUserRole.ts - Add to AppRole type
+export type AppRole = 
+  | 'system_admin'
+  | 'minister'
+  | 'project_leader'
+  | 'frontdesk_bouwsubsidie'
+  | 'frontdesk_housing'
+  | 'admin_staff'
+  | 'audit'
+  | 'social_field_worker'  // NEW
+
+// useAuditLog.ts - Add to EntityType
+type EntityType = 
+  | 'person' 
+  | 'household' 
+  | ... 
+  | 'social_report'  // NEW (if not already present)
+```
+
+---
+
+**PHASE 4A — SOCIAL FIELD WORKER ACTIVATION — BOUWSUBSIDIE ONLY**
 
 **Awaiting approval to create Restore Point and begin implementation.**
+

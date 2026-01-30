@@ -6,6 +6,7 @@ import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
 import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
+import { createAdminNotification } from '@/hooks/useAdminNotifications'
 import UrgencyAssessmentForm from '../components/UrgencyAssessmentForm'
 
 interface HousingRegistration {
@@ -134,6 +135,9 @@ const HousingRegistrationDetail = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
 
+      // Generate correlation ID for audit trail linkage
+      const correlationId = crypto.randomUUID()
+
       const { error: updateError } = await supabase
         .from('housing_registration')
         .update({ current_status: newStatus })
@@ -158,6 +162,18 @@ const HousingRegistrationDetail = () => {
         entity_type: 'housing_registration',
         entity_id: registration.id,
         reason: `Status changed from ${registration.current_status} to ${newStatus}: ${statusReason}`,
+      })
+
+      // Create admin notification for status change (S-03)
+      await createAdminNotification({
+        recipientRole: 'frontdesk_housing',
+        districtCode: registration.district_code,
+        notificationType: 'status_change',
+        title: `Registration ${registration.reference_number} Updated`,
+        message: `Status changed to ${STATUS_BADGES[newStatus]?.label || newStatus}`,
+        entityType: 'housing_registration',
+        entityId: registration.id,
+        correlationId,
       })
 
       notify.success(`Status changed to ${STATUS_BADGES[newStatus]?.label || newStatus}`)

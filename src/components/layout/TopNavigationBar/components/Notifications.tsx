@@ -1,38 +1,111 @@
-import { notificationsData } from '@/assets/data/topbar'
+import { useCallback } from 'react'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import SimplebarReactClient from '@/components/wrapper/SimplebarReactClient'
-import { NotificationType } from '@/types/data'
-import { Col, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row } from 'react-bootstrap'
-import { Link } from 'react-router-dom'
+import { Col, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Row, Spinner } from 'react-bootstrap'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAdminNotifications, AdminNotification } from '@/hooks/useAdminNotifications'
+import { formatDistanceToNow } from 'date-fns'
 
-const NotificationItem = ({ from, content, icon }: NotificationType) => {
+/**
+ * Get icon based on notification type
+ */
+const getNotificationIcon = (type: string): string => {
+  switch (type) {
+    case 'status_change':
+      return 'solar:refresh-circle-outline'
+    case 'transition_blocked':
+      return 'solar:danger-triangle-outline'
+    default:
+      return 'solar:bell-outline'
+  }
+}
+
+/**
+ * Get link based on entity type and ID
+ */
+const getEntityLink = (entityType: string, entityId: string): string => {
+  switch (entityType) {
+    case 'subsidy_case':
+      return `/subsidy-cases/${entityId}`
+    case 'housing_registration':
+      return `/housing-registrations/${entityId}`
+    default:
+      return '#'
+  }
+}
+
+/**
+ * Notification Item Component
+ */
+const NotificationItem = ({ 
+  notification, 
+  onMarkAsRead 
+}: { 
+  notification: AdminNotification
+  onMarkAsRead: (id: string) => void
+}) => {
+  const navigate = useNavigate()
+  const icon = getNotificationIcon(notification.notification_type)
+  const link = getEntityLink(notification.entity_type, notification.entity_id)
+  const timeAgo = formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })
+
+  const handleClick = useCallback(() => {
+    if (!notification.is_read) {
+      onMarkAsRead(notification.id)
+    }
+    if (link !== '#') {
+      navigate(link)
+    }
+  }, [notification.id, notification.is_read, link, navigate, onMarkAsRead])
+
   return (
-    <DropdownItem className="py-3 border-bottom text-wrap">
+    <DropdownItem 
+      className={`py-3 border-bottom text-wrap ${notification.is_read ? 'opacity-75' : ''}`}
+      onClick={handleClick}
+      style={{ cursor: 'pointer' }}
+    >
       <div className="d-flex">
         <div className="flex-shrink-0">
-          {icon ? (
-            <img src={icon} className="img-fluid me-2 avatar-sm rounded-circle" alt="avatar-1" />
-          ) : (
-            <div className="avatar-sm me-2">
-              <span className="avatar-title bg-soft-info text-info fs-20 rounded-circle">{from.charAt(0).toUpperCase()}</span>
-            </div>
-          )}
+          <div className="avatar-sm me-2">
+            <span className={`avatar-title ${notification.notification_type === 'transition_blocked' ? 'bg-soft-danger text-danger' : 'bg-soft-info text-info'} fs-20 rounded-circle`}>
+              <IconifyIcon icon={icon} />
+            </span>
+          </div>
         </div>
         <div className="flex-grow-1">
-          <span className="mb-0 fw-semibold">{from}</span>
-          <span className="mb-0 text-wrap">{content}</span>
+          <div className="d-flex justify-content-between align-items-start">
+            <span className={`mb-0 ${notification.is_read ? '' : 'fw-semibold'}`}>
+              {notification.title}
+            </span>
+            {!notification.is_read && (
+              <span className="badge bg-primary rounded-pill ms-2" style={{ fontSize: '0.6rem' }}>New</span>
+            )}
+          </div>
+          <span className="mb-0 text-wrap d-block small text-muted">
+            {notification.message}
+          </span>
+          <small className="text-muted">{timeAgo}</small>
         </div>
       </div>
     </DropdownItem>
   )
 }
 
+/**
+ * Notifications Component
+ * V1.3 Phase 2 S-03: Live in-app notifications for admin users
+ */
 const Notifications = () => {
-  const notificationList = notificationsData
-  const notificationCount = notificationList.length
+  const { 
+    notifications, 
+    unreadCount, 
+    loading, 
+    markAsRead, 
+    markAllAsRead 
+  } = useAdminNotifications()
 
   return (
-    <Dropdown className="topbar-item ">
+    <Dropdown className="topbar-item">
       <DropdownToggle
         as={'a'}
         type="button"
@@ -41,10 +114,11 @@ const Notifications = () => {
         data-bs-toggle="dropdown"
         aria-haspopup="true"
         aria-expanded="false">
-        <IconifyIcon icon="solar:bell-bing-outline" className="fs-22 align-middle " />
-        {notificationCount > 0 && (
+        <IconifyIcon icon="solar:bell-bing-outline" className="fs-22 align-middle" />
+        {unreadCount > 0 && (
           <span className="position-absolute topbar-badge fs-10 translate-middle badge bg-danger rounded-pill">
-            {notificationCount}<span className="visually-hidden">unread messages</span>
+            {unreadCount > 99 ? '99+' : unreadCount}
+            <span className="visually-hidden">unread messages</span>
           </span>
         )}
       </DropdownToggle>
@@ -52,21 +126,41 @@ const Notifications = () => {
         <div className="p-3 border-top-0 border-start-0 border-end-0 border-dashed border">
           <Row className="align-items-center">
             <Col>
-              <h6 className="m-0 fs-16 fw-semibold">Notifications ({notificationCount})</h6>
+              <h6 className="m-0 fs-16 fw-semibold">
+                Notifications {unreadCount > 0 && `(${unreadCount})`}
+              </h6>
             </Col>
-            {notificationCount > 0 && (
+            {unreadCount > 0 && (
               <Col xs={'auto'}>
-                <Link to="" className="text-dark text-decoration-underline">
-                  <small>Clear All</small>
+                <Link 
+                  to="#" 
+                  className="text-dark text-decoration-underline"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    markAllAsRead()
+                  }}
+                >
+                  <small>Mark all as read</small>
                 </Link>
               </Col>
             )}
           </Row>
         </div>
-        {notificationCount > 0 ? (
+        
+        {loading ? (
+          <div className="text-center py-4">
+            <Spinner animation="border" size="sm" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </Spinner>
+          </div>
+        ) : notifications.length > 0 ? (
           <SimplebarReactClient style={{ maxHeight: 280 }}>
-            {notificationList.map((notification, idx) => (
-              <NotificationItem key={idx} {...notification} />
+            {notifications.map((notification) => (
+              <NotificationItem 
+                key={notification.id} 
+                notification={notification} 
+                onMarkAsRead={markAsRead}
+              />
             ))}
           </SimplebarReactClient>
         ) : (
@@ -75,9 +169,10 @@ const Notifications = () => {
             <small>No notifications</small>
           </div>
         )}
+        
         <div className="text-center py-3">
-          <Link to="" className="btn btn-primary btn-sm">
-            View All Notification <IconifyIcon icon="bx:right-arrow-alt" className="ms-1" />
+          <Link to="/audit-log" className="btn btn-primary btn-sm">
+            View Activity Log <IconifyIcon icon="bx:right-arrow-alt" className="ms-1" />
           </Link>
         </div>
       </DropdownMenu>

@@ -6,6 +6,7 @@ import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
 import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
+import { createAdminNotification } from '@/hooks/useAdminNotifications'
 
 interface SubsidyCase {
   id: string
@@ -189,6 +190,9 @@ const SubsidyCaseDetail = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
 
+      // Generate correlation ID for audit trail linkage
+      const correlationId = crypto.randomUUID()
+
       // Update case status
       const { error: updateError } = await supabase
         .from('subsidy_case')
@@ -215,6 +219,18 @@ const SubsidyCaseDetail = () => {
         entity_type: 'subsidy_case',
         entity_id: subsidyCase.id,
         reason: `Status changed from ${subsidyCase.status} to ${newStatus}: ${statusReason}`,
+      })
+
+      // Create admin notification for status change (S-03)
+      await createAdminNotification({
+        recipientRole: 'frontdesk_bouwsubsidie',
+        districtCode: subsidyCase.district_code,
+        notificationType: 'status_change',
+        title: `Case ${subsidyCase.case_number} Updated`,
+        message: `Status changed to ${STATUS_BADGES[newStatus]?.label || newStatus}`,
+        entityType: 'subsidy_case',
+        entityId: subsidyCase.id,
+        correlationId,
       })
 
       notify.success(`Status changed to ${STATUS_BADGES[newStatus]?.label || newStatus}`)

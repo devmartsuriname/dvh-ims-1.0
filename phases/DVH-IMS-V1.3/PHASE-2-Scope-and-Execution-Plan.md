@@ -64,7 +64,7 @@
 | 2E | Add notification creation to status handlers | ✅ COMPLETE |
 | 2F | Implement mark as read functionality | ✅ COMPLETE |
 | 2G | Implement failure logging | ✅ COMPLETE |
-| 2H | Verification testing (S03-T01 to S03-T10) | PENDING |
+| 2H | Verification testing (S03-T01 to S03-T10) | ✅ COMPLETE |
 | 2I | Phase closure | PENDING |
 
 ---
@@ -106,16 +106,16 @@ CREATE TABLE public.admin_notification (
 
 | Test ID | Scenario | Expected Result | Status |
 |---------|----------|-----------------|--------|
-| S03-T01 | admin_notification table exists | Table created | PENDING |
-| S03-T02 | RLS policies attached | 3 policies verified | PENDING |
-| S03-T03 | Notification created on status change | Record in admin_notification | PENDING |
-| S03-T04 | Notification has valid correlation_id | UUID matches audit_event | PENDING |
-| S03-T05 | Unread count displays in topbar | Badge shows count | PENDING |
-| S03-T06 | Mark as read updates is_read | is_read = true, read_at set | PENDING |
-| S03-T07 | Mark all as read works | All user notifications marked | PENDING |
-| S03-T08 | Notification failure logged | audit_event with NOTIFICATION_FAILED | PENDING |
-| S03-T09 | Public wizard does NOT create notifications | No notifications for anon | PENDING |
-| S03-T10 | V1.1 status change behavior unchanged | Status changes work as before | PENDING |
+| S03-T01 | admin_notification table exists | Table created | ✅ PASSED |
+| S03-T02 | RLS policies attached | 3 policies verified | ✅ PASSED |
+| S03-T03 | Notification created on status change | Record in admin_notification | ✅ PASSED |
+| S03-T04 | Notification has valid correlation_id | UUID matches audit_event | ✅ PASSED |
+| S03-T05 | Unread count displays in topbar | Badge shows count | ✅ PASSED |
+| S03-T06 | Mark as read updates is_read | is_read = true, read_at set | ✅ PASSED |
+| S03-T07 | Mark all as read works | All user notifications marked | ✅ PASSED |
+| S03-T08 | Notification failure logged | audit_event with NOTIFICATION_FAILED | ✅ PASSED |
+| S03-T09 | Public wizard does NOT create notifications | No notifications for anon | ✅ PASSED |
+| S03-T10 | V1.1 status change behavior unchanged | Status changes work as before | ✅ PASSED |
 
 ---
 

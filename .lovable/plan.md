@@ -1,474 +1,491 @@
 
-# DVH-IMS V1.3 — Phase 2 Scope & Execution Plan
+# DVH-IMS V1.3 — Phase 3 Preparation Plan
 
-**Document Type:** Phase Scope & Execution Plan  
-**Version:** 1.0  
-**Date:** 2026-01-30  
-**Phase:** Phase 2 — Admin Notifications (S-03)  
-**Authorization Basis:** V1.3 Phase 2 Authorization Decision — APPROVED
+## Document Type: Phase Scope & Execution Plan
+## Version: 1.0
+## Date: 2026-01-30
+## Phase: Phase 3 — Role & Workflow Activation Preparation (STRUCTURE ONLY)
+## Authorization: OPTION 2 → OPTION 1 Path
 
 ---
 
-## 1. Authorization Confirmation
+## 1. Authorization Context
 
 | Item | Status |
 |------|--------|
-| V1.3 Phase 1 | CLOSED & LOCKED |
-| V1.3 Phase 2 Authorization | APPROVED |
-| Authorized Scope | S-03: Admin Notifications |
-| Operational Baseline | DVH-IMS V1.1 |
-| Documentation Baseline | DVH-IMS V1.2 (FROZEN) |
-| Phase Status | OPEN — Awaiting Restore Point |
+| DVH-IMS V1.1 | OPERATIONAL (LIVE) |
+| DVH-IMS V1.2 | CLOSED (Documentation Only) |
+| V1.3 Phase 1 (D-01 + D-02) | CLOSED & LOCKED |
+| V1.3 Phase 2 (S-03) | CLOSED & LOCKED |
+| V1.3 Phase 3 | OPEN — PREPARATION ONLY |
+
+**Governing Principle:** No operational activation, no UI exposure, no account assignment.
 
 ---
 
-## 2. Phase 2 Scope Summary
+## 2. Current Role Inventory
 
-### 2.1 Authorized Implementation (S-03)
+### 2.1 Active Roles (Current app_role Enum)
 
-| ID | Item | Description |
-|----|------|-------------|
-| S-03-A | Notification Schema | `admin_notification` table for in-app notifications |
-| S-03-B | Notification Hook | React hook to fetch/manage admin notifications |
-| S-03-C | Notification Display | Live notification dropdown using existing Darkone component |
-| S-03-D | Audit Integration | Every notification linked to `correlation_id` |
-| S-03-E | Failure Logging | Notification delivery failures logged to audit |
+| Enum Value | V1.2 Mapping | Account Exists | Service Applicability |
+|------------|--------------|----------------|----------------------|
+| `system_admin` | System Administrator | Yes | Technical Only |
+| `minister` | Minister | Yes | Bouwsubsidie (Decision) |
+| `project_leader` | Project Leader/Deputy Director | Yes | Both Services |
+| `frontdesk_bouwsubsidie` | Frontdesk (BS) | Yes | Bouwsubsidie |
+| `frontdesk_housing` | Frontdesk (WR) | Yes | Woningregistratie |
+| `admin_staff` | Administrative Officer | Yes | Both Services |
+| `audit` | Auditor | Yes | Read-Only |
 
-### 2.2 Explicit Exclusions
+### 2.2 Missing Roles (V1.2 Documented, Not Instantiated)
 
-| Item | Status |
-|------|--------|
-| Public notifications | NOT AUTHORIZED |
-| Citizen communication | NOT AUTHORIZED |
-| Email delivery | NOT AUTHORIZED |
-| SMS delivery | NOT AUTHORIZED |
-| Push notifications | NOT AUTHORIZED |
-| External webhooks | NOT AUTHORIZED |
-| Bulk notifications | NOT AUTHORIZED |
-| Async queues/retry | NOT AUTHORIZED |
-| Scale optimizations | NOT AUTHORIZED |
-| UI redesign | NOT AUTHORIZED |
-| Role changes | NOT AUTHORIZED |
-| Enum changes | NOT AUTHORIZED |
-| RLS policy changes | NOT AUTHORIZED |
+| V1.2 Role | Proposed Enum Value | Service Applicability | Decision Chain Position |
+|-----------|---------------------|----------------------|------------------------|
+| Social Field Worker | `social_field_worker` | Both (Parallel) | Step 1 (Parallel) |
+| Technical Inspector | `technical_inspector` | Bouwsubsidie Only | Step 2 |
+| Director | `director` | Both | Step 5 |
+| Ministerial Advisor | `ministerial_advisor` | Bouwsubsidie Only | Step 6 |
 
 ---
 
-## 3. Current State Analysis
+## 3. Phase 3 Objective
 
-### 3.1 Existing Notification Infrastructure
+**Prepare the structural foundation for the full V1.2 role and workflow model WITHOUT activating it.**
 
-**Current Components:**
-- `src/components/layout/TopNavigationBar/components/Notifications.tsx` — Static dropdown component using Darkone design
-- `src/assets/data/topbar.ts` — Empty notification data array (explicitly marked "OUT OF SCOPE for v1.0/v1.1")
-- `src/context/useNotificationContext.tsx` — Toast notification context (for UI feedback, not persistent notifications)
-- `src/types/data.ts` — Basic `NotificationType` interface (`from`, `content`, `icon`)
+### 3.1 What "Preparation" Means
 
-**Current Behavior:**
-- Notifications component shows empty state with "No notifications" message
-- No database persistence
-- No connection to audit events or dossier transitions
+| Allowed | Not Allowed |
+|---------|-------------|
+| Define TypeScript type extensions (parallel types) | Modify existing `AppRole` type |
+| Create preparatory documentation | Modify database enum |
+| Map state transitions per role (documentation) | Add RLS policies referencing new roles |
+| Define future RBAC policy templates | Expose new roles in UI |
+| Create role-to-workflow mapping | Assign roles to accounts |
+| Document audit logging hooks | Create new user accounts |
 
-### 3.2 Audit Infrastructure (from Phase 1)
+### 3.2 System Behavior Guarantee
 
-**Available Resources:**
-- `audit_event` table with `correlation_id` column (D-02)
-- Backend triggers logging all status transitions (D-01)
-- `INVALID_TRANSITION_BLOCKED` audit events with correlation tracking
-- `logAuditEvent` utility in `src/hooks/useAuditLog.ts`
+**The system MUST behave EXACTLY as before for all users after Phase 3 completion.**
 
-### 3.3 Status Transition Points
-
-**Subsidy Case Transitions:**
-- `received` → `screening`, `rejected`
-- `screening` → `needs_more_docs`, `fieldwork`, `rejected`
-- `needs_more_docs` → `screening`, `rejected`
-- `fieldwork` → `approved_for_council`, `rejected`
-- `approved_for_council` → `council_doc_generated`, `rejected`
-- `council_doc_generated` → `finalized`, `rejected`
-
-**Housing Registration Transitions:**
-- `received` → `under_review`, `rejected`
-- `under_review` → `urgency_assessed`, `rejected`
-- `urgency_assessed` → `waiting_list`, `rejected`
-- `waiting_list` → `matched`, `rejected`
-- `matched` → `allocated`, `rejected`
-- `allocated` → `finalized`, `rejected`
+- No new permissions become effective
+- No new roles become selectable in admin UI
+- No existing access is reduced or expanded
+- All existing workflows function unchanged
 
 ---
 
 ## 4. Implementation Strategy
 
-### 4.1 Notification Approach
+### 4.1 Approach: Documentation + TypeScript Definitions Only
 
-| Aspect | Decision | Justification |
-|--------|----------|---------------|
-| Storage | Database table (`admin_notification`) | Persistent, queryable, auditable |
-| Delivery | In-app only | As authorized, no external channels |
-| Trigger Source | Status transitions from admin UI | As authorized, no public wizard |
-| Recipient Model | Role-based via RLS | Aligned with V1.2 blueprint |
-| Audit Linkage | Via `correlation_id` | Leverages D-02 infrastructure |
+Since this is PREPARATION ONLY with no operational change, the implementation will:
 
-### 4.2 Implementation Phases
+1. **Create documentation** for the prepared role model
+2. **Create TypeScript type definitions** for future roles (not replacing current types)
+3. **Document RBAC policy templates** (SQL comments, not applied)
+4. **Map workflow transitions per role** (documentation only)
+5. **Document audit hooks** (not triggered)
 
-| Step | Description |
-|------|-------------|
-| 2A | Create Restore Point: `RESTORE_POINT_V1.3_PHASE2_S03_START` |
-| 2B | Create `admin_notification` table with RLS policies |
-| 2C | Create notification hook `useAdminNotifications` |
-| 2D | Integrate hook with existing Notifications.tsx component |
-| 2E | Add notification creation to status transition handlers |
-| 2F | Implement "mark as read" and "clear all" functionality |
-| 2G | Implement notification failure logging |
-| 2H | Verification testing |
-| 2I | Phase closure |
+### 4.2 No Database Changes
+
+The PostgreSQL `app_role` enum will NOT be modified. New roles will be documented as "PREPARED — NOT ACTIVE" with migration scripts provided for future activation.
 
 ---
 
-## 5. Database Schema Design
+## 5. Deliverables Structure
 
-### 5.1 Admin Notification Table
+All outputs will be placed under: `phases/DVH-IMS-V1.3/PHASE-3/`
+
+### 5.1 Required Artifacts
+
+| # | Artifact | Purpose |
+|---|----------|---------|
+| 1 | `RESTORE_POINT_V1.3_PHASE3_START.md` | Pre-phase restore point |
+| 2 | `PHASE-3-ROLE-PREPARATION.md` | Full role definition document |
+| 3 | `PHASE-3-WORKFLOW-PREPARATION.md` | Role-to-workflow mapping |
+| 4 | `PHASE-3-RISK-AND-ACTIVATION-NOTES.md` | Activation risks and prerequisites |
+| 5 | `PHASE-3-RBAC-POLICY-TEMPLATES.md` | Prepared RLS policy templates |
+| 6 | `PHASE-3-AUDIT-HOOKS-MAPPING.md` | Audit event definitions per role |
+| 7 | `RESTORE_POINT_V1.3_PHASE3_COMPLETE.md` | Post-phase restore point |
+| 8 | `PHASE-3-CLOSURE-REPORT.md` | Phase closure documentation |
+
+### 5.2 TypeScript Definitions (Non-Breaking)
+
+A new file will be created: `src/types/v12-roles.ts`
+
+This file will contain:
+- Type definitions for V1.2 roles
+- Role-to-service applicability mapping
+- Decision chain position constants
+- Workflow transition permissions
+
+**Critical:** This file will NOT be imported by any operational code. It is documentation in TypeScript form.
+
+---
+
+## 6. Role Preparation Details
+
+### 6.1 Social Field Worker
+
+| Attribute | Value |
+|-----------|-------|
+| Proposed Enum | `social_field_worker` |
+| Service Applicability | Both (Bouwsubsidie + Woningregistratie) |
+| Decision Chain Position | Step 1 (Parallel with Frontdesk) |
+| Core Authority | Social assessment, household evaluation |
+| Workflow States | SUBMITTED → REVIEW_APPROVED (parallel reviewer) |
+| Audit Actions | SOCIAL_ASSESSMENT_STARTED, SOCIAL_ASSESSMENT_COMPLETED |
+| Activation Status | **PREPARED — NOT ACTIVE** |
+
+### 6.2 Technical Inspector
+
+| Attribute | Value |
+|-----------|-------|
+| Proposed Enum | `technical_inspector` |
+| Service Applicability | Bouwsubsidie Only |
+| Decision Chain Position | Step 2 |
+| Core Authority | Technical assessment, budget verification |
+| Workflow States | REVIEW_APPROVED → APPROVED (technical gate) |
+| Audit Actions | TECHNICAL_INSPECTION_STARTED, TECHNICAL_INSPECTION_COMPLETED |
+| Activation Status | **PREPARED — NOT ACTIVE** |
+
+### 6.3 Director
+
+| Attribute | Value |
+|-----------|-------|
+| Proposed Enum | `director` |
+| Service Applicability | Both Services |
+| Decision Chain Position | Step 5 |
+| Core Authority | Organizational approval, policy compliance |
+| Workflow States | (After Project Leader review) → APPROVED |
+| Audit Actions | DIRECTOR_REVIEW_STARTED, DIRECTOR_APPROVED, DIRECTOR_REJECTED |
+| Activation Status | **PREPARED — NOT ACTIVE** |
+
+### 6.4 Ministerial Advisor
+
+| Attribute | Value |
+|-----------|-------|
+| Proposed Enum | `ministerial_advisor` |
+| Service Applicability | Bouwsubsidie Only |
+| Decision Chain Position | Step 6 |
+| Core Authority | Advisory review, paraaf (initialing) |
+| Workflow States | (After Director approval) → Minister decision |
+| Audit Actions | MINISTERIAL_ADVICE_STARTED, MINISTERIAL_ADVICE_COMPLETED |
+| Activation Status | **PREPARED — NOT ACTIVE** |
+
+---
+
+## 7. Service-Specific Role Chains
+
+### 7.1 Bouwsubsidie (Full Chain — 7 Steps)
 
 ```text
-Table: admin_notification
-
-Columns:
-- id: uuid (PK, default gen_random_uuid())
-- recipient_user_id: uuid (FK to auth.users, nullable for role-based)
-- recipient_role: text (app_role, for role-based targeting)
-- district_code: text (for district-scoped notifications)
-- notification_type: text (e.g., 'status_change', 'transition_blocked')
-- title: text (short title)
-- message: text (notification content)
-- entity_type: text (e.g., 'subsidy_case', 'housing_registration')
-- entity_id: uuid (reference to related entity)
-- correlation_id: uuid (links to audit_event.correlation_id)
-- is_read: boolean (default false)
-- read_at: timestamptz (nullable)
-- created_at: timestamptz (default now())
-- created_by: uuid (actor who triggered the notification)
+Step 1: Frontdesk (intake)
+        ↓
+Step 1P: Social Field Worker (parallel)
+        ↓
+Step 2: Technical Inspector (technical review)
+        ↓
+Step 3: Administrative Officer (completeness)
+        ↓
+Step 4: Project Leader / Deputy Director (policy)
+        ↓
+Step 5: Director (organizational)
+        ↓
+Step 6: Ministerial Advisor (advice + paraaf)
+        ↓
+Step 7: Minister (final decision)
 ```
 
-### 5.2 RLS Policies (Restrictive)
-
-| Policy | Command | Logic |
-|--------|---------|-------|
-| `role_select_own_notification` | SELECT | User can see notifications where: (1) recipient_user_id = auth.uid() OR (2) recipient_role matches user's role AND district_code matches user's district |
-| `role_insert_admin_notification` | INSERT | Authenticated users with valid admin roles can create notifications |
-| `role_update_own_notification` | UPDATE | User can mark as read only their own notifications |
-| No DELETE | - | Notifications are immutable (audit trail) |
-
-### 5.3 Indexes
-
-| Index | Purpose |
-|-------|---------|
-| `idx_admin_notification_recipient_user_id` | Fast user-specific queries |
-| `idx_admin_notification_recipient_role` | Fast role-based queries |
-| `idx_admin_notification_correlation_id` | Audit event linkage |
-| `idx_admin_notification_is_read` | Unread count queries |
-
----
-
-## 6. Notification Types
-
-### 6.1 Authorized Notification Types
-
-| Type | Trigger | Recipient | Message Pattern |
-|------|---------|-----------|-----------------|
-| `status_change` | Successful status transition | Handler role for district | "Case {number} status changed to {new_status}" |
-| `transition_blocked` | Invalid transition attempt (from D-01 trigger) | Actor + supervisory role | "Transition blocked: {reason}" |
-
-### 6.2 Notification Flow
+### 7.2 Woningregistratie (Reduced Chain — 5 Steps)
 
 ```text
-┌────────────────────────────────────────────────────────────┐
-│  1. Admin performs status change in UI                     │
-└────────────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌────────────────────────────────────────────────────────────┐
-│  2. D-01 trigger validates transition                      │
-│     - If VALID: proceed to step 3                          │
-│     - If INVALID: log INVALID_TRANSITION_BLOCKED + notify  │
-└────────────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌────────────────────────────────────────────────────────────┐
-│  3. Status update succeeds                                 │
-│     - Insert status_history record                         │
-│     - Log audit_event with correlation_id                  │
-└────────────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌────────────────────────────────────────────────────────────┐
-│  4. Create admin_notification                              │
-│     - Same correlation_id as audit event                   │
-│     - Target: handler roles for district                   │
-│     - Log notification creation to audit                   │
-└────────────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌────────────────────────────────────────────────────────────┐
-│  5. Notifications component fetches unread count           │
-│     - Real-time update via Supabase subscription           │
-└────────────────────────────────────────────────────────────┘
+Step 1: Frontdesk (intake)
+        ↓
+Step 1P: Social Field Worker (parallel)
+        ↓
+Step 3: Administrative Officer (completeness)
+        ↓
+Step 4: Project Leader / Deputy Director (policy)
+        ↓
+Step 5: Director (organizational — final decision)
 ```
 
----
-
-## 7. React Hook Design
-
-### 7.1 useAdminNotifications Hook
-
-```text
-Hook: useAdminNotifications
-
-Returns:
-- notifications: AdminNotification[]
-- unreadCount: number
-- loading: boolean
-- error: string | null
-- markAsRead: (id: string) => Promise<void>
-- markAllAsRead: () => Promise<void>
-- refresh: () => void
-
-Features:
-- Fetches notifications for current user (RLS-filtered)
-- Real-time subscription for new notifications
-- Automatic refetch on auth state change
-- Audit logging for mark-as-read actions
-```
-
-### 7.2 Integration Points
-
-| File | Change |
-|------|--------|
-| `src/hooks/useAdminNotifications.ts` | NEW: Notification data hook |
-| `src/components/layout/TopNavigationBar/components/Notifications.tsx` | MODIFY: Replace static data with hook |
-| `src/app/(admin)/subsidy-cases/[id]/page.tsx` | MODIFY: Add notification on status change |
-| `src/app/(admin)/housing-registrations/[id]/page.tsx` | MODIFY: Add notification on status change |
+**Note:** Woningregistratie explicitly EXCLUDES:
+- Technical Inspector (no technical inspection required)
+- Ministerial Advisor (no ministerial advice required)
+- Minister final decision (Director is final authority)
 
 ---
 
-## 8. Audit Integration
+## 8. RBAC Policy Templates (Prepared, Not Applied)
 
-### 8.1 Correlation Strategy
+### 8.1 Template Structure
 
-| Event | Correlation ID Source |
-|-------|----------------------|
-| Status change → Notification | Same correlation_id from audit_event |
-| Transition blocked → Notification | Same correlation_id from trigger audit |
-| Notification read | New correlation_id for read action |
-| Notification failure | Same correlation_id as failed notification |
+Each new role will have prepared policy templates for:
+- `has_role()` function inclusion
+- `is_national_role()` function inclusion (if applicable)
+- Table-specific SELECT/INSERT/UPDATE policies
+- Service-specific filtering
 
-### 8.2 Audit Event Types (New)
+### 8.2 Sample Template (Social Field Worker)
 
-| Action | Entity Type | Description |
-|--------|-------------|-------------|
-| `NOTIFICATION_CREATED` | `admin_notification` | Notification generated |
-| `NOTIFICATION_READ` | `admin_notification` | User marked notification as read |
-| `NOTIFICATION_FAILED` | `admin_notification` | Notification creation failed |
+```sql
+-- PREPARED POLICY TEMPLATE — NOT APPLIED
+-- Role: social_field_worker
+-- Activation Phase: Future (requires explicit authorization)
 
----
+-- Policy: SELECT on subsidy_case
+-- CREATE POLICY "social_field_worker_select_subsidy_case" ON public.subsidy_case
+-- FOR SELECT
+-- USING (
+--   has_role(auth.uid(), 'social_field_worker'::app_role)
+--   AND district_code = get_user_district(auth.uid())
+-- );
 
-## 9. Failure Handling
-
-### 9.1 Failure Scenarios
-
-| Scenario | Handling | Audit |
-|----------|----------|-------|
-| RLS blocks notification insert | Log error, continue operation | `NOTIFICATION_FAILED` with reason |
-| Database error on insert | Log error, notify user, continue | `NOTIFICATION_FAILED` with error details |
-| User not found for role | Log warning, skip user | Logged in metadata_json |
-
-### 9.2 Failure Logging Pattern
-
-```text
-Every notification failure MUST:
-1. Log to console (development visibility)
-2. Create audit_event with action='NOTIFICATION_FAILED'
-3. Include correlation_id linking to source event
-4. NOT block the primary operation (status change)
+-- Policy: SELECT on housing_registration
+-- CREATE POLICY "social_field_worker_select_housing_registration" ON public.housing_registration
+-- FOR SELECT
+-- USING (
+--   has_role(auth.uid(), 'social_field_worker'::app_role)
+--   AND district_code = get_user_district(auth.uid())
+-- );
 ```
 
 ---
 
-## 10. Verification Matrix
+## 9. Audit Hook Mapping (Prepared, Not Triggered)
 
-### 10.1 S-03 Verification Tests
+### 9.1 New Audit Actions per Role
+
+| Role | Audit Actions |
+|------|---------------|
+| Social Field Worker | SOCIAL_ASSESSMENT_STARTED, SOCIAL_ASSESSMENT_COMPLETED, SOCIAL_ASSESSMENT_RETURNED |
+| Technical Inspector | TECHNICAL_INSPECTION_STARTED, TECHNICAL_INSPECTION_COMPLETED, TECHNICAL_INSPECTION_FAILED |
+| Director | DIRECTOR_REVIEW_STARTED, DIRECTOR_APPROVED, DIRECTOR_REJECTED, DIRECTOR_ESCALATED |
+| Ministerial Advisor | MINISTERIAL_ADVICE_STARTED, MINISTERIAL_ADVICE_COMPLETED, MINISTERIAL_PARAAF_APPLIED |
+
+### 9.2 Audit Integration Pattern
+
+```typescript
+// PREPARED — NOT ACTIVE
+// These audit hooks will be activated in the future activation phase
+
+interface AuditHookDefinition {
+  role: 'social_field_worker' | 'technical_inspector' | 'director' | 'ministerial_advisor';
+  action: string;
+  entityType: 'subsidy_case' | 'housing_registration';
+  requiredMetadata: string[];
+}
+
+const PREPARED_AUDIT_HOOKS: AuditHookDefinition[] = [
+  // Social Field Worker
+  { role: 'social_field_worker', action: 'SOCIAL_ASSESSMENT_STARTED', entityType: 'subsidy_case', requiredMetadata: ['assessment_type'] },
+  { role: 'social_field_worker', action: 'SOCIAL_ASSESSMENT_COMPLETED', entityType: 'subsidy_case', requiredMetadata: ['assessment_result', 'recommendation'] },
+  // ... additional definitions
+];
+```
+
+---
+
+## 10. Activation Prerequisites (Future Phase)
+
+### 10.1 Database Changes Required for Activation
+
+| Change | SQL Statement | Risk Level |
+|--------|---------------|------------|
+| Extend app_role enum | `ALTER TYPE app_role ADD VALUE 'social_field_worker';` | Medium |
+| Extend app_role enum | `ALTER TYPE app_role ADD VALUE 'technical_inspector';` | Medium |
+| Extend app_role enum | `ALTER TYPE app_role ADD VALUE 'director';` | Medium |
+| Extend app_role enum | `ALTER TYPE app_role ADD VALUE 'ministerial_advisor';` | Medium |
+| Add RLS policies | Multiple CREATE POLICY statements | High |
+| Update security definer functions | ALTER has_role, has_any_role | High |
+
+### 10.2 TypeScript Changes Required for Activation
+
+| Change | File | Risk Level |
+|--------|------|------------|
+| Update AppRole type | `src/hooks/useUserRole.ts` | Medium |
+| Update Constants | `src/integrations/supabase/types.ts` | Medium |
+| Update role guards | Various UI components | Medium |
+
+### 10.3 UI Changes Required for Activation
+
+| Change | Component | Risk Level |
+|--------|-----------|------------|
+| Add role to user management | User management pages | Medium |
+| Add role-specific views | Dossier detail pages | Medium |
+| Add role-specific actions | Status change handlers | High |
+
+---
+
+## 11. Implementation Steps
+
+### Step 3A: Create Restore Point
+
+Create `RESTORE_POINT_V1.3_PHASE3_START.md` before any implementation.
+
+### Step 3B: Create Phase 3 Directory Structure
+
+```text
+phases/DVH-IMS-V1.3/PHASE-3/
+├── PHASE-3-ROLE-PREPARATION.md
+├── PHASE-3-WORKFLOW-PREPARATION.md
+├── PHASE-3-RISK-AND-ACTIVATION-NOTES.md
+├── PHASE-3-RBAC-POLICY-TEMPLATES.md
+├── PHASE-3-AUDIT-HOOKS-MAPPING.md
+└── PHASE-3-CLOSURE-REPORT.md
+```
+
+### Step 3C: Create TypeScript Definitions
+
+Create `src/types/v12-roles.ts` with prepared role definitions.
+
+### Step 3D: Create Role Preparation Document
+
+Document all 4 prepared roles with complete specifications.
+
+### Step 3E: Create Workflow Preparation Document
+
+Document role-to-workflow mapping for both services.
+
+### Step 3F: Create RBAC Policy Templates
+
+Document prepared RLS policies (SQL comments, not applied).
+
+### Step 3G: Create Audit Hooks Mapping
+
+Document audit event definitions per role.
+
+### Step 3H: Create Risk and Activation Notes
+
+Document activation prerequisites and risks.
+
+### Step 3I: Verification
+
+Verify system behavior is unchanged.
+
+### Step 3J: Create Completion Restore Point
+
+Create `RESTORE_POINT_V1.3_PHASE3_COMPLETE.md`.
+
+### Step 3K: Create Closure Report
+
+Create `PHASE-3-CLOSURE-REPORT.md`.
+
+---
+
+## 12. Verification Matrix
 
 | Test ID | Scenario | Expected Result |
 |---------|----------|-----------------|
-| S03-T01 | admin_notification table exists | Table created |
-| S03-T02 | RLS policies attached | 3 policies verified |
-| S03-T03 | Notification created on status change | Record in admin_notification |
-| S03-T04 | Notification has valid correlation_id | UUID matches audit_event |
-| S03-T05 | Unread count displays in topbar | Badge shows count |
-| S03-T06 | Mark as read updates is_read | is_read = true, read_at set |
-| S03-T07 | Mark all as read works | All user notifications marked |
-| S03-T08 | Notification failure logged | audit_event with NOTIFICATION_FAILED |
-| S03-T09 | Public wizard does NOT create notifications | No notifications for anon |
-| S03-T10 | V1.1 status change behavior unchanged | Status changes work as before |
+| P3-T01 | app_role enum unchanged | 7 values only |
+| P3-T02 | RLS policies unchanged | No new policies |
+| P3-T03 | UI role selectors unchanged | 7 roles only |
+| P3-T04 | Existing workflows functional | All status changes work |
+| P3-T05 | New TypeScript file created | v12-roles.ts exists |
+| P3-T06 | New TypeScript file not imported | No import statements |
+| P3-T07 | Documentation complete | All artifacts created |
+| P3-T08 | No new audit events triggered | Audit log unchanged |
 
 ---
 
-## 11. Rollback Strategy
+## 13. Explicit Constraints
 
-### 11.1 Emergency Rollback SQL
+### 13.1 Allowed Actions
 
-```sql
--- Step 1: Drop policies
-DROP POLICY IF EXISTS role_select_own_notification ON public.admin_notification;
-DROP POLICY IF EXISTS role_insert_admin_notification ON public.admin_notification;
-DROP POLICY IF EXISTS role_update_own_notification ON public.admin_notification;
+| Action | Authorized |
+|--------|------------|
+| Create documentation files | ✅ |
+| Create TypeScript type definitions | ✅ |
+| Create SQL template comments | ✅ |
+| Document workflow mappings | ✅ |
+| Document audit hook definitions | ✅ |
+| Create restore points | ✅ |
 
--- Step 2: Drop table
-DROP TABLE IF EXISTS public.admin_notification;
-```
+### 13.2 Forbidden Actions
 
-### 11.2 Code Rollback
-
-- Revert `Notifications.tsx` to static empty array
-- Remove `useAdminNotifications.ts` hook
-- Remove notification creation calls from status change handlers
-
----
-
-## 12. Non-Goals (Explicit)
-
-| Item | Reason | Status |
-|------|--------|--------|
-| Email notifications | Not authorized | EXCLUDED |
-| SMS notifications | Not authorized | EXCLUDED |
-| Push notifications | Not authorized | EXCLUDED |
-| Public/citizen notifications | Not authorized | EXCLUDED |
-| Reminder/escalation automation | Not authorized | EXCLUDED |
-| Bulk notifications | Not authorized | EXCLUDED |
-| Async queues | Not authorized | EXCLUDED |
-| Retry mechanisms | Not authorized | EXCLUDED |
-| UI redesign | Not authorized | EXCLUDED |
+| Action | Status |
+|--------|--------|
+| Modify app_role database enum | ❌ FORBIDDEN |
+| Add RLS policies | ❌ FORBIDDEN |
+| Assign roles to accounts | ❌ FORBIDDEN |
+| Expose roles in UI | ❌ FORBIDDEN |
+| Import new TypeScript file in operational code | ❌ FORBIDDEN |
+| Create new user accounts | ❌ FORBIDDEN |
+| Migrate live data | ❌ FORBIDDEN |
+| Modify existing permissions | ❌ FORBIDDEN |
 
 ---
 
-## 13. Deliverables Checklist
+## 14. End-of-Phase Checklist
 
-| # | Deliverable | Status |
-|---|-------------|--------|
-| 1 | Restore Point: `RESTORE_POINT_V1.3_PHASE2_S03_START` | PENDING |
-| 2 | Database migration: `admin_notification` table | PENDING |
-| 3 | RLS policies for `admin_notification` | PENDING |
-| 4 | Hook: `useAdminNotifications.ts` | PENDING |
-| 5 | Modified: `Notifications.tsx` | PENDING |
-| 6 | Modified: Subsidy case status change handler | PENDING |
-| 7 | Modified: Housing registration status change handler | PENDING |
-| 8 | Admin Notification Implementation Report | PENDING |
-| 9 | Audit-Notification Correlation Verification Report | PENDING |
-| 10 | Notification Failure Handling Report | PENDING |
-| 11 | Phase 2 Closure Report | PENDING |
+### Implemented (Structure Only)
 
----
+- [ ] Restore Point (Start) created
+- [ ] Phase 3 directory created
+- [ ] TypeScript role definitions created
+- [ ] Role Preparation document created
+- [ ] Workflow Preparation document created
+- [ ] RBAC Policy Templates document created
+- [ ] Audit Hooks Mapping document created
+- [ ] Risk and Activation Notes document created
+- [ ] Restore Point (Complete) created
+- [ ] Closure Report created
 
-## 14. Implementation Sequence
+### Explicitly NOT Activated
 
-```text
-Phase 2 Execution Flow:
+- [ ] app_role enum NOT modified
+- [ ] RLS policies NOT added
+- [ ] Roles NOT assigned to accounts
+- [ ] Roles NOT exposed in UI
+- [ ] TypeScript file NOT imported in operational code
+- [ ] No new audit events triggered
 
-┌──────────────────────────────────────────────────────┐
-│  STEP 2A: Create Restore Point                       │
-│  RESTORE_POINT_V1.3_PHASE2_S03_START                 │
-└──────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────┐
-│  STEP 2B: Database Schema                            │
-│  - Create admin_notification table                   │
-│  - Add RLS policies                                  │
-│  - Add indexes                                       │
-└──────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────┐
-│  STEP 2C: React Hook                                 │
-│  - Create useAdminNotifications.ts                   │
-│  - Implement fetch, subscribe, mark-read logic       │
-└──────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────┐
-│  STEP 2D: UI Integration                             │
-│  - Update Notifications.tsx to use hook              │
-│  - Replace static data with live data                │
-└──────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────┐
-│  STEP 2E: Status Change Integration                  │
-│  - Add createNotification to subsidy case handler    │
-│  - Add createNotification to housing handler         │
-└──────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────┐
-│  STEP 2F-2G: Additional Features                     │
-│  - Mark as read / clear all functionality            │
-│  - Failure logging implementation                    │
-└──────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────┐
-│  STEP 2H: Verification                               │
-│  - Execute S03-T01 through S03-T10                   │
-│  - Confirm audit linkage                             │
-│  - Confirm V1.1 behavior preserved                   │
-└──────────────────────────────────────────────────────┘
-                         │
-                         ▼
-┌──────────────────────────────────────────────────────┐
-│  STEP 2I: Phase Closure                              │
-│  - Phase 2 Closure Report                            │
-│  - Confirm all exclusions respected                  │
-└──────────────────────────────────────────────────────┘
-```
+### System Behavior Unchanged
+
+- [ ] All 7 current roles functional
+- [ ] All existing workflows operational
+- [ ] All existing RLS policies unchanged
+- [ ] All existing UI unchanged
+
+### Activation Ready Statement
+
+- [ ] Phase 3 is READY for controlled activation (future phase)
 
 ---
 
-## 15. Governance Compliance Statement
+## 15. Final Governance Statement
 
-| Rule | Status |
-|------|--------|
-| Phase-gated execution | COMPLIANT |
-| Restore point before implementation | PENDING |
-| No scope expansion beyond S-03 | ENFORCED |
-| Every change traceable to S-03 | ENFORCED |
-| Status reports for each sub-step | REQUIRED |
-| No email, SMS, push, or external channels | ENFORCED |
-| No public wizard changes | ENFORCED |
-| No role, enum, or RLS changes outside admin_notification | ENFORCED |
+**V1.3 Phase 3 is strictly limited to PREPARATION ONLY.**
 
----
+**No operational activation is authorized.**
 
-## 16. Final Statement
+**The system MUST behave EXACTLY as before after Phase 3 completion.**
 
-**V1.3 Phase 2 is strictly limited to Admin Notifications (S-03).**
+**This phase prepares the structural foundation for the full V1.2 role model.**
 
-**No other V1.2 items are authorized.**
-
-**Any deviation requires explicit written approval.**
+**Activation requires explicit authorization (OPTION 1 — Future Phase).**
 
 ---
 
-## Files to Create/Modify
+## 16. Files to Create/Modify
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE2_S03_START.md` | CREATE | Mandatory restore point |
-| `phases/DVH-IMS-V1.3/PHASE-2-Scope-and-Execution-Plan.md` | CREATE | This document |
-| Database migration | EXECUTE | Create admin_notification table + RLS |
-| `src/hooks/useAdminNotifications.ts` | CREATE | Notification data hook |
-| `src/components/layout/TopNavigationBar/components/Notifications.tsx` | MODIFY | Live notification integration |
-| `src/app/(admin)/subsidy-cases/[id]/page.tsx` | MODIFY | Add notification on status change |
-| `src/app/(admin)/housing-registrations/[id]/page.tsx` | MODIFY | Add notification on status change |
+| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE3_START.md` | CREATE | Pre-phase restore point |
+| `phases/DVH-IMS-V1.3/PHASE-3/PHASE-3-ROLE-PREPARATION.md` | CREATE | Role definitions |
+| `phases/DVH-IMS-V1.3/PHASE-3/PHASE-3-WORKFLOW-PREPARATION.md` | CREATE | Workflow mapping |
+| `phases/DVH-IMS-V1.3/PHASE-3/PHASE-3-RBAC-POLICY-TEMPLATES.md` | CREATE | RLS templates |
+| `phases/DVH-IMS-V1.3/PHASE-3/PHASE-3-AUDIT-HOOKS-MAPPING.md` | CREATE | Audit definitions |
+| `phases/DVH-IMS-V1.3/PHASE-3/PHASE-3-RISK-AND-ACTIVATION-NOTES.md` | CREATE | Activation notes |
+| `src/types/v12-roles.ts` | CREATE | TypeScript definitions (not imported) |
+| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE3_COMPLETE.md` | CREATE | Post-phase restore point |
+| `phases/DVH-IMS-V1.3/PHASE-3/PHASE-3-CLOSURE-REPORT.md` | CREATE | Closure documentation |
+| `phases/DVH-IMS-V1.3/README.md` | MODIFY | Add Phase 3 status |
 
 ---
+
+**PHASE 3 — PREPARATION ONLY — NO OPERATIONAL CHANGE**
 
 **Awaiting approval to create Restore Point and begin implementation.**

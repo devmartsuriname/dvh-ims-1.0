@@ -9,6 +9,7 @@ export type AppRole =
   | 'frontdesk_housing'
   | 'admin_staff'
   | 'audit'
+  | 'social_field_worker'
 
 interface UseUserRoleReturn {
   roles: AppRole[]
@@ -81,7 +82,7 @@ export const useUserRole = (): UseUserRoleReturn => {
   )
 
   const isDistrictScoped = roles.some(role =>
-    ['frontdesk_bouwsubsidie', 'frontdesk_housing', 'admin_staff'].includes(role)
+    ['frontdesk_bouwsubsidie', 'frontdesk_housing', 'admin_staff', 'social_field_worker'].includes(role)
   ) && !isNationalRole
 
   return {

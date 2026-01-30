@@ -77,6 +77,9 @@ interface GeneratedDocument {
 
 const STATUS_BADGES: Record<string, { bg: string; label: string }> = {
   received: { bg: 'secondary', label: 'Received' },
+  in_social_review: { bg: 'info', label: 'In Social Review' },
+  social_completed: { bg: 'primary', label: 'Social Completed' },
+  returned_to_intake: { bg: 'warning', label: 'Returned to Intake' },
   screening: { bg: 'info', label: 'Screening' },
   needs_more_docs: { bg: 'warning', label: 'Needs More Docs' },
   fieldwork: { bg: 'primary', label: 'Fieldwork' },
@@ -87,7 +90,10 @@ const STATUS_BADGES: Record<string, { bg: string; label: string }> = {
 }
 
 const STATUS_TRANSITIONS: Record<string, string[]> = {
-  received: ['screening', 'rejected'],
+  received: ['in_social_review', 'screening', 'rejected'],
+  in_social_review: ['social_completed', 'returned_to_intake', 'rejected'],
+  returned_to_intake: ['in_social_review', 'rejected'],
+  social_completed: ['screening', 'rejected'],
   screening: ['needs_more_docs', 'fieldwork', 'rejected'],
   needs_more_docs: ['screening', 'rejected'],
   fieldwork: ['approved_for_council', 'rejected'],

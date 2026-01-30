@@ -1,414 +1,347 @@
 
-# DVH-IMS V1.2 — Phase 5 Planning Pack
 
-## Services Module Decomposition
+# DVH-IMS V1.2 — Phase 6 Planning Pack
+
+## Stabilization & Readiness
 
 **Version:** 1.0  
 **Date:** 2026-01-30  
-**Phase:** 5 — Services Module Decomposition  
+**Phase:** 6 — Stabilization & Readiness  
 **Status:** PLANNING
 
 ---
 
 ## 1. Executive Summary
 
-Phase 5 focuses on validating alignment between the implemented service logic and the V1.2 Services Module Decomposition document. This phase verifies that existing Edge Functions, client-side service calls, and workflow handlers correctly implement the service architecture defined in the planning documents.
+Phase 6 is the final phase of the V1.2 Implementation Roadmap. Its purpose is to validate operational readiness and confirm that all V1.2 governance controls are verified before formal closure of the V1.2 documentation cycle.
+
+**Critical Note:** DVH-IMS V1.2 has been executed as a **documentation and verification cycle only**. No implementation (code, schema, RLS, UI) has been performed. Phase 6 serves as a **consolidation and readiness assessment** phase.
 
 **Key Objectives:**
-- Map existing implementations to documented service definitions
-- Validate Bouwsubsidie-specific services (including Raadvoorstel Generation)
-- Validate Woning Registratie-specific services
-- Verify service boundaries and exclusions are respected
-- Document any gaps between specification and implementation
+- Validate all V1.2 phase verification is complete
+- Confirm system remains on V1.1 baseline
+- Document operational readiness status
+- Create V1.2 cycle closure artifacts
+- Prepare handover documentation
 
 ---
 
-## 2. Scope Definition
+## 2. Phase Context: V1.2 Execution Summary
 
-### 2.1 In Scope
+### 2.1 What V1.2 Achieved
+
+| Phase | Scope | Status |
+|-------|-------|--------|
+| Phase 0 | Documentation Baseline | ✅ COMPLETE — 17 documents |
+| Phase 1 | Access & Authority Foundation | ✅ CLOSED — User/Role operationalization |
+| Phase 2 | Workflow & Decision Integrity | ✅ CLOSED — Workflow verification |
+| Phase 3 | Audit & Legal Traceability | ✅ CLOSED — Audit coverage verified |
+| Phase 4 | Operational Workflows | ✅ CLOSED — Workflow/RBAC verification |
+| Phase 5 | Services Module Decomposition | ✅ CLOSED — Documentation only |
+
+### 2.2 What V1.2 Did NOT Do
+
+| Item | Status |
+|------|--------|
+| Code changes | ❌ NOT EXECUTED |
+| Schema changes | ❌ NOT EXECUTED |
+| RLS policy changes | ❌ NOT EXECUTED |
+| New Edge Functions | ❌ NOT EXECUTED |
+| UI changes | ❌ NOT EXECUTED |
+| Notification implementation | ❌ NOT EXECUTED (planning only) |
+| Database triggers | ❌ NOT EXECUTED |
+
+### 2.3 System Baseline
+
+**DVH-IMS remains on V1.1 baseline** with verified V1.2 documentation overlay.
+
+---
+
+## 3. Scope Definition
+
+### 3.1 In Scope
 
 | Item | Description | Deliverable |
 |------|-------------|-------------|
-| Service Inventory | Map all existing service implementations | Service Implementation Matrix |
-| Service-Workflow Alignment | Verify services follow documented workflows | Alignment Report |
-| Bouwsubsidie Services | Validate Financial Assessment, Raadvoorstel, Allocation | Module Verification Report |
-| Woning Registratie Services | Validate Registration, Urgency, Allocation | Module Verification Report |
-| Cross-Cutting Services | Verify Audit, RBAC enforcement | Cross-Cut Verification |
-| Service Boundaries | Confirm exclusions are respected | Boundary Validation |
+| Phase Completion Verification | Confirm all 5 phases properly closed | Phase Status Matrix |
+| Restore Point Inventory | Verify all restore points documented | Restore Point Registry |
+| Documentation Integrity | Confirm all V1.2 docs intact | Documentation Checklist |
+| Deferred Items Registry | Consolidate all deferred items | Deferment Manifest |
+| V1.2 Cycle Summary | Create executive summary | V1.2 Closure Report |
+| Operational Readiness Statement | Confirm V1.1 operational status | Readiness Statement |
 
-### 2.2 Explicit Out of Scope
+### 3.2 Explicit Out of Scope
 
 | Item | Reason |
 |------|--------|
-| Schema changes | Requires explicit authorization |
-| New Edge Functions | Beyond verification scope |
-| New roles | Governance constraint |
-| Notification implementation | Documented as planning-only |
-| External integrations | Explicitly excluded in V1.2 |
+| Any code changes | Verification only |
+| Schema changes | Governance constraint |
+| New documentation | Consolidation only |
+| Performance optimization | Not in V1.2 scope |
+| Scale implementation | Planning only (Scale Packs) |
+| Notification implementation | Planning only |
 
 ---
 
-## 3. Current Service Implementation Analysis
+## 4. Phase 6 Tasks (from V1.2 Tasks and Phases Document)
 
-### 3.1 Edge Functions (Backend Services)
+| Task ID | Task Description | Source Document | Method |
+|---------|------------------|-----------------|--------|
+| P6-T01 | Validate all workflows end-to-end | End-to-End Workflows | Cross-reference Phase 2/4 reports |
+| P6-T02 | Verify audit trail completeness | Audit & Legal Traceability | Cross-reference Phase 3 report |
+| P6-T03 | Test notification delivery | Notifications & Escalations | N/A — Not implemented (planning only) |
+| P6-T04 | Verify role-based access enforcement | Roles & Authority Matrix | Cross-reference Phase 1/4 reports |
+| P6-T05 | Confirm state machine integrity | Dossier State Model | Cross-reference Phase 2 report |
+| P6-T06 | Data entry readiness check | Scope & Objectives | Verify V1.1 operational status |
+| P6-T07 | Operational handover preparation | Implementation Roadmap | Create closure documentation |
 
-| Function | V1.2 Service Mapping | Status |
-|----------|----------------------|--------|
-| `execute-allocation-run` | Subsidy Allocation Service (Housing) | ✅ Implemented |
-| `generate-raadvoorstel` | Raadvoorstel Generation Service | ✅ Implemented |
-| `get-document-download-url` | Document Access (supporting) | ✅ Implemented |
-| `submit-bouwsubsidie-application` | Intake Service (Bouwsubsidie) | ✅ Implemented |
-| `submit-housing-registration` | Intake Service (Housing) | ✅ Implemented |
-| `lookup-public-status` | Status Lookup (supporting) | ✅ Implemented |
-
-### 3.2 Client-Side Service Implementations
-
-| Component | V1.2 Service Mapping | Implementation |
-|-----------|----------------------|----------------|
-| CaseFormModal | Dossier Management Service | Direct Supabase insert |
-| RegistrationFormModal | Dossier Management Service | Direct Supabase insert |
-| PersonFormModal | Shared Core (Person management) | Direct Supabase upsert |
-| HouseholdFormModal | Shared Core (Household management) | Direct Supabase insert |
-| UrgencyAssessmentForm | Registration Validation Service | Direct Supabase insert |
-| DecisionFormModal | Decision Service | Direct Supabase insert |
-| AssignmentFormModal | Registry Recording Service | Direct Supabase insert |
-| Status Change Handlers | Review & Assessment Service | Direct Supabase update |
-
-### 3.3 V1.2 Services vs Implementation Matrix
-
-#### Shared Core Services
-
-| Service | Documented | Implemented | Method |
-|---------|------------|-------------|--------|
-| Intake Service | ✅ | ✅ | Edge Functions (public) + Modals (admin) |
-| Dossier Management Service | ✅ | ✅ | Client-side modals + RLS |
-| Review & Assessment Service | ✅ | ✅ | Status change handlers |
-| Decision Service | ✅ | ✅ | DecisionFormModal + status handlers |
-| Audit & Traceability Service | ✅ | ✅ | useAuditLog hook + Edge direct inserts |
-
-#### Bouwsubsidie-Specific Services
-
-| Service | Documented | Implemented | Method |
-|---------|------------|-------------|--------|
-| Financial Assessment Service | ✅ | ⚠️ Partial | Fields exist, no formal assessment logic |
-| Raadvoorstel Generation Service | ✅ | ✅ | Edge Function (generate-raadvoorstel) |
-| Subsidy Allocation Service | ✅ | ⚠️ Partial | approved_amount field, no formal allocation flow |
-
-#### Woning Registratie-Specific Services
-
-| Service | Documented | Implemented | Method |
-|---------|------------|-------------|--------|
-| Registration Validation Service | ✅ | ✅ | UrgencyAssessmentForm + status flow |
-| Registry Recording Service | ✅ | ✅ | execute-allocation-run Edge Function |
-
-#### Cross-Cutting Services
-
-| Service | Documented | Implemented | Status |
-|---------|------------|-------------|--------|
-| Notification Orchestration Service | ✅ | ❌ | Documented as planning-only |
-| Reporting & Statistics Service | ✅ | ⚠️ Partial | Dashboard exists, aggregations manual |
-| Role & Authority Enforcement | ✅ | ✅ | RLS + useUserRole + Edge RBAC |
+**Note:** P6-T03 is not applicable as Notifications are documented as planning-only in V1.2.
 
 ---
 
-## 4. Service-to-Workflow Mapping Verification
+## 5. Verification Approach
 
-### 4.1 Documented Mapping (from V1.2 Services Decomposition)
+### 5.1 Phase Completion Matrix
 
-| Workflow Phase | Primary Service | Implementation |
-|----------------|-----------------|----------------|
-| Submission | Intake Service | Edge Functions (public) / Modals (admin) |
-| Dossier Creation | Dossier Management Service | CaseFormModal / RegistrationFormModal |
-| Review | Review & Assessment Service | Status change handlers |
-| Decision | Decision Service | DecisionFormModal + status handlers |
-| Raadvoorstel | Raadvoorstel Generation Service | generate-raadvoorstel Edge Function |
-| Finalization | Subsidy Allocation / Registry Recording | Status finalization + allocation runs |
+| Phase | Verification Report | Closure Statement | Restore Point | Status |
+|-------|---------------------|-------------------|---------------|--------|
+| Phase 1 | N/A (pre-format) | N/A (pre-format) | RESTORE_POINT_V1.2_PHASE1_ACCESS_AUTHORITY.md | ✅ |
+| Phase 2 | PHASE-2-Workflow-Verification-Report.md | PHASE-2-CLOSURE-STATEMENT.md | RESTORE_POINT_V1.2_PHASE2_VERIFICATION.md | ✅ |
+| Phase 3 | PHASE-3-Verification-Report.md | PHASE-3-CLOSURE-STATEMENT.md | RESTORE_POINT_V1.2_PHASE3_AUDIT_START.md | ✅ |
+| Phase 4 | PHASE-4-Verification-Report.md | PHASE-4-CLOSURE-STATEMENT.md | RESTORE_POINT_V1.2_PHASE4_WORKFLOWS_START.md | ✅ |
+| Phase 5 | PHASE-5-Verification-Report.md | PHASE-5-CLOSURE-STATEMENT.md | RESTORE_POINT_V1.2_PHASE5_SERVICES_START.md | ✅ |
 
-### 4.2 Bouwsubsidie Workflow Coverage
+### 5.2 Documentation Inventory
 
-| Phase | Service | Edge Function | Client Component | Status |
-|-------|---------|---------------|------------------|--------|
-| Public Submission | Intake | submit-bouwsubsidie-application | (none) | ✅ |
-| Admin Creation | Dossier Mgmt | (none) | CaseFormModal | ✅ |
-| Screening | Review | (none) | Status handler | ✅ |
-| Fieldwork | Review | (none) | Status handler | ✅ |
-| Council Approval | Decision | (none) | Status handler | ✅ |
-| Raadvoorstel | Raadvoorstel Gen | generate-raadvoorstel | Generate button | ✅ |
-| Finalization | Subsidy Allocation | (none) | Status handler | ✅ |
+| Category | Count | Location |
+|----------|-------|----------|
+| V1.2 Reference Documents | 17 | `/docs/DVH-IMS-V1.2/` |
+| V1.2 Phase Documents | 10 | `/phases/DVH-IMS-V1.2/` |
+| V1.2 Restore Points | 5+ | `/restore-points/v1.2/` |
 
-### 4.3 Woning Registratie Workflow Coverage
+### 5.3 Deferred Items Consolidation
 
-| Phase | Service | Edge Function | Client Component | Status |
-|-------|---------|---------------|------------------|--------|
-| Public Submission | Intake | submit-housing-registration | (none) | ✅ |
-| Admin Creation | Dossier Mgmt | (none) | RegistrationFormModal | ✅ |
-| Review | Review | (none) | Status handler | ✅ |
-| Urgency Assessment | Registration Validation | (none) | UrgencyAssessmentForm | ✅ |
-| Waiting List | Registry Recording | (none) | Status handler | ✅ |
-| Matching | Registry Recording | execute-allocation-run | RunExecutorModal | ✅ |
-| Allocation | Registry Recording | (none) | Status handler | ✅ |
-| Finalization | Registry Recording | (none) | Status handler | ✅ |
+From closed phases, the following items are explicitly deferred:
+
+| Source | ID | Item | Impact | Deferred To |
+|--------|----|----|--------|-------------|
+| Phase 4 | D-01 | Backend Transition Enforcement (DB triggers) | Medium | V1.3 or Scale Pack |
+| Phase 4 | D-02 | Legacy Audit Events (pre-Phase 2) | Low | Accepted |
+| Phase 5 | S-01 | Financial Assessment Service formalization | Low | V1.3 |
+| Phase 5 | S-02 | Subsidy Allocation formal workflow | Low | V1.3 |
+| Phase 5 | S-03 | Notification Orchestration | Expected | V1.3 |
+| Phase 5 | S-04 | Reporting Aggregations (database-level) | Low | Scale Pack B |
+| Scale | SP-A | Admin Listings Server-Side Pagination | Medium | Scale Pack A |
+| Scale | SP-B | Dashboard KPI Aggregations | Medium | Scale Pack B |
+| Scale | SP-C | Form Selector Async Search | Medium | Scale Pack C |
 
 ---
 
-## 5. Raadvoorstel Service Verification
+## 6. V1.1 Operational Readiness Confirmation
 
-### 5.1 Service Alignment
+### 6.1 Baseline Reference
 
-**Documented Specification (V1.2 Backend Design Overview):**
+The V1.1 Stability and Operational Readiness Report (dated 2026-01-24) established:
 
-| Aspect | Specification | Implementation |
-|--------|---------------|----------------|
-| Purpose | Generate Raadvoorstel after approval | ✅ Generates DOCX after approved_for_council |
-| Input | Approved Bouwsubsidie dossier | ✅ Validates status is eligible |
-| Output | Raadvoorstel document | ✅ Produces DOCX via docx library |
-| Authority | System (triggered post-approval) | ⚠️ User-triggered, not automatic |
-| Audit | Generation event logged | ✅ Logs document_generated event |
+| Check | Result |
+|-------|--------|
+| All 11 Admin Modules | ✅ PASS |
+| Runtime Errors (Postgres/Auth/Edge) | ZERO |
+| Console Artifacts | ZERO |
+| Theme Isolation | ✅ Stable |
+| Code Health | ✅ Acceptable |
+| Audit Logging | ✅ Integrated |
+| Final Verdict | **STABLE** |
 
-### 5.2 Implementation Details
+### 6.2 V1.2 Verification Overlay
 
-**Edge Function:** `generate-raadvoorstel`
-- **RBAC:** system_admin, project_leader, frontdesk_bouwsubsidie, admin_staff
-- **Status Validation:** Must be approved_for_council, council_doc_generated, or finalized
-- **Output:** DOCX document with structured sections
-- **Audit:** Logs to audit_event with actor_role
+Phase 1-5 verification confirms:
 
-### 5.3 Module Exclusion Verification
-
-**V1.2 Requirement:** Raadvoorstel applies ONLY to Bouwsubsidie. Woning Registratie explicitly excludes this service.
-
-**Verification:**
-- generate-raadvoorstel queries `subsidy_case` table only
-- No Raadvoorstel UI in housing-registrations detail page
-- No generate-raadvoorstel references in housing module
-
-**Status:** ✅ COMPLIANT
+| Control | Verified |
+|---------|----------|
+| User/Role Operationalization | ✅ Phase 1 |
+| Workflow Integrity | ✅ Phase 2/4 |
+| Audit Coverage | ✅ Phase 3 |
+| RBAC Enforcement | ✅ Phase 4 |
+| Service Alignment | ✅ Phase 5 |
 
 ---
 
-## 6. Service Boundary Verification
-
-### 6.1 Documented Exclusions (from V1.2 Services Decomposition)
-
-| Exclusion | Requirement | Status |
-|-----------|-------------|--------|
-| No external payment services | Not implemented | ✅ COMPLIANT |
-| No automated decision engines | All decisions manual | ✅ COMPLIANT |
-| No public notification channels | Notifications not active | ✅ COMPLIANT |
-| No cross-dossier automation | Each dossier independent | ✅ COMPLIANT |
-
-### 6.2 Notification Service Status
-
-**V1.2 Note:** Notification services are documented but not implemented in V1.2.
-
-**Current State:**
-- No notification Edge Functions exist
-- No notification triggers in workflows
-- Notification documented in planning only
-
-**Status:** ✅ COMPLIANT (correctly not implemented)
-
----
-
-## 7. Audit-First Design Verification
-
-### 7.1 Service-Level Audit Compliance
-
-| Service Implementation | Audit Event | actor_role | Status |
-|------------------------|-------------|------------|--------|
-| submit-bouwsubsidie-application | public_submission | 'public' | ✅ |
-| submit-housing-registration | public_submission | 'public' | ✅ |
-| generate-raadvoorstel | document_generated | From user_roles | ✅ |
-| execute-allocation-run | CREATE | From user_roles | ✅ |
-| get-document-download-url | document_downloaded | From user_roles | ✅ |
-| lookup-public-status | status_lookup | 'public' | ✅ |
-| Client: CaseFormModal | CREATE | Via useAuditLog | ✅ |
-| Client: Status handlers | STATUS_CHANGE | Via useAuditLog | ✅ |
-
-### 7.2 Immutability Verification
-
-**V1.2 Requirement:** Audit & Traceability Service must produce immutable logs.
-
-**Verification (from Phase 3):**
-- No UPDATE RLS policy on audit_event
-- No DELETE RLS policy on audit_event
-- UI has no edit/delete paths
-
-**Status:** ✅ VERIFIED (Phase 3 closure)
-
----
-
-## 8. Gap Analysis
-
-### 8.1 Documented Gaps
-
-| ID | Service | Gap | Impact | Recommendation |
-|----|---------|-----|--------|----------------|
-| S-01 | Financial Assessment | No formal assessment logic | LOW | Fields exist, workflow supports manual assessment |
-| S-02 | Subsidy Allocation | No formal allocation workflow | LOW | approved_amount + finalized status sufficient |
-| S-03 | Notification Orchestration | Not implemented | EXPECTED | Documented as planning-only |
-| S-04 | Reporting & Statistics | Manual aggregations | LOW | Dashboard functional, optimization deferred |
-
-### 8.2 Design Deviations
-
-| Deviation | Documented | Implemented | Justification |
-|-----------|------------|-------------|---------------|
-| Raadvoorstel trigger | System (auto) | User (button) | User control preferred |
-| Service layer | Dedicated services | RLS + Edge + Client | Supabase architecture |
-
----
-
-## 9. Phase 5 Verification Activities
-
-### 9.1 Pre-Verification Checklist
-
-| # | Item | Status |
-|---|------|--------|
-| 1 | Restore point created | ⏳ PENDING |
-| 2 | Edge Functions inventory | ✅ Section 3 |
-| 3 | Client service mapping | ✅ Section 3 |
-| 4 | Workflow alignment | ✅ Section 4 |
-| 5 | Raadvoorstel verification | ✅ Section 5 |
-| 6 | Boundary compliance | ✅ Section 6 |
-| 7 | Audit compliance | ✅ Section 7 |
-
-### 9.2 Verification Activities
-
-| Activity | Method | Deliverable |
-|----------|--------|-------------|
-| Edge Function code review | Read function implementations | Code alignment notes |
-| Service boundary check | Search for exclusion violations | Boundary report |
-| Workflow-to-service trace | Map each workflow step to service | Trace matrix |
-| Audit capture validation | Query audit_event by service | Coverage report |
-
----
-
-## 10. Execution Plan
+## 7. Execution Plan
 
 ### Step 1: Create Restore Point
-Create `RESTORE_POINT_V1.2_PHASE5_SERVICES_START.md` in `/restore-points/v1.2/`
 
-### Step 2: Service Implementation Verification
-- Review all 6 Edge Functions for service alignment
-- Verify RBAC implementation per function
-- Confirm audit logging per function
+Create `RESTORE_POINT_V1.2_PHASE6_STABILIZATION_START.md` in `/restore-points/v1.2/`
 
-### Step 3: Workflow-Service Mapping Validation
-- Trace each workflow phase to implementing service
-- Document any missing service implementations
-- Verify service boundaries respected
+### Step 2: Phase Completion Audit
 
-### Step 4: Module-Specific Verification
-- Bouwsubsidie: Validate Raadvoorstel flow end-to-end
-- Housing: Validate allocation run flow end-to-end
+- Read all Phase closure statements
+- Verify all phase documents exist
+- Confirm restore points documented
 
-### Step 5: Documentation
-- Generate Phase 5 Verification Report
-- Document gaps and deferred items
-- Create closure statement
+### Step 3: Documentation Integrity Check
+
+- Verify all 17 V1.2 reference documents exist
+- Confirm no documents were modified during phases
+- Verify phase documents in correct location
+
+### Step 4: Deferred Items Registry
+
+- Consolidate all deferred items from Phases 1-5
+- Create unified Deferment Manifest
+- Cross-reference Scale Readiness Roadmap
+
+### Step 5: V1.2 Cycle Closure
+
+- Create V1.2 Cycle Summary Report
+- Update Phase README with Phase 6 status
+- Create final closure statement
 
 ---
 
-## 11. Deliverables
+## 8. Deliverables
 
 | Document | Location | Status |
 |----------|----------|--------|
-| RESTORE_POINT_V1.2_PHASE5_SERVICES_START.md | `/restore-points/v1.2/` | Pending |
-| Phase 5 Planning Pack | `/phases/DVH-IMS-V1.2/` | This document |
-| Service Implementation Matrix | Section 3 | ✅ COMPLETE |
-| Workflow-Service Trace | Section 4 | ✅ COMPLETE |
-| Phase 5 Verification Report | `/phases/DVH-IMS-V1.2/` | Pending |
-| Phase 5 Closure Statement | `/phases/DVH-IMS-V1.2/` | Pending |
+| RESTORE_POINT_V1.2_PHASE6_STABILIZATION_START.md | `/restore-points/v1.2/` | Pending |
+| Phase 6 Planning Pack | `/phases/DVH-IMS-V1.2/` | This document |
+| V1.2 Cycle Summary Report | `/phases/DVH-IMS-V1.2/` | Pending |
+| Deferred Items Manifest | `/phases/DVH-IMS-V1.2/` | Pending |
+| Phase 6 Closure Statement | `/phases/DVH-IMS-V1.2/` | Pending |
 
 ---
 
-## 12. Governance Compliance
+## 9. Governance Compliance
 
 | Rule | Status |
 |------|--------|
-| No schema changes | ✅ Compliant (verification only) |
-| No new Edge Functions | ✅ Compliant |
+| No code changes | ✅ Compliant (consolidation only) |
+| No schema changes | ✅ Compliant |
 | No new roles | ✅ Compliant |
-| No /docs edits | ✅ Compliant (read-only) |
+| No /docs edits | ✅ Compliant |
 | Darkone compliance | N/A (no UI changes) |
 
 ---
 
-## 13. Risk Assessment
+## 10. Risk Assessment
 
 | Risk | Probability | Impact | Mitigation |
 |------|-------------|--------|------------|
-| Missing service implementation | Low | Medium | Document and defer |
-| Service boundary violation | Low | High | STOP + REPORT |
-| Raadvoorstel in wrong module | Low | High | Already verified negative |
-| Audit gap in service | Low | Medium | Phase 3 verified |
+| Missing phase document | Low | Medium | Inventory verification |
+| Incomplete deferment tracking | Low | Low | Consolidation step |
+| Governance violation | Very Low | High | Read-only verification |
 
 ---
 
-## 14. Technical Summary
+## 11. Technical Summary
 
-### Current Architecture
+### V1.2 Cycle Architecture
 
 ```text
-+----------------------------------+
-|        PUBLIC LAYER              |
-+----------------------------------+
-| Edge Functions:                  |
-| - submit-bouwsubsidie-application|
-| - submit-housing-registration    |
-| - lookup-public-status           |
-+----------------------------------+
++------------------------------------------+
+|        V1.2 DOCUMENTATION LAYER          |
++------------------------------------------+
+| 17 Reference Documents (read-only)       |
+| - Scope & Objectives                     |
+| - Roles & Authority Matrix               |
+| - End-to-End Workflows                   |
+| - Dossier State Model                    |
+| - Audit & Legal Traceability             |
+| - Notifications (planning only)          |
+| - Services Decomposition                 |
+| - Architecture Overview                  |
+| - Scale Readiness Roadmap                |
+| - Tasks and Phases                       |
+| - ...                                    |
++------------------------------------------+
              |
              v
-+----------------------------------+
-|      AUTHENTICATED LAYER         |
-+----------------------------------+
-| Edge Functions:                  |
-| - generate-raadvoorstel          |
-| - execute-allocation-run         |
-| - get-document-download-url      |
-|                                  |
-| Client Services:                 |
-| - Form Modals (CRUD)             |
-| - Status Handlers (Transitions)  |
-| - useAuditLog (Audit capture)    |
-+----------------------------------+
++------------------------------------------+
+|         V1.2 VERIFICATION LAYER          |
++------------------------------------------+
+| Phase 1: User/Role Operationalization    |
+| Phase 2: Workflow Verification           |
+| Phase 3: Audit Coverage                  |
+| Phase 4: Operational Workflows           |
+| Phase 5: Service Alignment (docs only)   |
+| Phase 6: Stabilization & Readiness       |
++------------------------------------------+
              |
              v
-+----------------------------------+
-|         RLS LAYER                |
-+----------------------------------+
-| - Role-based access              |
-| - District isolation             |
-| - Audit immutability             |
-+----------------------------------+
-             |
-             v
-+----------------------------------+
-|      PERSISTENCE LAYER           |
-+----------------------------------+
-| - Dossier tables                 |
-| - Status history tables          |
-| - Audit event table              |
-| - Generated documents            |
-+----------------------------------+
++------------------------------------------+
+|         V1.1 OPERATIONAL BASELINE        |
++------------------------------------------+
+| - 11 Admin Modules (STABLE)              |
+| - 6 Edge Functions (VERIFIED)            |
+| - 24 Database Tables (RLS active)        |
+| - Public Wizards (FROZEN)                |
+| - Audit Logging (OPERATIONAL)            |
++------------------------------------------+
 ```
 
 ---
 
-## 15. Authorization Request
+## 12. Exit Criteria
 
-This Planning Pack defines Phase 5 scope, objectives, and verification approach.
+Phase 6 is complete when:
+
+| Criterion | Verification |
+|-----------|--------------|
+| All phase artifacts inventoried | ✅ Document exists |
+| All restore points documented | ✅ Registry complete |
+| Deferred items consolidated | ✅ Manifest created |
+| V1.2 cycle summary created | ✅ Report exists |
+| Operational readiness confirmed | ✅ V1.1 baseline stable |
+| Closure statement created | ✅ Document exists |
+
+---
+
+## 13. Authorization Request
+
+This Planning Pack defines Phase 6 scope, objectives, and verification approach.
 
 **Awaiting explicit approval to:**
-1. Create Phase 5 START restore point
-2. Execute verification activities
-3. Generate Phase 5 completion documentation
+1. Create Phase 6 START restore point
+2. Execute verification activities (document inventory + consolidation)
+3. Generate V1.2 Cycle Summary and Closure documentation
 
 **No implementation or code changes will occur.**
+
+---
+
+## 14. End-of-Task Report Format
+
+At completion, report will include:
+
+```
+IMPLEMENTED:
+- Phase completion audit
+- Documentation integrity check
+- Deferred items consolidation
+- V1.2 Cycle Summary Report
+- Phase 6 Closure Statement
+
+PARTIAL:
+- NONE (expected)
+
+SKIPPED:
+- P6-T03 (Notification testing) - Not applicable
+
+VERIFICATION:
+- All phase documents exist
+- All restore points documented
+- V1.1 operational status confirmed
+
+RESTORE POINT:
+- RESTORE_POINT_V1.2_PHASE6_STABILIZATION_START.md
+
+BLOCKERS / ERRORS:
+- NONE (expected)
+```
 
 ---
 
 *Document Author: DVH-IMS System*  
 *Planning Date: 2026-01-30*  
 *Authority: Awaiting Client Approval*
+

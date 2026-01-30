@@ -1,18 +1,18 @@
 # DVH-IMS V1.2 Phase Documentation
 
-**Status:** PHASE 2 CLOSED  
+**Status:** PHASE 3 IN PROGRESS  
 **Created:** 2026-01-24  
-**Updated:** 2026-01-29
+**Updated:** 2026-01-30
 
 ---
 
 ## Phase Status Overview
 
-| Phase | Status | Date Closed |
-|-------|--------|-------------|
-| Phase 1 — Access & Authority Foundation | ✅ CLOSED | 2026-01-28 |
-| Phase 2 — Workflow & Decision Integrity | ✅ CLOSED | 2026-01-29 |
-| Phase 3 — Audit & Legal Traceability | ⏳ NOT STARTED | — |
+| Phase | Status | Date Started | Date Closed |
+|-------|--------|--------------|-------------|
+| Phase 1 — Access & Authority Foundation | ✅ CLOSED | 2026-01-28 | 2026-01-28 |
+| Phase 2 — Workflow & Decision Integrity | ✅ CLOSED | 2026-01-29 | 2026-01-29 |
+| Phase 3 — Audit & Legal Traceability | 🔵 IN PROGRESS | 2026-01-30 | — |
 
 ---
 
@@ -24,11 +24,19 @@
 |------|--------|-------|
 | `PHASE-1-Access-and-Authority-Foundation.md` | ⚠️ INVALID | Historical artifact; superseded by V1.2 governance |
 
-### Phase 2 (ACTIVE)
+### Phase 2 (CLOSED)
 
 | File | Status | Notes |
 |------|--------|-------|
-| `PHASE-2-Workflow-Verification-Report.md` | ✅ COMPLETE | Tier 1 verification complete; Tier 2 fixes pending authorization |
+| `PHASE-2-Workflow-Verification-Report.md` | ✅ COMPLETE | Comprehensive workflow verification |
+| `PHASE-2-CLOSURE-STATEMENT.md` | ✅ COMPLETE | Formal closure statement |
+
+### Phase 3 (IN PROGRESS)
+
+| File | Status | Notes |
+|------|--------|-------|
+| `PHASE-3-Audit-Planning-Pack.md` | ✅ COMPLETE | Planning and scope documentation |
+| `PHASE-3-Verification-Report.md` | ⏳ PENDING | Database verification results |
 
 ---
 

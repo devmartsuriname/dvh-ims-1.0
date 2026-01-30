@@ -1,11 +1,11 @@
 
-# DVH-IMS V1.3 — Phase 1 Scope & Execution Plan
+# DVH-IMS V1.3 — Phase 2 Scope & Execution Plan
 
 **Document Type:** Phase Scope & Execution Plan  
 **Version:** 1.0  
 **Date:** 2026-01-30  
-**Phase:** Phase 1 — Backend Enforcement + Audit Hardening  
-**Authorization Basis:** V1.3 Authorization Decision — OPTION B (APPROVED)
+**Phase:** Phase 2 — Admin Notifications (S-03)  
+**Authorization Basis:** V1.3 Phase 2 Authorization Decision — APPROVED
 
 ---
 
@@ -13,375 +13,447 @@
 
 | Item | Status |
 |------|--------|
-| V1.3 Authorization Decision | OPTION B — APPROVED |
-| Authorized Scope | D-01 + D-02 |
+| V1.3 Phase 1 | CLOSED & LOCKED |
+| V1.3 Phase 2 Authorization | APPROVED |
+| Authorized Scope | S-03: Admin Notifications |
 | Operational Baseline | DVH-IMS V1.1 |
 | Documentation Baseline | DVH-IMS V1.2 (FROZEN) |
 | Phase Status | OPEN — Awaiting Restore Point |
 
 ---
 
-## 2. Phase 1 Scope Summary
+## 2. Phase 2 Scope Summary
 
-### 2.1 Authorized Implementation (D-01 + D-02)
+### 2.1 Authorized Implementation (S-03)
 
 | ID | Item | Description |
 |----|------|-------------|
-| D-01 | Backend Transition Enforcement | Database triggers to enforce state machine at DB level |
-| D-02 | Audit Hardening | Correlation IDs, cross-entity linkage, completeness verification |
+| S-03-A | Notification Schema | `admin_notification` table for in-app notifications |
+| S-03-B | Notification Hook | React hook to fetch/manage admin notifications |
+| S-03-C | Notification Display | Live notification dropdown using existing Darkone component |
+| S-03-D | Audit Integration | Every notification linked to `correlation_id` |
+| S-03-E | Failure Logging | Notification delivery failures logged to audit |
 
 ### 2.2 Explicit Exclusions
 
 | Item | Status |
 |------|--------|
-| Notifications (S-03) | NOT AUTHORIZED |
-| Scale/Performance (SP-A/B/C) | NOT AUTHORIZED |
-| Service refactors (S-01, S-02) | NOT AUTHORIZED |
-| UI changes | NOT AUTHORIZED |
+| Public notifications | NOT AUTHORIZED |
+| Citizen communication | NOT AUTHORIZED |
+| Email delivery | NOT AUTHORIZED |
+| SMS delivery | NOT AUTHORIZED |
+| Push notifications | NOT AUTHORIZED |
+| External webhooks | NOT AUTHORIZED |
+| Bulk notifications | NOT AUTHORIZED |
+| Async queues/retry | NOT AUTHORIZED |
+| Scale optimizations | NOT AUTHORIZED |
+| UI redesign | NOT AUTHORIZED |
 | Role changes | NOT AUTHORIZED |
 | Enum changes | NOT AUTHORIZED |
 | RLS policy changes | NOT AUTHORIZED |
-| Public wizard changes | NOT AUTHORIZED |
 
 ---
 
 ## 3. Current State Analysis
 
-### 3.1 Status Transition Enforcement (D-01 Gap)
+### 3.1 Existing Notification Infrastructure
 
-**Current Implementation:**
-- UI-level validation only in `STATUS_TRANSITIONS` constant
-- `subsidy_case` uses status values: `received`, `screening`, `needs_more_docs`, `fieldwork`, `approved_for_council`, `council_doc_generated`, `finalized`, `rejected`
-- `housing_registration` uses status values: `received`, `under_review`, `urgency_assessed`, `waiting_list`, `matched`, `allocated`, `finalized`, `rejected`
-- No database-level enforcement — invalid transitions possible via direct SQL or API manipulation
+**Current Components:**
+- `src/components/layout/TopNavigationBar/components/Notifications.tsx` — Static dropdown component using Darkone design
+- `src/assets/data/topbar.ts` — Empty notification data array (explicitly marked "OUT OF SCOPE for v1.0/v1.1")
+- `src/context/useNotificationContext.tsx` — Toast notification context (for UI feedback, not persistent notifications)
+- `src/types/data.ts` — Basic `NotificationType` interface (`from`, `content`, `icon`)
 
-**Risk:** Invalid transitions possible without audit trail, compromising legal traceability.
+**Current Behavior:**
+- Notifications component shows empty state with "No notifications" message
+- No database persistence
+- No connection to audit events or dossier transitions
 
-### 3.2 Audit Schema (D-02 Gap)
+### 3.2 Audit Infrastructure (from Phase 1)
 
-**Current `audit_event` Table Schema:**
+**Available Resources:**
+- `audit_event` table with `correlation_id` column (D-02)
+- Backend triggers logging all status transitions (D-01)
+- `INVALID_TRANSITION_BLOCKED` audit events with correlation tracking
+- `logAuditEvent` utility in `src/hooks/useAuditLog.ts`
 
-| Column | Type | Status |
-|--------|------|--------|
-| id | uuid | EXISTS |
-| actor_user_id | uuid | EXISTS |
-| actor_role | text | EXISTS |
-| action | text | EXISTS |
-| entity_type | text | EXISTS |
-| entity_id | uuid | EXISTS |
-| occurred_at | timestamptz | EXISTS |
-| reason | text | EXISTS |
-| metadata_json | jsonb | EXISTS |
-| correlation_id | uuid | **MISSING** |
+### 3.3 Status Transition Points
 
-**Gap:** No correlation ID for grouping related audit events. Cross-entity traceability relies on manual metadata inspection.
+**Subsidy Case Transitions:**
+- `received` → `screening`, `rejected`
+- `screening` → `needs_more_docs`, `fieldwork`, `rejected`
+- `needs_more_docs` → `screening`, `rejected`
+- `fieldwork` → `approved_for_council`, `rejected`
+- `approved_for_council` → `council_doc_generated`, `rejected`
+- `council_doc_generated` → `finalized`, `rejected`
 
-### 3.3 Current Status Values in Production
-
-| Table | Records | Status Values |
-|-------|---------|---------------|
-| subsidy_case | 0 | N/A (empty) |
-| housing_registration | 0 | N/A (empty) |
-
-**Migration Risk:** LOW — No existing data to validate against new state machine.
+**Housing Registration Transitions:**
+- `received` → `under_review`, `rejected`
+- `under_review` → `urgency_assessed`, `rejected`
+- `urgency_assessed` → `waiting_list`, `rejected`
+- `waiting_list` → `matched`, `rejected`
+- `matched` → `allocated`, `rejected`
+- `allocated` → `finalized`, `rejected`
 
 ---
 
 ## 4. Implementation Strategy
 
-### 4.1 Enforcement Approach Decision
+### 4.1 Notification Approach
 
-| Option | Pros | Cons | Recommendation |
-|--------|------|------|----------------|
-| Database Triggers | Bypass-proof, centralized, no code changes | Requires schema migration | **SELECTED** |
-| Edge Function Layer | Application-level control | Can be bypassed, requires refactoring | Not selected |
-
-**Decision:** Implement as PostgreSQL `BEFORE UPDATE` triggers per D-01 Technical Specification.
-
-**Justification:**
-- Database triggers cannot be bypassed regardless of access path
-- Service role operations still trigger validation
-- Aligned with D-01 Technical Specification already approved
-- No changes to existing UI or Edge Functions required
+| Aspect | Decision | Justification |
+|--------|----------|---------------|
+| Storage | Database table (`admin_notification`) | Persistent, queryable, auditable |
+| Delivery | In-app only | As authorized, no external channels |
+| Trigger Source | Status transitions from admin UI | As authorized, no public wizard |
+| Recipient Model | Role-based via RLS | Aligned with V1.2 blueprint |
+| Audit Linkage | Via `correlation_id` | Leverages D-02 infrastructure |
 
 ### 4.2 Implementation Phases
 
-| Phase | Step | Description |
-|-------|------|-------------|
-| 1A | Restore Point | Create mandatory restore point |
-| 1B | Audit Schema Enhancement | Add correlation_id column to audit_event |
-| 1C | Transition Matrix Definition | Define canonical status values and transitions |
-| 1D | Trigger Functions | Create validation trigger functions |
-| 1E | Trigger Attachment | Attach triggers to tables |
-| 1F | Audit Integration | Ensure triggers log to audit_event with correlation |
-| 1G | Verification | Test valid and invalid transitions |
-| 1H | Closure | Phase closure report |
+| Step | Description |
+|------|-------------|
+| 2A | Create Restore Point: `RESTORE_POINT_V1.3_PHASE2_S03_START` |
+| 2B | Create `admin_notification` table with RLS policies |
+| 2C | Create notification hook `useAdminNotifications` |
+| 2D | Integrate hook with existing Notifications.tsx component |
+| 2E | Add notification creation to status transition handlers |
+| 2F | Implement "mark as read" and "clear all" functionality |
+| 2G | Implement notification failure logging |
+| 2H | Verification testing |
+| 2I | Phase closure |
 
 ---
 
-## 5. D-01: Backend Transition Enforcement
+## 5. Database Schema Design
 
-### 5.1 Status Value Mapping
-
-Current V1.1 status values must be mapped to the canonical state machine:
-
-**Subsidy Case (Bouwsubsidie):**
-
-| V1.1 Status | Canonical State | Valid Transitions To |
-|-------------|-----------------|---------------------|
-| `received` | Initial | `screening`, `rejected` |
-| `screening` | Review | `needs_more_docs`, `fieldwork`, `rejected` |
-| `needs_more_docs` | Revision | `screening`, `rejected` |
-| `fieldwork` | Assessment | `approved_for_council`, `rejected` |
-| `approved_for_council` | Pre-Approval | `council_doc_generated`, `rejected` |
-| `council_doc_generated` | Approved | `finalized`, `rejected` |
-| `finalized` | Terminal | *(none)* |
-| `rejected` | Terminal | *(none)* |
-
-**Housing Registration (Woning Registratie):**
-
-| V1.1 Status | Canonical State | Valid Transitions To |
-|-------------|-----------------|---------------------|
-| `received` | Initial | `under_review`, `rejected` |
-| `under_review` | Review | `urgency_assessed`, `rejected` |
-| `urgency_assessed` | Assessed | `waiting_list`, `rejected` |
-| `waiting_list` | Queued | `matched`, `rejected` |
-| `matched` | Pre-Allocation | `allocated`, `rejected` |
-| `allocated` | Allocated | `finalized`, `rejected` |
-| `finalized` | Terminal | *(none)* |
-| `rejected` | Terminal | *(none)* |
-
-### 5.2 Trigger Function Design
+### 5.1 Admin Notification Table
 
 ```text
-+--------------------------------------------+
-|       BEFORE UPDATE Trigger Function        |
-+--------------------------------------------+
-| 1. Check if status column changed           |
-| 2. If unchanged: RETURN NEW (no validation) |
-| 3. Get allowed transitions for OLD status   |
-| 4. If NEW status in allowed list:           |
-|    - Generate correlation_id                |
-|    - RETURN NEW (proceed with update)       |
-| 5. If NOT in allowed list:                  |
-|    - Log INVALID_TRANSITION_BLOCKED audit   |
-|    - RAISE EXCEPTION (check_violation)      |
-+--------------------------------------------+
+Table: admin_notification
+
+Columns:
+- id: uuid (PK, default gen_random_uuid())
+- recipient_user_id: uuid (FK to auth.users, nullable for role-based)
+- recipient_role: text (app_role, for role-based targeting)
+- district_code: text (for district-scoped notifications)
+- notification_type: text (e.g., 'status_change', 'transition_blocked')
+- title: text (short title)
+- message: text (notification content)
+- entity_type: text (e.g., 'subsidy_case', 'housing_registration')
+- entity_id: uuid (reference to related entity)
+- correlation_id: uuid (links to audit_event.correlation_id)
+- is_read: boolean (default false)
+- read_at: timestamptz (nullable)
+- created_at: timestamptz (default now())
+- created_by: uuid (actor who triggered the notification)
 ```
 
-### 5.3 Required Database Changes
+### 5.2 RLS Policies (Restrictive)
 
-| Change | Type | Table/Function |
-|--------|------|----------------|
-| Create function | DDL | `validate_subsidy_case_transition()` |
-| Create function | DDL | `validate_housing_registration_transition()` |
-| Create trigger | DDL | `trg_validate_subsidy_case_transition` on `subsidy_case` |
-| Create trigger | DDL | `trg_validate_housing_registration_transition` on `housing_registration` |
+| Policy | Command | Logic |
+|--------|---------|-------|
+| `role_select_own_notification` | SELECT | User can see notifications where: (1) recipient_user_id = auth.uid() OR (2) recipient_role matches user's role AND district_code matches user's district |
+| `role_insert_admin_notification` | INSERT | Authenticated users with valid admin roles can create notifications |
+| `role_update_own_notification` | UPDATE | User can mark as read only their own notifications |
+| No DELETE | - | Notifications are immutable (audit trail) |
+
+### 5.3 Indexes
+
+| Index | Purpose |
+|-------|---------|
+| `idx_admin_notification_recipient_user_id` | Fast user-specific queries |
+| `idx_admin_notification_recipient_role` | Fast role-based queries |
+| `idx_admin_notification_correlation_id` | Audit event linkage |
+| `idx_admin_notification_is_read` | Unread count queries |
 
 ---
 
-## 6. D-02: Audit Hardening
+## 6. Notification Types
 
-### 6.1 Correlation ID Implementation
+### 6.1 Authorized Notification Types
 
-**Schema Change:**
+| Type | Trigger | Recipient | Message Pattern |
+|------|---------|-----------|-----------------|
+| `status_change` | Successful status transition | Handler role for district | "Case {number} status changed to {new_status}" |
+| `transition_blocked` | Invalid transition attempt (from D-01 trigger) | Actor + supervisory role | "Transition blocked: {reason}" |
 
-```sql
-ALTER TABLE public.audit_event 
-ADD COLUMN correlation_id uuid DEFAULT gen_random_uuid();
+### 6.2 Notification Flow
+
+```text
+┌────────────────────────────────────────────────────────────┐
+│  1. Admin performs status change in UI                     │
+└────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌────────────────────────────────────────────────────────────┐
+│  2. D-01 trigger validates transition                      │
+│     - If VALID: proceed to step 3                          │
+│     - If INVALID: log INVALID_TRANSITION_BLOCKED + notify  │
+└────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌────────────────────────────────────────────────────────────┐
+│  3. Status update succeeds                                 │
+│     - Insert status_history record                         │
+│     - Log audit_event with correlation_id                  │
+└────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌────────────────────────────────────────────────────────────┐
+│  4. Create admin_notification                              │
+│     - Same correlation_id as audit event                   │
+│     - Target: handler roles for district                   │
+│     - Log notification creation to audit                   │
+└────────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌────────────────────────────────────────────────────────────┐
+│  5. Notifications component fetches unread count           │
+│     - Real-time update via Supabase subscription           │
+└────────────────────────────────────────────────────────────┘
 ```
-
-**Purpose:**
-- Group related audit events from a single transaction
-- Enable cross-entity traceability (dossier ↔ status history ↔ documents)
-- Support legal reconstruction of decision chains
-
-### 6.2 Correlation Strategy
-
-| Scenario | Correlation Approach |
-|----------|---------------------|
-| Status transition | Same correlation_id for UPDATE audit + status_history INSERT |
-| Blocked transition | Unique correlation_id for INVALID_TRANSITION_BLOCKED event |
-| Multi-entity operation | Shared correlation_id across all affected entities |
-
-### 6.3 Audit Completeness Verification
-
-**Enforcement Rule:** Every status transition MUST generate an audit event.
-
-**Implementation:**
-- Trigger functions log all transitions (valid and invalid)
-- UI-level audit logging remains as additional layer
-- No silent state changes possible
-
-### 6.4 Required Database Changes
-
-| Change | Type | Table |
-|--------|------|-------|
-| Add column | DDL | `audit_event.correlation_id` |
-| Add index | DDL | `idx_audit_event_correlation_id` |
 
 ---
 
-## 7. Verification Matrix
+## 7. React Hook Design
 
-### 7.1 D-01 Verification Tests
+### 7.1 useAdminNotifications Hook
 
-| Test ID | Scenario | Table | Expected Result |
-|---------|----------|-------|-----------------|
-| D01-T01 | `received` → `screening` | subsidy_case | ALLOWED |
-| D01-T02 | `received` → `finalized` | subsidy_case | BLOCKED |
-| D01-T03 | `finalized` → `received` | subsidy_case | BLOCKED |
-| D01-T04 | `screening` → `rejected` | subsidy_case | ALLOWED |
-| D01-T05 | `received` → `under_review` | housing_registration | ALLOWED |
-| D01-T06 | `received` → `allocated` | housing_registration | BLOCKED |
-| D01-T07 | `finalized` → `received` | housing_registration | BLOCKED |
-| D01-T08 | `waiting_list` → `rejected` | housing_registration | ALLOWED |
-| D01-T09 | Audit event created on block | both | audit_event record exists |
-| D01-T10 | Error message includes allowed transitions | both | Message readable |
+```text
+Hook: useAdminNotifications
 
-### 7.2 D-02 Verification Tests
+Returns:
+- notifications: AdminNotification[]
+- unreadCount: number
+- loading: boolean
+- error: string | null
+- markAsRead: (id: string) => Promise<void>
+- markAllAsRead: () => Promise<void>
+- refresh: () => void
+
+Features:
+- Fetches notifications for current user (RLS-filtered)
+- Real-time subscription for new notifications
+- Automatic refetch on auth state change
+- Audit logging for mark-as-read actions
+```
+
+### 7.2 Integration Points
+
+| File | Change |
+|------|--------|
+| `src/hooks/useAdminNotifications.ts` | NEW: Notification data hook |
+| `src/components/layout/TopNavigationBar/components/Notifications.tsx` | MODIFY: Replace static data with hook |
+| `src/app/(admin)/subsidy-cases/[id]/page.tsx` | MODIFY: Add notification on status change |
+| `src/app/(admin)/housing-registrations/[id]/page.tsx` | MODIFY: Add notification on status change |
+
+---
+
+## 8. Audit Integration
+
+### 8.1 Correlation Strategy
+
+| Event | Correlation ID Source |
+|-------|----------------------|
+| Status change → Notification | Same correlation_id from audit_event |
+| Transition blocked → Notification | Same correlation_id from trigger audit |
+| Notification read | New correlation_id for read action |
+| Notification failure | Same correlation_id as failed notification |
+
+### 8.2 Audit Event Types (New)
+
+| Action | Entity Type | Description |
+|--------|-------------|-------------|
+| `NOTIFICATION_CREATED` | `admin_notification` | Notification generated |
+| `NOTIFICATION_READ` | `admin_notification` | User marked notification as read |
+| `NOTIFICATION_FAILED` | `admin_notification` | Notification creation failed |
+
+---
+
+## 9. Failure Handling
+
+### 9.1 Failure Scenarios
+
+| Scenario | Handling | Audit |
+|----------|----------|-------|
+| RLS blocks notification insert | Log error, continue operation | `NOTIFICATION_FAILED` with reason |
+| Database error on insert | Log error, notify user, continue | `NOTIFICATION_FAILED` with error details |
+| User not found for role | Log warning, skip user | Logged in metadata_json |
+
+### 9.2 Failure Logging Pattern
+
+```text
+Every notification failure MUST:
+1. Log to console (development visibility)
+2. Create audit_event with action='NOTIFICATION_FAILED'
+3. Include correlation_id linking to source event
+4. NOT block the primary operation (status change)
+```
+
+---
+
+## 10. Verification Matrix
+
+### 10.1 S-03 Verification Tests
 
 | Test ID | Scenario | Expected Result |
 |---------|----------|-----------------|
-| D02-T01 | correlation_id column exists | Column in audit_event |
-| D02-T02 | Default value is UUID | Auto-generated on INSERT |
-| D02-T03 | Index exists for correlation_id | Query performance verified |
-| D02-T04 | Related events share correlation_id | Grouping works correctly |
-| D02-T05 | Invalid transition audit has correlation_id | Not null |
+| S03-T01 | admin_notification table exists | Table created |
+| S03-T02 | RLS policies attached | 3 policies verified |
+| S03-T03 | Notification created on status change | Record in admin_notification |
+| S03-T04 | Notification has valid correlation_id | UUID matches audit_event |
+| S03-T05 | Unread count displays in topbar | Badge shows count |
+| S03-T06 | Mark as read updates is_read | is_read = true, read_at set |
+| S03-T07 | Mark all as read works | All user notifications marked |
+| S03-T08 | Notification failure logged | audit_event with NOTIFICATION_FAILED |
+| S03-T09 | Public wizard does NOT create notifications | No notifications for anon |
+| S03-T10 | V1.1 status change behavior unchanged | Status changes work as before |
 
 ---
 
-## 8. Rollback Strategy
+## 11. Rollback Strategy
 
-### 8.1 Emergency Rollback SQL
+### 11.1 Emergency Rollback SQL
 
 ```sql
--- Step 1: Remove triggers
-DROP TRIGGER IF EXISTS trg_validate_subsidy_case_transition 
-  ON public.subsidy_case;
-DROP TRIGGER IF EXISTS trg_validate_housing_registration_transition 
-  ON public.housing_registration;
+-- Step 1: Drop policies
+DROP POLICY IF EXISTS role_select_own_notification ON public.admin_notification;
+DROP POLICY IF EXISTS role_insert_admin_notification ON public.admin_notification;
+DROP POLICY IF EXISTS role_update_own_notification ON public.admin_notification;
 
--- Step 2: Remove functions
-DROP FUNCTION IF EXISTS public.validate_subsidy_case_transition();
-DROP FUNCTION IF EXISTS public.validate_housing_registration_transition();
-
--- Step 3: Remove correlation_id (if needed)
--- ALTER TABLE public.audit_event DROP COLUMN IF EXISTS correlation_id;
+-- Step 2: Drop table
+DROP TABLE IF EXISTS public.admin_notification;
 ```
 
-### 8.2 Rollback Triggers
+### 11.2 Code Rollback
 
-| Trigger | Action |
-|---------|--------|
-| Production error after deployment | Execute rollback SQL |
-| Test failure | Fix before proceeding |
-| Blocker discovered | STOP + REPORT |
+- Revert `Notifications.tsx` to static empty array
+- Remove `useAdminNotifications.ts` hook
+- Remove notification creation calls from status change handlers
 
 ---
 
-## 9. Non-Goals (Explicit)
+## 12. Non-Goals (Explicit)
 
 | Item | Reason | Status |
 |------|--------|--------|
-| Modify UI status transition logic | Not authorized | EXCLUDED |
-| Add new status values | State machine unchanged | EXCLUDED |
-| Change RLS policies | Not authorized | EXCLUDED |
-| Modify Edge Functions | Only triggers, no app code | EXCLUDED |
-| Implement notifications | Deferred (S-03) | EXCLUDED |
-| Refactor services | Deferred (S-01, S-02) | EXCLUDED |
+| Email notifications | Not authorized | EXCLUDED |
+| SMS notifications | Not authorized | EXCLUDED |
+| Push notifications | Not authorized | EXCLUDED |
+| Public/citizen notifications | Not authorized | EXCLUDED |
+| Reminder/escalation automation | Not authorized | EXCLUDED |
+| Bulk notifications | Not authorized | EXCLUDED |
+| Async queues | Not authorized | EXCLUDED |
+| Retry mechanisms | Not authorized | EXCLUDED |
+| UI redesign | Not authorized | EXCLUDED |
 
 ---
 
-## 10. Deliverables Checklist
+## 13. Deliverables Checklist
 
 | # | Deliverable | Status |
 |---|-------------|--------|
-| 1 | Restore Point: `RESTORE_POINT_V1.3_PHASE1_D01_D02_START` | PENDING |
-| 2 | Database migration: correlation_id column | PENDING |
-| 3 | Trigger function: `validate_subsidy_case_transition()` | PENDING |
-| 4 | Trigger function: `validate_housing_registration_transition()` | PENDING |
-| 5 | Trigger: `trg_validate_subsidy_case_transition` | PENDING |
-| 6 | Trigger: `trg_validate_housing_registration_transition` | PENDING |
-| 7 | Backend Enforcement Verification Report | PENDING |
-| 8 | Audit Hardening Verification Report | PENDING |
-| 9 | Updated Audit Event Matrix | PENDING |
-| 10 | Phase 1 Closure Report | PENDING |
-| 11 | Confirmation: V1.1 functional behavior preserved | PENDING |
+| 1 | Restore Point: `RESTORE_POINT_V1.3_PHASE2_S03_START` | PENDING |
+| 2 | Database migration: `admin_notification` table | PENDING |
+| 3 | RLS policies for `admin_notification` | PENDING |
+| 4 | Hook: `useAdminNotifications.ts` | PENDING |
+| 5 | Modified: `Notifications.tsx` | PENDING |
+| 6 | Modified: Subsidy case status change handler | PENDING |
+| 7 | Modified: Housing registration status change handler | PENDING |
+| 8 | Admin Notification Implementation Report | PENDING |
+| 9 | Audit-Notification Correlation Verification Report | PENDING |
+| 10 | Notification Failure Handling Report | PENDING |
+| 11 | Phase 2 Closure Report | PENDING |
 
 ---
 
-## 11. Implementation Sequence
+## 14. Implementation Sequence
 
 ```text
-Phase 1 Execution Flow:
+Phase 2 Execution Flow:
 
 ┌──────────────────────────────────────────────────────┐
-│  STEP 1: Create Restore Point                        │
-│  RESTORE_POINT_V1.3_PHASE1_D01_D02_START             │
+│  STEP 2A: Create Restore Point                       │
+│  RESTORE_POINT_V1.3_PHASE2_S03_START                 │
 └──────────────────────────────────────────────────────┘
                          │
                          ▼
 ┌──────────────────────────────────────────────────────┐
-│  STEP 2: D-02 Audit Hardening (Schema)               │
-│  - Add correlation_id column to audit_event          │
-│  - Add index for correlation_id                      │
+│  STEP 2B: Database Schema                            │
+│  - Create admin_notification table                   │
+│  - Add RLS policies                                  │
+│  - Add indexes                                       │
 └──────────────────────────────────────────────────────┘
                          │
                          ▼
 ┌──────────────────────────────────────────────────────┐
-│  STEP 3: D-01 Backend Enforcement                    │
-│  - Create validate_subsidy_case_transition()         │
-│  - Create validate_housing_registration_transition() │
-│  - Attach BEFORE UPDATE triggers                     │
+│  STEP 2C: React Hook                                 │
+│  - Create useAdminNotifications.ts                   │
+│  - Implement fetch, subscribe, mark-read logic       │
 └──────────────────────────────────────────────────────┘
                          │
                          ▼
 ┌──────────────────────────────────────────────────────┐
-│  STEP 4: Verification                                │
-│  - Execute D01-T01 through D01-T10                   │
-│  - Execute D02-T01 through D02-T05                   │
-│  - Confirm V1.1 functional behavior preserved        │
+│  STEP 2D: UI Integration                             │
+│  - Update Notifications.tsx to use hook              │
+│  - Replace static data with live data                │
 └──────────────────────────────────────────────────────┘
                          │
                          ▼
 ┌──────────────────────────────────────────────────────┐
-│  STEP 5: Documentation                               │
-│  - Backend Enforcement Verification Report           │
-│  - Audit Hardening Verification Report               │
-│  - Updated Audit Event Matrix                        │
+│  STEP 2E: Status Change Integration                  │
+│  - Add createNotification to subsidy case handler    │
+│  - Add createNotification to housing handler         │
 └──────────────────────────────────────────────────────┘
                          │
                          ▼
 ┌──────────────────────────────────────────────────────┐
-│  STEP 6: Phase Closure                               │
-│  - Phase 1 Closure Report                            │
+│  STEP 2F-2G: Additional Features                     │
+│  - Mark as read / clear all functionality            │
+│  - Failure logging implementation                    │
+└──────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────┐
+│  STEP 2H: Verification                               │
+│  - Execute S03-T01 through S03-T10                   │
+│  - Confirm audit linkage                             │
+│  - Confirm V1.1 behavior preserved                   │
+└──────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────┐
+│  STEP 2I: Phase Closure                              │
+│  - Phase 2 Closure Report                            │
 │  - Confirm all exclusions respected                  │
 └──────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 12. Governance Compliance Statement
+## 15. Governance Compliance Statement
 
 | Rule | Status |
 |------|--------|
 | Phase-gated execution | COMPLIANT |
 | Restore point before implementation | PENDING |
-| No scope expansion beyond D-01 + D-02 | ENFORCED |
-| Every change traceable to D-01 or D-02 | ENFORCED |
+| No scope expansion beyond S-03 | ENFORCED |
+| Every change traceable to S-03 | ENFORCED |
 | Status reports for each sub-step | REQUIRED |
-| No UI, Role, Enum, RLS, or Public Wizard changes | ENFORCED |
+| No email, SMS, push, or external channels | ENFORCED |
+| No public wizard changes | ENFORCED |
+| No role, enum, or RLS changes outside admin_notification | ENFORCED |
 
 ---
 
-## 13. Authorization Gate
+## 16. Final Statement
 
-This Phase 1 Scope & Execution Plan requires approval before implementation may begin.
+**V1.3 Phase 2 is strictly limited to Admin Notifications (S-03).**
 
-**Mandatory First Step:** Create restore point before ANY code or schema changes.
+**No other V1.2 items are authorized.**
 
-**Document Status:** PENDING APPROVAL
+**Any deviation requires explicit written approval.**
 
 ---
 
@@ -389,21 +461,13 @@ This Phase 1 Scope & Execution Plan requires approval before implementation may 
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE1_D01_D02_START.md` | CREATE | Mandatory restore point |
-| `restore-points/v1.3/README.md` | CREATE | V1.3 restore point index |
-| Database migration | EXECUTE | Add correlation_id + triggers |
-| `phases/DVH-IMS-V1.3/PHASE-1-Scope-and-Execution-Plan.md` | CREATE | This document |
-| `phases/DVH-IMS-V1.3/README.md` | CREATE | Phase tracking index |
-
----
-
-## 14. Final Statement
-
-**V1.3 Phase 1 is limited to Backend Enforcement and Audit Hardening only.**
-
-**No other V1.2 items are authorized.**
-
-**Any deviation requires explicit written approval.**
+| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE2_S03_START.md` | CREATE | Mandatory restore point |
+| `phases/DVH-IMS-V1.3/PHASE-2-Scope-and-Execution-Plan.md` | CREATE | This document |
+| Database migration | EXECUTE | Create admin_notification table + RLS |
+| `src/hooks/useAdminNotifications.ts` | CREATE | Notification data hook |
+| `src/components/layout/TopNavigationBar/components/Notifications.tsx` | MODIFY | Live notification integration |
+| `src/app/(admin)/subsidy-cases/[id]/page.tsx` | MODIFY | Add notification on status change |
+| `src/app/(admin)/housing-registrations/[id]/page.tsx` | MODIFY | Add notification on status change |
 
 ---
 

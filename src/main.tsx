@@ -4,6 +4,9 @@ import App from './App.tsx'
 import { BrowserRouter } from 'react-router-dom'
 import { basePath } from './context/constants.ts'
 
+// i18n configuration (must be imported before App)
+import './i18n/config'
+
 // Darkone React Template SCSS (primary styles)
 import './assets/scss/style.scss'
 

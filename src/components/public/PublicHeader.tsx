@@ -1,15 +1,19 @@
 import { Container } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import logoSozavo from '@/assets/images/logo-sozavo.png'
+import LanguageSwitcher from './LanguageSwitcher'
 
 /**
  * PublicHeader - Reusable header for public pages
+ * V1.3 Phase 5A — Localized with i18n + Language Switcher
  * 
  * Darkone 1:1 with react-bootstrap
  * Official SoZaVo logo
- * English baseline
  */
 const PublicHeader = () => {
+  const { t } = useTranslation()
+
   return (
     <header className="py-3 border-bottom bg-white">
       <Container>
@@ -21,13 +25,16 @@ const PublicHeader = () => {
               style={{ height: '40px', width: 'auto' }}
             />
             <div>
-              <h5 className="mb-0 fw-bold text-dark">VolksHuisvesting</h5>
-              <small className="text-muted">Ministry of Social Affairs and Housing</small>
+              <h5 className="mb-0 fw-bold text-dark">{t('header.title')}</h5>
+              <small className="text-muted">{t('header.ministry')}</small>
             </div>
           </Link>
-          <Link to="/auth/sign-in" className="btn btn-outline-primary btn-sm">
-            Staff Portal
-          </Link>
+          <div className="d-flex align-items-center gap-3">
+            <LanguageSwitcher />
+            <Link to="/auth/sign-in" className="btn btn-outline-primary btn-sm">
+              {t('common.staffPortal')}
+            </Link>
+          </div>
         </div>
       </Container>
     </header>

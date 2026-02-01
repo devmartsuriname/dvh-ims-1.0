@@ -1,4 +1,5 @@
 import { Card, CardBody, Button, Spinner } from 'react-bootstrap'
+import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 
 interface WizardStepProps {
@@ -17,6 +18,7 @@ interface WizardStepProps {
 
 /**
  * WizardStep - Wrapper component for wizard step content
+ * V1.3 Phase 5A — Localized with i18n
  * 
  * Darkone 1:1 with react-bootstrap
  * Provides navigation buttons and step container
@@ -31,13 +33,20 @@ const WizardStep = ({
   isLastStep = false,
   isSubmitting = false,
   nextLabel,
-  backLabel = 'Back',
+  backLabel,
   nextDisabled = false,
 }: WizardStepProps) => {
+  const { t } = useTranslation()
+
   const getNextLabel = () => {
     if (nextLabel) return nextLabel
-    if (isLastStep) return 'Submit Application'
-    return 'Continue'
+    if (isLastStep) return t('common.submitApplication')
+    return t('common.continue')
+  }
+
+  const getBackLabel = () => {
+    if (backLabel) return backLabel
+    return t('common.back')
   }
 
   return (
@@ -66,7 +75,7 @@ const WizardStep = ({
                 disabled={isSubmitting}
               >
                 <IconifyIcon icon="mingcute:arrow-left-line" className="me-1" />
-                {backLabel}
+                {getBackLabel()}
               </Button>
             )}
           </div>
@@ -79,7 +88,7 @@ const WizardStep = ({
               {isSubmitting ? (
                 <>
                   <Spinner size="sm" className="me-2" />
-                  Processing...
+                  {t('common.processing')}
                 </>
               ) : (
                 <>

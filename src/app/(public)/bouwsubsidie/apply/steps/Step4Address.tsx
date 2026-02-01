@@ -2,36 +2,34 @@ import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { useTranslation } from 'react-i18next'
 import WizardStep from '@/components/public/WizardStep'
 import TextFormInput from '@/components/from/TextFormInput'
 import { DISTRICTS } from '@/constants/districts'
 import type { WizardStepProps } from '../types'
 
 /**
- * Validation schema aligned with Edge Function contract
- * Field renamed: address_line → address_line_1
- */
-const schema = yup.object({
-  address_line_1: yup
-    .string()
-    .required('Address is required')
-    .min(5, 'Address must be at least 5 characters'),
-  district: yup
-    .string()
-    .required('District is required'),
-  ressort: yup.string(),
-})
-
-type FormData = yup.InferType<typeof schema>
-
-/**
  * Step 4: Current Address
+ * V1.3 Phase 5A — Localized with i18n
  * 
  * Collects address line, district (required), and ressort (optional).
- * 
- * UPDATED: Admin v1.1-D - Renamed address_line to address_line_1 per Edge Function contract
  */
 const Step4Address = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
+  const { t } = useTranslation()
+
+  const schema = yup.object({
+    address_line_1: yup
+      .string()
+      .required(t('validation.addressRequired'))
+      .min(5, t('validation.addressMinLength')),
+    district: yup
+      .string()
+      .required(t('validation.districtRequired')),
+    ressort: yup.string(),
+  })
+
+  type FormData = yup.InferType<typeof schema>
+
   const { control, register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -48,8 +46,8 @@ const Step4Address = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
 
   return (
     <WizardStep
-      title="Current Address"
-      description="Where do you currently reside?"
+      title={t('bouwsubsidie.step4.title')}
+      description={t('bouwsubsidie.step4.description')}
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
@@ -60,8 +58,8 @@ const Step4Address = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
               <Col xs={12}>
                 <TextFormInput
                   name="address_line_1"
-                  label="Street Address"
-                  placeholder="Enter your street address"
+                  label={t('bouwsubsidie.step4.addressLine1')}
+                  placeholder={t('bouwsubsidie.step4.addressLine1Placeholder')}
                   control={control}
                   containerClassName="mb-0"
                 />
@@ -72,12 +70,12 @@ const Step4Address = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
               
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>District <span className="text-danger">*</span></Form.Label>
+                  <Form.Label>{t('bouwsubsidie.step4.district')} <span className="text-danger">*</span></Form.Label>
                   <Form.Select
                     {...register('district')}
                     isInvalid={!!errors.district}
                   >
-                    <option value="">Select your district</option>
+                    <option value="">{t('bouwsubsidie.step4.districtPlaceholder')}</option>
                     {DISTRICTS.map((district) => (
                       <option key={district.code} value={district.code}>
                         {district.name}
@@ -93,12 +91,12 @@ const Step4Address = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
               <Col md={6}>
                 <TextFormInput
                   name="ressort"
-                  label="Ressort"
-                  placeholder="Enter your ressort"
+                  label={t('bouwsubsidie.step4.ressort')}
+                  placeholder={t('bouwsubsidie.step4.ressortPlaceholder')}
                   control={control}
                   containerClassName="mb-0"
                 />
-                <div className="text-muted small mt-1">Optional</div>
+                <div className="text-muted small mt-1">{t('common.optional')}</div>
               </Col>
             </Row>
           </Form>

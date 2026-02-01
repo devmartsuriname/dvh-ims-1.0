@@ -2,48 +2,47 @@ import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { useTranslation } from 'react-i18next'
 import WizardStep from '@/components/public/WizardStep'
 import TextFormInput from '@/components/from/TextFormInput'
 import { GENDER_OPTIONS } from '../constants'
 import type { WizardStepProps } from '../types'
 
 /**
- * Validation schema aligned with Edge Function contract
- * All fields are REQUIRED per submit-bouwsubsidie-application
- */
-const schema = yup.object({
-  national_id: yup
-    .string()
-    .required('National ID is required')
-    .min(5, 'National ID must be at least 5 characters'),
-  first_name: yup
-    .string()
-    .required('First name is required')
-    .min(1, 'First name is required'),
-  last_name: yup
-    .string()
-    .required('Last name is required')
-    .min(1, 'Last name is required'),
-  date_of_birth: yup
-    .string()
-    .required('Date of birth is required'),
-  gender: yup
-    .string()
-    .required('Gender is required')
-    .oneOf(['male', 'female', 'other'], 'Please select a valid gender'),
-})
-
-type FormData = yup.InferType<typeof schema>
-
-/**
  * Step 1: Personal Identification
+ * V1.3 Phase 5A — Localized with i18n
  * 
  * Collects National ID, first name, last name, date of birth, and gender.
  * All fields are required per Edge Function contract.
- * 
- * UPDATED: Admin v1.1-D - Split full_name into first_name + last_name
  */
 const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
+  const { t } = useTranslation()
+
+  // Validation schema with translated messages
+  const schema = yup.object({
+    national_id: yup
+      .string()
+      .required(t('validation.nationalIdRequired'))
+      .min(5, t('validation.nationalIdMinLength')),
+    first_name: yup
+      .string()
+      .required(t('validation.firstNameRequired'))
+      .min(1, t('validation.firstNameRequired')),
+    last_name: yup
+      .string()
+      .required(t('validation.lastNameRequired'))
+      .min(1, t('validation.lastNameRequired')),
+    date_of_birth: yup
+      .string()
+      .required(t('validation.dateOfBirthRequired')),
+    gender: yup
+      .string()
+      .required(t('validation.genderRequired'))
+      .oneOf(['male', 'female', 'other'], t('validation.genderInvalid')),
+  })
+
+  type FormData = yup.InferType<typeof schema>
+
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -62,8 +61,8 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
 
   return (
     <WizardStep
-      title="Personal Identification"
-      description="Please provide your personal details as they appear on your National ID."
+      title={t('bouwsubsidie.step1.title')}
+      description={t('bouwsubsidie.step1.description')}
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
@@ -74,8 +73,8 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
               <Col md={6}>
                 <TextFormInput
                   name="national_id"
-                  label="National ID Number"
-                  placeholder="Enter your National ID"
+                  label={t('bouwsubsidie.step1.nationalId')}
+                  placeholder={t('bouwsubsidie.step1.nationalIdPlaceholder')}
                   control={control}
                   containerClassName="mb-0"
                 />
@@ -87,8 +86,8 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
               <Col md={6}>
                 <TextFormInput
                   name="first_name"
-                  label="First Name"
-                  placeholder="Enter your first name"
+                  label={t('bouwsubsidie.step1.firstName')}
+                  placeholder={t('bouwsubsidie.step1.firstNamePlaceholder')}
                   control={control}
                   containerClassName="mb-0"
                 />
@@ -100,8 +99,8 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
               <Col md={6}>
                 <TextFormInput
                   name="last_name"
-                  label="Last Name"
-                  placeholder="Enter your last name"
+                  label={t('bouwsubsidie.step1.lastName')}
+                  placeholder={t('bouwsubsidie.step1.lastNamePlaceholder')}
                   control={control}
                   containerClassName="mb-0"
                 />
@@ -113,7 +112,7 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
               <Col md={6}>
                 <TextFormInput
                   name="date_of_birth"
-                  label="Date of Birth"
+                  label={t('bouwsubsidie.step1.dateOfBirth')}
                   type="date"
                   control={control}
                   containerClassName="mb-0"
@@ -125,7 +124,7 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
               
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Gender <span className="text-danger">*</span></Form.Label>
+                  <Form.Label>{t('bouwsubsidie.step1.gender')} <span className="text-danger">*</span></Form.Label>
                   <Controller
                     name="gender"
                     control={control}
@@ -134,10 +133,10 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
                         {...field}
                         isInvalid={!!errors.gender}
                       >
-                        <option value="">Select gender</option>
+                        <option value="">{t('bouwsubsidie.step1.genderPlaceholder')}</option>
                         {GENDER_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
-                            {option.label}
+                            {t(option.labelKey)}
                           </option>
                         ))}
                       </Form.Select>

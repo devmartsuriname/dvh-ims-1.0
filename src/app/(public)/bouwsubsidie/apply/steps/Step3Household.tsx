@@ -2,29 +2,33 @@ import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { useTranslation } from 'react-i18next'
 import WizardStep from '@/components/public/WizardStep'
 import type { WizardStepProps } from '../types'
 
-const schema = yup.object({
-  household_size: yup
-    .number()
-    .required('Household size is required')
-    .min(1, 'Household size must be at least 1')
-    .max(20, 'Household size cannot exceed 20'),
-  dependents: yup
-    .number()
-    .min(0, 'Dependents cannot be negative')
-    .max(20, 'Dependents cannot exceed 20'),
-})
-
-type FormData = yup.InferType<typeof schema>
-
 /**
  * Step 3: Household Information
+ * V1.3 Phase 5A — Localized with i18n
  * 
  * Collects household size and number of dependents.
  */
 const Step3Household = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
+  const { t } = useTranslation()
+
+  const schema = yup.object({
+    household_size: yup
+      .number()
+      .required(t('validation.householdSizeRequired'))
+      .min(1, t('validation.householdSizeMin'))
+      .max(20, t('validation.householdSizeMax')),
+    dependents: yup
+      .number()
+      .min(0, t('validation.minValue', { min: 0 }))
+      .max(20, t('validation.maxValue', { max: 20 })),
+  })
+
+  type FormData = yup.InferType<typeof schema>
+
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -40,8 +44,8 @@ const Step3Household = ({ formData, updateFormData, onNext, onBack }: WizardStep
 
   return (
     <WizardStep
-      title="Household Information"
-      description="Tell us about your household composition."
+      title={t('bouwsubsidie.step3.title')}
+      description={t('bouwsubsidie.step3.description')}
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
@@ -51,12 +55,12 @@ const Step3Household = ({ formData, updateFormData, onNext, onBack }: WizardStep
             <Row className="g-3">
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Household Size</Form.Label>
+                  <Form.Label>{t('bouwsubsidie.step3.householdSize')}</Form.Label>
                   <Form.Control
                     type="number"
                     min={1}
                     max={20}
-                    placeholder="Total number of people in household"
+                    placeholder={t('bouwsubsidie.step3.householdSizePlaceholder')}
                     {...register('household_size')}
                     isInvalid={!!errors.household_size}
                   />
@@ -64,19 +68,19 @@ const Step3Household = ({ formData, updateFormData, onNext, onBack }: WizardStep
                     <div className="text-danger small mt-1">{String(errors.household_size.message)}</div>
                   )}
                   <Form.Text className="text-muted">
-                    Including yourself
+                    {t('bouwsubsidie.step3.householdSizeHelp')}
                   </Form.Text>
                 </Form.Group>
               </Col>
               
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Number of Dependents</Form.Label>
+                  <Form.Label>{t('bouwsubsidie.step3.dependents')}</Form.Label>
                   <Form.Control
                     type="number"
                     min={0}
                     max={20}
-                    placeholder="Number of dependents"
+                    placeholder={t('bouwsubsidie.step3.dependentsPlaceholder')}
                     {...register('dependents')}
                     isInvalid={!!errors.dependents}
                   />
@@ -84,7 +88,7 @@ const Step3Household = ({ formData, updateFormData, onNext, onBack }: WizardStep
                     <div className="text-danger small mt-1">{String(errors.dependents.message)}</div>
                   )}
                   <Form.Text className="text-muted">
-                    Children or others who depend on you financially (optional)
+                    {t('bouwsubsidie.step3.dependentsHelp')}
                   </Form.Text>
                 </Form.Group>
               </Col>

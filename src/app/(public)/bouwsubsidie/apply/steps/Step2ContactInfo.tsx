@@ -2,35 +2,33 @@ import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { useTranslation } from 'react-i18next'
 import WizardStep from '@/components/public/WizardStep'
 import TextFormInput from '@/components/from/TextFormInput'
 import type { WizardStepProps } from '../types'
 
 /**
- * Validation schema aligned with Edge Function contract
- * Email is now REQUIRED per submit-bouwsubsidie-application
- */
-const schema = yup.object({
-  phone_number: yup
-    .string()
-    .required('Phone number is required')
-    .min(7, 'Phone number must be at least 7 digits'),
-  email: yup
-    .string()
-    .required('Email is required')
-    .email('Please enter a valid email address'),
-})
-
-type FormData = yup.InferType<typeof schema>
-
-/**
  * Step 2: Contact Information
+ * V1.3 Phase 5A — Localized with i18n
  * 
  * Collects phone number and email (both required).
- * 
- * UPDATED: Admin v1.1-D - Made email required per Edge Function contract
  */
 const Step2ContactInfo = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
+  const { t } = useTranslation()
+
+  const schema = yup.object({
+    phone_number: yup
+      .string()
+      .required(t('validation.phoneRequired'))
+      .min(7, t('validation.phoneMinLength')),
+    email: yup
+      .string()
+      .required(t('validation.emailRequired'))
+      .email(t('validation.invalidEmail')),
+  })
+
+  type FormData = yup.InferType<typeof schema>
+
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
     defaultValues: {
@@ -46,8 +44,8 @@ const Step2ContactInfo = ({ formData, updateFormData, onNext, onBack }: WizardSt
 
   return (
     <WizardStep
-      title="Contact Information"
-      description="How can we reach you regarding your application?"
+      title={t('bouwsubsidie.step2.title')}
+      description={t('bouwsubsidie.step2.description')}
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
@@ -58,8 +56,8 @@ const Step2ContactInfo = ({ formData, updateFormData, onNext, onBack }: WizardSt
               <Col md={6}>
                 <TextFormInput
                   name="phone_number"
-                  label="Phone Number"
-                  placeholder="Enter your phone number"
+                  label={t('bouwsubsidie.step2.phoneNumber')}
+                  placeholder={t('bouwsubsidie.step2.phoneNumberPlaceholder')}
                   control={control}
                   containerClassName="mb-0"
                 />
@@ -71,9 +69,9 @@ const Step2ContactInfo = ({ formData, updateFormData, onNext, onBack }: WizardSt
               <Col md={6}>
                 <TextFormInput
                   name="email"
-                  label="Email Address"
+                  label={t('bouwsubsidie.step2.email')}
                   type="email"
-                  placeholder="Enter your email address"
+                  placeholder={t('bouwsubsidie.step2.emailPlaceholder')}
                   control={control}
                   containerClassName="mb-0"
                 />

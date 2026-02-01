@@ -3,18 +3,30 @@
  * 
  * TypeScript interfaces for the Construction Subsidy application wizard
  * 
- * UPDATED: Admin v1.1-D - Aligned with Edge Function contract
- * - Changed full_name → first_name + last_name
- * - Made gender, date_of_birth, email required
- * - Changed address_line → address_line_1
+ * UPDATED: V1.3 Phase 5A - Document Upload Implementation
+ * - Changed documents from declaration toggle to file upload
+ * - Added uploaded_file structure for storage references
  */
 
-export interface DocumentDeclaration {
-  id: string
-  label: string
-  hasDocument: boolean
+/**
+ * Document upload record for a single document requirement
+ */
+export interface DocumentUpload {
+  id: string                    // requirement ID (e.g., 'ID_COPY')
+  document_code: string         // code matching subsidy_document_requirement
+  label: string                 // display label (translated)
+  is_mandatory: boolean         // whether upload is required
+  uploaded_file?: {
+    file_path: string           // storage path in citizen-uploads bucket
+    file_name: string           // original file name
+    file_size: number           // file size in bytes
+    uploaded_at: string         // ISO timestamp
+  }
 }
 
+/**
+ * Main form data structure for Bouwsubsidie wizard
+ */
 export interface BouwsubsidieFormData {
   // Step 1 - Personal Identification
   national_id: string
@@ -41,8 +53,8 @@ export interface BouwsubsidieFormData {
   estimated_amount: string
   is_calamity: boolean
   
-  // Step 6 - Document Declaration
-  documents: DocumentDeclaration[]
+  // Step 6 - Document Uploads (V1.3 Phase 5A)
+  documents: DocumentUpload[]
   
   // Step 7 - Review
   declaration_accepted: boolean

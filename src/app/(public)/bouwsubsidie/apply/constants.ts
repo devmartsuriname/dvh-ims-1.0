@@ -3,45 +3,59 @@
  * 
  * Predefined options and document requirements
  * 
- * UPDATED: Admin v1.1-D - Aligned with Edge Function contract
- * - Changed full_name → first_name + last_name
- * - Changed address_line → address_line_1
+ * UPDATED: V1.3 Phase 5A - Document Upload Implementation
+ * - Changed REQUIRED_DOCUMENTS to include document_code and is_mandatory
+ * - Updated INITIAL_FORM_DATA.documents structure for file upload
  */
 
+import type { DocumentUpload } from './types'
+
 export const APPLICATION_REASONS = [
-  { value: 'new_construction', label: 'New construction' },
-  { value: 'renovation', label: 'Home renovation' },
-  { value: 'extension', label: 'Home extension' },
-  { value: 'repair', label: 'Structural repairs' },
-  { value: 'disaster_recovery', label: 'Disaster recovery' },
+  { value: 'new_construction', labelKey: 'bouwsubsidie.reasons.new_construction' },
+  { value: 'renovation', labelKey: 'bouwsubsidie.reasons.renovation' },
+  { value: 'extension', labelKey: 'bouwsubsidie.reasons.extension' },
+  { value: 'repair', labelKey: 'bouwsubsidie.reasons.repair' },
+  { value: 'disaster_recovery', labelKey: 'bouwsubsidie.reasons.disaster_recovery' },
 ] as const
 
 export const GENDER_OPTIONS = [
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'other', label: 'Other' },
+  { value: 'male', labelKey: 'bouwsubsidie.gender.male' },
+  { value: 'female', labelKey: 'bouwsubsidie.gender.female' },
+  { value: 'other', labelKey: 'bouwsubsidie.gender.other' },
 ] as const
 
-export const REQUIRED_DOCUMENTS = [
-  { id: 'national_id', label: 'Copy of National ID (front and back)' },
-  { id: 'income_proof', label: 'Proof of income (recent pay slips or tax declaration)' },
-  { id: 'property_proof', label: 'Property ownership documents or land lease' },
-  { id: 'construction_plan', label: 'Construction plan or cost estimate' },
-  { id: 'bank_statement', label: 'Recent bank statement' },
-] as const
+/**
+ * Document requirements for Bouwsubsidie
+ * Aligned with subsidy_document_requirement table
+ * 
+ * V1.3 Phase 5A: Updated with is_mandatory flag
+ */
+export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] = [
+  { id: 'ID_COPY', document_code: 'ID_COPY', label: 'bouwsubsidie.documents.ID_COPY', is_mandatory: true },
+  { id: 'INCOME_PROOF', document_code: 'INCOME_PROOF', label: 'bouwsubsidie.documents.INCOME_PROOF', is_mandatory: true },
+  { id: 'LAND_TITLE', document_code: 'LAND_TITLE', label: 'bouwsubsidie.documents.LAND_TITLE', is_mandatory: true },
+  { id: 'CONSTRUCTION_PLAN', document_code: 'CONSTRUCTION_PLAN', label: 'bouwsubsidie.documents.CONSTRUCTION_PLAN', is_mandatory: true },
+  { id: 'COST_ESTIMATE', document_code: 'COST_ESTIMATE', label: 'bouwsubsidie.documents.COST_ESTIMATE', is_mandatory: true },
+  { id: 'BUILDING_PERMIT', document_code: 'BUILDING_PERMIT', label: 'bouwsubsidie.documents.BUILDING_PERMIT', is_mandatory: true },
+  { id: 'BANK_STATEMENT', document_code: 'BANK_STATEMENT', label: 'bouwsubsidie.documents.BANK_STATEMENT', is_mandatory: false },
+  { id: 'HOUSEHOLD_COMP', document_code: 'HOUSEHOLD_COMP', label: 'bouwsubsidie.documents.HOUSEHOLD_COMP', is_mandatory: false },
+]
 
 export const WIZARD_STEPS = [
-  { title: 'Introduction' },
-  { title: 'Personal Info' },
-  { title: 'Contact' },
-  { title: 'Household' },
-  { title: 'Address' },
-  { title: 'Application' },
-  { title: 'Documents' },
-  { title: 'Review' },
-  { title: 'Receipt' },
+  { titleKey: 'wizard.steps.introduction' },
+  { titleKey: 'wizard.steps.personalInfo' },
+  { titleKey: 'wizard.steps.contact' },
+  { titleKey: 'wizard.steps.household' },
+  { titleKey: 'wizard.steps.address' },
+  { titleKey: 'wizard.steps.application' },
+  { titleKey: 'wizard.steps.documents' },
+  { titleKey: 'wizard.steps.review' },
+  { titleKey: 'wizard.steps.receipt' },
 ] as const
 
+/**
+ * Initial form data with empty document upload slots
+ */
 export const INITIAL_FORM_DATA = {
   // Step 1 - Personal (aligned with Edge Function contract)
   national_id: '',
@@ -68,11 +82,13 @@ export const INITIAL_FORM_DATA = {
   estimated_amount: '',
   is_calamity: false,
   
-  // Step 6 - Documents
+  // Step 6 - Documents (V1.3 Phase 5A: File upload structure)
   documents: REQUIRED_DOCUMENTS.map(doc => ({
     id: doc.id,
+    document_code: doc.document_code,
     label: doc.label,
-    hasDocument: false,
+    is_mandatory: doc.is_mandatory,
+    // uploaded_file is undefined until file is uploaded
   })),
   
   // Step 7 - Review

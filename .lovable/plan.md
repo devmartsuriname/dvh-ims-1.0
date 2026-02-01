@@ -1,311 +1,318 @@
 
-# DVH-IMS V1.3 — PHASE 5B EXECUTION PLAN
+# DVH-IMS V1.3 — PRIORITY 1: PUBLIC WIZARD DOCUMENT UPLOAD
 
-## FULL PUBLIC NL STANDARDIZATION (P0 BLOCKING)
+## Phase 5C Implementation Plan
 
 **Date:** 2026-02-01  
-**Phase:** V1.3 Phase 5B — Full Public NL Standardization  
-**Authorization:** P0 Blocking — No other phases may proceed  
-**Scope:** PUBLIC FRONTEND ONLY — Admin remains EN-only
+**Priority:** P0 (Blocking)  
+**Scope:** Document Upload for Bouwsubsidie + Woningregistratie Public Wizards
 
 ---
 
 ## 1. CURRENT STATE ANALYSIS
 
-### 1.1 Localized (Phase 5A)
-| Component | Status | Evidence |
-|-----------|--------|----------|
-| Bouwsubsidie Wizard (9 steps) | ✅ NL | Uses `useTranslation()`, `t()` keys |
-| PublicHeader.tsx | ✅ NL | Uses `t('header.title')`, `t('header.ministry')` |
-| WizardStep.tsx | ✅ NL | Uses `t('common.continue')`, `t('common.back')` |
-| LanguageSwitcher.tsx | ✅ NL | Implemented with NL/EN toggle |
-| nl.json / en.json | ✅ EXISTS | 224 lines each (Bouwsubsidie only) |
+### 1.1 Bouwsubsidie Wizard — COMPLETE ✅
+| Feature | Status | Evidence |
+|---------|--------|----------|
+| File upload UI | ✅ Implemented | `Step6Documents.tsx` with react-dropzone |
+| Multi-file per doc type | ⚠️ Single file | Current implementation allows 1 file per document type |
+| Mandatory enforcement | ✅ Implemented | `nextDisabled={!allMandatoryUploaded}` |
+| File type validation | ✅ Implemented | PDF, JPG, PNG only |
+| Size validation | ✅ Implemented | 10MB max |
+| Storage upload | ✅ Implemented | `citizen-uploads` bucket |
+| Edge Function linking | ✅ Implemented | Creates `subsidy_document_upload` records |
+| Admin visibility | ✅ Implemented | Admin page fetches from `subsidy_document_upload` |
 
-### 1.2 NOT Localized (Requires Phase 5B)
-
-| Component | Hardcoded EN Text | Priority |
-|-----------|-------------------|----------|
-| **Landing Page** | 15+ hardcoded strings | P0 |
-| **Housing Wizard (10 steps)** | 100+ hardcoded strings | P0 |
-| **Status Tracker Page** | 20+ hardcoded strings | P0 |
-| **StatusForm.tsx** | 15+ hardcoded strings | P0 |
-| **StatusResult.tsx** | 12+ hardcoded strings | P0 |
-| **StatusTimeline.tsx** | Date formatting locale | P0 |
-| **PublicFooter.tsx** | 2 hardcoded strings | P0 |
-| **Housing constants.ts** | 30+ option labels | P0 |
-| **Status constants.ts** | 6 status labels | P0 |
+### 1.2 Woningregistratie Wizard — NOT IMPLEMENTED ❌
+| Feature | Status | Evidence |
+|---------|--------|----------|
+| File upload UI | ❌ Missing | No document step exists (Steps 0-9 are data only) |
+| Document requirements | ❌ Missing | No `housing_document_requirement` table |
+| Document uploads table | ❌ Missing | No `housing_document_upload` table |
+| Edge Function linking | ❌ Missing | `submit-housing-registration` does not handle documents |
 
 ---
 
-## 2. PHASE 5B OBJECTIVES
+## 2. GAP ASSESSMENT
 
-### Part A: Landing Page Localization
-- Translate all hero text, service cards, and button labels
-- Use existing i18n keys pattern from Phase 5A
+### 2.1 Required for Housing Wizard Document Upload:
 
-### Part B: Housing Wizard Full Localization
-- Localize all 10 steps (Step0-Step9)
-- Convert `constants.ts` options to use `labelKey` pattern
-- Apply same validation message pattern as Bouwsubsidie
+**Database Schema:**
+- Create `housing_document_requirement` table (like `subsidy_document_requirement`)
+- Create `housing_document_upload` table (like `subsidy_document_upload`)
+- Add RLS policies for anon insert and staff read
 
-### Part C: Status Tracker Localization
-- Localize StatusForm, StatusResult, StatusTimeline
-- Translate status labels in constants.ts
-- Apply date/time locale based on language
+**Frontend:**
+- Add new step `Step8Documents.tsx` (before current Step8Review → Step9Review)
+- Update `types.ts` to include document upload structure
+- Update `constants.ts` with document requirements
+- Update `page.tsx` to handle new step flow
+- Renumber current Step8Review → Step9Review, Step9Receipt → Step10Receipt
 
-### Part D: Public Footer Localization
-- Translate ministry name and version text
+**Edge Function:**
+- Update `submit-housing-registration` to accept and link documents
 
----
-
-## 3. FILES TO MODIFY
-
-### 3.1 Translation Files (Extend)
-| File | Change |
-|------|--------|
-| `src/i18n/locales/nl.json` | Add `landing`, `housing`, `status`, `footer` sections |
-| `src/i18n/locales/en.json` | Add matching English sections |
-
-### 3.2 Landing Page
-| File | Change |
-|------|--------|
-| `src/app/(public)/landing/page.tsx` | Add `useTranslation()`, replace all hardcoded text |
-
-### 3.3 Housing Wizard
-| File | Change |
-|------|--------|
-| `src/app/(public)/housing/register/page.tsx` | Add `useTranslation()`, translate error messages |
-| `src/app/(public)/housing/register/constants.ts` | Change `label` to `labelKey` for all options |
-| `src/app/(public)/housing/register/steps/Step0Introduction.tsx` | Full i18n conversion |
-| `src/app/(public)/housing/register/steps/Step1PersonalInfo.tsx` | Full i18n conversion |
-| `src/app/(public)/housing/register/steps/Step2ContactInfo.tsx` | Full i18n conversion |
-| `src/app/(public)/housing/register/steps/Step3LivingSituation.tsx` | Full i18n conversion |
-| `src/app/(public)/housing/register/steps/Step4HousingPreference.tsx` | Full i18n conversion |
-| `src/app/(public)/housing/register/steps/Step5Reason.tsx` | Full i18n conversion |
-| `src/app/(public)/housing/register/steps/Step6Income.tsx` | Full i18n conversion |
-| `src/app/(public)/housing/register/steps/Step7Urgency.tsx` | Full i18n conversion |
-| `src/app/(public)/housing/register/steps/Step8Review.tsx` | Full i18n conversion |
-| `src/app/(public)/housing/register/steps/Step9Receipt.tsx` | Full i18n conversion |
-
-### 3.4 Status Tracker
-| File | Change |
-|------|--------|
-| `src/app/(public)/status/page.tsx` | Add `useTranslation()`, translate error messages |
-| `src/app/(public)/status/constants.ts` | Add `labelKey` for status definitions |
-| `src/app/(public)/status/components/StatusForm.tsx` | Full i18n conversion |
-| `src/app/(public)/status/components/StatusResult.tsx` | Full i18n conversion |
-| `src/app/(public)/status/components/StatusTimeline.tsx` | Locale-aware date formatting |
-
-### 3.5 Public Footer
-| File | Change |
-|------|--------|
-| `src/components/public/PublicFooter.tsx` | Add `useTranslation()`, translate text |
+### 2.2 Bouwsubsidie Enhancement (Optional):
+- Multi-file support per document type (currently single file)
 
 ---
 
-## 4. TRANSLATION KEYS STRUCTURE (NEW SECTIONS)
+## 3. DOCUMENT REQUIREMENTS FOR HOUSING REGISTRATION
 
+Based on government housing registration requirements:
+
+| Document Code | Document Name | Mandatory |
+|---------------|---------------|-----------|
+| ID_COPY | Copy of ID | Yes |
+| INCOME_PROOF | Proof of Income | Yes |
+| RESIDENCE_PROOF | Proof of Current Residence | Yes |
+| FAMILY_COMPOSITION | Family Composition | No |
+| MEDICAL_CERT | Medical Certificate (if applicable) | No |
+| EMERGENCY_PROOF | Emergency Situation Proof (if applicable) | No |
+
+---
+
+## 4. IMPLEMENTATION STEPS
+
+### Step 5C-1: Create Restore Point
+Create `RESTORE_POINT_V1.3_PHASE5C_START.md`
+
+### Step 5C-2: Database Schema Changes
+
+**Create `housing_document_requirement` table:**
 ```text
-nl.json / en.json additions:
+- id (uuid, PK)
+- document_code (text, unique)
+- document_name (text)
+- description (text)
+- is_mandatory (boolean)
+- created_at (timestamp)
+```
 
-├── landing
-│   ├── heroTitle
-│   ├── heroDescription
-│   ├── servicesTitle
-│   ├── servicesSubtitle
-│   ├── bouwsubsidie
-│   │   ├── title
-│   │   ├── description
-│   │   └── button
-│   ├── housing
-│   │   ├── title
-│   │   ├── description
-│   │   └── button
-│   └── status
-│       ├── title
-│       ├── description
-│       └── button
-├── housing
-│   ├── title
-│   ├── step0 (Introduction)
-│   ├── step1 (Personal)
-│   ├── step2 (Contact)
-│   ├── step3 (Living)
-│   ├── step4 (Preference)
-│   ├── step5 (Reason)
-│   ├── step6 (Income)
-│   ├── step7 (Urgency)
-│   ├── step8 (Review)
-│   ├── step9 (Receipt)
-│   ├── housingTypes
-│   ├── interestTypes
-│   ├── reasons
-│   ├── incomeSources
-│   └── gender
-├── status
-│   ├── title
-│   ├── description
-│   ├── form (labels, placeholders, validation)
-│   ├── result (labels, sections)
-│   ├── statuses (submitted, under_review, etc.)
-│   └── help
-└── footer
-    ├── copyright
-    └── version
+**Create `housing_document_upload` table:**
+```text
+- id (uuid, PK)
+- registration_id (uuid, FK → housing_registration)
+- requirement_id (uuid, FK → housing_document_requirement)
+- file_path (text)
+- file_name (text)
+- uploaded_by (uuid, nullable)
+- uploaded_at (timestamp)
+- is_verified (boolean)
+- verified_by (uuid, nullable)
+- verified_at (timestamp, nullable)
+```
+
+**RLS Policies:**
+- Anonymous INSERT for public submissions
+- Staff SELECT based on district
+
+### Step 5C-3: Seed Document Requirements
+Insert initial document requirements for housing registration.
+
+### Step 5C-4: Update Housing Wizard Types
+Add `DocumentUpload` interface to `housing/register/types.ts`
+Add `documents` array to `HousingFormData`
+
+### Step 5C-5: Update Housing Wizard Constants
+Add `REQUIRED_DOCUMENTS` array with document definitions
+Update `INITIAL_FORM_DATA` to include documents array
+Update `WIZARD_STEPS` to include new documents step
+
+### Step 5C-6: Create Step8Documents.tsx
+Create document upload step for Housing wizard
+Reuse pattern from Bouwsubsidie `Step6Documents.tsx`
+Apply i18n (NL/EN translations)
+
+### Step 5C-7: Renumber Housing Wizard Steps
+- Current Step8Review.tsx → Step9Review.tsx
+- Current Step9Receipt.tsx → Step10Receipt.tsx
+- Update imports in page.tsx
+
+### Step 5C-8: Update Housing Wizard Page
+Update step count and step rendering logic
+Add Step8Documents to wizard flow
+
+### Step 5C-9: Add Translation Keys
+Add housing document upload translations to `nl.json` and `en.json`
+
+### Step 5C-10: Update Edge Function
+Modify `submit-housing-registration` to:
+- Accept `documents` array in input
+- Query `housing_document_requirement` for requirement IDs
+- Insert records into `housing_document_upload`
+- Log document count in audit event
+
+### Step 5C-11: Deploy Edge Function
+Deploy updated `submit-housing-registration`
+
+### Step 5C-12: Create Documentation
+Create `PHASE-5C-DOCUMENT-UPLOAD-REPORT.md`
+
+### Step 5C-13: Create Completion Restore Point
+Create `RESTORE_POINT_V1.3_PHASE5C_COMPLETE.md`
+
+---
+
+## 5. FILES TO CREATE/MODIFY
+
+### New Files:
+| File | Purpose |
+|------|---------|
+| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE5C_START.md` | Pre-phase restore point |
+| `src/app/(public)/housing/register/steps/Step8Documents.tsx` | Document upload step |
+| `phases/DVH-IMS-V1.3/PHASE-5C/PHASE-5C-DOCUMENT-UPLOAD-REPORT.md` | Implementation report |
+| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE5C_COMPLETE.md` | Post-phase restore point |
+
+### Modified Files:
+| File | Change |
+|------|--------|
+| `src/app/(public)/housing/register/types.ts` | Add DocumentUpload interface |
+| `src/app/(public)/housing/register/constants.ts` | Add REQUIRED_DOCUMENTS |
+| `src/app/(public)/housing/register/page.tsx` | Add Step8Documents, update step flow |
+| `src/app/(public)/housing/register/steps/Step8Review.tsx` | Rename to Step9Review.tsx |
+| `src/app/(public)/housing/register/steps/Step9Receipt.tsx` | Rename to Step10Receipt.tsx |
+| `src/i18n/locales/nl.json` | Add housing.step8 document translations |
+| `src/i18n/locales/en.json` | Add housing.step8 document translations |
+| `supabase/functions/submit-housing-registration/index.ts` | Add document handling |
+
+---
+
+## 6. DATABASE MIGRATION REQUIRED
+
+```sql
+-- Create housing_document_requirement table
+CREATE TABLE IF NOT EXISTS public.housing_document_requirement (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  document_code TEXT NOT NULL UNIQUE,
+  document_name TEXT NOT NULL,
+  description TEXT,
+  is_mandatory BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Create housing_document_upload table
+CREATE TABLE IF NOT EXISTS public.housing_document_upload (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  registration_id UUID NOT NULL REFERENCES housing_registration(id),
+  requirement_id UUID NOT NULL REFERENCES housing_document_requirement(id),
+  file_path TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  uploaded_by UUID,
+  uploaded_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  is_verified BOOLEAN NOT NULL DEFAULT false,
+  verified_by UUID,
+  verified_at TIMESTAMPTZ
+);
+
+-- Enable RLS
+ALTER TABLE housing_document_requirement ENABLE ROW LEVEL SECURITY;
+ALTER TABLE housing_document_upload ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for housing_document_requirement
+CREATE POLICY "Anyone can read housing document requirements"
+  ON housing_document_requirement FOR SELECT
+  TO anon, authenticated
+  USING (true);
+
+-- RLS Policies for housing_document_upload
+CREATE POLICY "anon_can_insert_housing_document_upload"
+  ON housing_document_upload FOR INSERT
+  TO anon
+  WITH CHECK (true);
+
+CREATE POLICY "role_select_housing_document_upload"
+  ON housing_document_upload FOR SELECT
+  TO authenticated
+  USING (
+    is_national_role(auth.uid()) OR
+    EXISTS (
+      SELECT 1 FROM housing_registration hr
+      WHERE hr.id = housing_document_upload.registration_id
+      AND (has_role(auth.uid(), 'frontdesk_housing') OR has_role(auth.uid(), 'admin_staff'))
+      AND hr.district_code = get_user_district(auth.uid())
+    )
+  );
+
+-- Seed initial document requirements
+INSERT INTO housing_document_requirement (document_code, document_name, description, is_mandatory)
+VALUES
+  ('ID_COPY', 'Copy of ID', 'Valid government-issued ID card or passport', true),
+  ('INCOME_PROOF', 'Proof of Income', 'Recent salary slips or income statement', true),
+  ('RESIDENCE_PROOF', 'Proof of Current Residence', 'Utility bill or rental agreement', true),
+  ('FAMILY_COMPOSITION', 'Family Composition', 'Declaration of household members', false),
+  ('MEDICAL_CERT', 'Medical Certificate', 'Medical certificate for disability (if applicable)', false),
+  ('EMERGENCY_PROOF', 'Emergency Documentation', 'Proof of emergency situation (if applicable)', false);
 ```
 
 ---
 
-## 5. IMPLEMENTATION STEPS
+## 7. EXPLICIT CONSTRAINTS
 
-### Step 5B-1: Create Restore Point
-Create `RESTORE_POINT_V1.3_PHASE5B_START.md`
-
-### Step 5B-2: Extend Translation Files
-- Add ~300 new translation keys to nl.json
-- Add ~300 matching keys to en.json
-
-### Step 5B-3: Localize Landing Page
-- Import `useTranslation` hook
-- Replace all hardcoded text with `t()` calls
-
-### Step 5B-4: Localize Housing Wizard Constants
-- Convert all option arrays to use `labelKey` pattern
-- Update `WIZARD_STEPS` to use `titleKey`
-
-### Step 5B-5: Localize Housing Wizard Page
-- Add `useTranslation()` hook
-- Translate error messages
-- Translate step titles for progress
-
-### Step 5B-6: Localize Housing Steps (10 files)
-- Each step: import `useTranslation`, replace text
-- Apply same pattern as Bouwsubsidie steps
-
-### Step 5B-7: Localize Status Tracker
-- StatusForm: form labels, placeholders, validation
-- StatusResult: section headers, labels
-- StatusTimeline: locale-aware date formatting
-
-### Step 5B-8: Localize Public Footer
-- Translate ministry text and version
-
-### Step 5B-9: Update Status Constants
-- Add `labelKey` for status definitions
-
-### Step 5B-10: Verification Testing
-- Test NL default on all public pages
-- Test EN switch functionality
-- Verify no EN text when NL active
-- Verify Admin unchanged
-
-### Step 5B-11: Create Documentation
-- PHASE-5B-PUBLIC-NL-COVERAGE-REPORT.md
-- PHASE-5B-I18N-ENFORCEMENT-REPORT.md
-- PHASE-5B-VERIFICATION-CHECKLIST.md
-
-### Step 5B-12: Create Completion Restore Point
-Create `RESTORE_POINT_V1.3_PHASE5B_COMPLETE.md`
-
----
-
-## 6. FILES TO CREATE
-
-| File | Purpose |
-|------|---------|
-| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE5B_START.md` | Pre-phase restore point |
-| `phases/DVH-IMS-V1.3/PHASE-5B/PHASE-5B-PUBLIC-NL-COVERAGE-REPORT.md` | Page-by-page coverage |
-| `phases/DVH-IMS-V1.3/PHASE-5B/PHASE-5B-I18N-ENFORCEMENT-REPORT.md` | No hardcoded text confirmation |
-| `phases/DVH-IMS-V1.3/PHASE-5B/PHASE-5B-VERIFICATION-CHECKLIST.md` | Test results |
-| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE5B_COMPLETE.md` | Post-phase restore point |
-
----
-
-## 7. VERIFICATION MATRIX
-
-| Test ID | Scenario | Expected Result |
-|---------|----------|-----------------|
-| P5B-T01 | Landing page first load | NL default everywhere |
-| P5B-T02 | Landing page EN switch | All text in English |
-| P5B-T03 | Housing wizard first load | NL default |
-| P5B-T04 | Housing wizard all steps | NL labels, validation, errors |
-| P5B-T05 | Status tracker first load | NL default |
-| P5B-T06 | Status form labels | NL placeholders, validation |
-| P5B-T07 | Status result display | NL dates, labels |
-| P5B-T08 | Footer text | NL ministry name |
-| P5B-T09 | Language persistence | Preference saved in session |
-| P5B-T10 | Admin unchanged | All admin pages EN-only |
-| P5B-T11 | Bouwsubsidie unchanged | No regression from 5A |
-
----
-
-## 8. EXPLICIT CONSTRAINTS
-
-### 8.1 Allowed Actions
-| Action | Authorized |
-|--------|------------|
-| Extend translation files | ALLOWED |
-| Modify public pages for i18n | ALLOWED |
-| Add `useTranslation` to public components | ALLOWED |
-| Change option arrays to labelKey pattern | ALLOWED |
-
-### 8.2 Forbidden Actions
+### Allowed:
 | Action | Status |
 |--------|--------|
-| Localize Admin UI | FORBIDDEN |
+| Create housing document tables | ALLOWED |
+| Add document upload step to Housing wizard | ALLOWED |
+| Extend Edge Function for document handling | ALLOWED |
+| Add i18n translations for new step | ALLOWED |
+
+### Forbidden:
+| Action | Status |
+|--------|--------|
+| Create public accounts | FORBIDDEN |
 | Change roles or permissions | FORBIDDEN |
-| Modify workflow logic | FORBIDDEN |
-| Change authentication | FORBIDDEN |
-| Modify database schema | FORBIDDEN |
+| Modify workflow state machine | FORBIDDEN |
+| Change Admin UI language | FORBIDDEN |
+| Modify Bouwsubsidie (beyond optional multi-file) | FORBIDDEN |
 
 ---
 
-## 9. ESTIMATED EFFORT
+## 8. VERIFICATION CHECKLIST
 
-| Component | Files | Estimated Time |
-|-----------|-------|----------------|
-| Translation files | 2 | 2 hours |
-| Landing page | 1 | 0.5 hours |
-| Housing wizard | 12 | 3 hours |
-| Status tracker | 5 | 1.5 hours |
-| Public footer | 1 | 0.5 hours |
-| Documentation | 5 | 1 hour |
-| Testing | - | 1 hour |
-| **TOTAL** | 26 files | ~9.5 hours |
-
----
-
-## 10. DELIVERABLES
-
-| # | Artifact | Purpose |
-|---|----------|---------|
-| 1 | RESTORE_POINT_V1.3_PHASE5B_START.md | Pre-phase snapshot |
-| 2 | Extended nl.json (~500 keys total) | Dutch translations |
-| 3 | Extended en.json (~500 keys total) | English translations |
-| 4 | Localized landing page | NL default |
-| 5 | Localized housing wizard (10 steps) | NL default |
-| 6 | Localized status tracker (3 components) | NL default |
-| 7 | Localized public footer | NL default |
-| 8 | PHASE-5B-PUBLIC-NL-COVERAGE-REPORT.md | Coverage documentation |
-| 9 | PHASE-5B-I18N-ENFORCEMENT-REPORT.md | Enforcement confirmation |
-| 10 | PHASE-5B-VERIFICATION-CHECKLIST.md | Test results |
-| 11 | RESTORE_POINT_V1.3_PHASE5B_COMPLETE.md | Post-phase snapshot |
+| Test | Expected |
+|------|----------|
+| Housing wizard shows document step after Step 7 | Documents step visible |
+| Mandatory documents block progression | Cannot proceed without uploads |
+| Files upload to citizen-uploads bucket | Storage success |
+| Edge Function creates document records | Database entries created |
+| Admin can view uploaded documents | Documents visible in admin |
+| Bouwsubsidie wizard unchanged | No regression |
+| NL translations work on new step | Dutch text displays |
 
 ---
 
-## 11. GOVERNANCE STATEMENT
+## 9. END-OF-TASK DELIVERABLES
 
-**V1.3 Phase 5B implements FULL PUBLIC NL STANDARDIZATION.**
-
-- ALL public-facing content will default to Dutch (NL)
-- English remains available via language switch
-- Language preference persists per session
-- Admin interface remains EN-only
-- No workflow, role, or schema changes
-
-**STOP after Phase 5B completion and await authorization for next phase.**
+| Deliverable | Status |
+|-------------|--------|
+| RESTORE_POINT_V1.3_PHASE5C_START.md | To create |
+| Database tables + RLS + seed data | To create |
+| Step8Documents.tsx (Housing) | To create |
+| Updated Housing wizard flow | To modify |
+| Updated Edge Function | To modify |
+| i18n translations | To add |
+| PHASE-5C-DOCUMENT-UPLOAD-REPORT.md | To create |
+| RESTORE_POINT_V1.3_PHASE5C_COMPLETE.md | To create |
 
 ---
 
-**PHASE 5B — FULL PUBLIC NL STANDARDIZATION — AWAITING APPROVAL TO BEGIN IMPLEMENTATION**
+## GOVERNANCE STATEMENT
 
+**Phase 5C implements document upload for the Woningregistratie (Housing Registration) public wizard.**
+
+- Follows the existing Bouwsubsidie pattern exactly
+- Uses same storage bucket (`citizen-uploads`)
+- Enforces mandatory document upload before submission
+- Validates file types (PDF, JPG, PNG) and size (10MB)
+- Links documents to registration in database
+- Adds NL/EN translations for new step
+- No workflow state machine changes
+- No role or authentication changes
+- Admin remains EN-only
+
+**STOP after Phase 5C and await authorization for next phase.**
+
+---
+
+**PHASE 5C — PUBLIC WIZARD DOCUMENT UPLOAD — AWAITING APPROVAL TO BEGIN IMPLEMENTATION**

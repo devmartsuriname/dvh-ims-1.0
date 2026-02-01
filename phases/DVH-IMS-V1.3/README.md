@@ -16,6 +16,7 @@
 | Phase 3 | Role & Workflow Preparation | **CLOSED** | 2026-01-30 |
 | Phase 4A | Social Field Worker Activation | **CLOSED** | 2026-01-30 |
 | Phase 4B | Technical Inspector Activation | **CLOSED** | 2026-01-30 |
+| Phase 4C | Administrative Officer Workflow Activation | **CLOSED** | 2026-02-01 |
 
 ---
 
@@ -173,8 +174,9 @@
 | in_technical_review | Case in technical inspection |
 | technical_approved | Technical inspection completed |
 | returned_to_social | Returned to social field worker |
-
----
+| in_admin_review | Case in administrative review |
+| admin_complete | Administrative review passed |
+| returned_to_technical | Returned to technical inspector |
 
 ## Current Active Roles (9 Total)
 
@@ -220,13 +222,50 @@ The following remain NOT authorized for V1.3:
 | Phase 3 is LOCKED from further modification | ✓ ENFORCED |
 | Phase 4A is LOCKED from further modification | ✓ ENFORCED |
 | Phase 4B is LOCKED from further modification | ✓ ENFORCED |
-| Woningregistratie unchanged after Phase 4B | ✓ CONFIRMED |
+| Phase 4C is LOCKED from further modification | ✓ ENFORCED |
+| Woningregistratie unchanged after Phase 4C | ✓ CONFIRMED |
+
+---
+
+## Phase 4C — CLOSED
+
+**Scope:** Administrative Officer Workflow Activation (Bouwsubsidie Only)
+
+**Key Difference:** No enum extension needed - admin_staff role already exists. This phase adds workflow states only.
+
+**Deliverables:**
+
+| ID | Deliverable | Status |
+|----|-------------|--------|
+| P4C-DB-1 | Updated subsidy_case transition trigger (admin review states) | **FINAL** |
+| P4C-TS-1 | AuditAction type update | **FINAL** |
+| P4C-UI-1 | Status transitions and badges | **FINAL** |
+
+**Documentation:**
+
+| Document | Location | Status |
+|----------|----------|--------|
+| Activation Report | [PHASE-4C/PHASE-4C-ACTIVATION-REPORT.md](./PHASE-4C/PHASE-4C-ACTIVATION-REPORT.md) | FINAL |
+| Verification Checklist | [PHASE-4C/PHASE-4C-VERIFICATION-CHECKLIST.md](./PHASE-4C/PHASE-4C-VERIFICATION-CHECKLIST.md) | FINAL |
+| Risk Observations | [PHASE-4C/PHASE-4C-RISK-OBSERVATIONS.md](./PHASE-4C/PHASE-4C-RISK-OBSERVATIONS.md) | FINAL |
+
+**Restore Points:**
+- `RESTORE_POINT_V1.3_PHASE4C_START`
+- `RESTORE_POINT_V1.3_PHASE4C_COMPLETE`
+
+**New Status Values (Bouwsubsidie):**
+
+| Status | Description |
+|--------|-------------|
+| in_admin_review | Case in administrative completeness check |
+| admin_complete | Administrative review passed |
+| returned_to_technical | Returned to technical inspector |
 
 ---
 
 ## Next Phase (Requires Authorization)
 
-**Phase 4C: Director Activation (Bouwsubsidie Only)**
+**Phase 4D: Director Activation (Bouwsubsidie Only)**
 
 Prerequisites:
 - Explicit authorization from Delroy

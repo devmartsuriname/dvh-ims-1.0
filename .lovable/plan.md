@@ -1,12 +1,12 @@
 
 
-# DVH-IMS V1.3 — Phase 4C Execution Plan
+# DVH-IMS V1.3 — Phase 5A Execution Plan
 
 ## Document Type: Phase Scope & Execution Plan
 ## Version: 1.0
-## Date: 2026-01-30
-## Phase: Phase 4C — Administrative Officer Workflow Activation (Bouwsubsidie Only)
-## Authorization: Controlled Sequential Activation Path
+## Date: 2026-02-01
+## Phase: Phase 5A — Public Wizard: Mandatory Document Upload + NL Localization (P0)
+## Authorization: Blocking for Real Use
 
 ---
 
@@ -14,417 +14,580 @@
 
 | Item | Status |
 |------|--------|
-| DVH-IMS V1.1 | OPERATIONAL (LIVE) |
-| DVH-IMS V1.2 | CLOSED (Documentation Only) |
-| V1.3 Phase 1 (D-01 + D-02) | CLOSED & LOCKED |
-| V1.3 Phase 2 (S-03) | CLOSED & LOCKED |
-| V1.3 Phase 3 (Preparation) | CLOSED & LOCKED |
-| V1.3 Phase 4A (Social Field Worker) | CLOSED & LOCKED |
-| V1.3 Phase 4B (Technical Inspector) | CLOSED & LOCKED |
-| V1.3 Phase 4C | OPEN — Admin Review Workflow Activation |
+| V1.3 Phase 4C | CLOSED & LOCKED |
+| V1.3 Phase 5A | OPEN — Public Wizard Hardening |
 
-**Scope Constraint:** Bouwsubsidie ONLY — Woningregistratie remains UNCHANGED
+**Scope Constraint:** PUBLIC WIZARD ONLY — Admin remains EN-only
 
 ---
 
-## 2. Critical Clarification
+## 2. Current State Analysis
 
-### 2.1 Role Status
+### 2.1 Document Upload
 
-The `admin_staff` role **already exists** in the database enum (9 current values) and has active RLS policies. This phase does NOT add a new enum value.
+| Component | Current State |
+|-----------|---------------|
+| Step6Documents.tsx | Declaration-only (toggle checkbox) |
+| File upload UI | NOT IMPLEMENTED |
+| Storage bucket for uploads | NOT EXISTS (only `generated-documents`) |
+| subsidy_document_upload table | EXISTS (case_id, requirement_id, file_path, uploaded_at) |
+| subsidy_document_requirement table | EXISTS (8 requirement types defined) |
+| RLS on subsidy_document_upload | Authenticated only — NO anon policy |
+| react-dropzone | INSTALLED but not used in wizard |
 
-### 2.2 What This Phase Activates
+### 2.2 Localization
 
-This phase activates the **workflow enforcement** for the Administrative Officer completeness check step by:
-1. Adding new status values to the workflow
-2. Updating the transition trigger to enforce the admin review step
-3. Adding UI status badges and transitions
+| Component | Current State |
+|-----------|---------------|
+| i18n framework | NOT INSTALLED |
+| src/locales directory | EMPTY |
+| Hardcoded English text | ALL wizard steps + constants |
+| Language switcher | NOT EXISTS |
+
+### 2.3 Files Requiring Translation
+
+| File | Text Type |
+|------|-----------|
+| src/app/(public)/bouwsubsidie/apply/constants.ts | Labels, options |
+| src/app/(public)/bouwsubsidie/apply/steps/Step0Introduction.tsx | Instructions |
+| src/app/(public)/bouwsubsidie/apply/steps/Step1PersonalInfo.tsx | Labels, validation |
+| src/app/(public)/bouwsubsidie/apply/steps/Step2ContactInfo.tsx | Labels, validation |
+| src/app/(public)/bouwsubsidie/apply/steps/Step3Household.tsx | Labels, validation |
+| src/app/(public)/bouwsubsidie/apply/steps/Step4Address.tsx | Labels, validation |
+| src/app/(public)/bouwsubsidie/apply/steps/Step5Context.tsx | Labels, validation |
+| src/app/(public)/bouwsubsidie/apply/steps/Step6Documents.tsx | Labels (REPLACED) |
+| src/app/(public)/bouwsubsidie/apply/steps/Step7Review.tsx | Labels, sections |
+| src/app/(public)/bouwsubsidie/apply/steps/Step8Receipt.tsx | Messages, instructions |
+| src/components/public/WizardStep.tsx | Button labels |
+| src/components/public/PublicHeader.tsx | Navigation |
+| src/components/public/PublicFooter.tsx | Footer text |
+| src/constants/districts.ts | District names (keep as-is, official) |
 
 ---
 
-## 3. Current State Analysis
+## 3. Phase 5A Objective
 
-### 3.1 Current app_role Enum (9 Values)
+### Part A: Mandatory Document Upload
 
-| # | Enum Value | Status |
-|---|------------|--------|
-| 1 | system_admin | ACTIVE |
-| 2 | minister | ACTIVE |
-| 3 | project_leader | ACTIVE |
-| 4 | frontdesk_bouwsubsidie | ACTIVE |
-| 5 | frontdesk_housing | ACTIVE |
-| 6 | admin_staff | ACTIVE |
-| 7 | audit | ACTIVE |
-| 8 | social_field_worker | ACTIVE (Phase 4A) |
-| 9 | technical_inspector | ACTIVE (Phase 4B) |
+Replace the toggle-based declaration with actual file uploads:
+1. Create public storage bucket for citizen uploads
+2. Update Step6Documents to use react-dropzone for file upload
+3. Modify Edge Function to handle file references
+4. Block submission if mandatory documents are not uploaded
+5. Enable Admin visibility of uploaded documents
 
-### 3.2 Current Bouwsubsidie Workflow (Post Phase 4B)
+### Part B: Dutch (NL) Localization
+
+1. Install react-i18next framework
+2. Create translation files (nl.json, en.json)
+3. Set NL as default language
+4. Add language switcher to public header
+5. Translate all wizard components
+
+---
+
+## 4. PART A: Document Upload Implementation
+
+### 4.1 Storage Architecture
 
 ```text
-received → in_social_review → social_completed → in_technical_review → 
-           technical_approved → screening → needs_more_docs/fieldwork → 
-           approved_for_council → council_doc_generated → finalized
-           (any non-terminal) → rejected
+Bucket: citizen-uploads (PUBLIC for read, controlled write)
+├── bouwsubsidie/
+│   └── {case_id}/
+│       └── {document_type}_{timestamp}.{ext}
+└── housing/
+    └── {registration_id}/
+        └── {document_type}_{timestamp}.{ext}
 ```
 
-### 3.3 Target Workflow (Phase 4C — Admin Review Integration)
+### 4.2 Database Changes
+
+#### 4.2.1 Storage Bucket Creation
+
+```sql
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('citizen-uploads', 'citizen-uploads', true);
+```
+
+#### 4.2.2 Storage RLS Policies
+
+```sql
+-- Allow public upload (anonymous)
+CREATE POLICY "anon_can_upload_citizen_documents"
+ON storage.objects FOR INSERT TO anon
+WITH CHECK (bucket_id = 'citizen-uploads');
+
+-- Allow public read (for preview)
+CREATE POLICY "anon_can_read_citizen_documents"
+ON storage.objects FOR SELECT TO anon
+USING (bucket_id = 'citizen-uploads');
+
+-- Allow authenticated staff to read all
+CREATE POLICY "staff_can_read_citizen_documents"
+ON storage.objects FOR SELECT TO authenticated
+USING (bucket_id = 'citizen-uploads');
+```
+
+#### 4.2.3 Document Upload Table - Add Anon Policy
+
+```sql
+-- Allow anonymous insert for public submissions
+CREATE POLICY "anon_can_insert_document_upload"
+ON public.subsidy_document_upload FOR INSERT TO anon
+WITH CHECK (true);
+```
+
+### 4.3 Updated Step6Documents Component
+
+**Major Changes:**
+1. Replace toggle with file dropzone per document type
+2. Validate mandatory documents before allowing next
+3. Upload files to storage bucket immediately on drop
+4. Store file references in formData for submission
+5. Show upload progress and preview
+
+**New formData structure:**
+
+```typescript
+interface DocumentUpload {
+  id: string                    // requirement ID
+  document_code: string         // e.g., 'ID_COPY'
+  label: string                 // display label
+  is_mandatory: boolean
+  uploaded_file?: {
+    file_path: string           // storage path
+    file_name: string           // original name
+    uploaded_at: string         // ISO timestamp
+  }
+}
+
+// documents: DocumentUpload[]
+```
+
+### 4.4 Edge Function Update
+
+Modify `submit-bouwsubsidie-application`:
+1. Accept documents array with file paths
+2. Validate mandatory documents are uploaded
+3. Create `subsidy_document_upload` records
+4. Return error if mandatory docs missing
+
+### 4.5 Validation Rules
+
+| Document Code | Label (EN) | Mandatory |
+|---------------|------------|-----------|
+| ID_COPY | Copy of ID | YES |
+| INCOME_PROOF | Income Proof | YES |
+| LAND_TITLE | Land Title / Deed | YES |
+| CONSTRUCTION_PLAN | Construction Plan | YES |
+| COST_ESTIMATE | Cost Estimate | YES |
+| BUILDING_PERMIT | Building Permit | YES |
+| BANK_STATEMENT | Bank Statement | NO |
+| HOUSEHOLD_COMP | Household Composition | NO |
+
+**Submission blocked if any mandatory document is missing.**
+
+---
+
+## 5. PART B: Localization Implementation
+
+### 5.1 Package Installation
+
+```bash
+npm install react-i18next i18next i18next-browser-languagedetector
+```
+
+### 5.2 i18n Configuration
+
+```typescript
+// src/i18n/config.ts
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
+
+import nl from './locales/nl.json';
+import en from './locales/en.json';
+
+i18n
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    resources: { nl: { translation: nl }, en: { translation: en } },
+    fallbackLng: 'nl',  // Dutch as default
+    lng: 'nl',          // Force Dutch initially
+    interpolation: { escapeValue: false },
+  });
+
+export default i18n;
+```
+
+### 5.3 Translation File Structure
 
 ```text
-received → in_social_review → social_completed → in_technical_review → 
-           technical_approved → in_admin_review → admin_complete → 
-           screening → needs_more_docs/fieldwork → approved_for_council → 
-           council_doc_generated → finalized
-           (any non-terminal) → rejected
-           in_admin_review → returned_to_technical
+src/i18n/
+├── config.ts
+└── locales/
+    ├── nl.json
+    └── en.json
+```
+
+### 5.4 Translation Keys Structure
+
+```json
+{
+  "common": {
+    "next": "Volgende",
+    "back": "Vorige",
+    "submit": "Indienen",
+    "continue": "Doorgaan",
+    "staffPortal": "Personeelsportaal",
+    "print": "Afdrukken",
+    "checkStatus": "Status controleren",
+    "returnHome": "Terug naar home"
+  },
+  "header": {
+    "ministry": "Ministerie van Sociale Zaken en Volkshuisvesting"
+  },
+  "wizard": {
+    "steps": {
+      "introduction": "Introductie",
+      "personalInfo": "Persoonsgegevens",
+      "contact": "Contactgegevens",
+      "household": "Huishouden",
+      "address": "Adres",
+      "application": "Aanvraag",
+      "documents": "Documenten",
+      "review": "Controleren",
+      "receipt": "Ontvangstbewijs"
+    }
+  },
+  "bouwsubsidie": {
+    "title": "Bouwsubsidie Aanvraag",
+    "step0": {
+      "title": "Welkom bij de Bouwsubsidie Aanvraag",
+      "importantNotice": "Belangrijke mededeling",
+      "noticeText": "Aanvragen via dit portaal zijn alleen voor registratiedoeleinden..."
+    },
+    "step1": {
+      "title": "Persoonsgegevens",
+      "nationalId": "ID-nummer",
+      "firstName": "Voornaam",
+      "lastName": "Achternaam",
+      "dateOfBirth": "Geboortedatum",
+      "gender": "Geslacht"
+    },
+    "step6": {
+      "title": "Documenten Uploaden",
+      "description": "Upload de vereiste documenten om door te gaan.",
+      "mandatory": "Verplicht",
+      "optional": "Optioneel",
+      "dropzone": "Sleep bestand hierheen of klik om te uploaden",
+      "maxSize": "Maximale bestandsgrootte: 10MB",
+      "uploaded": "Geüpload"
+    },
+    "step8": {
+      "successTitle": "Aanvraag Succesvol Ingediend",
+      "referenceNumber": "Uw Referentienummer",
+      "securityToken": "Beveiligingstoken"
+    },
+    "reasons": {
+      "new_construction": "Nieuwbouw",
+      "renovation": "Woningrenovatie",
+      "extension": "Woninguitbreiding",
+      "repair": "Structurele reparaties",
+      "disaster_recovery": "Rampenherstel"
+    },
+    "documents": {
+      "ID_COPY": "Kopie ID-kaart (voor- en achterkant)",
+      "INCOME_PROOF": "Inkomensverklaring (recente loonstroken)",
+      "LAND_TITLE": "Grondbewijs of erfpachtovereenkomst",
+      "CONSTRUCTION_PLAN": "Bouwplan of kostenbegroting",
+      "COST_ESTIMATE": "Gedetailleerde kostenbegroting",
+      "BUILDING_PERMIT": "Bouwvergunning",
+      "BANK_STATEMENT": "Bankafschrift (laatste 3 maanden)",
+      "HOUSEHOLD_COMP": "Huishoudsamenstelling"
+    }
+  },
+  "validation": {
+    "required": "Dit veld is verplicht",
+    "invalidEmail": "Ongeldig e-mailadres",
+    "invalidDate": "Ongeldige datum",
+    "minLength": "Minimaal {{min}} tekens vereist",
+    "documentRequired": "Dit document is verplicht"
+  }
+}
+```
+
+### 5.5 Language Switcher Component
+
+```typescript
+// src/components/public/LanguageSwitcher.tsx
+import { useTranslation } from 'react-i18next';
+import { Dropdown } from 'react-bootstrap';
+
+const LanguageSwitcher = () => {
+  const { i18n } = useTranslation();
+  
+  const languages = [
+    { code: 'nl', label: 'Nederlands', flag: '🇸🇷' },
+    { code: 'en', label: 'English', flag: '🇬🇧' },
+  ];
+  
+  return (
+    <Dropdown>
+      <Dropdown.Toggle variant="outline-secondary" size="sm">
+        {languages.find(l => l.code === i18n.language)?.flag} 
+        {languages.find(l => l.code === i18n.language)?.label}
+      </Dropdown.Toggle>
+      <Dropdown.Menu>
+        {languages.map(lang => (
+          <Dropdown.Item 
+            key={lang.code}
+            onClick={() => i18n.changeLanguage(lang.code)}
+            active={i18n.language === lang.code}
+          >
+            {lang.flag} {lang.label}
+          </Dropdown.Item>
+        ))}
+      </Dropdown.Menu>
+    </Dropdown>
+  );
+};
+```
+
+### 5.6 Component Updates
+
+Each wizard step will be updated to use `useTranslation()`:
+
+```typescript
+import { useTranslation } from 'react-i18next';
+
+const Step1PersonalInfo = () => {
+  const { t } = useTranslation();
+  
+  return (
+    <WizardStep
+      title={t('bouwsubsidie.step1.title')}
+      description={t('bouwsubsidie.step1.description')}
+    >
+      <TextFormInput
+        label={t('bouwsubsidie.step1.firstName')}
+        // ...
+      />
+    </WizardStep>
+  );
+};
 ```
 
 ---
 
-## 4. Phase 4C Objective
+## 6. Implementation Steps
 
-Activate the **Administrative Officer completeness check workflow step** for Bouwsubsidie service ONLY, with:
-- New status values: `in_admin_review`, `admin_complete`, `returned_to_technical`
-- Mandatory completeness check between technical approval and screening
-- Full audit logging for admin review actions
-- Traceability via correlation_id
+### Step 5A-1: Create Restore Point
+Create `RESTORE_POINT_V1.3_PHASE5A_START.md`
+
+### Step 5A-2: Install Dependencies
+- Add react-i18next, i18next, i18next-browser-languagedetector to package.json
+
+### Step 5A-3: Create i18n Infrastructure
+- Create src/i18n/config.ts
+- Create src/i18n/locales/nl.json
+- Create src/i18n/locales/en.json
+- Import i18n config in main.tsx
+
+### Step 5A-4: Database Migration - Storage Bucket
+- Create citizen-uploads storage bucket
+- Create storage RLS policies
+- Create anon insert policy on subsidy_document_upload
+
+### Step 5A-5: Update Types
+- Update BouwsubsidieFormData.documents type
+- Add DocumentUpload interface
+
+### Step 5A-6: Create Document Upload Component
+- Rebuild Step6Documents.tsx with file upload
+- Use react-dropzone for file selection
+- Implement immediate upload to storage
+- Add validation for mandatory documents
+
+### Step 5A-7: Update Edge Function
+- Modify submit-bouwsubsidie-application
+- Accept document file paths
+- Create subsidy_document_upload records
+- Validate mandatory documents present
+
+### Step 5A-8: Localize All Wizard Steps
+- Update Step0Introduction.tsx with translations
+- Update Step1PersonalInfo.tsx with translations
+- Update Step2ContactInfo.tsx with translations
+- Update Step3Household.tsx with translations
+- Update Step4Address.tsx with translations
+- Update Step5Context.tsx with translations
+- Update Step6Documents.tsx with translations
+- Update Step7Review.tsx with translations
+- Update Step8Receipt.tsx with translations
+
+### Step 5A-9: Update Public Header/Footer
+- Add LanguageSwitcher to PublicHeader
+- Translate all text in PublicHeader
+- Translate PublicFooter if exists
+
+### Step 5A-10: Update WizardStep Component
+- Add translation for button labels
+
+### Step 5A-11: Verification Testing
+- Test document upload flow
+- Test submission blocking without docs
+- Verify NL is default language
+- Verify language switch works
+- Verify Admin can see uploaded documents
+
+### Step 5A-12: Documentation
+- Create Phase 5A artifacts
+
+### Step 5A-13: Create Completion Restore Point
+Create `RESTORE_POINT_V1.3_PHASE5A_COMPLETE.md`
 
 ---
 
-## 5. Implementation Scope
+## 7. Files to Create
 
-### 5.1 What Gets Activated
+| File | Purpose |
+|------|---------|
+| restore-points/v1.3/RESTORE_POINT_V1.3_PHASE5A_START.md | Pre-phase restore point |
+| src/i18n/config.ts | i18n configuration |
+| src/i18n/locales/nl.json | Dutch translations |
+| src/i18n/locales/en.json | English translations |
+| src/components/public/LanguageSwitcher.tsx | Language toggle |
+| phases/DVH-IMS-V1.3/PHASE-5A/PHASE-5A-WIZARD-UPLOAD-REPORT.md | Upload implementation report |
+| phases/DVH-IMS-V1.3/PHASE-5A/PHASE-5A-LOCALIZATION-REPORT.md | Localization report |
+| phases/DVH-IMS-V1.3/PHASE-5A/PHASE-5A-VERIFICATION-CHECKLIST.md | Test results |
+| restore-points/v1.3/RESTORE_POINT_V1.3_PHASE5A_COMPLETE.md | Post-phase restore point |
 
-| Item | Action |
-|------|--------|
-| New status values | `in_admin_review`, `admin_complete`, `returned_to_technical` |
-| Backend trigger | UPDATE to enforce admin review step |
-| UI status badges | ADD for new statuses |
-| UI transitions | UPDATE for admin review workflow |
-| Audit events | ENABLE for admin review actions |
-
-### 5.2 What Remains UNCHANGED
-
-| Item | Status |
-|------|--------|
-| app_role enum | NO CHANGES (admin_staff already exists) |
-| Existing admin_staff RLS policies | NO CHANGES (already have access) |
-| Woningregistratie workflow | NO CHANGES |
-| Housing registration trigger | NO CHANGES |
-| UI menus/dropdowns | NO CHANGES |
-| Director role | NOT ACTIVATED |
-| Ministerial Advisor role | NOT ACTIVATED |
-| Social Field Worker logic | PRESERVED |
-| Technical Inspector logic | PRESERVED |
-
----
-
-## 6. Database Changes
-
-### 6.1 No Enum Extension Required
-
-The `admin_staff` role already exists in the `app_role` enum. No enum change needed.
-
-### 6.2 Backend Trigger Update
-
-The `validate_subsidy_case_transition()` function will be updated to:
-
-| From Status | New Allowed Transitions |
-|-------------|-------------------------|
-| technical_approved | in_admin_review, rejected |
-| **in_admin_review** | admin_complete, returned_to_technical, rejected |
-| **returned_to_technical** | in_technical_review, rejected |
-| **admin_complete** | screening, rejected |
-
-**Key Change:** `technical_approved → screening` is NO LONGER ALLOWED. Cases must go through `in_admin_review`.
-
-### 6.3 No New RLS Policies Required
-
-The existing `admin_staff` role policies already provide:
-- SELECT access to `subsidy_case` (district-scoped)
-- UPDATE access to `subsidy_case` (district-scoped)
-- Access to related tables (person, household, documents)
-
-The new statuses (`in_admin_review`, `admin_complete`) will be accessible through existing policies.
-
----
-
-## 7. Application Changes
-
-### 7.1 TypeScript Updates
+## 8. Files to Modify
 
 | File | Change |
 |------|--------|
-| src/hooks/useAuditLog.ts | Add `ADMIN_REVIEW_STARTED`, `ADMIN_REVIEW_COMPLETED`, `ADMIN_REVIEW_RETURNED` actions |
-
-### 7.2 UI Updates (Subsidy Case Detail Page)
-
-| Component | Change |
-|-----------|--------|
-| STATUS_BADGES | Add `in_admin_review`, `admin_complete`, `returned_to_technical` |
-| STATUS_TRANSITIONS | Update to include admin review states |
-
----
-
-## 8. Implementation Steps
-
-### Step 4C-1: Create Restore Point
-Create `RESTORE_POINT_V1.3_PHASE4C_START.md` before any implementation.
-
-### Step 4C-2: Database Migration
-Execute migration to:
-1. Update `validate_subsidy_case_transition()` function with admin review states
-2. No RLS policy changes needed
-
-### Step 4C-3: TypeScript Updates
-1. Update `AuditAction` type in `useAuditLog.ts` (add admin review actions)
-
-### Step 4C-4: Status Handler Updates
-1. Add new status badges to `STATUS_BADGES` constant
-2. Update `STATUS_TRANSITIONS` to include admin review paths
-3. Modify `technical_approved → screening` to `technical_approved → in_admin_review`
-
-### Step 4C-5: Verification Testing
-Execute verification tests (see Section 10).
-
-### Step 4C-6: Documentation
-Create Phase 4C artifacts under `phases/DVH-IMS-V1.3/PHASE-4C/`.
-
-### Step 4C-7: Create Completion Restore Point
-Create `RESTORE_POINT_V1.3_PHASE4C_COMPLETE.md`.
+| package.json | Add i18n dependencies |
+| src/main.tsx | Import i18n config |
+| src/app/(public)/bouwsubsidie/apply/types.ts | Update DocumentUpload interface |
+| src/app/(public)/bouwsubsidie/apply/constants.ts | Update REQUIRED_DOCUMENTS |
+| src/app/(public)/bouwsubsidie/apply/page.tsx | Add i18n context |
+| src/app/(public)/bouwsubsidie/apply/steps/Step*.tsx | All 9 steps with translations |
+| src/components/public/WizardStep.tsx | Add translations |
+| src/components/public/PublicHeader.tsx | Add LanguageSwitcher + translations |
+| supabase/functions/submit-bouwsubsidie-application/index.ts | Handle document uploads |
 
 ---
 
-## 9. Transition Matrix Update (Bouwsubsidie)
-
-### 9.1 Updated State Machine (Post Phase 4C)
-
-| From Status | Allowed Transitions |
-|-------------|---------------------|
-| received | in_social_review, screening, rejected |
-| in_social_review | social_completed, returned_to_intake, rejected |
-| returned_to_intake | in_social_review, rejected |
-| social_completed | in_technical_review, rejected |
-| in_technical_review | technical_approved, returned_to_social, rejected |
-| returned_to_social | in_social_review, rejected |
-| technical_approved | **in_admin_review**, rejected |
-| **in_admin_review** | admin_complete, returned_to_technical, rejected |
-| **returned_to_technical** | in_technical_review, rejected |
-| **admin_complete** | screening, rejected |
-| screening | needs_more_docs, fieldwork, rejected |
-| needs_more_docs | screening, rejected |
-| fieldwork | approved_for_council, rejected |
-| approved_for_council | council_doc_generated, rejected |
-| council_doc_generated | finalized, rejected |
-| finalized | (terminal) |
-| rejected | (terminal) |
-
-### 9.2 Backward Compatibility
-
-- Cases already in `screening` or later: **Unaffected**
-- Cases in `technical_approved`: **Must proceed to in_admin_review**
-- Existing admin_staff permissions: **Already sufficient for new workflow**
-
----
-
-## 10. Verification Matrix
+## 9. Verification Matrix
 
 | Test ID | Scenario | Expected Result |
 |---------|----------|-----------------|
-| P4C-T01 | app_role enum unchanged | 9 values (same as Phase 4B) |
-| P4C-T02 | Transition technical_approved → in_admin_review allowed | Trigger permits |
-| P4C-T03 | Transition in_admin_review → admin_complete allowed | Trigger permits |
-| P4C-T04 | Transition technical_approved → screening blocked | Trigger rejects |
-| P4C-T05 | admin_staff can SELECT case in in_admin_review | Access granted |
-| P4C-T06 | admin_staff can UPDATE case in in_admin_review | Update succeeds |
-| P4C-T07 | Audit event logged for admin review | audit_event created |
-| P4C-T08 | Woningregistratie workflow unchanged | Housing transitions work as before |
-| P4C-T09 | Technical Inspector role unaffected | Phase 4B transitions still work |
-| P4C-T10 | Social Field Worker role unaffected | Phase 4A transitions still work |
-| P4C-T11 | Admin notification created on status change | Notification appears |
-| P4C-T12 | Return path in_admin_review → returned_to_technical works | Trigger permits |
+| P5A-T01 | Upload mandatory document | File uploaded, preview shown |
+| P5A-T02 | Submit without mandatory docs | Submission BLOCKED, error shown |
+| P5A-T03 | Submit with all mandatory docs | Submission succeeds |
+| P5A-T04 | Admin views uploaded documents | Documents visible in case detail |
+| P5A-T05 | First load language | NL is default |
+| P5A-T06 | Switch to EN | All labels change to English |
+| P5A-T07 | Switch back to NL | All labels change to Dutch |
+| P5A-T08 | Validation messages in NL | Dutch error messages |
+| P5A-T09 | Receipt page in NL | All text in Dutch |
+| P5A-T10 | Woningregistratie unchanged | No changes to housing wizard |
 
 ---
 
-## 11. Audit Event Definitions (Activated)
+## 10. Explicit Constraints
 
-| Action | Entity Type | Triggered By |
-|--------|-------------|--------------|
-| ADMIN_REVIEW_STARTED | subsidy_case | Status → in_admin_review |
-| ADMIN_REVIEW_COMPLETED | subsidy_case | Status → admin_complete |
-| ADMIN_REVIEW_RETURNED | subsidy_case | Status → returned_to_technical |
-
----
-
-## 12. Explicit Constraints
-
-### 12.1 Allowed Actions
+### 10.1 Allowed Actions
 
 | Action | Authorized |
 |--------|------------|
-| Update Bouwsubsidie trigger | ALLOWED |
-| Add new status values to workflow | ALLOWED |
-| Update TypeScript audit types | ALLOWED |
-| Add status transitions to UI | ALLOWED |
-| Create audit events | ALLOWED |
+| Install i18n packages | ALLOWED |
+| Create storage bucket | ALLOWED |
+| Create translation files | ALLOWED |
+| Modify Bouwsubsidie wizard | ALLOWED |
+| Modify public header | ALLOWED |
+| Add language switcher | ALLOWED |
+| Update Edge Function | ALLOWED |
 
-### 12.2 Forbidden Actions
+### 10.2 Forbidden Actions
 
 | Action | Status |
 |--------|--------|
-| Modify app_role enum | FORBIDDEN (not needed) |
-| Add RLS policies | FORBIDDEN (existing policies sufficient) |
-| Modify Woningregistratie workflow | FORBIDDEN |
-| Activate Director | FORBIDDEN |
-| Activate Ministerial Advisor | FORBIDDEN |
-| Modify UI menus/navigation | FORBIDDEN |
-| Create user accounts | FORBIDDEN |
-| Assign roles to users | FORBIDDEN |
-| Modify Social Field Worker logic | FORBIDDEN |
-| Modify Technical Inspector logic | FORBIDDEN |
+| Create public user accounts | FORBIDDEN |
+| Modify authentication flows | FORBIDDEN |
+| Localize Admin interface | FORBIDDEN |
+| Modify Woningregistratie wizard | FORBIDDEN |
+| Change role permissions | FORBIDDEN |
+| Modify workflow triggers | FORBIDDEN |
 
 ---
 
-## 13. Risk Mitigation
+## 11. Risk Mitigation
 
 | Risk | Mitigation |
 |------|------------|
-| Trigger update breaks existing cases | Backward-compatible transitions only |
-| Cases stuck in technical_approved | UI will show path to in_admin_review |
-| Existing RLS policies don't cover new statuses | Policies are status-agnostic for admin_staff |
+| Large file uploads fail | Limit file size to 10MB, show progress |
+| Storage bucket permissions | Test anon upload before full implementation |
+| Translation misses | Use t() function with fallback keys |
+| Upload performance | Immediate upload per file, not on submit |
 
 ---
 
-## 14. Rollback Plan
+## 12. Rollback Plan
 
-### 14.1 Database Rollback
+### 12.1 Database Rollback
 
 ```sql
--- Revert trigger to Phase 4B transition matrix
--- (Re-run Phase 4B trigger creation)
+-- Remove storage bucket
+DELETE FROM storage.buckets WHERE id = 'citizen-uploads';
+
+-- Remove anon policy
+DROP POLICY IF EXISTS "anon_can_insert_document_upload" ON public.subsidy_document_upload;
 ```
 
-### 14.2 Application Rollback
+### 12.2 Application Rollback
 
-1. Revert TypeScript changes (git)
-2. Revert status handler changes (git)
-3. Redeploy previous version
+1. Remove i18n packages from package.json
+2. Revert all component changes (git)
+3. Restore original Step6Documents.tsx
 
 ---
 
-## 15. Deliverables
+## 13. Deliverables
 
 | # | Artifact | Purpose |
 |---|----------|---------|
-| 1 | RESTORE_POINT_V1.3_PHASE4C_START.md | Pre-phase restore point |
-| 2 | Database migration (trigger only) | Workflow activation |
-| 3 | Updated useAuditLog.ts | Audit actions |
-| 4 | Updated subsidy-cases/[id]/page.tsx | Status transitions |
-| 5 | PHASE-4C-ACTIVATION-REPORT.md | Implementation report |
-| 6 | PHASE-4C-VERIFICATION-CHECKLIST.md | Test results |
-| 7 | PHASE-4C-RISK-OBSERVATIONS.md | Risk notes |
-| 8 | RESTORE_POINT_V1.3_PHASE4C_COMPLETE.md | Post-phase restore point |
+| 1 | RESTORE_POINT_V1.3_PHASE5A_START.md | Pre-phase restore point |
+| 2 | Storage bucket + policies | Document storage |
+| 3 | i18n framework + translations | Localization |
+| 4 | Updated Step6Documents.tsx | File upload UI |
+| 5 | Updated Edge Function | Document handling |
+| 6 | LanguageSwitcher.tsx | Language toggle |
+| 7 | All localized wizard steps | NL + EN translations |
+| 8 | PHASE-5A-WIZARD-UPLOAD-REPORT.md | Documentation |
+| 9 | PHASE-5A-LOCALIZATION-REPORT.md | Documentation |
+| 10 | PHASE-5A-VERIFICATION-CHECKLIST.md | Test results |
+| 11 | RESTORE_POINT_V1.3_PHASE5A_COMPLETE.md | Post-phase restore point |
 
 ---
 
-## 16. Files to Create/Modify
+## 14. Governance Statement
 
-| File | Action | Purpose |
-|------|--------|---------|
-| restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4C_START.md | CREATE | Pre-phase restore point |
-| phases/DVH-IMS-V1.3/PHASE-4C/ | CREATE | Phase 4C directory |
-| Database migration | EXECUTE | Trigger update only |
-| src/hooks/useAuditLog.ts | MODIFY | Add admin review audit actions |
-| src/app/(admin)/subsidy-cases/[id]/page.tsx | MODIFY | Add new transitions |
-| phases/DVH-IMS-V1.3/PHASE-4C/PHASE-4C-ACTIVATION-REPORT.md | CREATE | Documentation |
-| phases/DVH-IMS-V1.3/PHASE-4C/PHASE-4C-VERIFICATION-CHECKLIST.md | CREATE | Test results |
-| phases/DVH-IMS-V1.3/PHASE-4C/PHASE-4C-RISK-OBSERVATIONS.md | CREATE | Risk notes |
-| restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4C_COMPLETE.md | CREATE | Post-phase restore point |
-| phases/DVH-IMS-V1.3/README.md | MODIFY | Add Phase 4C status |
+**V1.3 Phase 5A implements mandatory document upload and Dutch localization for PUBLIC WIZARD ONLY.**
 
----
+**Admin interface remains English-only.**
 
-## 17. End-of-Phase Checklist
+**No public user accounts are introduced.**
 
-### Implemented
+**Authentication flows remain unchanged.**
 
-- [ ] Restore Point (Start) created
-- [ ] Backend trigger updated for admin review states
-- [ ] AuditAction types updated
-- [ ] Status transitions added to UI
-- [ ] Status badges added to UI
-- [ ] Audit logging enabled
+**Woningregistratie wizard remains unchanged.**
 
-### Explicitly NOT Activated
-
-- [ ] app_role enum (NOT changed - admin_staff already exists)
-- [ ] RLS policies (NOT added - existing policies sufficient)
-- [ ] Director (NOT activated)
-- [ ] Ministerial Advisor (NOT activated)
-- [ ] Woningregistratie workflow (NOT changed)
-- [ ] UI navigation/menus (NOT changed)
-
-### System Behavior Verification
-
-- [ ] All 9 existing roles functional
-- [ ] Technical Inspector role preserved
-- [ ] Social Field Worker role preserved
-- [ ] Woningregistratie workflow unchanged
-- [ ] Existing Bouwsubsidie cases processable
-- [ ] Audit trail complete
-
-### Activation Ready Statement
-
-- [ ] Phase 4C is COMPLETE
-- [ ] Administrative Officer workflow is ACTIVE for Bouwsubsidie
-- [ ] System ready for Phase 4D (Director activation, if authorized)
+**STOP after Phase 5A completion and await authorization for next phase.**
 
 ---
 
-## 18. Governance Statement
-
-**V1.3 Phase 4C activates the Administrative Officer workflow step (NOT the role - it already exists).**
-
-**Scope is strictly limited to Bouwsubsidie service.**
-
-**Woningregistratie remains completely unchanged.**
-
-**Technical Inspector activation (Phase 4B) is preserved.**
-
-**Social Field Worker activation (Phase 4A) is preserved.**
-
-**No additional roles are activated in this phase.**
-
-**STOP after Phase 4C completion and await authorization for next role.**
-
----
-
-## 19. Technical Summary
-
-### 19.1 Key Database Changes
-
-1. **No Enum Extension:** `admin_staff` already exists
-2. **Trigger Update:** Enforce mandatory admin review step after technical approval
-3. **No RLS Policies:** Existing admin_staff policies are sufficient
-
-### 19.2 Key Application Changes
-
-1. **Audit Actions:** Add `ADMIN_REVIEW_STARTED`, `ADMIN_REVIEW_COMPLETED`, `ADMIN_REVIEW_RETURNED`
-2. **UI Status Badges:** Add `in_admin_review`, `admin_complete`, `returned_to_technical`
-3. **UI Transitions:** Update `technical_approved` to transition to `in_admin_review`
-
-### 19.3 Workflow Path Change
-
-```text
-BEFORE (Phase 4B):
-  technical_approved → screening
-
-AFTER (Phase 4C):
-  technical_approved → in_admin_review → admin_complete → screening
-```
-
----
-
-**PHASE 4C — ADMINISTRATIVE OFFICER WORKFLOW ACTIVATION — BOUWSUBSIDIE ONLY**
-
-**Awaiting approval to create Restore Point and begin implementation.**
+**PHASE 5A — PUBLIC WIZARD HARDENING — AWAITING APPROVAL TO BEGIN IMPLEMENTATION**
 

@@ -2,40 +2,42 @@ import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { useTranslation } from 'react-i18next'
 import WizardStep from '@/components/public/WizardStep'
 import { APPLICATION_REASONS } from '../constants'
 import type { WizardStepProps } from '../types'
-
-const schema = yup.object({
-  application_reason: yup
-    .string()
-    .required('Please select a reason for your application'),
-})
-
-type FormData = yup.InferType<typeof schema>
 
 /**
  * Step 5: Reason for Application
  * 
  * Collects the main reason for housing registration.
+ * i18n enabled - NL default
  */
 const Step5Reason = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { t } = useTranslation()
+
+  const schema = yup.object({
+    application_reason: yup
+      .string()
+      .required(t('validation.applicationReasonRequired')),
+  })
+
+  const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       application_reason: formData.application_reason,
     },
   })
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: any) => {
     updateFormData(data)
     onNext()
   }
 
   return (
     <WizardStep
-      title="Reason for Application"
-      description="Why are you applying for housing registration?"
+      title={t('housing.step5.title')}
+      description={t('housing.step5.description')}
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
@@ -45,13 +47,13 @@ const Step5Reason = ({ formData, updateFormData, onNext, onBack }: WizardStepPro
             <Row className="g-3">
               <Col xs={12}>
                 <Form.Group>
-                  <Form.Label>Primary Reason</Form.Label>
+                  <Form.Label>{t('housing.step5.primaryReason')}</Form.Label>
                   {APPLICATION_REASONS.map((reason) => (
                     <Form.Check
                       key={reason.value}
                       type="radio"
                       id={`reason-${reason.value}`}
-                      label={reason.label}
+                      label={t(reason.labelKey)}
                       value={reason.value}
                       {...register('application_reason')}
                       className="mb-2"

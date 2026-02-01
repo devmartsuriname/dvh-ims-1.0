@@ -20,11 +20,39 @@
     "remove": "Verwijderen",
     "upload": "Uploaden",
     "uploading": "Bezig met uploaden...",
-    "uploaded": "Geüpload"
+    "uploaded": "Geüpload",
+    "printReceipt": "Ontvangstbewijs afdrukken",
+    "beginRegistration": "Registratie starten",
+    "submitRegistration": "Registratie indienen"
   },
   "header": {
     "title": "VolksHuisvesting",
     "ministry": "Ministerie van Sociale Zaken en Volkshuisvesting"
+  },
+  "footer": {
+    "copyright": "Ministerie van Sociale Zaken en Volkshuisvesting, Suriname",
+    "version": "VolksHuisvesting IMS v1.0"
+  },
+  "landing": {
+    "heroTitle": "Welkom bij VolksHuisvesting",
+    "heroDescription": "Uw portaal voor huisvestingsdiensten in Suriname. Vraag bouwsubsidie aan, registreer voor sociale huisvesting of controleer de status van uw aanvraag.",
+    "servicesTitle": "Onze Diensten",
+    "servicesSubtitle": "Selecteer een dienst om te beginnen",
+    "bouwsubsidie": {
+      "title": "Bouwsubsidie",
+      "description": "Vraag financiële ondersteuning aan voor woningbouw of renovatieprojecten.",
+      "button": "Aanvraag starten"
+    },
+    "housing": {
+      "title": "Woningregistratie",
+      "description": "Registreer als woningzoekende om op de wachtlijst voor sociale huisvesting te komen.",
+      "button": "Nu registreren"
+    },
+    "status": {
+      "title": "Status controleren",
+      "description": "Volg de voortgang van uw subsidie- of woningregistratieaanvraag.",
+      "button": "Status bekijken"
+    }
   },
   "wizard": {
     "steps": {
@@ -36,7 +64,241 @@
       "application": "Aanvraag",
       "documents": "Documenten",
       "review": "Controleren",
-      "receipt": "Ontvangstbewijs"
+      "receipt": "Ontvangstbewijs",
+      "livingSituation": "Woonsituatie",
+      "preference": "Voorkeur",
+      "reason": "Reden",
+      "income": "Inkomen",
+      "urgency": "Urgentie"
+    }
+  },
+  "housing": {
+    "title": "Woningregistratie",
+    "step0": {
+      "title": "Welkom bij de Woningregistratie",
+      "description": "Registreer voor de officiële wachtlijst voor huisvesting in Suriname.",
+      "aboutTitle": "Over de wachtlijst voor huisvesting",
+      "aboutText": "Deze registratie plaatst u op de officiële wachtlijst voor huisvesting beheerd door het Ministerie van Sociale Zaken en Volkshuisvesting. Registratie garandeert geen directe toewijzing van huisvesting. Toewijzing is gebaseerd op beschikbaarheid, urgentie en wachtlijstpositie.",
+      "processTitle": "Registratieproces",
+      "process1Title": "1. Registreren",
+      "process1Text": "Vul dit registratieformulier in",
+      "process2Title": "2. Wachten op beoordeling",
+      "process2Text": "Uw registratie wordt geverifieerd",
+      "process3Title": "3. Toewijzing",
+      "process3Text": "Huisvesting wordt toegewezen wanneer beschikbaar",
+      "requirementsTitle": "Wat u nodig heeft",
+      "requirement1": "Geldig ID-nummer",
+      "requirement2": "Contactgegevens (telefoonnummer verplicht)",
+      "requirement3": "Informatie over uw huidige woonsituatie",
+      "requirement4": "Inkomensgegevens (indien van toepassing)",
+      "acknowledgementLabel": "Ik begrijp dat dit een registratie voor de wachtlijst voor huisvesting is en dat plaatsing geen directe huisvesting garandeert. Ik bevestig dat ik nauwkeurige informatie zal verstrekken."
+    },
+    "step1": {
+      "title": "Persoonsgegevens",
+      "description": "Vul uw persoonlijke gegevens in zoals vermeld op uw identiteitsbewijs.",
+      "nationalId": "ID-nummer",
+      "nationalIdPlaceholder": "Voer uw ID-nummer in",
+      "firstName": "Voornaam",
+      "firstNamePlaceholder": "Voer uw voornaam in",
+      "lastName": "Achternaam",
+      "lastNamePlaceholder": "Voer uw achternaam in",
+      "dateOfBirth": "Geboortedatum",
+      "gender": "Geslacht",
+      "genderPlaceholder": "Selecteer geslacht"
+    },
+    "step2": {
+      "title": "Contactgegevens",
+      "description": "Hoe kunnen wij u bereiken over uw registratie?",
+      "phoneNumber": "Telefoonnummer",
+      "phoneNumberPlaceholder": "Voer uw telefoonnummer in",
+      "email": "E-mailadres",
+      "emailPlaceholder": "Voer uw e-mailadres in"
+    },
+    "step3": {
+      "title": "Huidige woonsituatie",
+      "description": "Vertel ons over uw huidige woonsituatie.",
+      "address": "Huidig adres",
+      "addressPlaceholder": "Voer uw huidige adres in",
+      "district": "District",
+      "districtPlaceholder": "Selecteer uw district",
+      "housingType": "Type woning",
+      "housingTypePlaceholder": "Selecteer type woning",
+      "monthlyRent": "Maandelijkse huur (SRD)",
+      "monthlyRentPlaceholder": "Voer bedrag in",
+      "monthlyRentHelp": "Optioneel - indien u huurt",
+      "residents": "Aantal bewoners",
+      "residentsHelp": "Inclusief uzelf"
+    },
+    "step4": {
+      "title": "Woningvoorkeur",
+      "description": "In wat voor type woning bent u geïnteresseerd?",
+      "interestType": "Type interesse",
+      "interestTypePlaceholder": "Selecteer type interesse",
+      "preferredDistrict": "Voorkeurdistrict",
+      "preferredDistrictPlaceholder": "Selecteer voorkeurdistrict",
+      "note": "Uw voorkeurdistrict wordt gebruikt voor toewijzingsprioriteit. Uiteindelijke toewijzing kan in een ander district zijn op basis van beschikbaarheid."
+    },
+    "step5": {
+      "title": "Reden voor aanvraag",
+      "description": "Waarom vraagt u woningregistratie aan?",
+      "primaryReason": "Primaire reden"
+    },
+    "step6": {
+      "title": "Inkomensgegevens",
+      "description": "Geef informatie over uw inkomen.",
+      "incomeSource": "Primaire inkomensbron",
+      "incomeSourcePlaceholder": "Selecteer inkomensbron",
+      "monthlyIncomeApplicant": "Uw maandelijks inkomen (SRD)",
+      "monthlyIncomeApplicantPlaceholder": "Voer bedrag in",
+      "monthlyIncomePartner": "Maandelijks inkomen partner (SRD)",
+      "monthlyIncomePartnerPlaceholder": "Voer bedrag in",
+      "monthlyIncomePartnerHelp": "Optioneel - indien van toepassing",
+      "note": "Inkomensgegevens worden gebruikt om geschiktheid voor verschillende huisvestingsprogramma's te bepalen. U kunt later worden gevraagd om inkomensbewijs te verstrekken."
+    },
+    "step7": {
+      "title": "Speciale behoeften & Urgentie",
+      "description": "Heeft u speciale omstandigheden die dringende aandacht vereisen?",
+      "infoText": "Speciale omstandigheden kunnen uw positie op de wachtlijst beïnvloeden. Geef nauwkeurige informatie. Documentatie kan nodig zijn voor verificatie.",
+      "disability": "Handicap of speciale medische behoeften",
+      "disabilityDescription": "U of een gezinslid heeft een handicap of medische aandoening die specifieke woningaanpassingen vereist.",
+      "emergency": "Noodsituatie / Dringende situatie",
+      "emergencyDescription": "U bevindt zich in een noodsituatie zoals dakloosheid, ontheemding door een ramp of dreigende uitzetting.",
+      "detailsLabel": "Geef details over uw situatie",
+      "detailsPlaceholder": "Beschrijf uw speciale omstandigheden...",
+      "detailsHelp": "Deze informatie wordt beoordeeld om urgentieprioriteit te bepalen."
+    },
+    "step8": {
+      "title": "Controleer uw registratie",
+      "description": "Controleer alle informatie voordat u indient.",
+      "sectionPersonal": "Persoonsgegevens",
+      "sectionContact": "Contactgegevens",
+      "sectionLiving": "Huidige woonsituatie",
+      "sectionPreference": "Woningvoorkeur",
+      "sectionApplication": "Aanvraaggegevens",
+      "sectionUrgency": "Speciale behoeften & Urgentie",
+      "declarationTitle": "Waarheidsverklaring",
+      "declarationText": "Ik verklaar hierbij dat alle informatie in deze registratie naar waarheid en naar mijn beste weten is verstrekt. Ik begrijp dat het verstrekken van onjuiste informatie kan leiden tot verwijdering van de wachtlijst en mogelijke juridische consequenties.",
+      "labelNationalId": "ID-nummer",
+      "labelFirstName": "Voornaam",
+      "labelLastName": "Achternaam",
+      "labelDateOfBirth": "Geboortedatum",
+      "labelGender": "Geslacht",
+      "labelPhone": "Telefoonnummer",
+      "labelEmail": "E-mailadres",
+      "labelAddress": "Adres",
+      "labelDistrict": "District",
+      "labelHousingType": "Type woning",
+      "labelMonthlyRent": "Maandelijkse huur",
+      "labelResidents": "Bewoners",
+      "labelInterestType": "Type interesse",
+      "labelPreferredDistrict": "Voorkeurdistrict",
+      "labelReason": "Reden",
+      "labelIncomeSource": "Inkomensbron",
+      "labelYourIncome": "Uw inkomen",
+      "labelPartnerIncome": "Inkomen partner",
+      "labelDisability": "Handicap",
+      "labelEmergency": "Noodsituatie",
+      "labelDetails": "Details"
+    },
+    "step9": {
+      "successTitle": "Registratie succesvol ingediend",
+      "successText": "Uw woningregistratie is ingediend. Bewaar de onderstaande informatie.",
+      "referenceNumber": "Uw referentienummer",
+      "referenceNumberHelp": "Gebruik dit nummer om de status van uw registratie te volgen",
+      "securityToken": "Beveiligingstoken",
+      "securityTokenWarning": "Bewaar dit token veilig. U heeft zowel het referentienummer als dit token nodig om online de status van uw registratie te controleren. Dit token wordt slechts één keer getoond.",
+      "submittedOn": "Ingediend op",
+      "time": "Tijd",
+      "nextStepsTitle": "Wat gebeurt er nu?",
+      "nextStep1Title": "Beoordeling registratie",
+      "nextStep1Text": "Uw registratie wordt geverifieerd door de afdeling huisvesting.",
+      "nextStep2Title": "Plaatsing op wachtlijst",
+      "nextStep2Text": "Na verificatie wordt u op de officiële wachtlijst geplaatst.",
+      "nextStep3Title": "Toewijzingsmelding",
+      "nextStep3Text": "U wordt gecontacteerd wanneer er huisvesting voor u beschikbaar komt."
+    },
+    "housingTypes": {
+      "house": "Huis",
+      "apartment": "Appartement",
+      "room": "Kamer",
+      "shared": "Gedeelde woning",
+      "other": "Anders"
+    },
+    "interestTypes": {
+      "rent": "Huren",
+      "rent_to_own": "Huurkoop",
+      "purchase": "Kopen"
+    },
+    "reasons": {
+      "no_housing": "Momenteel zonder goede huisvesting",
+      "overcrowding": "Overbevolkte woonomstandigheden",
+      "unsafe": "Onveilige of ongezonde woning",
+      "calamity": "Getroffen door calamiteit/ramp",
+      "eviction": "Dreigende uitzetting",
+      "family_growth": "Gezinsuitbreiding",
+      "other": "Andere reden"
+    },
+    "incomeSources": {
+      "employment": "In loondienst",
+      "self_employed": "Zelfstandig ondernemer",
+      "pension": "Pensioen",
+      "social_assistance": "Sociale bijstand",
+      "unemployment": "Werkloosheidsuitkering",
+      "other": "Anders",
+      "none": "Geen inkomen"
+    },
+    "gender": {
+      "male": "Man",
+      "female": "Vrouw",
+      "other": "Anders"
+    }
+  },
+  "status": {
+    "title": "Status controleren",
+    "description": "Voer uw referentienummer en toegangstoken in om de status van uw aanvraag te bekijken",
+    "form": {
+      "referenceNumber": "Referentienummer",
+      "referenceNumberPlaceholder": "bijv. BS-2026-123456 of WR-2026-789012",
+      "referenceNumberHelp": "Uw referentienummer is verstrekt bij het indienen van uw aanvraag",
+      "accessToken": "Toegangstoken",
+      "accessTokenPlaceholder": "Voer uw 12-karakter toegangstoken in",
+      "accessTokenHelp": "Het toegangstoken is eenmalig getoond bij het indienen van uw aanvraag",
+      "checkStatus": "Status controleren",
+      "checkingStatus": "Status controleren..."
+    },
+    "result": {
+      "foundTitle": "Aanvraag gevonden",
+      "foundText": "Hier is de huidige status van uw aanvraag",
+      "applicationDetails": "Aanvraaggegevens",
+      "applicationType": "Type aanvraag",
+      "referenceNumber": "Referentienummer",
+      "applicantName": "Naam aanvrager",
+      "submittedOn": "Ingediend op",
+      "currentStatus": "Huidige status",
+      "statusHistory": "Statusgeschiedenis",
+      "checkAnother": "Andere aanvraag controleren"
+    },
+    "statuses": {
+      "submitted": "Ingediend",
+      "under_review": "In behandeling",
+      "pending_documents": "Wacht op documenten",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen",
+      "waitlisted": "Op wachtlijst"
+    },
+    "applicationTypes": {
+      "bouwsubsidie": "Bouwsubsidie",
+      "housing_registration": "Woningregistratie"
+    },
+    "help": {
+      "text": "Hulp nodig? Neem contact op met het Ministerie van Sociale Zaken en Volkshuisvesting",
+      "backToHome": "Terug naar home"
+    },
+    "validation": {
+      "referenceRequired": "Referentienummer is verplicht",
+      "referenceInvalid": "Ongeldig formaat. Gebruik BS-JJJJ-NNNNNN of WR-JJJJ-NNNNNN",
+      "tokenRequired": "Toegangstoken is verplicht",
+      "tokenMinLength": "Toegangstoken moet minimaal {{min}} tekens zijn"
     }
   },
   "bouwsubsidie": {
@@ -211,7 +473,13 @@
     "householdSizeMin": "Huishoudgrootte moet minimaal 1 zijn",
     "householdSizeMax": "Huishoudgrootte mag maximaal 20 zijn",
     "applicationReasonRequired": "Selecteer een reden voor uw aanvraag",
-    "documentRequired": "Dit document is verplicht"
+    "documentRequired": "Dit document is verplicht",
+    "housingTypeRequired": "Type woning is verplicht",
+    "residentsRequired": "Aantal bewoners is verplicht",
+    "residentsMin": "Er moet minimaal 1 bewoner zijn",
+    "interestTypeRequired": "Selecteer uw type interesse",
+    "preferredDistrictRequired": "Selecteer uw voorkeurdistrict",
+    "incomeSourceRequired": "Selecteer uw inkomensbron"
   },
   "errors": {
     "submissionFailed": "Aanvraag kon niet worden ingediend. Probeer opnieuw.",
@@ -219,6 +487,8 @@
     "rateLimited": "U heeft te veel verzoeken ingediend. Wacht een uur voordat u opnieuw probeert.",
     "validationError": "Controleer uw gegevens en probeer opnieuw. Sommige velden zijn onvolledig of onjuist.",
     "serverError": "We konden uw verzoek momenteel niet verwerken. Probeer later opnieuw.",
-    "uploadFailed": "Document uploaden mislukt. Probeer opnieuw."
+    "uploadFailed": "Document uploaden mislukt. Probeer opnieuw.",
+    "statusLookupFailed": "We konden de status van uw aanvraag niet ophalen. Probeer opnieuw.",
+    "invalidCredentials": "Het referentienummer of toegangstoken dat u heeft ingevoerd is onjuist. Controleer en probeer opnieuw."
   }
 }

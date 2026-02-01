@@ -1,5 +1,6 @@
 import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import WizardStep from '@/components/public/WizardStep'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import type { WizardStepProps } from '../types'
@@ -8,8 +9,10 @@ import type { WizardStepProps } from '../types'
  * Step 7: Special Needs / Urgency
  * 
  * Collects information about disability or emergency situations.
+ * i18n enabled - NL default
  */
 const Step7Urgency = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
+  const { t } = useTranslation()
   const [hasDisability, setHasDisability] = useState(formData.has_disability)
   const [hasEmergency, setHasEmergency] = useState(formData.has_emergency)
   const [urgencyDetails, setUrgencyDetails] = useState(formData.urgency_details)
@@ -25,8 +28,8 @@ const Step7Urgency = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
 
   return (
     <WizardStep
-      title="Special Needs & Urgency"
-      description="Do you have any special circumstances that require urgent attention?"
+      title={t('housing.step7.title')}
+      description={t('housing.step7.description')}
       onBack={onBack}
       onNext={handleSubmit}
     >
@@ -41,9 +44,7 @@ const Step7Urgency = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
               />
               <div>
                 <p className="text-muted mb-0 small">
-                  Special circumstances may affect your position on the waiting list. 
-                  Please provide accurate information. Documentation may be required 
-                  for verification.
+                  {t('housing.step7.infoText')}
                 </p>
               </div>
             </div>
@@ -59,11 +60,10 @@ const Step7Urgency = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
                   onChange={(e) => setHasDisability(e.target.checked)}
                   label={
                     <span>
-                      <strong>Disability or Special Medical Needs</strong>
+                      <strong>{t('housing.step7.disability')}</strong>
                       <br />
                       <span className="text-muted small">
-                        You or a household member has a disability or medical condition 
-                        requiring specific housing accommodations.
+                        {t('housing.step7.disabilityDescription')}
                       </span>
                     </span>
                   }
@@ -80,11 +80,10 @@ const Step7Urgency = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
                   onChange={(e) => setHasEmergency(e.target.checked)}
                   label={
                     <span>
-                      <strong>Emergency / Urgent Situation</strong>
+                      <strong>{t('housing.step7.emergency')}</strong>
                       <br />
                       <span className="text-muted small">
-                        You are facing an emergency situation such as homelessness, 
-                        displacement due to calamity, or imminent eviction.
+                        {t('housing.step7.emergencyDescription')}
                       </span>
                     </span>
                   }
@@ -95,16 +94,16 @@ const Step7Urgency = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
             {(hasDisability || hasEmergency) && (
               <Col xs={12}>
                 <Form.Group className="mt-3">
-                  <Form.Label>Please provide details about your situation</Form.Label>
+                  <Form.Label>{t('housing.step7.detailsLabel')}</Form.Label>
                   <Form.Control
                     as="textarea"
                     rows={4}
                     value={urgencyDetails}
                     onChange={(e) => setUrgencyDetails(e.target.value)}
-                    placeholder="Describe your special circumstances..."
+                    placeholder={t('housing.step7.detailsPlaceholder')}
                   />
                   <div className="text-muted small mt-1">
-                    This information will be reviewed to assess urgency priority.
+                    {t('housing.step7.detailsHelp')}
                   </div>
                 </Form.Group>
               </Col>

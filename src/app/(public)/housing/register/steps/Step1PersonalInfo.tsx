@@ -2,37 +2,44 @@ import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { useTranslation } from 'react-i18next'
 import WizardStep from '@/components/public/WizardStep'
 import TextFormInput from '@/components/from/TextFormInput'
 import { GENDER_OPTIONS } from '../constants'
 import type { WizardStepProps } from '../types'
 
-const schema = yup.object({
-  national_id: yup
-    .string()
-    .required('National ID is required')
-    .min(5, 'National ID must be at least 5 characters'),
-  first_name: yup
-    .string()
-    .required('First name is required')
-    .min(1, 'First name is required'),
-  last_name: yup
-    .string()
-    .required('Last name is required')
-    .min(1, 'Last name is required'),
-  date_of_birth: yup
-    .string()
-    .required('Date of birth is required'),
-  gender: yup
-    .string()
-    .required('Gender is required')
-    .oneOf(['male', 'female', 'other'], 'Please select a valid gender'),
-})
-
-type FormData = yup.InferType<typeof schema>
-
+/**
+ * Step 1: Personal Identification
+ * 
+ * Collects personal details as shown on National ID.
+ * i18n enabled - NL default
+ */
 const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { t } = useTranslation()
+
+  const schema = yup.object({
+    national_id: yup
+      .string()
+      .required(t('validation.nationalIdRequired'))
+      .min(5, t('validation.nationalIdMinLength')),
+    first_name: yup
+      .string()
+      .required(t('validation.firstNameRequired'))
+      .min(1, t('validation.firstNameRequired')),
+    last_name: yup
+      .string()
+      .required(t('validation.lastNameRequired'))
+      .min(1, t('validation.lastNameRequired')),
+    date_of_birth: yup
+      .string()
+      .required(t('validation.dateOfBirthRequired')),
+    gender: yup
+      .string()
+      .required(t('validation.genderRequired'))
+      .oneOf(['male', 'female', 'other'], t('validation.genderInvalid')),
+  })
+
+  const { control, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       national_id: formData.national_id,
@@ -43,15 +50,15 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
     },
   })
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: any) => {
     updateFormData(data)
     onNext()
   }
 
   return (
     <WizardStep
-      title="Personal Identification"
-      description="Please provide your personal details as they appear on your National ID."
+      title={t('housing.step1.title')}
+      description={t('housing.step1.description')}
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
@@ -60,31 +67,73 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
           <Form>
             <Row className="g-3">
               <Col md={6}>
-                <TextFormInput name="national_id" label="National ID Number" placeholder="Enter your National ID" control={control} containerClassName="mb-0" />
-                {errors.national_id?.message && <div className="text-danger small mt-1">{String(errors.national_id.message)}</div>}
+                <TextFormInput 
+                  name="national_id" 
+                  label={t('housing.step1.nationalId')} 
+                  placeholder={t('housing.step1.nationalIdPlaceholder')} 
+                  control={control} 
+                  containerClassName="mb-0" 
+                />
+                {errors.national_id?.message && (
+                  <div className="text-danger small mt-1">{String(errors.national_id.message)}</div>
+                )}
               </Col>
               <Col md={6}>
-                <TextFormInput name="first_name" label="First Name" placeholder="Enter your first name" control={control} containerClassName="mb-0" />
-                {errors.first_name?.message && <div className="text-danger small mt-1">{String(errors.first_name.message)}</div>}
+                <TextFormInput 
+                  name="first_name" 
+                  label={t('housing.step1.firstName')} 
+                  placeholder={t('housing.step1.firstNamePlaceholder')} 
+                  control={control} 
+                  containerClassName="mb-0" 
+                />
+                {errors.first_name?.message && (
+                  <div className="text-danger small mt-1">{String(errors.first_name.message)}</div>
+                )}
               </Col>
               <Col md={6}>
-                <TextFormInput name="last_name" label="Last Name" placeholder="Enter your last name" control={control} containerClassName="mb-0" />
-                {errors.last_name?.message && <div className="text-danger small mt-1">{String(errors.last_name.message)}</div>}
+                <TextFormInput 
+                  name="last_name" 
+                  label={t('housing.step1.lastName')} 
+                  placeholder={t('housing.step1.lastNamePlaceholder')} 
+                  control={control} 
+                  containerClassName="mb-0" 
+                />
+                {errors.last_name?.message && (
+                  <div className="text-danger small mt-1">{String(errors.last_name.message)}</div>
+                )}
               </Col>
               <Col md={6}>
-                <TextFormInput name="date_of_birth" label="Date of Birth" type="date" control={control} containerClassName="mb-0" />
-                {errors.date_of_birth?.message && <div className="text-danger small mt-1">{String(errors.date_of_birth.message)}</div>}
+                <TextFormInput 
+                  name="date_of_birth" 
+                  label={t('housing.step1.dateOfBirth')} 
+                  type="date" 
+                  control={control} 
+                  containerClassName="mb-0" 
+                />
+                {errors.date_of_birth?.message && (
+                  <div className="text-danger small mt-1">{String(errors.date_of_birth.message)}</div>
+                )}
               </Col>
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Gender <span className="text-danger">*</span></Form.Label>
-                  <Controller name="gender" control={control} render={({ field }) => (
-                    <Form.Select {...field} isInvalid={!!errors.gender}>
-                      <option value="">Select gender</option>
-                      {GENDER_OPTIONS.map((option) => (<option key={option.value} value={option.value}>{option.label}</option>))}
-                    </Form.Select>
-                  )} />
-                  {errors.gender?.message && <div className="text-danger small mt-1">{String(errors.gender.message)}</div>}
+                  <Form.Label>{t('housing.step1.gender')} <span className="text-danger">*</span></Form.Label>
+                  <Controller 
+                    name="gender" 
+                    control={control} 
+                    render={({ field }) => (
+                      <Form.Select {...field} isInvalid={!!errors.gender}>
+                        <option value="">{t('housing.step1.genderPlaceholder')}</option>
+                        {GENDER_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {t(option.labelKey)}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    )} 
+                  />
+                  {errors.gender?.message && (
+                    <div className="text-danger small mt-1">{String(errors.gender.message)}</div>
+                  )}
                 </Form.Group>
               </Col>
             </Row>

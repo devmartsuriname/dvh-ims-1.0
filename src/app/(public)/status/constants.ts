@@ -1,6 +1,8 @@
 /**
  * Status Tracking Constants
- * Phase 5 - Checkpoint 6
+ * Phase 5B - Full NL localization
+ * 
+ * Status definitions with i18n labelKey pattern
  */
 
 import type { StatusLookupResponse } from './types'
@@ -14,35 +16,35 @@ export const REFERENCE_PATTERNS = {
 // Minimum token length
 export const MIN_TOKEN_LENGTH = 12
 
-// Status definitions with colors
-export const STATUS_CONFIG: Record<string, { label: string; variant: string; icon: string }> = {
+// Status definitions with colors and i18n keys
+export const STATUS_CONFIG: Record<string, { labelKey: string; variant: string; icon: string }> = {
   submitted: {
-    label: 'Submitted',
+    labelKey: 'status.statuses.submitted',
     variant: 'info',
     icon: 'mingcute:file-check-line',
   },
   under_review: {
-    label: 'Under Review',
+    labelKey: 'status.statuses.under_review',
     variant: 'warning',
     icon: 'mingcute:eye-line',
   },
   pending_documents: {
-    label: 'Pending Documents',
+    labelKey: 'status.statuses.pending_documents',
     variant: 'warning',
     icon: 'mingcute:folder-open-line',
   },
   approved: {
-    label: 'Approved',
+    labelKey: 'status.statuses.approved',
     variant: 'success',
     icon: 'mingcute:check-circle-line',
   },
   rejected: {
-    label: 'Rejected',
+    labelKey: 'status.statuses.rejected',
     variant: 'danger',
     icon: 'mingcute:close-circle-line',
   },
   waitlisted: {
-    label: 'Waitlisted',
+    labelKey: 'status.statuses.waitlisted',
     variant: 'secondary',
     icon: 'mingcute:time-line',
   },

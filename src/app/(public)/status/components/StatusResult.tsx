@@ -1,9 +1,11 @@
 /**
  * Status Result Component
- * Phase 5 - Checkpoint 6
+ * Phase 5B - Full NL localization
+ * i18n enabled - NL default
  */
 
 import { Card, CardBody, Button, Row, Col, Badge } from 'react-bootstrap'
+import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import StatusTimeline from './StatusTimeline'
 import { STATUS_CONFIG } from '../constants'
@@ -15,11 +17,13 @@ interface StatusResultProps {
 }
 
 const StatusResult = ({ result, onReset }: StatusResultProps) => {
+  const { t, i18n } = useTranslation()
   const statusConfig = STATUS_CONFIG[result.current_status] || STATUS_CONFIG.submitted
+  const locale = i18n.language === 'nl' ? 'nl-NL' : 'en-US'
   
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(locale, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -29,8 +33,8 @@ const StatusResult = ({ result, onReset }: StatusResultProps) => {
 
   const getApplicationTypeLabel = (): string => {
     return result.application_type === 'bouwsubsidie' 
-      ? 'Building Subsidy (Bouwsubsidie)'
-      : 'Housing Registration'
+      ? t('status.applicationTypes.bouwsubsidie')
+      : t('status.applicationTypes.housing_registration')
   }
 
   return (
@@ -50,9 +54,9 @@ const StatusResult = ({ result, onReset }: StatusResultProps) => {
               />
             </span>
             <div>
-              <h5 className="mb-1 fw-bold">Application Found</h5>
+              <h5 className="mb-1 fw-bold">{t('status.result.foundTitle')}</h5>
               <p className="mb-0 text-muted">
-                Here is the current status of your application
+                {t('status.result.foundText')}
               </p>
             </div>
           </div>
@@ -64,31 +68,31 @@ const StatusResult = ({ result, onReset }: StatusResultProps) => {
         <CardBody className="p-4">
           <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
             <IconifyIcon icon="mingcute:document-line" className="text-primary" />
-            Application Details
+            {t('status.result.applicationDetails')}
           </h5>
           
           <Row className="g-3">
             <Col md={6}>
               <div className="mb-3">
-                <small className="text-muted d-block">Application Type</small>
+                <small className="text-muted d-block">{t('status.result.applicationType')}</small>
                 <span className="fw-medium">{getApplicationTypeLabel()}</span>
               </div>
             </Col>
             <Col md={6}>
               <div className="mb-3">
-                <small className="text-muted d-block">Reference Number</small>
+                <small className="text-muted d-block">{t('status.result.referenceNumber')}</small>
                 <span className="fw-medium font-monospace">{result.reference_number}</span>
               </div>
             </Col>
             <Col md={6}>
               <div className="mb-3">
-                <small className="text-muted d-block">Applicant Name</small>
+                <small className="text-muted d-block">{t('status.result.applicantName')}</small>
                 <span className="fw-medium">{result.applicant_name}</span>
               </div>
             </Col>
             <Col md={6}>
               <div className="mb-3">
-                <small className="text-muted d-block">Submitted On</small>
+                <small className="text-muted d-block">{t('status.result.submittedOn')}</small>
                 <span className="fw-medium">{formatDate(result.submitted_at)}</span>
               </div>
             </Col>
@@ -98,14 +102,14 @@ const StatusResult = ({ result, onReset }: StatusResultProps) => {
           <div className="mt-3 p-3 bg-light rounded-3">
             <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
               <div>
-                <small className="text-muted d-block mb-1">Current Status</small>
+                <small className="text-muted d-block mb-1">{t('status.result.currentStatus')}</small>
                 <Badge 
                   bg={statusConfig.variant} 
                   className="d-inline-flex align-items-center gap-1 px-3 py-2"
                   style={{ fontSize: '0.9rem' }}
                 >
                   <IconifyIcon icon={statusConfig.icon} />
-                  {result.current_status_label}
+                  {t(statusConfig.labelKey)}
                 </Badge>
               </div>
               <IconifyIcon 
@@ -123,7 +127,7 @@ const StatusResult = ({ result, onReset }: StatusResultProps) => {
         <CardBody className="p-4">
           <h5 className="fw-bold mb-4 d-flex align-items-center gap-2">
             <IconifyIcon icon="mingcute:time-line" className="text-primary" />
-            Status History
+            {t('status.result.statusHistory')}
           </h5>
           
           <StatusTimeline history={result.status_history} />
@@ -138,7 +142,7 @@ const StatusResult = ({ result, onReset }: StatusResultProps) => {
           className="d-inline-flex align-items-center gap-2"
         >
           <IconifyIcon icon="mingcute:refresh-2-line" />
-          Check Another Application
+          {t('status.result.checkAnother')}
         </Button>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import WizardStep from '@/components/public/WizardStep'
 import { DISTRICTS } from '@/constants/districts'
 import { 
@@ -23,11 +24,10 @@ interface Step8ReviewProps {
  * Step 8: Review & Confirmation
  * 
  * Summary of all entered data with declaration of truthfulness.
- * 
- * UPDATED: Admin v1.1-D - Updated to show first_name + last_name instead of full_name,
- * gender field, and address_line_1/district instead of current_address/current_district
+ * i18n enabled - NL default
  */
 const Step8Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }: Step8ReviewProps) => {
+  const { t } = useTranslation()
   const [accepted, setAccepted] = useState(formData.declaration_accepted)
 
   const handleAcceptChange = (value: boolean) => {
@@ -46,23 +46,28 @@ const Step8Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }:
   }
 
   const getHousingTypeName = (value: string) => {
-    return HOUSING_TYPES.find((t) => t.value === value)?.label || value
+    const item = HOUSING_TYPES.find((t) => t.value === value)
+    return item ? t(item.labelKey) : value
   }
 
   const getInterestTypeName = (value: string) => {
-    return INTEREST_TYPES.find((t) => t.value === value)?.label || value
+    const item = INTEREST_TYPES.find((t) => t.value === value)
+    return item ? t(item.labelKey) : value
   }
 
   const getReasonLabel = (value: string) => {
-    return APPLICATION_REASONS.find((r) => r.value === value)?.label || value
+    const item = APPLICATION_REASONS.find((r) => r.value === value)
+    return item ? t(item.labelKey) : value
   }
 
   const getIncomeSourceLabel = (value: string) => {
-    return INCOME_SOURCES.find((s) => s.value === value)?.label || value
+    const item = INCOME_SOURCES.find((s) => s.value === value)
+    return item ? t(item.labelKey) : value
   }
 
   const getGenderLabel = (value: string) => {
-    return GENDER_OPTIONS.find((g) => g.value === value)?.label || value
+    const item = GENDER_OPTIONS.find((g) => g.value === value)
+    return item ? t(item.labelKey) : value
   }
 
   const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -83,77 +88,77 @@ const Step8Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }:
 
   return (
     <WizardStep
-      title="Review Your Registration"
-      description="Please verify all information before submitting."
+      title={t('housing.step8.title')}
+      description={t('housing.step8.description')}
       onBack={onBack}
       onNext={handleSubmit}
       isLastStep={true}
       isSubmitting={isSubmitting}
       nextDisabled={!accepted}
-      nextLabel="Submit Registration"
+      nextLabel={t('common.submitRegistration')}
     >
       {/* Personal Information */}
-      <SectionCard title="Personal Information">
-        <DataRow label="National ID" value={formData.national_id} />
-        <DataRow label="First Name" value={formData.first_name} />
-        <DataRow label="Last Name" value={formData.last_name} />
-        <DataRow label="Date of Birth" value={formData.date_of_birth} />
-        <DataRow label="Gender" value={getGenderLabel(formData.gender)} />
+      <SectionCard title={t('housing.step8.sectionPersonal')}>
+        <DataRow label={t('housing.step8.labelNationalId')} value={formData.national_id} />
+        <DataRow label={t('housing.step8.labelFirstName')} value={formData.first_name} />
+        <DataRow label={t('housing.step8.labelLastName')} value={formData.last_name} />
+        <DataRow label={t('housing.step8.labelDateOfBirth')} value={formData.date_of_birth} />
+        <DataRow label={t('housing.step8.labelGender')} value={getGenderLabel(formData.gender)} />
       </SectionCard>
 
       {/* Contact Information */}
-      <SectionCard title="Contact Information">
-        <DataRow label="Phone Number" value={formData.phone_number} />
-        <DataRow label="Email" value={formData.email} />
+      <SectionCard title={t('housing.step8.sectionContact')}>
+        <DataRow label={t('housing.step8.labelPhone')} value={formData.phone_number} />
+        <DataRow label={t('housing.step8.labelEmail')} value={formData.email} />
       </SectionCard>
 
       {/* Current Living Situation */}
-      <SectionCard title="Current Living Situation">
-        <DataRow label="Address" value={formData.address_line_1} />
-        <DataRow label="District" value={getDistrictName(formData.district)} />
-        <DataRow label="Housing Type" value={getHousingTypeName(formData.current_housing_type)} />
-        <DataRow label="Monthly Rent" value={formData.monthly_rent ? `SRD ${formData.monthly_rent}` : undefined} />
-        <DataRow label="Residents" value={formData.number_of_residents} />
+      <SectionCard title={t('housing.step8.sectionLiving')}>
+        <DataRow label={t('housing.step8.labelAddress')} value={formData.address_line_1} />
+        <DataRow label={t('housing.step8.labelDistrict')} value={getDistrictName(formData.district)} />
+        <DataRow label={t('housing.step8.labelHousingType')} value={getHousingTypeName(formData.current_housing_type)} />
+        <DataRow label={t('housing.step8.labelMonthlyRent')} value={formData.monthly_rent ? `SRD ${formData.monthly_rent}` : undefined} />
+        <DataRow label={t('housing.step8.labelResidents')} value={formData.number_of_residents} />
       </SectionCard>
 
       {/* Housing Preference */}
-      <SectionCard title="Housing Preference">
-        <DataRow label="Interest Type" value={getInterestTypeName(formData.interest_type)} />
-        <DataRow label="Preferred District" value={getDistrictName(formData.preferred_district)} />
+      <SectionCard title={t('housing.step8.sectionPreference')}>
+        <DataRow label={t('housing.step8.labelInterestType')} value={getInterestTypeName(formData.interest_type)} />
+        <DataRow label={t('housing.step8.labelPreferredDistrict')} value={getDistrictName(formData.preferred_district)} />
       </SectionCard>
 
       {/* Application Details */}
-      <SectionCard title="Application Details">
-        <DataRow label="Reason" value={getReasonLabel(formData.application_reason)} />
-        <DataRow label="Income Source" value={getIncomeSourceLabel(formData.income_source)} />
-        <DataRow label="Your Income" value={formData.monthly_income_applicant ? `SRD ${formData.monthly_income_applicant}` : undefined} />
-        <DataRow label="Partner Income" value={formData.monthly_income_partner ? `SRD ${formData.monthly_income_partner}` : undefined} />
+      <SectionCard title={t('housing.step8.sectionApplication')}>
+        <DataRow label={t('housing.step8.labelReason')} value={getReasonLabel(formData.application_reason)} />
+        <DataRow label={t('housing.step8.labelIncomeSource')} value={getIncomeSourceLabel(formData.income_source)} />
+        <DataRow label={t('housing.step8.labelYourIncome')} value={formData.monthly_income_applicant ? `SRD ${formData.monthly_income_applicant}` : undefined} />
+        <DataRow label={t('housing.step8.labelPartnerIncome')} value={formData.monthly_income_partner ? `SRD ${formData.monthly_income_partner}` : undefined} />
       </SectionCard>
 
       {/* Urgency */}
-      <SectionCard title="Special Needs & Urgency">
+      <SectionCard title={t('housing.step8.sectionUrgency')}>
         <Row className="mb-2">
-          <Col xs={5} className="text-muted small">Disability</Col>
+          <Col xs={5} className="text-muted small">{t('housing.step8.labelDisability')}</Col>
           <Col xs={7}>
             {formData.has_disability ? (
-              <span className="badge bg-warning text-dark">Yes</span>
+              <span className="badge bg-warning text-dark">{t('common.yes')}</span>
             ) : (
-              <span className="badge bg-secondary">No</span>
+              <span className="badge bg-secondary">{t('common.no')}</span>
             )}
           </Col>
         </Row>
         <Row className="mb-2">
-          <Col xs={5} className="text-muted small">Emergency</Col>
+          <Col xs={5} className="text-muted small">{t('housing.step8.labelEmergency')}</Col>
           <Col xs={7}>
             {formData.has_emergency ? (
-              <span className="badge bg-danger">Yes</span>
+              <span className="badge bg-danger">{t('common.yes')}</span>
             ) : (
-              <span className="badge bg-secondary">No</span>
+              <span className="badge bg-secondary">{t('common.no')}</span>
             )}
           </Col>
         </Row>
         {formData.urgency_details && (
-          <DataRow label="Details" value={formData.urgency_details} />
+          <DataRow label={t('housing.step8.labelDetails')} value={formData.urgency_details} />
         )}
       </SectionCard>
 
@@ -167,12 +172,10 @@ const Step8Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }:
             onChange={(e) => handleAcceptChange(e.target.checked)}
             label={
               <span>
-                <strong>Declaration of Truthfulness</strong>
+                <strong>{t('housing.step8.declarationTitle')}</strong>
                 <br />
                 <span className="text-muted small">
-                  I hereby declare that all information provided in this registration is true 
-                  and accurate to the best of my knowledge. I understand that providing false 
-                  information may result in removal from the waiting list and possible legal consequences.
+                  {t('housing.step8.declarationText')}
                 </span>
               </span>
             }

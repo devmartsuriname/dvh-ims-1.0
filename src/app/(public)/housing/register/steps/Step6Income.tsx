@@ -2,28 +2,30 @@ import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { useTranslation } from 'react-i18next'
 import WizardStep from '@/components/public/WizardStep'
 import TextFormInput from '@/components/from/TextFormInput'
 import { INCOME_SOURCES } from '../constants'
 import type { WizardStepProps } from '../types'
 
-const schema = yup.object({
-  income_source: yup
-    .string()
-    .required('Please select your income source'),
-  monthly_income_applicant: yup.string(),
-  monthly_income_partner: yup.string(),
-})
-
-type FormData = yup.InferType<typeof schema>
-
 /**
  * Step 6: Income Information
  * 
  * Collects income source and monthly income details.
+ * i18n enabled - NL default
  */
 const Step6Income = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
-  const { control, register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { t } = useTranslation()
+
+  const schema = yup.object({
+    income_source: yup
+      .string()
+      .required(t('validation.incomeSourceRequired')),
+    monthly_income_applicant: yup.string(),
+    monthly_income_partner: yup.string(),
+  })
+
+  const { control, register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       income_source: formData.income_source,
@@ -32,15 +34,15 @@ const Step6Income = ({ formData, updateFormData, onNext, onBack }: WizardStepPro
     },
   })
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: any) => {
     updateFormData(data)
     onNext()
   }
 
   return (
     <WizardStep
-      title="Income Information"
-      description="Please provide information about your income."
+      title={t('housing.step6.title')}
+      description={t('housing.step6.description')}
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
@@ -50,15 +52,15 @@ const Step6Income = ({ formData, updateFormData, onNext, onBack }: WizardStepPro
             <Row className="g-3">
               <Col xs={12}>
                 <Form.Group>
-                  <Form.Label>Primary Income Source</Form.Label>
+                  <Form.Label>{t('housing.step6.incomeSource')}</Form.Label>
                   <Form.Select
                     {...register('income_source')}
                     isInvalid={!!errors.income_source}
                   >
-                    <option value="">Select income source</option>
+                    <option value="">{t('housing.step6.incomeSourcePlaceholder')}</option>
                     {INCOME_SOURCES.map((source) => (
                       <option key={source.value} value={source.value}>
-                        {source.label}
+                        {t(source.labelKey)}
                       </option>
                     ))}
                   </Form.Select>
@@ -71,31 +73,29 @@ const Step6Income = ({ formData, updateFormData, onNext, onBack }: WizardStepPro
               <Col md={6}>
                 <TextFormInput
                   name="monthly_income_applicant"
-                  label="Your Monthly Income (SRD)"
-                  placeholder="Enter amount"
+                  label={t('housing.step6.monthlyIncomeApplicant')}
+                  placeholder={t('housing.step6.monthlyIncomeApplicantPlaceholder')}
                   control={control}
                   containerClassName="mb-0"
                 />
-                <div className="text-muted small mt-1">Optional</div>
+                <div className="text-muted small mt-1">{t('common.optional')}</div>
               </Col>
 
               <Col md={6}>
                 <TextFormInput
                   name="monthly_income_partner"
-                  label="Partner's Monthly Income (SRD)"
-                  placeholder="Enter amount"
+                  label={t('housing.step6.monthlyIncomePartner')}
+                  placeholder={t('housing.step6.monthlyIncomePartnerPlaceholder')}
                   control={control}
                   containerClassName="mb-0"
                 />
-                <div className="text-muted small mt-1">Optional - if applicable</div>
+                <div className="text-muted small mt-1">{t('housing.step6.monthlyIncomePartnerHelp')}</div>
               </Col>
             </Row>
 
             <div className="bg-light rounded p-3 mt-4">
               <p className="text-muted small mb-0">
-                <strong>Note:</strong> Income information is used to determine eligibility for 
-                different housing programs. You may be asked to provide proof of income later 
-                in the process.
+                <strong>{t('common.optional')}:</strong> {t('housing.step6.note')}
               </p>
             </div>
           </Form>

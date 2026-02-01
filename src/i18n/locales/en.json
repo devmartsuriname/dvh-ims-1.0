@@ -20,11 +20,39 @@
     "remove": "Remove",
     "upload": "Upload",
     "uploading": "Uploading...",
-    "uploaded": "Uploaded"
+    "uploaded": "Uploaded",
+    "printReceipt": "Print Receipt",
+    "beginRegistration": "Begin Registration",
+    "submitRegistration": "Submit Registration"
   },
   "header": {
     "title": "VolksHuisvesting",
     "ministry": "Ministry of Social Affairs and Housing"
+  },
+  "footer": {
+    "copyright": "Ministry of Social Affairs and Housing, Suriname",
+    "version": "VolksHuisvesting IMS v1.0"
+  },
+  "landing": {
+    "heroTitle": "Welcome to VolksHuisvesting",
+    "heroDescription": "Your portal for housing services in Suriname. Apply for construction subsidies, register for social housing, or check the status of your application.",
+    "servicesTitle": "Our Services",
+    "servicesSubtitle": "Select a service to get started",
+    "bouwsubsidie": {
+      "title": "Construction Subsidy",
+      "description": "Apply for financial support for home construction or renovation projects.",
+      "button": "Start Application"
+    },
+    "housing": {
+      "title": "Housing Registration",
+      "description": "Register as a housing applicant to join the waiting list for social housing.",
+      "button": "Register Now"
+    },
+    "status": {
+      "title": "Check Status",
+      "description": "Track the progress of your subsidy or housing registration application.",
+      "button": "View Status"
+    }
   },
   "wizard": {
     "steps": {
@@ -36,7 +64,241 @@
       "application": "Application",
       "documents": "Documents",
       "review": "Review",
-      "receipt": "Receipt"
+      "receipt": "Receipt",
+      "livingSituation": "Living Situation",
+      "preference": "Preference",
+      "reason": "Reason",
+      "income": "Income",
+      "urgency": "Urgency"
+    }
+  },
+  "housing": {
+    "title": "Housing Registration",
+    "step0": {
+      "title": "Welcome to the Housing Registration",
+      "description": "Register for the official housing waiting list in Suriname.",
+      "aboutTitle": "About the Housing Waiting List",
+      "aboutText": "This registration places you on the official housing waiting list managed by the Ministry of Social Affairs and Housing. Registration does not guarantee immediate housing allocation. Allocation is based on availability, urgency, and waiting list position.",
+      "processTitle": "Registration Process",
+      "process1Title": "1. Register",
+      "process1Text": "Complete this registration form",
+      "process2Title": "2. Wait for Review",
+      "process2Text": "Your registration will be verified",
+      "process3Title": "3. Get Allocated",
+      "process3Text": "Housing assigned when available",
+      "requirementsTitle": "What You Will Need",
+      "requirement1": "Valid National ID number",
+      "requirement2": "Contact information (phone number required)",
+      "requirement3": "Information about your current living situation",
+      "requirement4": "Income details (if applicable)",
+      "acknowledgementLabel": "I understand that this is a registration for the housing waiting list and that placement does not guarantee immediate housing. I confirm that I will provide accurate information."
+    },
+    "step1": {
+      "title": "Personal Identification",
+      "description": "Please provide your personal details as they appear on your National ID.",
+      "nationalId": "National ID Number",
+      "nationalIdPlaceholder": "Enter your National ID",
+      "firstName": "First Name",
+      "firstNamePlaceholder": "Enter your first name",
+      "lastName": "Last Name",
+      "lastNamePlaceholder": "Enter your last name",
+      "dateOfBirth": "Date of Birth",
+      "gender": "Gender",
+      "genderPlaceholder": "Select gender"
+    },
+    "step2": {
+      "title": "Contact Information",
+      "description": "How can we reach you regarding your registration?",
+      "phoneNumber": "Phone Number",
+      "phoneNumberPlaceholder": "Enter your phone number",
+      "email": "Email Address",
+      "emailPlaceholder": "Enter your email address"
+    },
+    "step3": {
+      "title": "Current Living Situation",
+      "description": "Tell us about where you currently live.",
+      "address": "Current Address",
+      "addressPlaceholder": "Enter your current address",
+      "district": "District",
+      "districtPlaceholder": "Select your district",
+      "housingType": "Housing Type",
+      "housingTypePlaceholder": "Select housing type",
+      "monthlyRent": "Monthly Rent (SRD)",
+      "monthlyRentPlaceholder": "Enter amount",
+      "monthlyRentHelp": "Optional - if renting",
+      "residents": "Number of Residents",
+      "residentsHelp": "Including yourself"
+    },
+    "step4": {
+      "title": "Housing Preference",
+      "description": "What type of housing are you interested in?",
+      "interestType": "Interest Type",
+      "interestTypePlaceholder": "Select interest type",
+      "preferredDistrict": "Preferred District",
+      "preferredDistrictPlaceholder": "Select preferred district",
+      "note": "Your preferred district is used for allocation prioritization. Final allocation may be in a different district based on availability."
+    },
+    "step5": {
+      "title": "Reason for Application",
+      "description": "Why are you applying for housing registration?",
+      "primaryReason": "Primary Reason"
+    },
+    "step6": {
+      "title": "Income Information",
+      "description": "Please provide information about your income.",
+      "incomeSource": "Primary Income Source",
+      "incomeSourcePlaceholder": "Select income source",
+      "monthlyIncomeApplicant": "Your Monthly Income (SRD)",
+      "monthlyIncomeApplicantPlaceholder": "Enter amount",
+      "monthlyIncomePartner": "Partner's Monthly Income (SRD)",
+      "monthlyIncomePartnerPlaceholder": "Enter amount",
+      "monthlyIncomePartnerHelp": "Optional - if applicable",
+      "note": "Income information is used to determine eligibility for different housing programs. You may be asked to provide proof of income later in the process."
+    },
+    "step7": {
+      "title": "Special Needs & Urgency",
+      "description": "Do you have any special circumstances that require urgent attention?",
+      "infoText": "Special circumstances may affect your position on the waiting list. Please provide accurate information. Documentation may be required for verification.",
+      "disability": "Disability or Special Medical Needs",
+      "disabilityDescription": "You or a household member has a disability or medical condition requiring specific housing accommodations.",
+      "emergency": "Emergency / Urgent Situation",
+      "emergencyDescription": "You are facing an emergency situation such as homelessness, displacement due to calamity, or imminent eviction.",
+      "detailsLabel": "Please provide details about your situation",
+      "detailsPlaceholder": "Describe your special circumstances...",
+      "detailsHelp": "This information will be reviewed to assess urgency priority."
+    },
+    "step8": {
+      "title": "Review Your Registration",
+      "description": "Please verify all information before submitting.",
+      "sectionPersonal": "Personal Information",
+      "sectionContact": "Contact Information",
+      "sectionLiving": "Current Living Situation",
+      "sectionPreference": "Housing Preference",
+      "sectionApplication": "Application Details",
+      "sectionUrgency": "Special Needs & Urgency",
+      "declarationTitle": "Declaration of Truthfulness",
+      "declarationText": "I hereby declare that all information provided in this registration is true and accurate to the best of my knowledge. I understand that providing false information may result in removal from the waiting list and possible legal consequences.",
+      "labelNationalId": "National ID",
+      "labelFirstName": "First Name",
+      "labelLastName": "Last Name",
+      "labelDateOfBirth": "Date of Birth",
+      "labelGender": "Gender",
+      "labelPhone": "Phone Number",
+      "labelEmail": "Email",
+      "labelAddress": "Address",
+      "labelDistrict": "District",
+      "labelHousingType": "Housing Type",
+      "labelMonthlyRent": "Monthly Rent",
+      "labelResidents": "Residents",
+      "labelInterestType": "Interest Type",
+      "labelPreferredDistrict": "Preferred District",
+      "labelReason": "Reason",
+      "labelIncomeSource": "Income Source",
+      "labelYourIncome": "Your Income",
+      "labelPartnerIncome": "Partner Income",
+      "labelDisability": "Disability",
+      "labelEmergency": "Emergency",
+      "labelDetails": "Details"
+    },
+    "step9": {
+      "successTitle": "Registration Submitted Successfully",
+      "successText": "Your housing registration has been submitted. Please save the information below.",
+      "referenceNumber": "Your Reference Number",
+      "referenceNumberHelp": "Use this number to track your registration status",
+      "securityToken": "Security Token",
+      "securityTokenWarning": "Save this token securely. You will need both the reference number and this token to check your registration status online. This token will only be displayed once.",
+      "submittedOn": "Submitted On",
+      "time": "Time",
+      "nextStepsTitle": "What Happens Next?",
+      "nextStep1Title": "Registration Review",
+      "nextStep1Text": "Your registration will be verified by the housing department.",
+      "nextStep2Title": "Waiting List Placement",
+      "nextStep2Text": "Once verified, you will be placed on the official waiting list.",
+      "nextStep3Title": "Allocation Notification",
+      "nextStep3Text": "You will be contacted when housing becomes available for you."
+    },
+    "housingTypes": {
+      "house": "House",
+      "apartment": "Apartment",
+      "room": "Room",
+      "shared": "Shared accommodation",
+      "other": "Other"
+    },
+    "interestTypes": {
+      "rent": "Rent",
+      "rent_to_own": "Rent-to-own",
+      "purchase": "Purchase"
+    },
+    "reasons": {
+      "no_housing": "Currently without proper housing",
+      "overcrowding": "Overcrowded living conditions",
+      "unsafe": "Unsafe or unhealthy housing",
+      "calamity": "Calamity / disaster affected",
+      "eviction": "Facing eviction",
+      "family_growth": "Family growth",
+      "other": "Other reason"
+    },
+    "incomeSources": {
+      "employment": "Employment",
+      "self_employed": "Self-employed",
+      "pension": "Pension",
+      "social_assistance": "Social assistance",
+      "unemployment": "Unemployment benefits",
+      "other": "Other",
+      "none": "No income"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    }
+  },
+  "status": {
+    "title": "Check Application Status",
+    "description": "Enter your reference number and access token to view your application status",
+    "form": {
+      "referenceNumber": "Reference Number",
+      "referenceNumberPlaceholder": "e.g., BS-2026-123456 or WR-2026-789012",
+      "referenceNumberHelp": "Your reference number was provided when you submitted your application",
+      "accessToken": "Access Token",
+      "accessTokenPlaceholder": "Enter your 12-character access token",
+      "accessTokenHelp": "The access token was shown once when your application was submitted",
+      "checkStatus": "Check Status",
+      "checkingStatus": "Checking Status..."
+    },
+    "result": {
+      "foundTitle": "Application Found",
+      "foundText": "Here is the current status of your application",
+      "applicationDetails": "Application Details",
+      "applicationType": "Application Type",
+      "referenceNumber": "Reference Number",
+      "applicantName": "Applicant Name",
+      "submittedOn": "Submitted On",
+      "currentStatus": "Current Status",
+      "statusHistory": "Status History",
+      "checkAnother": "Check Another Application"
+    },
+    "statuses": {
+      "submitted": "Submitted",
+      "under_review": "Under Review",
+      "pending_documents": "Pending Documents",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "waitlisted": "Waitlisted"
+    },
+    "applicationTypes": {
+      "bouwsubsidie": "Building Subsidy (Bouwsubsidie)",
+      "housing_registration": "Housing Registration"
+    },
+    "help": {
+      "text": "Need help? Contact the Ministry of Social Affairs and Housing",
+      "backToHome": "Back to Home"
+    },
+    "validation": {
+      "referenceRequired": "Reference number is required",
+      "referenceInvalid": "Invalid format. Use BS-YYYY-NNNNNN or WR-YYYY-NNNNNN",
+      "tokenRequired": "Access token is required",
+      "tokenMinLength": "Access token must be at least {{min}} characters"
     }
   },
   "bouwsubsidie": {
@@ -211,7 +473,13 @@
     "householdSizeMin": "Household size must be at least 1",
     "householdSizeMax": "Household size cannot exceed 20",
     "applicationReasonRequired": "Please select a reason for your application",
-    "documentRequired": "This document is required"
+    "documentRequired": "This document is required",
+    "housingTypeRequired": "Housing type is required",
+    "residentsRequired": "Number of residents is required",
+    "residentsMin": "Must be at least 1 resident",
+    "interestTypeRequired": "Please select your interest type",
+    "preferredDistrictRequired": "Please select your preferred district",
+    "incomeSourceRequired": "Please select your income source"
   },
   "errors": {
     "submissionFailed": "Unable to submit your application. Please try again.",
@@ -219,6 +487,8 @@
     "rateLimited": "You have submitted too many requests. Please wait one hour before trying again.",
     "validationError": "Please check your information and try again. Some fields may be incomplete or incorrect.",
     "serverError": "We were unable to process your request at this time. Please try again later.",
-    "uploadFailed": "Document upload failed. Please try again."
+    "uploadFailed": "Document upload failed. Please try again.",
+    "statusLookupFailed": "We were unable to retrieve your application status. Please try again.",
+    "invalidCredentials": "The reference number or access token you entered is incorrect. Please check and try again."
   }
 }

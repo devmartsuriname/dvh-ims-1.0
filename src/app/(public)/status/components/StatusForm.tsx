@@ -1,10 +1,12 @@
 /**
  * Status Lookup Form Component
- * Phase 5 - Checkpoint 6
+ * Phase 5B - Full NL localization
+ * i18n enabled - NL default
  */
 
 import { useState } from 'react'
 import { Card, CardBody, Form, Button, Alert, Spinner } from 'react-bootstrap'
+import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { validateReferenceNumber, validateToken, MIN_TOKEN_LENGTH } from '../constants'
 
@@ -15,6 +17,7 @@ interface StatusFormProps {
 }
 
 const StatusForm = ({ onSubmit, isLoading, error }: StatusFormProps) => {
+  const { t } = useTranslation()
   const [referenceNumber, setReferenceNumber] = useState('')
   const [accessToken, setAccessToken] = useState('')
   const [validationErrors, setValidationErrors] = useState<{
@@ -28,15 +31,15 @@ const StatusForm = ({ onSubmit, isLoading, error }: StatusFormProps) => {
     const errors: typeof validationErrors = {}
     
     if (!referenceNumber.trim()) {
-      errors.referenceNumber = 'Reference number is required'
+      errors.referenceNumber = t('status.validation.referenceRequired')
     } else if (!validateReferenceNumber(referenceNumber.trim().toUpperCase())) {
-      errors.referenceNumber = 'Invalid format. Use BS-YYYY-NNNNNN or WR-YYYY-NNNNNN'
+      errors.referenceNumber = t('status.validation.referenceInvalid')
     }
     
     if (!accessToken.trim()) {
-      errors.accessToken = 'Access token is required'
+      errors.accessToken = t('status.validation.tokenRequired')
     } else if (!validateToken(accessToken.trim())) {
-      errors.accessToken = `Access token must be at least ${MIN_TOKEN_LENGTH} characters`
+      errors.accessToken = t('status.validation.tokenMinLength', { min: MIN_TOKEN_LENGTH })
     }
     
     if (Object.keys(errors).length > 0) {
@@ -62,9 +65,9 @@ const StatusForm = ({ onSubmit, isLoading, error }: StatusFormProps) => {
               style={{ fontSize: '1.75rem' }}
             />
           </span>
-          <h4 className="mt-3 mb-1 fw-bold">Check Application Status</h4>
+          <h4 className="mt-3 mb-1 fw-bold">{t('status.title')}</h4>
           <p className="text-muted mb-0">
-            Enter your reference number and access token to view your application status
+            {t('status.description')}
           </p>
         </div>
 
@@ -78,11 +81,11 @@ const StatusForm = ({ onSubmit, isLoading, error }: StatusFormProps) => {
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label className="fw-medium">
-              Reference Number <span className="text-danger">*</span>
+              {t('status.form.referenceNumber')} <span className="text-danger">*</span>
             </Form.Label>
             <Form.Control
               type="text"
-              placeholder="e.g., BS-2026-123456 or WR-2026-789012"
+              placeholder={t('status.form.referenceNumberPlaceholder')}
               value={referenceNumber}
               onChange={(e) => setReferenceNumber(e.target.value.toUpperCase())}
               isInvalid={!!validationErrors.referenceNumber}
@@ -95,17 +98,17 @@ const StatusForm = ({ onSubmit, isLoading, error }: StatusFormProps) => {
               </div>
             )}
             <Form.Text className="text-muted">
-              Your reference number was provided when you submitted your application
+              {t('status.form.referenceNumberHelp')}
             </Form.Text>
           </Form.Group>
 
           <Form.Group className="mb-4">
             <Form.Label className="fw-medium">
-              Access Token <span className="text-danger">*</span>
+              {t('status.form.accessToken')} <span className="text-danger">*</span>
             </Form.Label>
             <Form.Control
               type="text"
-              placeholder="Enter your 12-character access token"
+              placeholder={t('status.form.accessTokenPlaceholder')}
               value={accessToken}
               onChange={(e) => setAccessToken(e.target.value)}
               isInvalid={!!validationErrors.accessToken}
@@ -118,7 +121,7 @@ const StatusForm = ({ onSubmit, isLoading, error }: StatusFormProps) => {
               </div>
             )}
             <Form.Text className="text-muted">
-              The access token was shown once when your application was submitted
+              {t('status.form.accessTokenHelp')}
             </Form.Text>
           </Form.Group>
 
@@ -139,12 +142,12 @@ const StatusForm = ({ onSubmit, isLoading, error }: StatusFormProps) => {
                     role="status"
                     aria-hidden="true"
                   />
-                  <span>Checking Status...</span>
+                  <span>{t('status.form.checkingStatus')}</span>
                 </>
               ) : (
                 <>
                   <IconifyIcon icon="mingcute:search-line" />
-                  <span>Check Status</span>
+                  <span>{t('status.form.checkStatus')}</span>
                 </>
               )}
             </Button>

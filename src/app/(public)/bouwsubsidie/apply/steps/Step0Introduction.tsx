@@ -1,5 +1,6 @@
 import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import WizardStep from '@/components/public/WizardStep'
 
@@ -9,21 +10,23 @@ interface Step0IntroductionProps {
 
 /**
  * Step 0: Introduction
+ * V1.3 Phase 5A — Localized with i18n
  * 
  * Explains the application process and requirements.
  * User must acknowledge understanding before proceeding.
  */
 const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
+  const { t } = useTranslation()
   const [acknowledged, setAcknowledged] = useState(false)
 
   return (
     <WizardStep
-      title="Welcome to the Construction Subsidy Application"
-      description="Please read the following information carefully before proceeding."
+      title={t('bouwsubsidie.step0.title')}
+      description={t('bouwsubsidie.step0.description')}
       onNext={onNext}
       isFirstStep={true}
       nextDisabled={!acknowledged}
-      nextLabel="Begin Application"
+      nextLabel={t('common.beginApplication')}
     >
       <Card className="border-0 shadow-none mb-4">
         <Card.Body className="p-0">
@@ -35,26 +38,24 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
                 className="text-primary fs-4 me-2 mt-1" 
               />
               <div>
-                <h6 className="fw-semibold mb-2">Important Notice</h6>
+                <h6 className="fw-semibold mb-2">{t('bouwsubsidie.step0.importantNotice')}</h6>
                 <p className="text-muted mb-0 small">
-                  Applications submitted through this portal are for registration purposes only. 
-                  No evaluation or decision will be made at the counter. All applications will be 
-                  reviewed by the appropriate department and you will be contacted regarding the outcome.
+                  {t('bouwsubsidie.step0.noticeText')}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Process Steps */}
-          <h6 className="fw-semibold mb-3">Application Process</h6>
+          <h6 className="fw-semibold mb-3">{t('bouwsubsidie.step0.processTitle')}</h6>
           <Row className="g-3 mb-4">
             <Col md={4}>
               <div className="text-center p-3 bg-light rounded">
                 <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style={{ width: 48, height: 48 }}>
                   <IconifyIcon icon="mingcute:edit-line" className="text-primary fs-5" />
                 </div>
-                <h6 className="small fw-semibold mb-1">1. Submit Application</h6>
-                <p className="text-muted small mb-0">Complete this form with your information</p>
+                <h6 className="small fw-semibold mb-1">{t('bouwsubsidie.step0.process1Title')}</h6>
+                <p className="text-muted small mb-0">{t('bouwsubsidie.step0.process1Text')}</p>
               </div>
             </Col>
             <Col md={4}>
@@ -62,8 +63,8 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
                 <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style={{ width: 48, height: 48 }}>
                   <IconifyIcon icon="mingcute:search-line" className="text-primary fs-5" />
                 </div>
-                <h6 className="small fw-semibold mb-1">2. Review Process</h6>
-                <p className="text-muted small mb-0">Your application will be reviewed by staff</p>
+                <h6 className="small fw-semibold mb-1">{t('bouwsubsidie.step0.process2Title')}</h6>
+                <p className="text-muted small mb-0">{t('bouwsubsidie.step0.process2Text')}</p>
               </div>
             </Col>
             <Col md={4}>
@@ -71,30 +72,30 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
                 <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style={{ width: 48, height: 48 }}>
                   <IconifyIcon icon="mingcute:mail-line" className="text-primary fs-5" />
                 </div>
-                <h6 className="small fw-semibold mb-1">3. Get Notified</h6>
-                <p className="text-muted small mb-0">You will be contacted with the outcome</p>
+                <h6 className="small fw-semibold mb-1">{t('bouwsubsidie.step0.process3Title')}</h6>
+                <p className="text-muted small mb-0">{t('bouwsubsidie.step0.process3Text')}</p>
               </div>
             </Col>
           </Row>
 
           {/* Requirements */}
-          <h6 className="fw-semibold mb-3">What You Will Need</h6>
+          <h6 className="fw-semibold mb-3">{t('bouwsubsidie.step0.requirementsTitle')}</h6>
           <ul className="list-unstyled mb-4">
             <li className="d-flex align-items-center mb-2">
               <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
-              <span className="small">Valid National ID number</span>
+              <span className="small">{t('bouwsubsidie.step0.requirement1')}</span>
             </li>
             <li className="d-flex align-items-center mb-2">
               <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
-              <span className="small">Contact information (phone number required)</span>
+              <span className="small">{t('bouwsubsidie.step0.requirement2')}</span>
             </li>
             <li className="d-flex align-items-center mb-2">
               <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
-              <span className="small">Current address details</span>
+              <span className="small">{t('bouwsubsidie.step0.requirement3')}</span>
             </li>
             <li className="d-flex align-items-center mb-2">
               <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
-              <span className="small">Information about required documents</span>
+              <span className="small">{t('bouwsubsidie.step0.requirement4')}</span>
             </li>
           </ul>
 
@@ -107,9 +108,7 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
               onChange={(e) => setAcknowledged(e.target.checked)}
               label={
                 <span className="small">
-                  I understand that this is a registration portal only and that no evaluation 
-                  or decision will be made at the counter. I confirm that I will provide 
-                  accurate information.
+                  {t('bouwsubsidie.step0.acknowledgementLabel')}
                 </span>
               }
             />

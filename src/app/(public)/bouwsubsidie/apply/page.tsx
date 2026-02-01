@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Container, Card } from 'react-bootstrap'
 import { toast } from 'react-toastify'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/integrations/supabase/client'
 import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
@@ -20,19 +21,20 @@ import Step8Receipt from './steps/Step8Receipt'
 
 /**
  * Bouwsubsidie Public Wizard
- * Phase 5 - Checkpoint 4
+ * V1.3 Phase 5A — Public Wizard with i18n + Document Upload
  * 
  * Multi-step wizard for Construction Subsidy applications
  * Uses react-bootstrap components per Darkone 1:1 standard
  */
 const BouwsubsidieWizard = () => {
+  const { t } = useTranslation()
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState<BouwsubsidieFormData>(INITIAL_FORM_DATA)
   const [submissionResult, setSubmissionResult] = useState<SubmissionResult | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Cast readonly array to mutable for WizardProgress compatibility
-  const progressSteps: WizardStep[] = WIZARD_STEPS.map(step => ({ title: step.title }))
+  // Translate wizard steps for progress indicator
+  const progressSteps: WizardStep[] = WIZARD_STEPS.map(step => ({ title: t(step.titleKey) }))
 
   const handleNext = () => {
     if (currentStep === 7) {
@@ -52,13 +54,13 @@ const BouwsubsidieWizard = () => {
   }
 
   /**
-   * Maps technical errors to citizen-safe messages
+   * Maps technical errors to citizen-safe messages (translated)
    * No internal error details are exposed to users
    */
   const getSafeErrorMessage = (response: any, error: any): string => {
     // Network/offline detection
     if (!navigator.onLine || error?.message?.toLowerCase().includes('fetch')) {
-      return 'Unable to connect to the server. Please check your internet connection and try again.'
+      return t('errors.networkError')
     }
     
     const status = response?.error?.status
@@ -66,21 +68,21 @@ const BouwsubsidieWizard = () => {
     
     // Rate limiting
     if (status === 429 || errorStr.toLowerCase().includes('too many')) {
-      return 'You have submitted too many requests. Please wait one hour before trying again.'
+      return t('errors.rateLimited')
     }
     
     // Validation errors
     if (status === 400 || errorStr.toLowerCase().includes('validation')) {
-      return 'Please check your information and try again. Some fields may be incomplete or incorrect.'
+      return t('errors.validationError')
     }
     
     // Server errors
     if (status >= 500) {
-      return 'We were unable to process your request at this time. Please try again later.'
+      return t('errors.serverError')
     }
     
     // Generic fallback
-    return 'We were unable to submit your application. Please try again.'
+    return t('errors.submissionFailed')
   }
 
   const handleSubmit = async () => {

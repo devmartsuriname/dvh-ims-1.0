@@ -1,18 +1,26 @@
 import { Card, Row, Col, Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import type { SubmissionResult } from '../types'
 
 interface Step8ReceiptProps {
-  result: SubmissionResult
+  result: SubmissionResult | null
 }
 
 /**
  * Step 8: Receipt
+ * V1.3 Phase 5A — Localized with i18n
  * 
  * Displays case reference number, access token, and next steps.
  */
 const Step8Receipt = ({ result }: Step8ReceiptProps) => {
+  const { t, i18n } = useTranslation()
+
+  if (!result) {
+    return null
+  }
+
   const handlePrint = () => {
     window.print()
   }
@@ -25,6 +33,25 @@ const Step8Receipt = ({ result }: Step8ReceiptProps) => {
     navigator.clipboard.writeText(result.access_token)
   }
 
+  // Format date according to current language
+  const formatDate = (dateString: string) => {
+    const locale = i18n.language === 'nl' ? 'nl-SR' : 'en-US'
+    return new Date(dateString).toLocaleDateString(locale, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  }
+
+  const formatTime = (dateString: string) => {
+    const locale = i18n.language === 'nl' ? 'nl-SR' : 'en-US'
+    return new Date(dateString).toLocaleTimeString(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  }
+
   return (
     <div className="text-center">
       {/* Success Icon */}
@@ -35,28 +62,28 @@ const Step8Receipt = ({ result }: Step8ReceiptProps) => {
         <IconifyIcon icon="mingcute:check-circle-fill" className="text-success" style={{ fontSize: 48 }} />
       </div>
 
-      <h3 className="fw-bold mb-2">Application Submitted Successfully</h3>
+      <h3 className="fw-bold mb-2">{t('bouwsubsidie.step8.successTitle')}</h3>
       <p className="text-muted mb-4">
-        Your construction subsidy application has been registered. Please save the information below.
+        {t('bouwsubsidie.step8.successText')}
       </p>
 
       {/* Reference Number Card */}
       <Card className="mb-3">
         <Card.Body className="py-4">
-          <h6 className="text-muted mb-2">Your Reference Number</h6>
+          <h6 className="text-muted mb-2">{t('bouwsubsidie.step8.referenceNumber')}</h6>
           <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
             <h2 className="mb-0 font-monospace text-primary">{result.reference_number}</h2>
             <Button 
               variant="outline-secondary" 
               size="sm"
               onClick={handleCopyReference}
-              title="Copy to clipboard"
+              title={t('common.copy')}
             >
               <IconifyIcon icon="mingcute:copy-line" />
             </Button>
           </div>
           <p className="text-muted small mb-0">
-            Use this number to track your application status
+            {t('bouwsubsidie.step8.referenceNumberHelp')}
           </p>
         </Card.Body>
       </Card>
@@ -66,7 +93,7 @@ const Step8Receipt = ({ result }: Step8ReceiptProps) => {
         <Card.Header className="bg-warning bg-opacity-10 border-warning">
           <div className="d-flex align-items-center justify-content-center">
             <IconifyIcon icon="mingcute:key-2-line" className="text-warning me-2" />
-            <span className="fw-semibold">Security Token</span>
+            <span className="fw-semibold">{t('bouwsubsidie.step8.securityToken')}</span>
           </div>
         </Card.Header>
         <Card.Body className="py-4">
@@ -76,7 +103,7 @@ const Step8Receipt = ({ result }: Step8ReceiptProps) => {
               variant="outline-secondary" 
               size="sm"
               onClick={handleCopyToken}
-              title="Copy to clipboard"
+              title={t('common.copy')}
             >
               <IconifyIcon icon="mingcute:copy-line" />
             </Button>
@@ -84,9 +111,7 @@ const Step8Receipt = ({ result }: Step8ReceiptProps) => {
           <div className="bg-warning bg-opacity-10 rounded p-3 mt-3">
             <p className="text-warning mb-0 small">
               <IconifyIcon icon="mingcute:warning-line" className="me-1" />
-              <strong>Important:</strong> Save this token securely. You will need both the reference 
-              number and this token to check your application status online. This token will only 
-              be displayed once.
+              <strong>!</strong> {t('bouwsubsidie.step8.securityTokenWarning')}
             </p>
           </div>
         </Card.Body>
@@ -97,24 +122,12 @@ const Step8Receipt = ({ result }: Step8ReceiptProps) => {
         <Card.Body>
           <Row className="text-start">
             <Col xs={6}>
-              <p className="text-muted small mb-1">Submitted On</p>
-              <p className="fw-medium mb-0">
-                {new Date(result.submitted_at).toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </p>
+              <p className="text-muted small mb-1">{t('bouwsubsidie.step8.submittedOn')}</p>
+              <p className="fw-medium mb-0">{formatDate(result.submitted_at)}</p>
             </Col>
             <Col xs={6}>
-              <p className="text-muted small mb-1">Time</p>
-              <p className="fw-medium mb-0">
-                {new Date(result.submitted_at).toLocaleTimeString('en-US', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </p>
+              <p className="text-muted small mb-1">{t('bouwsubsidie.step8.time')}</p>
+              <p className="fw-medium mb-0">{formatTime(result.submitted_at)}</p>
             </Col>
           </Row>
         </Card.Body>
@@ -123,7 +136,7 @@ const Step8Receipt = ({ result }: Step8ReceiptProps) => {
       {/* Next Steps */}
       <Card className="mb-4">
         <Card.Header className="bg-light">
-          <h6 className="mb-0 fw-semibold">What Happens Next?</h6>
+          <h6 className="mb-0 fw-semibold">{t('bouwsubsidie.step8.nextStepsTitle')}</h6>
         </Card.Header>
         <Card.Body className="text-start">
           <div className="d-flex mb-3">
@@ -134,10 +147,8 @@ const Step8Receipt = ({ result }: Step8ReceiptProps) => {
               <span className="text-primary fw-bold small">1</span>
             </div>
             <div>
-              <p className="fw-medium mb-1">Application Review</p>
-              <p className="text-muted small mb-0">
-                Your application will be reviewed by the Volkshuisvesting department.
-              </p>
+              <p className="fw-medium mb-1">{t('bouwsubsidie.step8.nextStep1Title')}</p>
+              <p className="text-muted small mb-0">{t('bouwsubsidie.step8.nextStep1Text')}</p>
             </div>
           </div>
           <div className="d-flex mb-3">
@@ -148,10 +159,8 @@ const Step8Receipt = ({ result }: Step8ReceiptProps) => {
               <span className="text-primary fw-bold small">2</span>
             </div>
             <div>
-              <p className="fw-medium mb-1">Document Verification</p>
-              <p className="text-muted small mb-0">
-                You may be contacted to provide the documents you declared.
-              </p>
+              <p className="fw-medium mb-1">{t('bouwsubsidie.step8.nextStep2Title')}</p>
+              <p className="text-muted small mb-0">{t('bouwsubsidie.step8.nextStep2Text')}</p>
             </div>
           </div>
           <div className="d-flex">
@@ -162,10 +171,8 @@ const Step8Receipt = ({ result }: Step8ReceiptProps) => {
               <span className="text-primary fw-bold small">3</span>
             </div>
             <div>
-              <p className="fw-medium mb-1">Decision Notification</p>
-              <p className="text-muted small mb-0">
-                You will be contacted via phone regarding the outcome of your application.
-              </p>
+              <p className="fw-medium mb-1">{t('bouwsubsidie.step8.nextStep3Title')}</p>
+              <p className="text-muted small mb-0">{t('bouwsubsidie.step8.nextStep3Text')}</p>
             </div>
           </div>
         </Card.Body>
@@ -175,15 +182,15 @@ const Step8Receipt = ({ result }: Step8ReceiptProps) => {
       <div className="d-flex flex-column flex-sm-row gap-2 justify-content-center">
         <Button variant="outline-primary" onClick={handlePrint}>
           <IconifyIcon icon="mingcute:printer-line" className="me-2" />
-          Print Receipt
+          {t('common.print')}
         </Button>
         <Link to="/status" className="btn btn-outline-secondary">
           <IconifyIcon icon="mingcute:search-line" className="me-2" />
-          Check Status
+          {t('common.checkStatus')}
         </Link>
         <Link to="/" className="btn btn-primary">
           <IconifyIcon icon="mingcute:home-4-line" className="me-2" />
-          Return Home
+          {t('common.returnHome')}
         </Link>
       </div>
     </div>

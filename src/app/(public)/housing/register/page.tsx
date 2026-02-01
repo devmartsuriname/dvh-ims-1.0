@@ -17,14 +17,15 @@ import Step4HousingPreference from './steps/Step4HousingPreference'
 import Step5Reason from './steps/Step5Reason'
 import Step6Income from './steps/Step6Income'
 import Step7Urgency from './steps/Step7Urgency'
-import Step8Review from './steps/Step8Review'
-import Step9Receipt from './steps/Step9Receipt'
+import Step8Documents from './steps/Step8Documents'
+import Step9Review from './steps/Step9Review'
+import Step10Receipt from './steps/Step10Receipt'
 
 /**
  * Housing Registration Public Wizard
- * Phase 5B - Full NL localization
+ * Phase 5C - Document Upload Implementation
  * 
- * 10-step wizard for Housing Registration applications
+ * 11-step wizard for Housing Registration applications
  * Uses react-bootstrap components per Darkone 1:1 standard
  * i18n enabled - NL default
  */
@@ -41,8 +42,8 @@ const HousingRegistrationWizard = () => {
   }))
 
   const handleNext = () => {
-    if (currentStep === 8) {
-      // Step 8 (Review) triggers submission
+    if (currentStep === 9) {
+      // Step 9 (Review) triggers submission
       handleSubmit()
     } else {
       setCurrentStep(prev => Math.min(prev + 1, WIZARD_STEPS.length - 1))
@@ -106,7 +107,10 @@ const HousingRegistrationWizard = () => {
         access_token: response.data.access_token,
         submitted_at: response.data.submitted_at
       })
-      setCurrentStep(9)
+      setCurrentStep(10)
+      
+      // Clear session storage after successful submission
+      sessionStorage.removeItem('housing_session_id')
     } catch (error: any) {
       toast.error(getSafeErrorMessage(response, error))
     } finally {
@@ -140,8 +144,10 @@ const HousingRegistrationWizard = () => {
       case 7:
         return <Step7Urgency {...commonProps} />
       case 8:
+        return <Step8Documents {...commonProps} />
+      case 9:
         return (
-          <Step8Review 
+          <Step9Review 
             formData={formData}
             updateFormData={updateFormData}
             onNext={handleNext}
@@ -149,8 +155,8 @@ const HousingRegistrationWizard = () => {
             isSubmitting={isSubmitting}
           />
         )
-      case 9:
-        return <Step9Receipt result={submissionResult!} />
+      case 10:
+        return <Step10Receipt result={submissionResult!} />
       default:
         return null
     }
@@ -163,7 +169,7 @@ const HousingRegistrationWizard = () => {
       <main className="flex-grow-1 py-4 bg-light">
         <Container style={{ maxWidth: 800 }}>
           {/* Progress indicator - hide on receipt step */}
-          {currentStep < 9 && (
+          {currentStep < 10 && (
             <WizardProgress 
               steps={progressSteps} 
               currentStep={currentStep} 

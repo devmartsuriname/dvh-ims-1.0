@@ -4,8 +4,13 @@
  * Predefined options and wizard configuration
  * i18n enabled - uses labelKey pattern for translations
  * 
- * UPDATED: Phase 5B - Full NL localization
+ * UPDATED: Phase 5C - Document Upload Implementation
+ * - Added REQUIRED_DOCUMENTS array
+ * - Added documents step to WIZARD_STEPS
+ * - Updated INITIAL_FORM_DATA with documents array
  */
+
+import type { DocumentUpload } from './types'
 
 export const HOUSING_TYPES = [
   { value: 'house', labelKey: 'housing.housingTypes.house' },
@@ -47,6 +52,23 @@ export const GENDER_OPTIONS = [
   { value: 'other', labelKey: 'housing.gender.other' },
 ] as const
 
+/**
+ * Required documents for housing registration
+ * Phase 5C - Document Upload Implementation
+ */
+export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] = [
+  { id: 'ID_COPY', document_code: 'ID_COPY', label: 'housing.step8documents.docIdCopy', is_mandatory: true },
+  { id: 'INCOME_PROOF', document_code: 'INCOME_PROOF', label: 'housing.step8documents.docIncomeProof', is_mandatory: true },
+  { id: 'RESIDENCE_PROOF', document_code: 'RESIDENCE_PROOF', label: 'housing.step8documents.docResidenceProof', is_mandatory: true },
+  { id: 'FAMILY_COMPOSITION', document_code: 'FAMILY_COMPOSITION', label: 'housing.step8documents.docFamilyComposition', is_mandatory: false },
+  { id: 'MEDICAL_CERT', document_code: 'MEDICAL_CERT', label: 'housing.step8documents.docMedicalCert', is_mandatory: false },
+  { id: 'EMERGENCY_PROOF', document_code: 'EMERGENCY_PROOF', label: 'housing.step8documents.docEmergencyProof', is_mandatory: false },
+]
+
+/**
+ * Wizard steps with translation keys
+ * Phase 5C: Added documents step (step 8)
+ */
 export const WIZARD_STEPS = [
   { titleKey: 'wizard.steps.introduction' },
   { titleKey: 'wizard.steps.personalInfo' },
@@ -56,8 +78,9 @@ export const WIZARD_STEPS = [
   { titleKey: 'wizard.steps.reason' },
   { titleKey: 'wizard.steps.income' },
   { titleKey: 'wizard.steps.urgency' },
-  { titleKey: 'wizard.steps.review' },
-  { titleKey: 'wizard.steps.receipt' },
+  { titleKey: 'wizard.steps.documents' },  // NEW: Step 8 - Documents
+  { titleKey: 'wizard.steps.review' },      // Moved from step 8 to step 9
+  { titleKey: 'wizard.steps.receipt' },     // Moved from step 9 to step 10
 ] as const
 
 export const INITIAL_FORM_DATA = {
@@ -96,6 +119,9 @@ export const INITIAL_FORM_DATA = {
   has_emergency: false,
   urgency_details: '',
 
-  // Step 8 - Review
+  // Step 8 - Documents (Phase 5C)
+  documents: REQUIRED_DOCUMENTS.map(doc => ({ ...doc })),
+
+  // Step 9 - Review
   declaration_accepted: false,
 }

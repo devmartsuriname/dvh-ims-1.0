@@ -251,6 +251,30 @@
       "male": "Man",
       "female": "Vrouw",
       "other": "Anders"
+    },
+    "step8documents": {
+      "title": "Documenten uploaden",
+      "description": "Upload de vereiste documenten om door te gaan met uw registratie.",
+      "infoTitle": "Documentvereisten",
+      "infoText": "Alle verplichte documenten moeten worden geüpload voordat u uw registratie kunt indienen. Ondersteunde bestandstypen: PDF, JPG, PNG. Maximale bestandsgrootte: 10MB per document.",
+      "mandatory": "Verplicht",
+      "optional": "Optioneel",
+      "dropzone": "Sleep bestand hierheen of klik om te uploaden",
+      "dropzoneActive": "Laat bestand hier los...",
+      "maxSize": "Max. 10MB - PDF, JPG, PNG",
+      "uploaded": "Geüpload",
+      "uploadError": "Upload mislukt. Probeer opnieuw.",
+      "fileTooLarge": "Bestand te groot. Maximum is 10MB.",
+      "invalidType": "Ongeldig bestandstype. Gebruik PDF, JPG of PNG.",
+      "documentsUploaded": "Documenten geüpload",
+      "of": "van",
+      "mandatoryMissing": "Upload alle verplichte documenten om door te gaan",
+      "docIdCopy": "Kopie ID-bewijs",
+      "docIncomeProof": "Bewijs van inkomen",
+      "docResidenceProof": "Bewijs van huidige woning",
+      "docFamilyComposition": "Gezinssamenstelling",
+      "docMedicalCert": "Medische verklaring",
+      "docEmergencyProof": "Bewijs noodsituatie"
     }
   },
   "status": {

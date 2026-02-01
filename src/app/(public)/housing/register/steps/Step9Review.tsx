@@ -12,7 +12,7 @@ import {
 } from '../constants'
 import type { HousingFormData } from '../types'
 
-interface Step8ReviewProps {
+interface Step9ReviewProps {
   formData: HousingFormData
   updateFormData: (data: Partial<HousingFormData>) => void
   onNext: () => void
@@ -21,12 +21,13 @@ interface Step8ReviewProps {
 }
 
 /**
- * Step 8: Review & Confirmation
+ * Step 9: Review & Confirmation (was Step 8)
+ * Phase 5C: Renumbered from Step8Review
  * 
  * Summary of all entered data with declaration of truthfulness.
  * i18n enabled - NL default
  */
-const Step8Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }: Step8ReviewProps) => {
+const Step9Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }: Step9ReviewProps) => {
   const { t } = useTranslation()
   const [accepted, setAccepted] = useState(formData.declaration_accepted)
 
@@ -186,4 +187,4 @@ const Step8Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }:
   )
 }
 
-export default Step8Review
+export default Step9Review

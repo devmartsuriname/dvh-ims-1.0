@@ -251,6 +251,30 @@
       "male": "Male",
       "female": "Female",
       "other": "Other"
+    },
+    "step8documents": {
+      "title": "Upload Documents",
+      "description": "Upload the required documents to proceed with your registration.",
+      "infoTitle": "Document Requirements",
+      "infoText": "All mandatory documents must be uploaded before you can submit your registration. Supported file types: PDF, JPG, PNG. Maximum file size: 10MB per document.",
+      "mandatory": "Mandatory",
+      "optional": "Optional",
+      "dropzone": "Drop file here or click to upload",
+      "dropzoneActive": "Drop file here...",
+      "maxSize": "Max 10MB - PDF, JPG, PNG",
+      "uploaded": "Uploaded",
+      "uploadError": "Upload failed. Please try again.",
+      "fileTooLarge": "File too large. Maximum is 10MB.",
+      "invalidType": "Invalid file type. Use PDF, JPG, or PNG.",
+      "documentsUploaded": "Documents uploaded",
+      "of": "of",
+      "mandatoryMissing": "Upload all mandatory documents to proceed",
+      "docIdCopy": "Copy of ID",
+      "docIncomeProof": "Proof of Income",
+      "docResidenceProof": "Proof of Current Residence",
+      "docFamilyComposition": "Family Composition",
+      "docMedicalCert": "Medical Certificate",
+      "docEmergencyProof": "Emergency Documentation"
     }
   },
   "status": {

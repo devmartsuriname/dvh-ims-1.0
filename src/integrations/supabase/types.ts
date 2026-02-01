@@ -536,6 +536,87 @@ export type Database = {
           },
         ]
       }
+      housing_document_requirement: {
+        Row: {
+          created_at: string
+          description: string | null
+          document_code: string
+          document_name: string
+          id: string
+          is_mandatory: boolean
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          document_code: string
+          document_name: string
+          id?: string
+          is_mandatory?: boolean
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          document_code?: string
+          document_name?: string
+          id?: string
+          is_mandatory?: boolean
+        }
+        Relationships: []
+      }
+      housing_document_upload: {
+        Row: {
+          file_name: string
+          file_path: string
+          id: string
+          is_verified: boolean
+          registration_id: string
+          requirement_id: string
+          uploaded_at: string
+          uploaded_by: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          file_name: string
+          file_path: string
+          id?: string
+          is_verified?: boolean
+          registration_id: string
+          requirement_id: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          file_name?: string
+          file_path?: string
+          id?: string
+          is_verified?: boolean
+          registration_id?: string
+          requirement_id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "housing_document_upload_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "housing_registration"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "housing_document_upload_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "housing_document_requirement"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       housing_registration: {
         Row: {
           applicant_person_id: string

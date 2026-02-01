@@ -4,17 +4,18 @@ import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import type { SubmissionResult } from '../types'
 
-interface Step9ReceiptProps {
+interface Step10ReceiptProps {
   result: SubmissionResult
 }
 
 /**
- * Step 9: Receipt
+ * Step 10: Receipt (was Step 9)
+ * Phase 5C: Renumbered from Step9Receipt
  * 
  * Displays registration reference number, access token, and next steps.
  * i18n enabled - NL default
  */
-const Step9Receipt = ({ result }: Step9ReceiptProps) => {
+const Step10Receipt = ({ result }: Step10ReceiptProps) => {
   const { t, i18n } = useTranslation()
 
   const handlePrint = () => {
@@ -195,4 +196,4 @@ const Step9Receipt = ({ result }: Step9ReceiptProps) => {
   )
 }
 
-export default Step9Receipt
+export default Step10Receipt

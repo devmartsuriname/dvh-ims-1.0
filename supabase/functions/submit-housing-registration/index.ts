@@ -1,9 +1,9 @@
 /**
  * Edge Function: submit-housing-registration
- * Phase 9 - Public Wizard Database Integration
+ * Phase 5C - Document Upload Implementation
  * 
  * Handles anonymous Housing Registration (Woningregistratie) submissions
- * from the public wizard.
+ * from the public wizard including document uploads.
  * 
  * Security:
  * - Anonymous (no JWT required)
@@ -29,6 +29,20 @@ const RATE_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 // Valid district codes
 const VALID_DISTRICTS = ['PAR', 'WAA', 'NIC', 'COR', 'SAR', 'COM', 'MAR', 'SIP', 'BRO', 'PRA']
 
+// Document upload structure from frontend
+interface DocumentUploadInput {
+  id: string
+  document_code: string
+  label: string
+  is_mandatory: boolean
+  uploaded_file?: {
+    file_path: string
+    file_name: string
+    file_size: number
+    uploaded_at: string
+  }
+}
+
 // Input validation
 interface HousingInput {
   national_id: string
@@ -48,6 +62,7 @@ interface HousingInput {
   income_source?: string
   urgency_category?: string
   urgency_description?: string
+  documents?: DocumentUploadInput[]
 }
 
 interface ValidationError {
@@ -107,6 +122,20 @@ function validateInput(data: unknown): { valid: true; data: HousingInput } | { v
     }
   }
   
+  // Validate documents array if present
+  if (input.documents && Array.isArray(input.documents)) {
+    const docs = input.documents as DocumentUploadInput[]
+    const mandatoryDocs = docs.filter(d => d.is_mandatory)
+    const missingMandatory = mandatoryDocs.filter(d => !d.uploaded_file)
+    
+    if (missingMandatory.length > 0) {
+      errors.push({ 
+        field: 'documents', 
+        message: `Missing mandatory documents: ${missingMandatory.map(d => d.document_code).join(', ')}` 
+      })
+    }
+  }
+  
   if (errors.length > 0) {
     return { valid: false, errors }
   }
@@ -131,6 +160,7 @@ function validateInput(data: unknown): { valid: true; data: HousingInput } | { v
       income_source: input.income_source as string | undefined,
       urgency_category: input.urgency_category as string | undefined,
       urgency_description: input.urgency_description as string | undefined,
+      documents: input.documents as DocumentUploadInput[] | undefined,
     }
   }
 }
@@ -389,6 +419,51 @@ Deno.serve(async (req) => {
     
     const registrationId = registrationData.id
     
+    // Phase 5C: Process document uploads
+    let documentCount = 0
+    if (input.documents && input.documents.length > 0) {
+      // Get document requirements to map codes to IDs
+      const { data: requirements } = await supabase
+        .from('housing_document_requirement')
+        .select('id, document_code')
+      
+      const reqMap = new Map<string, string>()
+      if (requirements) {
+        for (const req of requirements) {
+          reqMap.set(req.document_code, req.id)
+        }
+      }
+      
+      // Insert document upload records for uploaded files
+      for (const doc of input.documents) {
+        if (doc.uploaded_file) {
+          const requirementId = reqMap.get(doc.document_code)
+          if (requirementId) {
+            const { error: docError } = await supabase
+              .from('housing_document_upload')
+              .insert({
+                registration_id: registrationId,
+                requirement_id: requirementId,
+                file_path: doc.uploaded_file.file_path,
+                file_name: doc.uploaded_file.file_name,
+                uploaded_by: null,
+                is_verified: false
+              })
+            
+            if (docError) {
+              console.error(`[submit-housing] Failed to create document upload for ${doc.document_code}:`, docError.message)
+            } else {
+              documentCount++
+            }
+          } else {
+            console.warn(`[submit-housing] Unknown document code: ${doc.document_code}`)
+          }
+        }
+      }
+      
+      console.log(`[submit-housing] Linked ${documentCount} documents to registration ${referenceNumber}`)
+    }
+    
     // Create initial status history entry
     const { error: statusHistoryError } = await supabase
       .from('housing_registration_status_history')
@@ -432,7 +507,8 @@ Deno.serve(async (req) => {
           reference_number: referenceNumber,
           district_code: input.district,
           submission_ip_hash: ipHash,
-          submission_timestamp: new Date().toISOString()
+          submission_timestamp: new Date().toISOString(),
+          document_count: documentCount  // Phase 5C: Track document count
         }
       })
     
@@ -440,7 +516,7 @@ Deno.serve(async (req) => {
       console.error('[submit-housing] Failed to create audit event:', auditError.message)
     }
     
-    console.log(`[submit-housing] Registration successful: ${referenceNumber}`)
+    console.log(`[submit-housing] Registration successful: ${referenceNumber} with ${documentCount} documents`)
     
     // Return success with reference number and access token
     return new Response(

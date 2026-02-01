@@ -3,13 +3,26 @@
  * 
  * TypeScript interfaces for the Housing Registration wizard
  * 
- * UPDATED: Admin v1.1-D - Aligned with Edge Function contract
- * - Changed full_name → first_name + last_name
- * - Added gender field (required)
- * - Made date_of_birth, email required
- * - Changed current_address → address_line_1
- * - Changed current_district → district
+ * UPDATED: Phase 5C - Document Upload Implementation
+ * - Added DocumentUpload interface for file handling
+ * - Added documents array to HousingFormData
  */
+
+/**
+ * Document upload record for a single document requirement
+ */
+export interface DocumentUpload {
+  id: string                    // requirement ID (e.g., 'ID_COPY')
+  document_code: string         // code matching housing_document_requirement
+  label: string                 // display label (translated)
+  is_mandatory: boolean         // whether upload is required
+  uploaded_file?: {
+    file_path: string           // storage path in citizen-uploads bucket
+    file_name: string           // original file name
+    file_size: number           // file size in bytes
+    uploaded_at: string         // ISO timestamp
+  }
+}
 
 export interface HousingFormData {
   // Step 1 - Personal Identification
@@ -47,7 +60,10 @@ export interface HousingFormData {
   has_emergency: boolean
   urgency_details: string
 
-  // Step 8 - Review
+  // Step 8 - Document Uploads (Phase 5C)
+  documents: DocumentUpload[]
+
+  // Step 9 - Review
   declaration_accepted: boolean
 }
 

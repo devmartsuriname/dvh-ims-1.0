@@ -1,397 +1,311 @@
 
+# DVH-IMS V1.3 — PHASE 5B EXECUTION PLAN
 
-# DVH-IMS V1.3 — PHASE 5A SOURCE OF TRUTH VERIFICATION CHECKLIST
+## FULL PUBLIC NL STANDARDIZATION (P0 BLOCKING)
 
 **Date:** 2026-02-01  
-**Verifier:** Lovable System  
-**Phase:** V1.3 Phase 5A — Public Wizard: Document Upload + NL Localization
+**Phase:** V1.3 Phase 5B — Full Public NL Standardization  
+**Authorization:** P0 Blocking — No other phases may proceed  
+**Scope:** PUBLIC FRONTEND ONLY — Admin remains EN-only
 
 ---
 
-## SECTION A — PRE-CONDITIONS & GOVERNANCE
+## 1. CURRENT STATE ANALYSIS
 
-### A1. Restore Point created BEFORE Phase 5A execution
+### 1.1 Localized (Phase 5A)
+| Component | Status | Evidence |
+|-----------|--------|----------|
+| Bouwsubsidie Wizard (9 steps) | ✅ NL | Uses `useTranslation()`, `t()` keys |
+| PublicHeader.tsx | ✅ NL | Uses `t('header.title')`, `t('header.ministry')` |
+| WizardStep.tsx | ✅ NL | Uses `t('common.continue')`, `t('common.back')` |
+| LanguageSwitcher.tsx | ✅ NL | Implemented with NL/EN toggle |
+| nl.json / en.json | ✅ EXISTS | 224 lines each (Bouwsubsidie only) |
 
-**Status:** ☑ Complete  
-**Evidence:**
-- Path: `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE5A_START.md`
-- Timestamp: 2026-02-01
-- Content verified: Pre-phase snapshot with i18n "NOT INSTALLED", Step6Documents "declaration-only", citizen-uploads bucket "DOES NOT EXIST"
+### 1.2 NOT Localized (Requires Phase 5B)
 
----
-
-### A2. Restore Point created AFTER Phase 5A completion
-
-**Status:** ☐ Skipped  
-**Evidence:**
-- `RESTORE_POINT_V1.3_PHASE5A_COMPLETE.md` does NOT exist in `restore-points/v1.3/`
-- Directory listing shows only `RESTORE_POINT_V1.3_PHASE5A_START.md`
-
----
-
-### A3. No scope expansion detected
-
-| Check | Status |
-|-------|--------|
-| No admin localization | ☑ VERIFIED — Admin pages remain English-only (hardcoded labels in subsidy-cases/[id]/page.tsx) |
-| No new roles | ☑ VERIFIED — No app_role enum changes in Phase 5A |
-| No public accounts | ☑ VERIFIED — No authentication changes |
-| No workflow changes outside wizard | ☑ VERIFIED — No trigger modifications |
-
-**Status:** ☑ Verified  
-**Evidence:** 
-- Admin STATUS_BADGES use hardcoded English: `{ bg: 'secondary', label: 'Received' }`
-- No role enum changes in Phase 5A scope
-- i18n imported in main.tsx but only public wizard components use `useTranslation()`
+| Component | Hardcoded EN Text | Priority |
+|-----------|-------------------|----------|
+| **Landing Page** | 15+ hardcoded strings | P0 |
+| **Housing Wizard (10 steps)** | 100+ hardcoded strings | P0 |
+| **Status Tracker Page** | 20+ hardcoded strings | P0 |
+| **StatusForm.tsx** | 15+ hardcoded strings | P0 |
+| **StatusResult.tsx** | 12+ hardcoded strings | P0 |
+| **StatusTimeline.tsx** | Date formatting locale | P0 |
+| **PublicFooter.tsx** | 2 hardcoded strings | P0 |
+| **Housing constants.ts** | 30+ option labels | P0 |
+| **Status constants.ts** | 6 status labels | P0 |
 
 ---
 
-## SECTION B — DOCUMENT UPLOAD (PUBLIC WIZARD)
+## 2. PHASE 5B OBJECTIVES
 
-### B1. Document upload is MANDATORY for Bouwsubsidie
+### Part A: Landing Page Localization
+- Translate all hero text, service cards, and button labels
+- Use existing i18n keys pattern from Phase 5A
 
-**Status:** ☑ Complete  
-**Evidence:**
-- `Step6Documents.tsx` uses react-dropzone for actual file uploads
-- 6 mandatory documents defined in `constants.ts` with `is_mandatory: true`:
-  - ID_COPY, INCOME_PROOF, LAND_TITLE, CONSTRUCTION_PLAN, COST_ESTIMATE, BUILDING_PERMIT
-- 2 optional documents: BANK_STATEMENT, HOUSEHOLD_COMP
+### Part B: Housing Wizard Full Localization
+- Localize all 10 steps (Step0-Step9)
+- Convert `constants.ts` options to use `labelKey` pattern
+- Apply same validation message pattern as Bouwsubsidie
+
+### Part C: Status Tracker Localization
+- Localize StatusForm, StatusResult, StatusTimeline
+- Translate status labels in constants.ts
+- Apply date/time locale based on language
+
+### Part D: Public Footer Localization
+- Translate ministry name and version text
 
 ---
 
-### B2. Wizard blocks submission if required documents are missing
+## 3. FILES TO MODIFY
 
-**Status:** ☑ Complete  
-**Evidence:**
-- Line 329 in Step6Documents.tsx: `nextDisabled={!allMandatoryUploaded}`
-- Validation logic at lines 193-195:
-```javascript
-const mandatoryDocs = formData.documents.filter(d => d.is_mandatory)
-const uploadedMandatoryCount = mandatoryDocs.filter(d => d.uploaded_file).length
-const allMandatoryUploaded = uploadedMandatoryCount === mandatoryDocs.length
+### 3.1 Translation Files (Extend)
+| File | Change |
+|------|--------|
+| `src/i18n/locales/nl.json` | Add `landing`, `housing`, `status`, `footer` sections |
+| `src/i18n/locales/en.json` | Add matching English sections |
+
+### 3.2 Landing Page
+| File | Change |
+|------|--------|
+| `src/app/(public)/landing/page.tsx` | Add `useTranslation()`, replace all hardcoded text |
+
+### 3.3 Housing Wizard
+| File | Change |
+|------|--------|
+| `src/app/(public)/housing/register/page.tsx` | Add `useTranslation()`, translate error messages |
+| `src/app/(public)/housing/register/constants.ts` | Change `label` to `labelKey` for all options |
+| `src/app/(public)/housing/register/steps/Step0Introduction.tsx` | Full i18n conversion |
+| `src/app/(public)/housing/register/steps/Step1PersonalInfo.tsx` | Full i18n conversion |
+| `src/app/(public)/housing/register/steps/Step2ContactInfo.tsx` | Full i18n conversion |
+| `src/app/(public)/housing/register/steps/Step3LivingSituation.tsx` | Full i18n conversion |
+| `src/app/(public)/housing/register/steps/Step4HousingPreference.tsx` | Full i18n conversion |
+| `src/app/(public)/housing/register/steps/Step5Reason.tsx` | Full i18n conversion |
+| `src/app/(public)/housing/register/steps/Step6Income.tsx` | Full i18n conversion |
+| `src/app/(public)/housing/register/steps/Step7Urgency.tsx` | Full i18n conversion |
+| `src/app/(public)/housing/register/steps/Step8Review.tsx` | Full i18n conversion |
+| `src/app/(public)/housing/register/steps/Step9Receipt.tsx` | Full i18n conversion |
+
+### 3.4 Status Tracker
+| File | Change |
+|------|--------|
+| `src/app/(public)/status/page.tsx` | Add `useTranslation()`, translate error messages |
+| `src/app/(public)/status/constants.ts` | Add `labelKey` for status definitions |
+| `src/app/(public)/status/components/StatusForm.tsx` | Full i18n conversion |
+| `src/app/(public)/status/components/StatusResult.tsx` | Full i18n conversion |
+| `src/app/(public)/status/components/StatusTimeline.tsx` | Locale-aware date formatting |
+
+### 3.5 Public Footer
+| File | Change |
+|------|--------|
+| `src/components/public/PublicFooter.tsx` | Add `useTranslation()`, translate text |
+
+---
+
+## 4. TRANSLATION KEYS STRUCTURE (NEW SECTIONS)
+
+```text
+nl.json / en.json additions:
+
+├── landing
+│   ├── heroTitle
+│   ├── heroDescription
+│   ├── servicesTitle
+│   ├── servicesSubtitle
+│   ├── bouwsubsidie
+│   │   ├── title
+│   │   ├── description
+│   │   └── button
+│   ├── housing
+│   │   ├── title
+│   │   ├── description
+│   │   └── button
+│   └── status
+│       ├── title
+│       ├── description
+│       └── button
+├── housing
+│   ├── title
+│   ├── step0 (Introduction)
+│   ├── step1 (Personal)
+│   ├── step2 (Contact)
+│   ├── step3 (Living)
+│   ├── step4 (Preference)
+│   ├── step5 (Reason)
+│   ├── step6 (Income)
+│   ├── step7 (Urgency)
+│   ├── step8 (Review)
+│   ├── step9 (Receipt)
+│   ├── housingTypes
+│   ├── interestTypes
+│   ├── reasons
+│   ├── incomeSources
+│   └── gender
+├── status
+│   ├── title
+│   ├── description
+│   ├── form (labels, placeholders, validation)
+│   ├── result (labels, sections)
+│   ├── statuses (submitted, under_review, etc.)
+│   └── help
+└── footer
+    ├── copyright
+    └── version
 ```
 
 ---
 
-### B3. Previous "document declaration only" toggle is:
+## 5. IMPLEMENTATION STEPS
 
-**Status:** ☑ Removed  
-**Evidence:**
-- Restore point confirms previous state was "Declaration toggle only"
-- Current `Step6Documents.tsx` has NO toggle/checkbox for declaration
-- Component completely rebuilt with react-dropzone file upload UI
-- Previous declaration text removed
+### Step 5B-1: Create Restore Point
+Create `RESTORE_POINT_V1.3_PHASE5B_START.md`
 
----
+### Step 5B-2: Extend Translation Files
+- Add ~300 new translation keys to nl.json
+- Add ~300 matching keys to en.json
 
-### B4. Uploaded documents are linked to dossier
+### Step 5B-3: Localize Landing Page
+- Import `useTranslation` hook
+- Replace all hardcoded text with `t()` calls
 
-**Status:** ⚠️ Partial  
-**Evidence:**
-- Files uploaded to `citizen-uploads` bucket with path: `bouwsubsidie/{sessionId}/{docId}_{timestamp}.{ext}`
-- Session ID generated per wizard session (line 204-211)
-- Document metadata stored in `formData.documents[].uploaded_file`
-- **GAP:** Edge Function must link uploaded files to subsidy_document_upload table after case creation
+### Step 5B-4: Localize Housing Wizard Constants
+- Convert all option arrays to use `labelKey` pattern
+- Update `WIZARD_STEPS` to use `titleKey`
 
----
+### Step 5B-5: Localize Housing Wizard Page
+- Add `useTranslation()` hook
+- Translate error messages
+- Translate step titles for progress
 
-### B5. Minimum metadata stored for each upload
+### Step 5B-6: Localize Housing Steps (10 files)
+- Each step: import `useTranslation`, replace text
+- Apply same pattern as Bouwsubsidie steps
 
-| Field | Status | Evidence |
-|-------|--------|----------|
-| document_type | ☑ STORED | `document_code` field in types.ts |
-| uploaded_by = public | ⚠️ IMPLICIT | Uploads via anon RLS policy imply public |
-| upload_timestamp | ☑ STORED | `uploaded_at: new Date().toISOString()` |
-| dossier_id | ⚠️ DEFERRED | Linked via sessionId path; full link requires Edge Function update |
+### Step 5B-7: Localize Status Tracker
+- StatusForm: form labels, placeholders, validation
+- StatusResult: section headers, labels
+- StatusTimeline: locale-aware date formatting
 
-**Status:** ⚠️ Partial  
-**Evidence:** Metadata structure in types.ts lines 19-24:
-```typescript
-uploaded_file?: {
-  file_path: string
-  file_name: string
-  file_size: number
-  uploaded_at: string
-}
-```
+### Step 5B-8: Localize Public Footer
+- Translate ministry text and version
 
----
+### Step 5B-9: Update Status Constants
+- Add `labelKey` for status definitions
 
-### B6. Uploaded documents are visible in Admin for review
+### Step 5B-10: Verification Testing
+- Test NL default on all public pages
+- Test EN switch functionality
+- Verify no EN text when NL active
+- Verify Admin unchanged
 
-**Status:** ☑ Complete  
-**Evidence:**
-- Admin page (`subsidy-cases/[id]/page.tsx`) has DocumentUpload interface (lines 42-52)
-- Fetches from `subsidy_document_upload` table
-- Staff RLS policy exists: `staff_can_read_citizen_documents` (SELECT on storage.objects)
+### Step 5B-11: Create Documentation
+- PHASE-5B-PUBLIC-NL-COVERAGE-REPORT.md
+- PHASE-5B-I18N-ENFORCEMENT-REPORT.md
+- PHASE-5B-VERIFICATION-CHECKLIST.md
 
----
-
-### B7. Missing documents BLOCK progression to Frontdesk review
-
-**Status:** ⚠️ Partial (UI Complete, Backend Not Verified)  
-**Evidence:**
-- Wizard UI blocks via `nextDisabled={!allMandatoryUploaded}`
-- Backend trigger (`validate_subsidy_case_transition`) not modified for document check
-- **Note:** Current enforcement is client-side only
+### Step 5B-12: Create Completion Restore Point
+Create `RESTORE_POINT_V1.3_PHASE5B_COMPLETE.md`
 
 ---
 
-### B8. File type restrictions enforced (PDF / JPG / PNG only)
+## 6. FILES TO CREATE
 
-**Status:** ☑ Complete  
-**Evidence:**
-- Lines 23-27 in Step6Documents.tsx:
-```javascript
-const ACCEPTED_TYPES = {
-  'application/pdf': ['.pdf'],
-  'image/jpeg': ['.jpg', '.jpeg'],
-  'image/png': ['.png'],
-}
-```
-- Validation at lines 230-237 rejects invalid types
+| File | Purpose |
+|------|---------|
+| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE5B_START.md` | Pre-phase restore point |
+| `phases/DVH-IMS-V1.3/PHASE-5B/PHASE-5B-PUBLIC-NL-COVERAGE-REPORT.md` | Page-by-page coverage |
+| `phases/DVH-IMS-V1.3/PHASE-5B/PHASE-5B-I18N-ENFORCEMENT-REPORT.md` | No hardcoded text confirmation |
+| `phases/DVH-IMS-V1.3/PHASE-5B/PHASE-5B-VERIFICATION-CHECKLIST.md` | Test results |
+| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE5B_COMPLETE.md` | Post-phase restore point |
 
 ---
 
-## SECTION C — NL LOCALIZATION (PUBLIC FRONTEND ONLY)
+## 7. VERIFICATION MATRIX
 
-### C1. i18n framework introduced (public frontend scope)
-
-**Status:** ☑ Complete  
-**Evidence:**
-- Framework: `react-i18next`, `i18next`, `i18next-browser-languagedetector`
-- Config location: `src/i18n/config.ts`
-- Imported in `main.tsx` line 8: `import './i18n/config'`
-
----
-
-### C2. Dutch (NL) is DEFAULT language on first load
-
-**Status:** ☑ Complete  
-**Evidence:**
-- `src/i18n/config.ts` lines 26-27:
-```javascript
-fallbackLng: 'nl',
-lng: 'nl', // Force Dutch as default
-```
-- Screenshot confirms NL visible: "Welkom bij de Bouwsubsidie Aanvraag"
+| Test ID | Scenario | Expected Result |
+|---------|----------|-----------------|
+| P5B-T01 | Landing page first load | NL default everywhere |
+| P5B-T02 | Landing page EN switch | All text in English |
+| P5B-T03 | Housing wizard first load | NL default |
+| P5B-T04 | Housing wizard all steps | NL labels, validation, errors |
+| P5B-T05 | Status tracker first load | NL default |
+| P5B-T06 | Status form labels | NL placeholders, validation |
+| P5B-T07 | Status result display | NL dates, labels |
+| P5B-T08 | Footer text | NL ministry name |
+| P5B-T09 | Language persistence | Preference saved in session |
+| P5B-T10 | Admin unchanged | All admin pages EN-only |
+| P5B-T11 | Bouwsubsidie unchanged | No regression from 5A |
 
 ---
 
-### C3. English (EN) is available via frontend language switch
+## 8. EXPLICIT CONSTRAINTS
 
-**Status:** ☑ Complete  
-**Evidence:**
-- `LanguageSwitcher.tsx` component created
-- Two languages defined: `{ code: 'nl', label: 'Nederlands' }`, `{ code: 'en', label: 'English' }`
-- Integrated in `PublicHeader.tsx` line 33
+### 8.1 Allowed Actions
+| Action | Authorized |
+|--------|------------|
+| Extend translation files | ALLOWED |
+| Modify public pages for i18n | ALLOWED |
+| Add `useTranslation` to public components | ALLOWED |
+| Change option arrays to labelKey pattern | ALLOWED |
 
----
-
-### C4. All public wizard steps localized to NL
-
-| Component | Localized | Evidence |
-|-----------|-----------|----------|
-| Step0Introduction | ☑ | Uses `t('bouwsubsidie.step0.title')` |
-| Step1PersonalInfo | ☑ | Uses `t('bouwsubsidie.step1.nationalId')` |
-| Step2ContactInfo | ☑ | Uses `t('bouwsubsidie.step2.phoneNumber')` |
-| Step3Household | ☑ | Uses `t('bouwsubsidie.step3.householdSize')` |
-| Step4Address | ☑ | Uses `t('bouwsubsidie.step4.district')` |
-| Step5Context | ☑ | Uses `t('bouwsubsidie.step5.applicationReason')` |
-| Step6Documents | ☑ | Uses `t('bouwsubsidie.step6.title')` |
-| Step7Review | ☑ | Uses `t('bouwsubsidie.step7.sectionPersonal')` |
-| Step8Receipt | ☑ | Uses `t('bouwsubsidie.step8.successTitle')` |
-| WizardStep | ☑ | Uses `t('common.continue')`, `t('common.back')` |
-| PublicHeader | ☑ | Uses `t('header.title')`, `t('header.ministry')` |
-| Labels | ☑ | All labels use translation keys |
-| Validation | ☑ | 20+ validation messages in nl.json |
-| Error messages | ☑ | 6 error messages in nl.json |
-
-**Status:** ☑ Complete  
-**Evidence:** 
-- `nl.json` contains 224 lines of Dutch translations
-- All wizard step files import `useTranslation` and use `t()` function
+### 8.2 Forbidden Actions
+| Action | Status |
+|--------|--------|
+| Localize Admin UI | FORBIDDEN |
+| Change roles or permissions | FORBIDDEN |
+| Modify workflow logic | FORBIDDEN |
+| Change authentication | FORBIDDEN |
+| Modify database schema | FORBIDDEN |
 
 ---
 
-### C5. No hardcoded user-facing text remains in public wizard
+## 9. ESTIMATED EFFORT
 
-**Status:** ☑ Verified  
-**Evidence:**
-- `constants.ts` uses `labelKey` pattern: `{ value: 'male', labelKey: 'bouwsubsidie.gender.male' }`
-- All step components use `t()` function for text
-- `WIZARD_STEPS` uses `titleKey` pattern
-
----
-
-### C6. Admin interface remains EN-only
-
-**Status:** ☑ Verified  
-**Evidence:**
-- `subsidy-cases/[id]/page.tsx` lines 78-96: STATUS_BADGES uses hardcoded English:
-```javascript
-received: { bg: 'secondary', label: 'Received' },
-in_social_review: { bg: 'info', label: 'In Social Review' },
-```
-- No `useTranslation()` import in admin components
+| Component | Files | Estimated Time |
+|-----------|-------|----------------|
+| Translation files | 2 | 2 hours |
+| Landing page | 1 | 0.5 hours |
+| Housing wizard | 12 | 3 hours |
+| Status tracker | 5 | 1.5 hours |
+| Public footer | 1 | 0.5 hours |
+| Documentation | 5 | 1 hour |
+| Testing | - | 1 hour |
+| **TOTAL** | 26 files | ~9.5 hours |
 
 ---
 
-## SECTION D — SCOPE PROTECTION
+## 10. DELIVERABLES
 
-### D1. Woningregistratie wizard remains unchanged
-
-**Status:** ☑ Verified  
-**Evidence:**
-- `housing/register/constants.ts` uses hardcoded English labels:
-  - `{ value: 'house', label: 'House' }` (not translation keys)
-  - `WIZARD_STEPS` has `{ title: 'Introduction' }` (not `titleKey`)
-- No i18n imports in housing wizard
-- No Step6Documents.tsx in housing wizard (different step structure)
-- Housing wizard has different steps: Step6Income, Step7Urgency (not document upload)
-
----
-
-### D2. No authentication or account model changes introduced
-
-**Status:** ☑ Verified  
-**Evidence:**
-- No changes to auth configuration
-- No public account creation flow
-- Wizard uses anonymous submission with reference number + access token
+| # | Artifact | Purpose |
+|---|----------|---------|
+| 1 | RESTORE_POINT_V1.3_PHASE5B_START.md | Pre-phase snapshot |
+| 2 | Extended nl.json (~500 keys total) | Dutch translations |
+| 3 | Extended en.json (~500 keys total) | English translations |
+| 4 | Localized landing page | NL default |
+| 5 | Localized housing wizard (10 steps) | NL default |
+| 6 | Localized status tracker (3 components) | NL default |
+| 7 | Localized public footer | NL default |
+| 8 | PHASE-5B-PUBLIC-NL-COVERAGE-REPORT.md | Coverage documentation |
+| 9 | PHASE-5B-I18N-ENFORCEMENT-REPORT.md | Enforcement confirmation |
+| 10 | PHASE-5B-VERIFICATION-CHECKLIST.md | Test results |
+| 11 | RESTORE_POINT_V1.3_PHASE5B_COMPLETE.md | Post-phase snapshot |
 
 ---
 
-### D3. No Darkone Admin UI changes performed
+## 11. GOVERNANCE STATEMENT
 
-**Status:** ☑ Verified  
-**Evidence:**
-- Admin components unchanged (hardcoded English labels)
-- No CSS/SCSS modifications to admin styles
-- Phase 5A scope explicitly PUBLIC WIZARD ONLY
+**V1.3 Phase 5B implements FULL PUBLIC NL STANDARDIZATION.**
 
----
+- ALL public-facing content will default to Dutch (NL)
+- English remains available via language switch
+- Language preference persists per session
+- Admin interface remains EN-only
+- No workflow, role, or schema changes
 
-## SECTION E — TESTING & VERIFICATION
-
-### E1. Test case: Bouwsubsidie dossier cannot be submitted without uploads
-
-**Result:** ☐ REQUIRES MANUAL TESTING  
-**Evidence:**
-- UI enforcement confirmed via code review (`nextDisabled={!allMandatoryUploaded}`)
-- Screenshot shows NL wizard loaded correctly
-- Actual upload flow requires manual verification
+**STOP after Phase 5B completion and await authorization for next phase.**
 
 ---
 
-### E2. Test case: Uploaded documents render correctly in Admin
-
-**Result:** ☐ REQUIRES MANUAL TESTING  
-**Evidence:**
-- Admin component fetches from `subsidy_document_upload` table
-- Staff RLS policy allows SELECT on citizen-uploads
-- Actual rendering requires manual verification
-
----
-
-### E3. Test case: NL loads by default, EN switch works
-
-**Result:** ☑ Pass  
-**Evidence:**
-- Screenshot confirms NL default: "Welkom bij de Bouwsubsidie Aanvraag"
-- Header shows "Nederlands" in language switcher
-- Language switcher component verified functional
-
----
-
-### E4. No regression detected in existing workflows
-
-**Result:** ☑ Pass  
-**Evidence:**
-- Backend triggers unchanged
-- Admin workflow transitions preserved
-- STATUS_TRANSITIONS constant unchanged
-- Housing wizard unchanged
-
----
-
-## SECTION F — DOCUMENTATION OUTPUT
-
-### F1. PHASE-5A-WIZARD-UPLOAD-REPORT.md created
-
-**Status:** ☐ Missing  
-**Path:** `phases/DVH-IMS-V1.3/PHASE-5A/` directory does not exist
-
----
-
-### F2. PHASE-5A-LOCALIZATION-REPORT.md created
-
-**Status:** ☐ Missing  
-**Path:** `phases/DVH-IMS-V1.3/PHASE-5A/` directory does not exist
-
----
-
-### F3. PHASE-5A-VERIFICATION-CHECKLIST.md completed
-
-**Status:** ☐ Missing  
-**Path:** `phases/DVH-IMS-V1.3/PHASE-5A/` directory does not exist
-
----
-
-## FINAL GOVERNANCE DECISION
-
-### Phase 5A Status:
-
-**☑ PARTIALLY COMPLIANT — remediation required**
-
----
-
-## IMPLEMENTATION SUMMARY
-
-| Category | Implemented | Partial | Missing |
-|----------|-------------|---------|---------|
-| i18n Framework | ☑ | | |
-| NL Translations (224 lines) | ☑ | | |
-| Language Switcher | ☑ | | |
-| All Wizard Steps Localized | ☑ | | |
-| Document Upload UI | ☑ | | |
-| Storage Bucket + RLS | ☑ | | |
-| File Type Validation | ☑ | | |
-| Mandatory Doc Blocking (UI) | ☑ | | |
-| Edge Function Document Linking | | ⚠️ | |
-| Backend Document Enforcement | | ⚠️ | |
-| Completion Restore Point | | | ☐ |
-| Phase 5A Documentation | | | ☐ |
-
----
-
-## NOTES / DEVIATIONS
-
-### Items Requiring Remediation
-
-1. **RESTORE_POINT_V1.3_PHASE5A_COMPLETE.md** — Must be created
-2. **phases/DVH-IMS-V1.3/PHASE-5A/** — Directory and reports must be created:
-   - PHASE-5A-WIZARD-UPLOAD-REPORT.md
-   - PHASE-5A-LOCALIZATION-REPORT.md
-   - PHASE-5A-VERIFICATION-CHECKLIST.md
-3. **Edge Function Update** — `submit-bouwsubsidie-application` should create `subsidy_document_upload` records linking files to case
-
-### Items Working As Designed
-
-- Housing wizard unchanged (correct — scope was Bouwsubsidie only)
-- Admin EN-only (correct — Phase 5A scope)
-- No backend document enforcement (acceptable — UI blocks progression)
-
----
-
-## STOP RULE COMPLIANCE
-
-**No next phase may be initiated until:**
-1. Completion restore point created
-2. Phase 5A documentation created
-3. Checklist formally signed off
-
----
-
-**END OF VERIFICATION CHECKLIST**
+**PHASE 5B — FULL PUBLIC NL STANDARDIZATION — AWAITING APPROVAL TO BEGIN IMPLEMENTATION**
 

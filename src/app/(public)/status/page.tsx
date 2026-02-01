@@ -1,17 +1,19 @@
 /**
  * Status Tracker Page
- * Phase 5 - Checkpoint 6
+ * Phase 5B - Full NL localization
  * 
  * Public page for citizens to check their application status
  * using reference number and access token.
  * 
  * Uses shared PublicHeader/PublicFooter for Darkone 1:1 parity.
  * NO breadcrumb per CP6 requirements.
+ * i18n enabled - NL default
  */
 
 import { useState } from 'react'
 import { Container, Card, CardBody, Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/integrations/supabase/client'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { PublicHeader, PublicFooter } from '@/components/public'
@@ -23,6 +25,7 @@ import type { LookupState, StatusLookupResponse } from './types'
  * Main Status Tracker Page Component
  */
 const StatusTrackerPage = () => {
+  const { t } = useTranslation()
   const [lookupState, setLookupState] = useState<LookupState>('idle')
   const [result, setResult] = useState<StatusLookupResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +37,7 @@ const StatusTrackerPage = () => {
   const getSafeErrorMessage = (response: any, error: any): string => {
     // Network/offline detection
     if (!navigator.onLine || error?.message?.toLowerCase().includes('fetch')) {
-      return 'Unable to connect to the server. Please check your internet connection and try again.'
+      return t('errors.networkError')
     }
     
     const status = response?.error?.status
@@ -42,21 +45,21 @@ const StatusTrackerPage = () => {
     
     // Rate limiting
     if (status === 429 || errorStr.toLowerCase().includes('too many')) {
-      return 'You have submitted too many requests. Please wait one hour before trying again.'
+      return t('errors.rateLimited')
     }
     
     // Invalid credentials (specific to status lookup)
     if (status === 401 || errorStr.toLowerCase().includes('invalid') || errorStr.toLowerCase().includes('not found')) {
-      return 'The reference number or access token you entered is incorrect. Please check and try again.'
+      return t('errors.invalidCredentials')
     }
     
     // Server errors
     if (status >= 500) {
-      return 'We were unable to retrieve your status at this time. Please try again later.'
+      return t('errors.serverError')
     }
     
     // Generic fallback
-    return 'We were unable to check your application status. Please try again.'
+    return t('errors.statusLookupFailed')
   }
 
   /**
@@ -116,7 +119,7 @@ const StatusTrackerPage = () => {
             <CardBody className="text-center py-4">
               <p className="text-muted small mb-3 d-flex align-items-center justify-content-center gap-2">
                 <IconifyIcon icon="mingcute:question-line" />
-                <span>Need help? Contact the Ministry of Social Affairs and Housing</span>
+                <span>{t('status.help.text')}</span>
               </p>
               <Link to="/">
                 <Button 
@@ -124,7 +127,7 @@ const StatusTrackerPage = () => {
                   className="d-inline-flex align-items-center justify-content-center gap-2"
                 >
                   <IconifyIcon icon="mingcute:arrow-left-line" />
-                  <span>Back to Home</span>
+                  <span>{t('status.help.backToHome')}</span>
                 </Button>
               </Link>
             </CardBody>

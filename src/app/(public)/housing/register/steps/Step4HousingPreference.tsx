@@ -2,29 +2,31 @@ import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
+import { useTranslation } from 'react-i18next'
 import WizardStep from '@/components/public/WizardStep'
 import { DISTRICTS } from '@/constants/districts'
 import { INTEREST_TYPES } from '../constants'
 import type { WizardStepProps } from '../types'
 
-const schema = yup.object({
-  interest_type: yup
-    .string()
-    .required('Please select your interest type'),
-  preferred_district: yup
-    .string()
-    .required('Please select your preferred district'),
-})
-
-type FormData = yup.InferType<typeof schema>
-
 /**
  * Step 4: Housing Preference
  * 
  * Collects interest type (rent/rent-to-own/purchase) and preferred district.
+ * i18n enabled - NL default
  */
 const Step4HousingPreference = ({ formData, updateFormData, onNext, onBack }: WizardStepProps) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { t } = useTranslation()
+
+  const schema = yup.object({
+    interest_type: yup
+      .string()
+      .required(t('validation.interestTypeRequired')),
+    preferred_district: yup
+      .string()
+      .required(t('validation.preferredDistrictRequired')),
+  })
+
+  const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       interest_type: formData.interest_type,
@@ -32,15 +34,15 @@ const Step4HousingPreference = ({ formData, updateFormData, onNext, onBack }: Wi
     },
   })
 
-  const onSubmit = (data: FormData) => {
+  const onSubmit = (data: any) => {
     updateFormData(data)
     onNext()
   }
 
   return (
     <WizardStep
-      title="Housing Preference"
-      description="What type of housing are you interested in?"
+      title={t('housing.step4.title')}
+      description={t('housing.step4.description')}
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
@@ -50,15 +52,15 @@ const Step4HousingPreference = ({ formData, updateFormData, onNext, onBack }: Wi
             <Row className="g-3">
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Interest Type</Form.Label>
+                  <Form.Label>{t('housing.step4.interestType')}</Form.Label>
                   <Form.Select
                     {...register('interest_type')}
                     isInvalid={!!errors.interest_type}
                   >
-                    <option value="">Select interest type</option>
+                    <option value="">{t('housing.step4.interestTypePlaceholder')}</option>
                     {INTEREST_TYPES.map((type) => (
                       <option key={type.value} value={type.value}>
-                        {type.label}
+                        {t(type.labelKey)}
                       </option>
                     ))}
                   </Form.Select>
@@ -70,12 +72,12 @@ const Step4HousingPreference = ({ formData, updateFormData, onNext, onBack }: Wi
 
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Preferred District</Form.Label>
+                  <Form.Label>{t('housing.step4.preferredDistrict')}</Form.Label>
                   <Form.Select
                     {...register('preferred_district')}
                     isInvalid={!!errors.preferred_district}
                   >
-                    <option value="">Select preferred district</option>
+                    <option value="">{t('housing.step4.preferredDistrictPlaceholder')}</option>
                     {DISTRICTS.map((district) => (
                       <option key={district.code} value={district.code}>
                         {district.name}
@@ -91,8 +93,7 @@ const Step4HousingPreference = ({ formData, updateFormData, onNext, onBack }: Wi
 
             <div className="bg-light rounded p-3 mt-4">
               <p className="text-muted small mb-0">
-                <strong>Note:</strong> Your preferred district is used for allocation 
-                prioritization. Final allocation may be in a different district based on availability.
+                <strong>{t('common.optional')}:</strong> {t('housing.step4.note')}
               </p>
             </div>
           </Form>

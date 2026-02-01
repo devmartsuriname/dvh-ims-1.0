@@ -1,5 +1,6 @@
 import { Card, Row, Col, Form } from 'react-bootstrap'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import WizardStep from '@/components/public/WizardStep'
 
@@ -12,18 +13,20 @@ interface Step0IntroductionProps {
  * 
  * Explains the housing registration process and waiting list.
  * User must acknowledge understanding before proceeding.
+ * i18n enabled - NL default
  */
 const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
+  const { t } = useTranslation()
   const [acknowledged, setAcknowledged] = useState(false)
 
   return (
     <WizardStep
-      title="Welcome to the Housing Registration"
-      description="Register for the official housing waiting list in Suriname."
+      title={t('housing.step0.title')}
+      description={t('housing.step0.description')}
       onNext={onNext}
       isFirstStep={true}
       nextDisabled={!acknowledged}
-      nextLabel="Begin Registration"
+      nextLabel={t('common.beginRegistration')}
     >
       <Card className="border-0 shadow-none mb-4">
         <Card.Body className="p-0">
@@ -35,27 +38,24 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
                 className="text-primary fs-4 me-2 mt-1" 
               />
               <div>
-                <h6 className="fw-semibold mb-2">About the Housing Waiting List</h6>
+                <h6 className="fw-semibold mb-2">{t('housing.step0.aboutTitle')}</h6>
                 <p className="text-muted mb-0 small">
-                  This registration places you on the official housing waiting list managed by 
-                  the Ministry of Social Affairs and Housing. Registration does not guarantee 
-                  immediate housing allocation. Allocation is based on availability, urgency, 
-                  and waiting list position.
+                  {t('housing.step0.aboutText')}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Process Steps */}
-          <h6 className="fw-semibold mb-3">Registration Process</h6>
+          <h6 className="fw-semibold mb-3">{t('housing.step0.processTitle')}</h6>
           <Row className="g-3 mb-4">
             <Col md={4}>
               <div className="text-center p-3 bg-light rounded">
                 <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style={{ width: 48, height: 48 }}>
                   <IconifyIcon icon="mingcute:edit-line" className="text-primary fs-5" />
                 </div>
-                <h6 className="small fw-semibold mb-1">1. Register</h6>
-                <p className="text-muted small mb-0">Complete this registration form</p>
+                <h6 className="small fw-semibold mb-1">{t('housing.step0.process1Title')}</h6>
+                <p className="text-muted small mb-0">{t('housing.step0.process1Text')}</p>
               </div>
             </Col>
             <Col md={4}>
@@ -63,8 +63,8 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
                 <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style={{ width: 48, height: 48 }}>
                   <IconifyIcon icon="mingcute:time-line" className="text-primary fs-5" />
                 </div>
-                <h6 className="small fw-semibold mb-1">2. Wait for Review</h6>
-                <p className="text-muted small mb-0">Your registration will be verified</p>
+                <h6 className="small fw-semibold mb-1">{t('housing.step0.process2Title')}</h6>
+                <p className="text-muted small mb-0">{t('housing.step0.process2Text')}</p>
               </div>
             </Col>
             <Col md={4}>
@@ -72,30 +72,30 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
                 <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style={{ width: 48, height: 48 }}>
                   <IconifyIcon icon="mingcute:home-4-line" className="text-primary fs-5" />
                 </div>
-                <h6 className="small fw-semibold mb-1">3. Get Allocated</h6>
-                <p className="text-muted small mb-0">Housing assigned when available</p>
+                <h6 className="small fw-semibold mb-1">{t('housing.step0.process3Title')}</h6>
+                <p className="text-muted small mb-0">{t('housing.step0.process3Text')}</p>
               </div>
             </Col>
           </Row>
 
           {/* Requirements */}
-          <h6 className="fw-semibold mb-3">What You Will Need</h6>
+          <h6 className="fw-semibold mb-3">{t('housing.step0.requirementsTitle')}</h6>
           <ul className="list-unstyled mb-4">
             <li className="d-flex align-items-center mb-2">
               <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
-              <span className="small">Valid National ID number</span>
+              <span className="small">{t('housing.step0.requirement1')}</span>
             </li>
             <li className="d-flex align-items-center mb-2">
               <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
-              <span className="small">Contact information (phone number required)</span>
+              <span className="small">{t('housing.step0.requirement2')}</span>
             </li>
             <li className="d-flex align-items-center mb-2">
               <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
-              <span className="small">Information about your current living situation</span>
+              <span className="small">{t('housing.step0.requirement3')}</span>
             </li>
             <li className="d-flex align-items-center mb-2">
               <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
-              <span className="small">Income details (if applicable)</span>
+              <span className="small">{t('housing.step0.requirement4')}</span>
             </li>
           </ul>
 
@@ -108,9 +108,7 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
               onChange={(e) => setAcknowledged(e.target.checked)}
               label={
                 <span className="small">
-                  I understand that this is a registration for the housing waiting list and that 
-                  placement does not guarantee immediate housing. I confirm that I will provide 
-                  accurate information.
+                  {t('housing.step0.acknowledgementLabel')}
                 </span>
               }
             />

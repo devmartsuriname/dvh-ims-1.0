@@ -1,8 +1,10 @@
 /**
  * Status Timeline Component
- * Phase 5 - Checkpoint 6
+ * Phase 5B - Full NL localization
+ * i18n enabled - NL default with locale-aware date formatting
  */
 
+import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { STATUS_CONFIG } from '../constants'
 import type { StatusHistoryEntry } from '../types'
@@ -12,9 +14,12 @@ interface StatusTimelineProps {
 }
 
 const StatusTimeline = ({ history }: StatusTimelineProps) => {
+  const { t, i18n } = useTranslation()
+  const locale = i18n.language === 'nl' ? 'nl-NL' : 'en-US'
+
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -23,7 +28,7 @@ const StatusTimeline = ({ history }: StatusTimelineProps) => {
 
   const formatTime = (dateString: string): string => {
     const date = new Date(dateString)
-    return date.toLocaleTimeString('en-US', {
+    return date.toLocaleTimeString(locale, {
       hour: '2-digit',
       minute: '2-digit',
     })
@@ -64,7 +69,7 @@ const StatusTimeline = ({ history }: StatusTimelineProps) => {
             <div className="flex-grow-1 pb-2">
               <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
                 <span className={`badge bg-${config.variant}`}>
-                  {entry.status_label}
+                  {t(config.labelKey)}
                 </span>
                 <small className="text-muted">
                   {formatDate(entry.timestamp)} at {formatTime(entry.timestamp)}

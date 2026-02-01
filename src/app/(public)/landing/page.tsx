@@ -1,5 +1,6 @@
 import { Card, CardBody, Row, Col, Container, Button } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { PublicHeader, PublicFooter } from '@/components/public'
 import bgPattern from '@/assets/images/bg-pattern-1.png'
@@ -9,10 +10,12 @@ import bgPattern from '@/assets/images/bg-pattern-1.png'
  * 
  * Darkone 1:1 implementation with react-bootstrap
  * Light theme scoped via PublicLayout wrapper
- * English baseline (no Dutch)
+ * i18n enabled - NL default
  * Premium government-grade visual tone
  */
 const LandingPage = () => {
+  const { t } = useTranslation()
+
   return (
     <div className="d-flex flex-column min-vh-100">
       <PublicHeader />
@@ -36,11 +39,10 @@ const LandingPage = () => {
           <Row className="align-items-center justify-content-center text-center py-4">
             <Col lg={8}>
               <h1 className="display-5 fw-bold mb-3 text-white">
-                Welcome to VolksHuisvesting
+                {t('landing.heroTitle')}
               </h1>
               <p className="lead text-white-50 mb-0">
-                Your portal for housing services in Suriname. Apply for construction subsidies, 
-                register for social housing, or check the status of your application.
+                {t('landing.heroDescription')}
               </p>
             </Col>
           </Row>
@@ -52,8 +54,8 @@ const LandingPage = () => {
         <Container>
           <Row className="mb-4">
             <Col className="text-center">
-              <h2 className="fw-bold mb-2">Our Services</h2>
-              <p className="text-muted">Select a service to get started</p>
+              <h2 className="fw-bold mb-2">{t('landing.servicesTitle')}</h2>
+              <p className="text-muted">{t('landing.servicesSubtitle')}</p>
             </Col>
           </Row>
 
@@ -73,16 +75,16 @@ const LandingPage = () => {
                       />
                     </span>
                   </div>
-                  <h5 className="fw-bold mb-2">Construction Subsidy</h5>
+                  <h5 className="fw-bold mb-2">{t('landing.bouwsubsidie.title')}</h5>
                   <p className="text-muted small mb-3">
-                    Apply for financial support for home construction or renovation projects.
+                    {t('landing.bouwsubsidie.description')}
                   </p>
                   <Link to="/bouwsubsidie/apply">
                     <Button 
                       variant="primary" 
                       className="w-100 d-flex align-items-center justify-content-center gap-2"
                     >
-                      <span>Start Application</span>
+                      <span>{t('landing.bouwsubsidie.button')}</span>
                       <IconifyIcon icon="mingcute:arrow-right-line" />
                     </Button>
                   </Link>
@@ -105,16 +107,16 @@ const LandingPage = () => {
                       />
                     </span>
                   </div>
-                  <h5 className="fw-bold mb-2">Housing Registration</h5>
+                  <h5 className="fw-bold mb-2">{t('landing.housing.title')}</h5>
                   <p className="text-muted small mb-3">
-                    Register as a housing applicant to join the waiting list for social housing.
+                    {t('landing.housing.description')}
                   </p>
                   <Link to="/housing/register">
                     <Button 
                       variant="success" 
                       className="w-100 d-flex align-items-center justify-content-center gap-2"
                     >
-                      <span>Register Now</span>
+                      <span>{t('landing.housing.button')}</span>
                       <IconifyIcon icon="mingcute:arrow-right-line" />
                     </Button>
                   </Link>
@@ -137,16 +139,16 @@ const LandingPage = () => {
                       />
                     </span>
                   </div>
-                  <h5 className="fw-bold mb-2">Check Status</h5>
+                  <h5 className="fw-bold mb-2">{t('landing.status.title')}</h5>
                   <p className="text-muted small mb-3">
-                    Track the progress of your subsidy or housing registration application.
+                    {t('landing.status.description')}
                   </p>
                   <Link to="/status">
                     <Button 
                       variant="info" 
                       className="w-100 d-flex align-items-center justify-content-center gap-2"
                     >
-                      <span>View Status</span>
+                      <span>{t('landing.status.button')}</span>
                       <IconifyIcon icon="mingcute:arrow-right-line" />
                     </Button>
                   </Link>

@@ -2,65 +2,62 @@
  * Housing Registration Wizard Constants
  * 
  * Predefined options and wizard configuration
+ * i18n enabled - uses labelKey pattern for translations
  * 
- * UPDATED: Admin v1.1-D - Aligned with Edge Function contract
- * - Changed full_name → first_name + last_name
- * - Added gender field
- * - Changed current_address → address_line_1
- * - Changed current_district → district
+ * UPDATED: Phase 5B - Full NL localization
  */
 
 export const HOUSING_TYPES = [
-  { value: 'house', label: 'House' },
-  { value: 'apartment', label: 'Apartment' },
-  { value: 'room', label: 'Room' },
-  { value: 'shared', label: 'Shared accommodation' },
-  { value: 'other', label: 'Other' },
+  { value: 'house', labelKey: 'housing.housingTypes.house' },
+  { value: 'apartment', labelKey: 'housing.housingTypes.apartment' },
+  { value: 'room', labelKey: 'housing.housingTypes.room' },
+  { value: 'shared', labelKey: 'housing.housingTypes.shared' },
+  { value: 'other', labelKey: 'housing.housingTypes.other' },
 ] as const
 
 export const INTEREST_TYPES = [
-  { value: 'rent', label: 'Rent' },
-  { value: 'rent_to_own', label: 'Rent-to-own' },
-  { value: 'purchase', label: 'Purchase' },
+  { value: 'rent', labelKey: 'housing.interestTypes.rent' },
+  { value: 'rent_to_own', labelKey: 'housing.interestTypes.rent_to_own' },
+  { value: 'purchase', labelKey: 'housing.interestTypes.purchase' },
 ] as const
 
 export const APPLICATION_REASONS = [
-  { value: 'no_housing', label: 'Currently without proper housing' },
-  { value: 'overcrowding', label: 'Overcrowded living conditions' },
-  { value: 'unsafe', label: 'Unsafe or unhealthy housing' },
-  { value: 'calamity', label: 'Calamity / disaster affected' },
-  { value: 'eviction', label: 'Facing eviction' },
-  { value: 'family_growth', label: 'Family growth' },
-  { value: 'other', label: 'Other reason' },
+  { value: 'no_housing', labelKey: 'housing.reasons.no_housing' },
+  { value: 'overcrowding', labelKey: 'housing.reasons.overcrowding' },
+  { value: 'unsafe', labelKey: 'housing.reasons.unsafe' },
+  { value: 'calamity', labelKey: 'housing.reasons.calamity' },
+  { value: 'eviction', labelKey: 'housing.reasons.eviction' },
+  { value: 'family_growth', labelKey: 'housing.reasons.family_growth' },
+  { value: 'other', labelKey: 'housing.reasons.other' },
 ] as const
 
 export const INCOME_SOURCES = [
-  { value: 'employment', label: 'Employment' },
-  { value: 'self_employed', label: 'Self-employed' },
-  { value: 'pension', label: 'Pension' },
-  { value: 'social_assistance', label: 'Social assistance' },
-  { value: 'unemployment', label: 'Unemployment benefits' },
-  { value: 'other', label: 'Other' },
-  { value: 'none', label: 'No income' },
+  { value: 'employment', labelKey: 'housing.incomeSources.employment' },
+  { value: 'self_employed', labelKey: 'housing.incomeSources.self_employed' },
+  { value: 'pension', labelKey: 'housing.incomeSources.pension' },
+  { value: 'social_assistance', labelKey: 'housing.incomeSources.social_assistance' },
+  { value: 'unemployment', labelKey: 'housing.incomeSources.unemployment' },
+  { value: 'other', labelKey: 'housing.incomeSources.other' },
+  { value: 'none', labelKey: 'housing.incomeSources.none' },
 ] as const
 
 export const GENDER_OPTIONS = [
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'other', label: 'Other' },
+  { value: 'male', labelKey: 'housing.gender.male' },
+  { value: 'female', labelKey: 'housing.gender.female' },
+  { value: 'other', labelKey: 'housing.gender.other' },
 ] as const
 
 export const WIZARD_STEPS = [
-  { title: 'Introduction' },
-  { title: 'Personal Info' },
-  { title: 'Contact' },
-  { title: 'Living Situation' },
-  { title: 'Preference' },
-  { title: 'Reason' },
-  { title: 'Income' },
-  { title: 'Urgency' },
-  { title: 'Review' },
-  { title: 'Receipt' },
+  { titleKey: 'wizard.steps.introduction' },
+  { titleKey: 'wizard.steps.personalInfo' },
+  { titleKey: 'wizard.steps.contact' },
+  { titleKey: 'wizard.steps.livingSituation' },
+  { titleKey: 'wizard.steps.preference' },
+  { titleKey: 'wizard.steps.reason' },
+  { titleKey: 'wizard.steps.income' },
+  { titleKey: 'wizard.steps.urgency' },
+  { titleKey: 'wizard.steps.review' },
+  { titleKey: 'wizard.steps.receipt' },
 ] as const
 
 export const INITIAL_FORM_DATA = {

@@ -1,11 +1,11 @@
 
 
-# DVH-IMS V1.3 — Phase 4B Execution Plan
+# DVH-IMS V1.3 — Phase 4C Execution Plan
 
 ## Document Type: Phase Scope & Execution Plan
 ## Version: 1.0
 ## Date: 2026-01-30
-## Phase: Phase 4B — Technical Inspector Activation (Bouwsubsidie Only)
+## Phase: Phase 4C — Administrative Officer Workflow Activation (Bouwsubsidie Only)
 ## Authorization: Controlled Sequential Activation Path
 
 ---
@@ -20,178 +20,183 @@
 | V1.3 Phase 2 (S-03) | CLOSED & LOCKED |
 | V1.3 Phase 3 (Preparation) | CLOSED & LOCKED |
 | V1.3 Phase 4A (Social Field Worker) | CLOSED & LOCKED |
-| V1.3 Phase 4B | OPEN — Technical Inspector Activation |
+| V1.3 Phase 4B (Technical Inspector) | CLOSED & LOCKED |
+| V1.3 Phase 4C | OPEN — Admin Review Workflow Activation |
 
 **Scope Constraint:** Bouwsubsidie ONLY — Woningregistratie remains UNCHANGED
 
 ---
 
-## 2. Current State Analysis
+## 2. Critical Clarification
 
-### 2.1 Current app_role Enum (8 Values)
+### 2.1 Role Status
 
-| Enum Value | Status |
-|------------|--------|
-| system_admin | ACTIVE |
-| minister | ACTIVE |
-| project_leader | ACTIVE |
-| frontdesk_bouwsubsidie | ACTIVE |
-| frontdesk_housing | ACTIVE |
-| admin_staff | ACTIVE |
-| audit | ACTIVE |
-| social_field_worker | ACTIVE (Phase 4A) |
+The `admin_staff` role **already exists** in the database enum (9 current values) and has active RLS policies. This phase does NOT add a new enum value.
 
-### 2.2 Current Bouwsubsidie Workflow (Post Phase 4A)
+### 2.2 What This Phase Activates
 
-```text
-received → in_social_review → social_completed → screening → 
-           needs_more_docs/fieldwork → approved_for_council → 
-           council_doc_generated → finalized
-           (any non-terminal) → rejected
-```
+This phase activates the **workflow enforcement** for the Administrative Officer completeness check step by:
+1. Adding new status values to the workflow
+2. Updating the transition trigger to enforce the admin review step
+3. Adding UI status badges and transitions
 
-### 2.3 Target Workflow (Phase 4B — Technical Inspector Integration)
+---
+
+## 3. Current State Analysis
+
+### 3.1 Current app_role Enum (9 Values)
+
+| # | Enum Value | Status |
+|---|------------|--------|
+| 1 | system_admin | ACTIVE |
+| 2 | minister | ACTIVE |
+| 3 | project_leader | ACTIVE |
+| 4 | frontdesk_bouwsubsidie | ACTIVE |
+| 5 | frontdesk_housing | ACTIVE |
+| 6 | admin_staff | ACTIVE |
+| 7 | audit | ACTIVE |
+| 8 | social_field_worker | ACTIVE (Phase 4A) |
+| 9 | technical_inspector | ACTIVE (Phase 4B) |
+
+### 3.2 Current Bouwsubsidie Workflow (Post Phase 4B)
 
 ```text
 received → in_social_review → social_completed → in_technical_review → 
            technical_approved → screening → needs_more_docs/fieldwork → 
            approved_for_council → council_doc_generated → finalized
            (any non-terminal) → rejected
-           in_technical_review → returned_to_social
+```
+
+### 3.3 Target Workflow (Phase 4C — Admin Review Integration)
+
+```text
+received → in_social_review → social_completed → in_technical_review → 
+           technical_approved → in_admin_review → admin_complete → 
+           screening → needs_more_docs/fieldwork → approved_for_council → 
+           council_doc_generated → finalized
+           (any non-terminal) → rejected
+           in_admin_review → returned_to_technical
 ```
 
 ---
 
-## 3. Phase 4B Objective
+## 4. Phase 4C Objective
 
-Activate the **Technical Inspector** role for Bouwsubsidie service ONLY, with:
-- RBAC enforcement at database level
-- Dossier state transition constraints (mandatory technical inspection after social completion)
-- Full audit logging for technical inspection actions
+Activate the **Administrative Officer completeness check workflow step** for Bouwsubsidie service ONLY, with:
+- New status values: `in_admin_review`, `admin_complete`, `returned_to_technical`
+- Mandatory completeness check between technical approval and screening
+- Full audit logging for admin review actions
 - Traceability via correlation_id
 
 ---
 
-## 4. Implementation Scope
+## 5. Implementation Scope
 
-### 4.1 What Gets Activated
+### 5.1 What Gets Activated
 
 | Item | Action |
 |------|--------|
-| `technical_inspector` enum value | ADD to app_role |
-| Technical Inspector RLS policies | CREATE (Bouwsubsidie only, 10+ policies) |
-| New status values | `in_technical_review`, `technical_approved`, `returned_to_social` |
-| Backend trigger | UPDATE to enforce technical step |
-| TypeScript AppRole | UPDATE to include new role |
-| Audit events | ENABLE for technical_inspector actions |
+| New status values | `in_admin_review`, `admin_complete`, `returned_to_technical` |
+| Backend trigger | UPDATE to enforce admin review step |
+| UI status badges | ADD for new statuses |
+| UI transitions | UPDATE for admin review workflow |
+| Audit events | ENABLE for admin review actions |
 
-### 4.2 What Remains UNCHANGED
+### 5.2 What Remains UNCHANGED
 
 | Item | Status |
 |------|--------|
+| app_role enum | NO CHANGES (admin_staff already exists) |
+| Existing admin_staff RLS policies | NO CHANGES (already have access) |
 | Woningregistratie workflow | NO CHANGES |
 | Housing registration trigger | NO CHANGES |
 | UI menus/dropdowns | NO CHANGES |
-| Existing 8 roles | UNCHANGED permissions |
 | Director role | NOT ACTIVATED |
 | Ministerial Advisor role | NOT ACTIVATED |
 | Social Field Worker logic | PRESERVED |
+| Technical Inspector logic | PRESERVED |
 
 ---
 
-## 5. Database Changes
+## 6. Database Changes
 
-### 5.1 Enum Extension
+### 6.1 No Enum Extension Required
 
-```sql
--- Add technical_inspector to app_role enum
-ALTER TYPE public.app_role ADD VALUE 'technical_inspector';
-```
+The `admin_staff` role already exists in the `app_role` enum. No enum change needed.
 
-### 5.2 Backend Trigger Update
+### 6.2 Backend Trigger Update
 
 The `validate_subsidy_case_transition()` function will be updated to:
 
-| From Status | Allowed Transitions |
-|-------------|---------------------|
-| social_completed | in_technical_review, rejected |
-| in_technical_review | technical_approved, returned_to_social, rejected |
-| returned_to_social | in_social_review, rejected |
-| technical_approved | screening, rejected |
+| From Status | New Allowed Transitions |
+|-------------|-------------------------|
+| technical_approved | in_admin_review, rejected |
+| **in_admin_review** | admin_complete, returned_to_technical, rejected |
+| **returned_to_technical** | in_technical_review, rejected |
+| **admin_complete** | screening, rejected |
 
-**Note:** The transition `social_completed → screening` will be REMOVED to enforce mandatory technical inspection.
+**Key Change:** `technical_approved → screening` is NO LONGER ALLOWED. Cases must go through `in_admin_review`.
 
-### 5.3 RLS Policy Creation (10 Policies)
+### 6.3 No New RLS Policies Required
 
-| # | Policy Name | Table | Operation |
-|---|-------------|-------|-----------|
-| 1 | technical_inspector_select_subsidy_case | subsidy_case | SELECT |
-| 2 | technical_inspector_update_subsidy_case | subsidy_case | UPDATE |
-| 3 | technical_inspector_select_person | person | SELECT |
-| 4 | technical_inspector_select_household | household | SELECT |
-| 5 | technical_inspector_select_technical_report | technical_report | SELECT |
-| 6 | technical_inspector_insert_technical_report | technical_report | INSERT |
-| 7 | technical_inspector_update_technical_report | technical_report | UPDATE |
-| 8 | technical_inspector_insert_audit_event | audit_event | INSERT |
-| 9 | technical_inspector_select_admin_notification | admin_notification | SELECT |
-| 10 | technical_inspector_update_admin_notification | admin_notification | UPDATE |
-| 11 | technical_inspector_insert_subsidy_status_history | subsidy_case_status_history | INSERT |
-| 12 | technical_inspector_select_subsidy_status_history | subsidy_case_status_history | SELECT |
+The existing `admin_staff` role policies already provide:
+- SELECT access to `subsidy_case` (district-scoped)
+- UPDATE access to `subsidy_case` (district-scoped)
+- Access to related tables (person, household, documents)
+
+The new statuses (`in_admin_review`, `admin_complete`) will be accessible through existing policies.
 
 ---
 
-## 6. Application Changes
+## 7. Application Changes
 
-### 6.1 TypeScript Updates
+### 7.1 TypeScript Updates
 
 | File | Change |
 |------|--------|
-| src/hooks/useUserRole.ts | Add 'technical_inspector' to AppRole type |
-| src/hooks/useAuditLog.ts | Add technical inspection audit actions |
+| src/hooks/useAuditLog.ts | Add `ADMIN_REVIEW_STARTED`, `ADMIN_REVIEW_COMPLETED`, `ADMIN_REVIEW_RETURNED` actions |
 
-### 6.2 UI Updates (Subsidy Case Detail Page)
+### 7.2 UI Updates (Subsidy Case Detail Page)
 
 | Component | Change |
 |-----------|--------|
-| STATUS_BADGES | Add in_technical_review, technical_approved, returned_to_social |
-| STATUS_TRANSITIONS | Update to include new technical review states |
+| STATUS_BADGES | Add `in_admin_review`, `admin_complete`, `returned_to_technical` |
+| STATUS_TRANSITIONS | Update to include admin review states |
 
 ---
 
-## 7. Implementation Steps
+## 8. Implementation Steps
 
-### Step 4B-1: Create Restore Point
-Create `RESTORE_POINT_V1.3_PHASE4B_START.md` before any implementation.
+### Step 4C-1: Create Restore Point
+Create `RESTORE_POINT_V1.3_PHASE4C_START.md` before any implementation.
 
-### Step 4B-2: Database Migration
+### Step 4C-2: Database Migration
 Execute migration to:
-1. Add `technical_inspector` to `app_role` enum
-2. Update `validate_subsidy_case_transition()` function with new states
-3. Create 12 RLS policies for technical_inspector
+1. Update `validate_subsidy_case_transition()` function with admin review states
+2. No RLS policy changes needed
 
-### Step 4B-3: TypeScript Updates
-1. Update `AppRole` type in `useUserRole.ts`
-2. Update `AuditAction` type in `useAuditLog.ts` (add TECHNICAL_INSPECTION_STARTED, etc.)
+### Step 4C-3: TypeScript Updates
+1. Update `AuditAction` type in `useAuditLog.ts` (add admin review actions)
 
-### Step 4B-4: Status Handler Updates
+### Step 4C-4: Status Handler Updates
 1. Add new status badges to `STATUS_BADGES` constant
-2. Update `STATUS_TRANSITIONS` to include technical review paths
-3. Modify `social_completed → screening` to `social_completed → in_technical_review`
+2. Update `STATUS_TRANSITIONS` to include admin review paths
+3. Modify `technical_approved → screening` to `technical_approved → in_admin_review`
 
-### Step 4B-5: Verification Testing
-Execute verification tests (see Section 9).
+### Step 4C-5: Verification Testing
+Execute verification tests (see Section 10).
 
-### Step 4B-6: Documentation
-Create Phase 4B artifacts under `phases/DVH-IMS-V1.3/PHASE-4B/`.
+### Step 4C-6: Documentation
+Create Phase 4C artifacts under `phases/DVH-IMS-V1.3/PHASE-4C/`.
 
-### Step 4B-7: Create Completion Restore Point
-Create `RESTORE_POINT_V1.3_PHASE4B_COMPLETE.md`.
+### Step 4C-7: Create Completion Restore Point
+Create `RESTORE_POINT_V1.3_PHASE4C_COMPLETE.md`.
 
 ---
 
-## 8. Transition Matrix Update (Bouwsubsidie)
+## 9. Transition Matrix Update (Bouwsubsidie)
 
-### 8.1 Updated State Machine (Post Phase 4B)
+### 9.1 Updated State Machine (Post Phase 4C)
 
 | From Status | Allowed Transitions |
 |-------------|---------------------|
@@ -199,9 +204,12 @@ Create `RESTORE_POINT_V1.3_PHASE4B_COMPLETE.md`.
 | in_social_review | social_completed, returned_to_intake, rejected |
 | returned_to_intake | in_social_review, rejected |
 | social_completed | in_technical_review, rejected |
-| **in_technical_review** | technical_approved, returned_to_social, rejected |
-| **returned_to_social** | in_social_review, rejected |
-| **technical_approved** | screening, rejected |
+| in_technical_review | technical_approved, returned_to_social, rejected |
+| returned_to_social | in_social_review, rejected |
+| technical_approved | **in_admin_review**, rejected |
+| **in_admin_review** | admin_complete, returned_to_technical, rejected |
+| **returned_to_technical** | in_technical_review, rejected |
+| **admin_complete** | screening, rejected |
 | screening | needs_more_docs, fieldwork, rejected |
 | needs_more_docs | screening, rejected |
 | fieldwork | approved_for_council, rejected |
@@ -210,61 +218,61 @@ Create `RESTORE_POINT_V1.3_PHASE4B_COMPLETE.md`.
 | finalized | (terminal) |
 | rejected | (terminal) |
 
-### 8.2 Backward Compatibility
+### 9.2 Backward Compatibility
 
-Cases in `social_completed` status will require technical review before proceeding.
-Cases already in `screening` or later statuses are unaffected.
+- Cases already in `screening` or later: **Unaffected**
+- Cases in `technical_approved`: **Must proceed to in_admin_review**
+- Existing admin_staff permissions: **Already sufficient for new workflow**
 
 ---
 
-## 9. Verification Matrix
+## 10. Verification Matrix
 
 | Test ID | Scenario | Expected Result |
 |---------|----------|-----------------|
-| P4B-T01 | app_role enum extended | 9 values (includes technical_inspector) |
-| P4B-T02 | RLS policies created | 12 new policies for technical_inspector |
-| P4B-T03 | Technical inspector can SELECT subsidy_case in district | Access granted |
-| P4B-T04 | Technical inspector can UPDATE case in in_technical_review | Update succeeds |
-| P4B-T05 | Technical inspector cannot UPDATE case in other status | Update blocked by RLS |
-| P4B-T06 | Transition social_completed → in_technical_review allowed | Trigger permits |
-| P4B-T07 | Transition in_technical_review → technical_approved allowed | Trigger permits |
-| P4B-T08 | Transition social_completed → screening blocked | Trigger rejects |
-| P4B-T09 | Audit event logged for technical inspection | audit_event created |
-| P4B-T10 | Woningregistratie workflow unchanged | Housing transitions work as before |
-| P4B-T11 | Social Field Worker role unaffected | Phase 4A transitions still work |
-| P4B-T12 | Admin notification created on status change | Notification appears |
+| P4C-T01 | app_role enum unchanged | 9 values (same as Phase 4B) |
+| P4C-T02 | Transition technical_approved → in_admin_review allowed | Trigger permits |
+| P4C-T03 | Transition in_admin_review → admin_complete allowed | Trigger permits |
+| P4C-T04 | Transition technical_approved → screening blocked | Trigger rejects |
+| P4C-T05 | admin_staff can SELECT case in in_admin_review | Access granted |
+| P4C-T06 | admin_staff can UPDATE case in in_admin_review | Update succeeds |
+| P4C-T07 | Audit event logged for admin review | audit_event created |
+| P4C-T08 | Woningregistratie workflow unchanged | Housing transitions work as before |
+| P4C-T09 | Technical Inspector role unaffected | Phase 4B transitions still work |
+| P4C-T10 | Social Field Worker role unaffected | Phase 4A transitions still work |
+| P4C-T11 | Admin notification created on status change | Notification appears |
+| P4C-T12 | Return path in_admin_review → returned_to_technical works | Trigger permits |
 
 ---
 
-## 10. Audit Event Definitions (Activated)
+## 11. Audit Event Definitions (Activated)
 
 | Action | Entity Type | Triggered By |
 |--------|-------------|--------------|
-| TECHNICAL_INSPECTION_STARTED | subsidy_case | Status → in_technical_review |
-| TECHNICAL_INSPECTION_COMPLETED | subsidy_case | Status → technical_approved |
-| TECHNICAL_INSPECTION_RETURNED | subsidy_case | Status → returned_to_social |
-| TECHNICAL_REPORT_CREATED | technical_report | Report created |
-| TECHNICAL_REPORT_UPDATED | technical_report | Report updated |
+| ADMIN_REVIEW_STARTED | subsidy_case | Status → in_admin_review |
+| ADMIN_REVIEW_COMPLETED | subsidy_case | Status → admin_complete |
+| ADMIN_REVIEW_RETURNED | subsidy_case | Status → returned_to_technical |
 
 ---
 
-## 11. Explicit Constraints
+## 12. Explicit Constraints
 
-### 11.1 Allowed Actions
+### 12.1 Allowed Actions
 
 | Action | Authorized |
 |--------|------------|
-| Add technical_inspector to enum | ALLOWED |
 | Update Bouwsubsidie trigger | ALLOWED |
-| Create RLS policies for technical_inspector | ALLOWED |
-| Update TypeScript types | ALLOWED |
+| Add new status values to workflow | ALLOWED |
+| Update TypeScript audit types | ALLOWED |
 | Add status transitions to UI | ALLOWED |
 | Create audit events | ALLOWED |
 
-### 11.2 Forbidden Actions
+### 12.2 Forbidden Actions
 
 | Action | Status |
 |--------|--------|
+| Modify app_role enum | FORBIDDEN (not needed) |
+| Add RLS policies | FORBIDDEN (existing policies sufficient) |
 | Modify Woningregistratie workflow | FORBIDDEN |
 | Activate Director | FORBIDDEN |
 | Activate Ministerial Advisor | FORBIDDEN |
@@ -272,87 +280,84 @@ Cases already in `screening` or later statuses are unaffected.
 | Create user accounts | FORBIDDEN |
 | Assign roles to users | FORBIDDEN |
 | Modify Social Field Worker logic | FORBIDDEN |
+| Modify Technical Inspector logic | FORBIDDEN |
 
 ---
 
-## 12. Risk Mitigation
+## 13. Risk Mitigation
 
 | Risk | Mitigation |
 |------|------------|
-| Enum extension failure | Test in migration, rollback plan ready |
 | Trigger update breaks existing cases | Backward-compatible transitions only |
-| Cases stuck in social_completed | UI will show path to in_technical_review |
-| RLS policy conflicts | Test all role combinations |
+| Cases stuck in technical_approved | UI will show path to in_admin_review |
+| Existing RLS policies don't cover new statuses | Policies are status-agnostic for admin_staff |
 
 ---
 
-## 13. Rollback Plan
+## 14. Rollback Plan
 
-### 13.1 Database Rollback
+### 14.1 Database Rollback
 
 ```sql
--- Drop RLS policies (if created)
-DROP POLICY IF EXISTS "technical_inspector_select_subsidy_case" ON public.subsidy_case;
-DROP POLICY IF EXISTS "technical_inspector_update_subsidy_case" ON public.subsidy_case;
--- ... additional policy drops
-
--- Revert trigger to Phase 4A transition matrix
--- (Re-run Phase 4A trigger creation)
-
--- Note: Enum value cannot be removed, but will be inert
+-- Revert trigger to Phase 4B transition matrix
+-- (Re-run Phase 4B trigger creation)
 ```
+
+### 14.2 Application Rollback
+
+1. Revert TypeScript changes (git)
+2. Revert status handler changes (git)
+3. Redeploy previous version
 
 ---
 
-## 14. Deliverables
+## 15. Deliverables
 
 | # | Artifact | Purpose |
 |---|----------|---------|
-| 1 | RESTORE_POINT_V1.3_PHASE4B_START.md | Pre-phase restore point |
-| 2 | Database migration (enum + trigger + RLS) | Database activation |
-| 3 | Updated useUserRole.ts | TypeScript type |
-| 4 | Updated useAuditLog.ts | Audit actions |
-| 5 | Updated subsidy-cases/[id]/page.tsx | Status transitions |
-| 6 | PHASE-4B-ACTIVATION-REPORT.md | Implementation report |
-| 7 | PHASE-4B-VERIFICATION-CHECKLIST.md | Test results |
-| 8 | PHASE-4B-RISK-OBSERVATIONS.md | Risk notes |
-| 9 | RESTORE_POINT_V1.3_PHASE4B_COMPLETE.md | Post-phase restore point |
+| 1 | RESTORE_POINT_V1.3_PHASE4C_START.md | Pre-phase restore point |
+| 2 | Database migration (trigger only) | Workflow activation |
+| 3 | Updated useAuditLog.ts | Audit actions |
+| 4 | Updated subsidy-cases/[id]/page.tsx | Status transitions |
+| 5 | PHASE-4C-ACTIVATION-REPORT.md | Implementation report |
+| 6 | PHASE-4C-VERIFICATION-CHECKLIST.md | Test results |
+| 7 | PHASE-4C-RISK-OBSERVATIONS.md | Risk notes |
+| 8 | RESTORE_POINT_V1.3_PHASE4C_COMPLETE.md | Post-phase restore point |
 
 ---
 
-## 15. Files to Create/Modify
+## 16. Files to Create/Modify
 
 | File | Action | Purpose |
 |------|--------|---------|
-| restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4B_START.md | CREATE | Pre-phase restore point |
-| phases/DVH-IMS-V1.3/PHASE-4B/ | CREATE | Phase 4B directory |
-| Database migration | EXECUTE | Enum + trigger + RLS |
-| src/hooks/useUserRole.ts | MODIFY | Add technical_inspector |
-| src/hooks/useAuditLog.ts | MODIFY | Add technical audit actions |
+| restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4C_START.md | CREATE | Pre-phase restore point |
+| phases/DVH-IMS-V1.3/PHASE-4C/ | CREATE | Phase 4C directory |
+| Database migration | EXECUTE | Trigger update only |
+| src/hooks/useAuditLog.ts | MODIFY | Add admin review audit actions |
 | src/app/(admin)/subsidy-cases/[id]/page.tsx | MODIFY | Add new transitions |
-| phases/DVH-IMS-V1.3/PHASE-4B/PHASE-4B-ACTIVATION-REPORT.md | CREATE | Documentation |
-| phases/DVH-IMS-V1.3/PHASE-4B/PHASE-4B-VERIFICATION-CHECKLIST.md | CREATE | Test results |
-| phases/DVH-IMS-V1.3/PHASE-4B/PHASE-4B-RISK-OBSERVATIONS.md | CREATE | Risk notes |
-| restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4B_COMPLETE.md | CREATE | Post-phase restore point |
-| phases/DVH-IMS-V1.3/README.md | MODIFY | Add Phase 4B status |
+| phases/DVH-IMS-V1.3/PHASE-4C/PHASE-4C-ACTIVATION-REPORT.md | CREATE | Documentation |
+| phases/DVH-IMS-V1.3/PHASE-4C/PHASE-4C-VERIFICATION-CHECKLIST.md | CREATE | Test results |
+| phases/DVH-IMS-V1.3/PHASE-4C/PHASE-4C-RISK-OBSERVATIONS.md | CREATE | Risk notes |
+| restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4C_COMPLETE.md | CREATE | Post-phase restore point |
+| phases/DVH-IMS-V1.3/README.md | MODIFY | Add Phase 4C status |
 
 ---
 
-## 16. End-of-Phase Checklist
+## 17. End-of-Phase Checklist
 
 ### Implemented
 
 - [ ] Restore Point (Start) created
-- [ ] app_role enum extended with technical_inspector
-- [ ] Backend trigger updated for new transitions
-- [ ] RLS policies created for technical_inspector (12 policies)
-- [ ] TypeScript AppRole updated
+- [ ] Backend trigger updated for admin review states
 - [ ] AuditAction types updated
 - [ ] Status transitions added to UI
+- [ ] Status badges added to UI
 - [ ] Audit logging enabled
 
 ### Explicitly NOT Activated
 
+- [ ] app_role enum (NOT changed - admin_staff already exists)
+- [ ] RLS policies (NOT added - existing policies sufficient)
 - [ ] Director (NOT activated)
 - [ ] Ministerial Advisor (NOT activated)
 - [ ] Woningregistratie workflow (NOT changed)
@@ -360,7 +365,8 @@ DROP POLICY IF EXISTS "technical_inspector_update_subsidy_case" ON public.subsid
 
 ### System Behavior Verification
 
-- [ ] All 8 existing roles functional
+- [ ] All 9 existing roles functional
+- [ ] Technical Inspector role preserved
 - [ ] Social Field Worker role preserved
 - [ ] Woningregistratie workflow unchanged
 - [ ] Existing Bouwsubsidie cases processable
@@ -368,46 +374,57 @@ DROP POLICY IF EXISTS "technical_inspector_update_subsidy_case" ON public.subsid
 
 ### Activation Ready Statement
 
-- [ ] Phase 4B is COMPLETE
-- [ ] Technical Inspector role is ACTIVE for Bouwsubsidie
-- [ ] System ready for Phase 4C (Director activation, if authorized)
+- [ ] Phase 4C is COMPLETE
+- [ ] Administrative Officer workflow is ACTIVE for Bouwsubsidie
+- [ ] System ready for Phase 4D (Director activation, if authorized)
 
 ---
 
-## 17. Governance Statement
+## 18. Governance Statement
 
-**V1.3 Phase 4B activates ONLY the Technical Inspector role.**
+**V1.3 Phase 4C activates the Administrative Officer workflow step (NOT the role - it already exists).**
 
 **Scope is strictly limited to Bouwsubsidie service.**
 
 **Woningregistratie remains completely unchanged.**
 
+**Technical Inspector activation (Phase 4B) is preserved.**
+
 **Social Field Worker activation (Phase 4A) is preserved.**
 
 **No additional roles are activated in this phase.**
 
-**STOP after Phase 4B completion and await authorization for next role.**
+**STOP after Phase 4C completion and await authorization for next role.**
 
 ---
 
-## 18. Technical Summary
+## 19. Technical Summary
 
-### 18.1 Key Database Changes
+### 19.1 Key Database Changes
 
-1. **Enum Extension:** Add `technical_inspector` (9th enum value)
-2. **Trigger Update:** Enforce mandatory technical step after social completion
-3. **RLS Policies:** 12 district-scoped policies for Bouwsubsidie access
+1. **No Enum Extension:** `admin_staff` already exists
+2. **Trigger Update:** Enforce mandatory admin review step after technical approval
+3. **No RLS Policies:** Existing admin_staff policies are sufficient
 
-### 18.2 Key Application Changes
+### 19.2 Key Application Changes
 
-1. **TypeScript:** Add `technical_inspector` to `AppRole` type
-2. **Audit Actions:** Add `TECHNICAL_INSPECTION_STARTED`, `TECHNICAL_INSPECTION_COMPLETED`, `TECHNICAL_INSPECTION_RETURNED`
-3. **UI Status Badges:** Add `in_technical_review`, `technical_approved`, `returned_to_social`
-4. **UI Transitions:** Update `social_completed` to transition to `in_technical_review`
+1. **Audit Actions:** Add `ADMIN_REVIEW_STARTED`, `ADMIN_REVIEW_COMPLETED`, `ADMIN_REVIEW_RETURNED`
+2. **UI Status Badges:** Add `in_admin_review`, `admin_complete`, `returned_to_technical`
+3. **UI Transitions:** Update `technical_approved` to transition to `in_admin_review`
+
+### 19.3 Workflow Path Change
+
+```text
+BEFORE (Phase 4B):
+  technical_approved → screening
+
+AFTER (Phase 4C):
+  technical_approved → in_admin_review → admin_complete → screening
+```
 
 ---
 
-**PHASE 4B — TECHNICAL INSPECTOR ACTIVATION — BOUWSUBSIDIE ONLY**
+**PHASE 4C — ADMINISTRATIVE OFFICER WORKFLOW ACTIVATION — BOUWSUBSIDIE ONLY**
 
 **Awaiting approval to create Restore Point and begin implementation.**
 

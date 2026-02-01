@@ -30,6 +30,14 @@ const RATE_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 const VALID_DISTRICTS = ['PAR', 'WAA', 'NIC', 'COR', 'SAR', 'COM', 'MAR', 'SIP', 'BRO', 'PRA']
 
 // Input validation schema (manual validation - no external Zod in Edge Functions)
+// Document upload structure from wizard (V1.3 Phase 5A)
+interface DocumentUploadInput {
+  document_code: string
+  file_path: string
+  file_name: string
+  uploaded_at: string
+}
+
 interface BouwsubsidieInput {
   national_id: string
   first_name: string
@@ -49,7 +57,7 @@ interface BouwsubsidieInput {
     relationship: string
   }>
   reason?: string
-  documents_confirmed?: boolean
+  documents?: DocumentUploadInput[]
 }
 
 interface ValidationError {
@@ -135,7 +143,7 @@ function validateInput(data: unknown): { valid: true; data: BouwsubsidieInput } 
       household_size: input.household_size as number,
       household_members: input.household_members as BouwsubsidieInput['household_members'],
       reason: input.reason as string | undefined,
-      documents_confirmed: input.documents_confirmed as boolean | undefined,
+      documents: input.documents as DocumentUploadInput[] | undefined,
     }
   }
 }
@@ -424,6 +432,42 @@ Deno.serve(async (req) => {
       console.error('[submit-bouwsubsidie] Failed to create public status access:', accessError.message)
     }
     
+    // V1.3 Phase 5A: Link uploaded documents to the case
+    let documentsLinked = 0
+    if (input.documents && input.documents.length > 0) {
+      // Get document requirement IDs
+      const { data: requirements } = await supabase
+        .from('subsidy_document_requirement')
+        .select('id, document_code')
+      
+      const requirementMap = new Map(
+        (requirements || []).map((r: any) => [r.document_code, r.id])
+      )
+      
+      for (const doc of input.documents) {
+        const requirementId = requirementMap.get(doc.document_code)
+        if (requirementId) {
+          const { error: docError } = await supabase
+            .from('subsidy_document_upload')
+            .insert({
+              case_id: caseId,
+              requirement_id: requirementId,
+              file_path: doc.file_path,
+              file_name: doc.file_name,
+              uploaded_by: null, // Public submission
+              is_verified: false
+            })
+          
+          if (docError) {
+            console.error(`[submit-bouwsubsidie] Failed to link document ${doc.document_code}:`, docError.message)
+          } else {
+            documentsLinked++
+          }
+        }
+      }
+      console.log(`[submit-bouwsubsidie] Linked ${documentsLinked} documents to case ${referenceNumber}`)
+    }
+    
     // Log audit event
     const ipHash = await hashIP(clientIP)
     const { error: auditError } = await supabase
@@ -438,7 +482,8 @@ Deno.serve(async (req) => {
           reference_number: referenceNumber,
           district_code: input.district,
           submission_ip_hash: ipHash,
-          submission_timestamp: new Date().toISOString()
+          submission_timestamp: new Date().toISOString(),
+          documents_count: documentsLinked
         }
       })
     

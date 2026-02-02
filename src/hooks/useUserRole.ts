@@ -11,6 +11,7 @@ export type AppRole =
   | 'audit'
   | 'social_field_worker'
   | 'technical_inspector'
+  | 'director'
 
 interface UseUserRoleReturn {
   roles: AppRole[]

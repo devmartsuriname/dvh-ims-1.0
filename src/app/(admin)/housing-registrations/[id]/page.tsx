@@ -51,6 +51,21 @@ interface UrgencyAssessment {
   justification: string | null
 }
 
+interface DocumentUpload {
+  id: string
+  file_path: string
+  file_name: string
+  is_verified: boolean
+  verified_by: string | null
+  verified_at: string | null
+  uploaded_at: string
+  requirement: {
+    document_name: string
+    document_code: string
+    is_mandatory: boolean
+  }
+}
+
 const STATUS_BADGES: Record<string, { bg: string; label: string }> = {
   received: { bg: 'secondary', label: 'Received' },
   under_review: { bg: 'info', label: 'Under Review' },
@@ -77,8 +92,10 @@ const HousingRegistrationDetail = () => {
   const [registration, setRegistration] = useState<HousingRegistration | null>(null)
   const [statusHistory, setStatusHistory] = useState<StatusHistory[]>([])
   const [urgencyAssessments, setUrgencyAssessments] = useState<UrgencyAssessment[]>([])
+  const [documents, setDocuments] = useState<DocumentUpload[]>([])
   const [loading, setLoading] = useState(true)
   const [statusLoading, setStatusLoading] = useState(false)
+  const [verifyingDocId, setVerifyingDocId] = useState<string | null>(null)
   const [statusReason, setStatusReason] = useState('')
   const { logEvent } = useAuditLog()
 
@@ -87,7 +104,7 @@ const HousingRegistrationDetail = () => {
 
     setLoading(true)
     
-    const [regRes, historyRes, urgencyRes] = await Promise.all([
+    const [regRes, historyRes, urgencyRes, docsRes] = await Promise.all([
       supabase
         .from('housing_registration')
         .select(`
@@ -106,7 +123,21 @@ const HousingRegistrationDetail = () => {
         .from('housing_urgency')
         .select('*')
         .eq('registration_id', id)
-        .order('assessment_date', { ascending: false })
+        .order('assessment_date', { ascending: false }),
+      supabase
+        .from('housing_document_upload')
+        .select(`
+          id,
+          file_path,
+          file_name,
+          is_verified,
+          verified_by,
+          verified_at,
+          uploaded_at,
+          requirement:requirement_id (document_name, document_code, is_mandatory)
+        `)
+        .eq('registration_id', id)
+        .order('uploaded_at', { ascending: false })
     ])
 
     if (regRes.error) {
@@ -118,7 +149,48 @@ const HousingRegistrationDetail = () => {
     setRegistration(regRes.data)
     setStatusHistory(historyRes.data || [])
     setUrgencyAssessments(urgencyRes.data || [])
+    setDocuments((docsRes.data as unknown as DocumentUpload[]) || [])
     setLoading(false)
+  }
+
+  const handleDocumentVerification = async (docId: string, currentVerified: boolean) => {
+    if (!registration) return
+
+    setVerifyingDocId(docId)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const newVerified = !currentVerified
+
+      const { error } = await supabase
+        .from('housing_document_upload')
+        .update({
+          is_verified: newVerified,
+          verified_by: newVerified ? user?.id : null,
+          verified_at: newVerified ? new Date().toISOString() : null,
+        })
+        .eq('id', docId)
+
+      if (error) throw error
+
+      await logEvent({
+        action: 'DOCUMENT_VERIFIED',
+        entity_type: 'housing_document_upload',
+        entity_id: docId,
+        reason: newVerified ? 'Document marked as verified' : 'Document verification removed',
+      })
+
+      notify.success(newVerified ? 'Document verified' : 'Verification removed')
+      fetchRegistration()
+    } catch (error: any) {
+      notify.error(error.message || 'Failed to update verification')
+    } finally {
+      setVerifyingDocId(null)
+    }
+  }
+
+  const getDocumentUrl = (filePath: string) => {
+    const { data } = supabase.storage.from('citizen-uploads').getPublicUrl(filePath)
+    return data.publicUrl
   }
 
   useEffect(() => {
@@ -384,6 +456,76 @@ const HousingRegistrationDetail = () => {
                         </td>
                         <td>{h.reason || '-'}</td>
                         <td>{new Date(h.changed_at).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
+            </CardBody>
+          </Card>
+        </Tab>
+
+        {/* Documents Tab */}
+        <Tab eventKey="documents" title={`Documents (${documents.length})`}>
+          <Card>
+            <CardHeader>
+              <CardTitle as="h5">Uploaded Documents</CardTitle>
+            </CardHeader>
+            <CardBody>
+              {documents.length === 0 ? (
+                <p className="text-muted text-center py-4">No documents uploaded</p>
+              ) : (
+                <Table hover responsive>
+                  <thead>
+                    <tr>
+                      <th>Document</th>
+                      <th>Required</th>
+                      <th>File</th>
+                      <th>Verified</th>
+                      <th>Uploaded</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {documents.map((doc) => (
+                      <tr key={doc.id}>
+                        <td>
+                          <span className="fw-medium">{doc.requirement?.document_name || doc.file_name}</span>
+                          <br />
+                          <small className="text-muted">{doc.requirement?.document_code}</small>
+                        </td>
+                        <td>
+                          <Badge bg={doc.requirement?.is_mandatory ? 'danger' : 'secondary'}>
+                            {doc.requirement?.is_mandatory ? 'Required' : 'Optional'}
+                          </Badge>
+                        </td>
+                        <td>
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            href={getDocumentUrl(doc.file_path)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <IconifyIcon icon="mingcute:download-2-line" className="me-1" />
+                            {doc.file_name}
+                          </Button>
+                        </td>
+                        <td>
+                          <Form.Check
+                            type="switch"
+                            id={`verify-${doc.id}`}
+                            checked={doc.is_verified}
+                            onChange={() => handleDocumentVerification(doc.id, doc.is_verified)}
+                            disabled={verifyingDocId === doc.id}
+                            label={doc.is_verified ? 'Verified' : 'Unverified'}
+                          />
+                          {doc.verified_at && (
+                            <small className="text-muted d-block">
+                              {new Date(doc.verified_at).toLocaleDateString()}
+                            </small>
+                          )}
+                        </td>
+                        <td>{new Date(doc.uploaded_at).toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>

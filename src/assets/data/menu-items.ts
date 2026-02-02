@@ -17,7 +17,7 @@ export const MENU_ITEMS: MenuItemWithRoles[] = [
     label: 'dashboard',
     icon: 'mingcute:home-3-line',
     url: '/dashboards',
-    allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'frontdesk_housing', 'admin_staff', 'audit'],
+    allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'frontdesk_housing', 'admin_staff', 'audit', 'director'],
   },
   {
     key: 'shared-core',
@@ -29,14 +29,14 @@ export const MENU_ITEMS: MenuItemWithRoles[] = [
     label: 'Persons',
     icon: 'mingcute:user-4-line',
     url: '/persons',
-    allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'frontdesk_housing', 'admin_staff', 'audit'],
+    allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'frontdesk_housing', 'admin_staff', 'audit', 'director'],
   },
   {
     key: 'households',
     label: 'Households',
     icon: 'mingcute:home-4-line',
     url: '/households',
-    allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'frontdesk_housing', 'admin_staff', 'audit'],
+    allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'frontdesk_housing', 'admin_staff', 'audit', 'director'],
   },
   {
     key: 'bouwsubsidie',
@@ -48,7 +48,7 @@ export const MENU_ITEMS: MenuItemWithRoles[] = [
     label: 'Subsidy Cases',
     icon: 'mingcute:file-check-line',
     url: '/subsidy-cases',
-    allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'admin_staff', 'audit'],
+    allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'admin_staff', 'audit', 'director'],
   },
   {
     key: 'woning-registratie',
@@ -112,6 +112,6 @@ export const MENU_ITEMS: MenuItemWithRoles[] = [
     label: 'Audit Log',
     icon: 'mingcute:file-security-line',
     url: '/audit-log',
-    allowedRoles: ['system_admin', 'minister', 'project_leader', 'audit'],
+    allowedRoles: ['system_admin', 'minister', 'project_leader', 'audit', 'director'],
   },
 ]

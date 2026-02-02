@@ -1,65 +1,73 @@
 
-# Phase 4E: Ministerial Advisor Activation for Bouwsubsidie
+# Phase 4F: Minister Final Decision Enforcement for Bouwsubsidie
 
 ## Executive Summary
 
-Phase 4E will activate the **Ministerial Advisor** role to complete the ministerial decision chain for the Bouwsubsidie workflow. After this phase, dossiers approved by the Director will require Ministerial Advisor review and "paraaf" (initialing) before proceeding to the Minister for final decision.
+Phase 4F will enforce the **Minister Final Decision** step in the Bouwsubsidie workflow. After Ministerial Advisor completes their advice, dossiers must receive the Minister's formal decision before proceeding to council document generation.
+
+This phase completes the 7-step decision chain as documented in V1.2:
+1. ✅ Frontdesk Intake (existing)
+2. ✅ Social Review (Phase 4A)
+3. ✅ Technical Inspection (Phase 4B)
+4. ✅ Administrative Review (Phase 4C)
+5. ✅ Director Organizational Approval (Phase 4D)
+6. ✅ Ministerial Advisor Advice (Phase 4E)
+7. **⏳ Minister Final Decision (Phase 4F - THIS PHASE)**
 
 ---
 
 ## Current State Analysis
 
-### Workflow Chain (Post-Phase 4D)
+### Workflow Chain (Post-Phase 4E)
 
 ```text
 received → in_social_review → social_completed → in_technical_review →
 technical_approved → in_admin_review → admin_complete → screening →
 needs_more_docs/fieldwork → awaiting_director_approval → director_approved →
-approved_for_council → council_doc_generated → finalized
+in_ministerial_advice → ministerial_advice_complete → approved_for_council →
+council_doc_generated → finalized
 ```
-
-### Active Roles (10 total)
-
-| Role | Service | Status |
-|------|---------|--------|
-| system_admin | Both | ACTIVE |
-| minister | Both | ACTIVE |
-| project_leader | Both | ACTIVE |
-| frontdesk_bouwsubsidie | Bouwsubsidie | ACTIVE |
-| frontdesk_housing | Woningregistratie | ACTIVE |
-| admin_staff | Both | ACTIVE |
-| audit | Both | ACTIVE |
-| social_field_worker | Bouwsubsidie | ACTIVE |
-| technical_inspector | Bouwsubsidie | ACTIVE |
-| director | Bouwsubsidie | ACTIVE |
 
 ### Gap Identified
 
-Per V1.2 documentation (Step 6 of 7), dossiers approved by the Director must go through Ministerial Advisor advice and "paraaf" before reaching the Minister for final decision. Currently, `director_approved` transitions directly to `approved_for_council`.
+Per V1.2 Workflow & Roles Harmonization (Step 7 of 7), `ministerial_advice_complete` should NOT proceed directly to `approved_for_council`. Instead:
+
+- The Minister must formally decide on the dossier
+- Only after ministerial decision can the dossier proceed to council document generation
+
+Currently, `ministerial_advice_complete` transitions directly to `approved_for_council`, bypassing ministerial authority.
 
 ---
 
-## Phase 4E Scope (STRICT)
+## Phase 4F Scope (STRICT)
 
 ### In Scope
 
-1. Add `ministerial_advisor` to `app_role` enum
-2. Add new workflow states: `in_ministerial_advice`, `ministerial_advice_complete`, `returned_to_director`
-3. Update `validate_subsidy_case_transition()` trigger
-4. Update `is_national_role()` function to include `ministerial_advisor`
-5. Create 8+ RLS policies for Ministerial Advisor role
-6. Update UI STATUS_BADGES and STATUS_TRANSITIONS
-7. Add audit actions for Ministerial Advisor workflow
-8. Update menu visibility for Ministerial Advisor role
+1. Add new workflow states:
+   - `awaiting_minister_decision` - Dossier pending Minister's formal decision
+   - `minister_approved` - Minister has approved the subsidy
+   - `returned_to_advisor` - Minister returned for additional advice
+2. Update `validate_subsidy_case_transition()` trigger with new states
+3. Add audit actions for Minister decision workflow
+4. Update UI STATUS_BADGES and STATUS_TRANSITIONS
+5. Documentation and restore points
 
 ### Explicitly Out of Scope
 
-- Minister final decision step enforcement (structurally prepared, not enforced)
-- Woningregistratie changes (Ministerial Advisor is Bouwsubsidie-only)
+- New RLS policies for Minister (already has national access via existing policies)
+- Menu visibility changes (Minister already has access to Subsidy Cases)
+- Woningregistratie changes
 - Public wizard changes
-- New user account creation
-- Scale optimizations
-- Ministerial Advisor user account provisioning
+- User account creation
+
+### Important Note: Minister Role Already Active
+
+The `minister` role already exists in the `app_role` enum and is included in `is_national_role()`. The Minister role already has:
+- RLS SELECT access to `subsidy_case`, `person`, `household`, etc.
+- RLS UPDATE access via existing national-level policies
+- Menu access to Subsidy Cases, Dashboard, Persons, Households, Audit Log
+
+**No new RLS policies are required for Minister.**
 
 ---
 
@@ -67,175 +75,102 @@ Per V1.2 documentation (Step 6 of 7), dossiers approved by the Director must go 
 
 ### Step 1: Create Restore Point (Pre-Implementation)
 
-**File:** `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4E_START.md`
+**File:** `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4F_START.md`
 
 ---
 
-### Step 2: Database Migration (Two Migrations)
+### Step 2: Database Migration
 
-**Migration 1:** Extend app_role enum
+**Migration:** Update `validate_subsidy_case_transition()` trigger
 
-```sql
--- Add ministerial_advisor to app_role enum
-ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'ministerial_advisor';
-```
+#### Updated Transition Matrix
 
-**Migration 2:** RLS policies and trigger update
+| From Status | To Status (CURRENT) | To Status (NEW) |
+|-------------|---------------------|-----------------|
+| `ministerial_advice_complete` | `approved_for_council`, `rejected` | `awaiting_minister_decision`, `rejected` |
+| `awaiting_minister_decision` | *(new)* | `minister_approved`, `returned_to_advisor`, `rejected` |
+| `returned_to_advisor` | *(new)* | `in_ministerial_advice`, `rejected` |
+| `minister_approved` | *(new)* | `approved_for_council`, `rejected` |
+| `approved_for_council` | `council_doc_generated`, `rejected` | *(unchanged)* |
 
-#### 2.1 Update is_national_role() function
-
-```sql
-CREATE OR REPLACE FUNCTION public.is_national_role(_user_id uuid)
-RETURNS boolean
-LANGUAGE sql
-STABLE SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM user_roles
-    WHERE user_id = _user_id
-    AND role IN (
-      'system_admin', 'minister', 'project_leader', 'audit',
-      'director', 'ministerial_advisor'  -- Add ministerial_advisor
-    )
-  )
-$$;
-```
-
-#### 2.2 Updated Transition Matrix
-
-| From Status | To Status (NEW) |
-|-------------|-----------------|
-| `director_approved` | `in_ministerial_advice`, `rejected` |
-| `in_ministerial_advice` | `ministerial_advice_complete`, `returned_to_director`, `rejected` |
-| `returned_to_director` | `awaiting_director_approval`, `rejected` |
-| `ministerial_advice_complete` | `approved_for_council`, `rejected` |
-| `approved_for_council` | `council_doc_generated`, `rejected` (unchanged) |
-
-#### 2.3 RLS Policies for Ministerial Advisor
-
-| Policy Name | Table | Operation | Scope |
-|-------------|-------|-----------|-------|
-| `ministerial_advisor_select_subsidy_case` | subsidy_case | SELECT | National |
-| `ministerial_advisor_update_subsidy_case` | subsidy_case | UPDATE | National |
-| `ministerial_advisor_select_person` | person | SELECT | National |
-| `ministerial_advisor_select_household` | household | SELECT | National |
-| `ministerial_advisor_insert_audit_event` | audit_event | INSERT | Authenticated |
-| `ministerial_advisor_select_status_history` | subsidy_case_status_history | SELECT | National |
-| `ministerial_advisor_insert_status_history` | subsidy_case_status_history | INSERT | National |
-| `ministerial_advisor_select_admin_notification` | admin_notification | SELECT | National |
-| `ministerial_advisor_update_admin_notification` | admin_notification | UPDATE | National |
-| `ministerial_advisor_insert_admin_notification` | admin_notification | INSERT | National |
-
-**Ministerial Advisor Scope Justification:**
-Per V1.2 Roles & Authority Matrix and Phase 3 documentation, Ministerial Advisor is a national-level advisory role with read access to all Bouwsubsidie dossiers and status update authority for advisory workflow.
+The complete new trigger will:
+- Block direct transition from `ministerial_advice_complete` to `approved_for_council`
+- Require passage through `awaiting_minister_decision` → `minister_approved`
+- Allow Minister to return dossiers for additional advice
+- Log invalid transition attempts to audit_event
 
 ---
 
-### Step 3: TypeScript Type Updates
-
-**File:** `src/hooks/useUserRole.ts`
-
-```typescript
-export type AppRole = 
-  | 'system_admin'
-  | 'minister'
-  | 'project_leader'
-  | 'frontdesk_bouwsubsidie'
-  | 'frontdesk_housing'
-  | 'admin_staff'
-  | 'audit'
-  | 'social_field_worker'
-  | 'technical_inspector'
-  | 'director'
-  | 'ministerial_advisor'  // NEW
-
-// Update isNationalRole check:
-const isNationalRole = roles.some(role => 
-  ['system_admin', 'minister', 'project_leader', 'audit', 'director', 'ministerial_advisor'].includes(role)
-)
-```
-
----
-
-### Step 4: Audit Action Updates
+### Step 3: Audit Action Updates
 
 **File:** `src/hooks/useAuditLog.ts`
 
 Add new audit actions:
-- `MINISTERIAL_ADVICE_STARTED`
-- `MINISTERIAL_ADVICE_COMPLETED`
-- `MINISTERIAL_ADVICE_RETURNED`
+- `MINISTER_DECISION_STARTED`
+- `MINISTER_APPROVED`
+- `MINISTER_RETURNED`
 
 ---
 
-### Step 5: Admin UI Updates
+### Step 4: Admin UI Updates
 
 **File:** `src/app/(admin)/subsidy-cases/[id]/page.tsx`
 
-#### 5.1 Add STATUS_BADGES
+#### 4.1 Add STATUS_BADGES
 
 ```typescript
-in_ministerial_advice: { bg: 'info', label: 'In Ministerial Advice' },
-ministerial_advice_complete: { bg: 'success', label: 'Advice Complete' },
-returned_to_director: { bg: 'warning', label: 'Returned to Director' },
+awaiting_minister_decision: { bg: 'info', label: 'Awaiting Minister Decision' },
+minister_approved: { bg: 'success', label: 'Minister Approved' },
+returned_to_advisor: { bg: 'warning', label: 'Returned to Advisor' },
 ```
 
-#### 5.2 Update STATUS_TRANSITIONS
+#### 4.2 Update STATUS_TRANSITIONS
 
 ```typescript
-director_approved: ['in_ministerial_advice', 'rejected'],
-in_ministerial_advice: ['ministerial_advice_complete', 'returned_to_director', 'rejected'],
-returned_to_director: ['awaiting_director_approval', 'rejected'],
-ministerial_advice_complete: ['approved_for_council', 'rejected'],
+ministerial_advice_complete: ['awaiting_minister_decision', 'rejected'],
+awaiting_minister_decision: ['minister_approved', 'returned_to_advisor', 'rejected'],
+returned_to_advisor: ['in_ministerial_advice', 'rejected'],
+minister_approved: ['approved_for_council', 'rejected'],
 ```
 
 ---
 
-### Step 6: Menu Visibility Update
+### Step 5: Create Restore Point (Post-Implementation)
 
-**File:** `src/assets/data/menu-items.ts`
-
-Add `ministerial_advisor` to allowedRoles for:
-- Dashboard
-- Persons
-- Households
-- Subsidy Cases
-- Audit Log
+**File:** `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4F_COMPLETE.md`
 
 ---
 
-### Step 7: Create Restore Point (Post-Implementation)
+### Step 6: Documentation
 
-**File:** `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4E_COMPLETE.md`
-
----
-
-### Step 8: Documentation
-
-**File:** `phases/DVH-IMS-V1.3/PHASE-4E/PHASE-4E-ACTIVATION-REPORT.md`
+**File:** `phases/DVH-IMS-V1.3/PHASE-4F/PHASE-4F-ACTIVATION-REPORT.md`
 
 ---
 
-## Workflow Diagram (Post-Phase 4E)
+## Workflow Diagram (Post-Phase 4F - COMPLETE 7-STEP CHAIN)
 
 ```text
-[Pre-Director Chain - Phases 4A/4B/4C]
+[Phases 4A/4B/4C - Social/Technical/Admin Chain]
 received → in_social_review → social_completed → in_technical_review →
 technical_approved → in_admin_review → admin_complete → screening →
 needs_more_docs → screening (loop)
                 ↓
             fieldwork
                 ↓
-[Phase 4D Director Chain]
+[Phase 4D - Director Chain]
     awaiting_director_approval
            ↓              ↓
     director_approved    returned_to_screening → screening
            ↓
-[NEW Phase 4E Ministerial Advisor Chain]
+[Phase 4E - Ministerial Advisor Chain]
     in_ministerial_advice
            ↓                    ↓
     ministerial_advice_complete  returned_to_director → awaiting_director_approval
+           ↓
+[NEW Phase 4F - Minister Decision Chain]
+    awaiting_minister_decision
+           ↓              ↓
+    minister_approved    returned_to_advisor → in_ministerial_advice
            ↓
     approved_for_council → council_doc_generated → finalized
 
@@ -248,15 +183,12 @@ needs_more_docs → screening (loop)
 
 | File | Action |
 |------|--------|
-| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4E_START.md` | CREATE |
-| `supabase/migrations/[timestamp]_phase_4e_ministerial_advisor_enum.sql` | CREATE |
-| `supabase/migrations/[timestamp]_phase_4e_ministerial_advisor_rls.sql` | CREATE |
-| `src/hooks/useUserRole.ts` | MODIFY (add ministerial_advisor, update isNationalRole) |
-| `src/hooks/useAuditLog.ts` | MODIFY (add audit actions) |
-| `src/app/(admin)/subsidy-cases/[id]/page.tsx` | MODIFY (add statuses) |
-| `src/assets/data/menu-items.ts` | MODIFY (add ministerial_advisor to roles) |
-| `phases/DVH-IMS-V1.3/PHASE-4E/PHASE-4E-ACTIVATION-REPORT.md` | CREATE |
-| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4E_COMPLETE.md` | CREATE |
+| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4F_START.md` | CREATE |
+| `supabase/migrations/[timestamp]_phase_4f_minister_decision.sql` | CREATE |
+| `src/hooks/useAuditLog.ts` | MODIFY (add 3 audit actions) |
+| `src/app/(admin)/subsidy-cases/[id]/page.tsx` | MODIFY (add badges and transitions) |
+| `phases/DVH-IMS-V1.3/PHASE-4F/PHASE-4F-ACTIVATION-REPORT.md` | CREATE |
+| `restore-points/v1.3/RESTORE_POINT_V1.3_PHASE4F_COMPLETE.md` | CREATE |
 
 ---
 
@@ -264,14 +196,13 @@ needs_more_docs → screening (loop)
 
 | Check | Expected Result |
 |-------|-----------------|
-| `ministerial_advisor` appears in app_role enum | Required |
-| `ministerial_advisor` included in is_national_role() | Required |
-| RLS SELECT policy allows national access | Required |
-| RLS UPDATE policy allows national access | Required |
-| Transition from `director_approved` → `in_ministerial_advice` works | Required |
-| Transition from `in_ministerial_advice` → `ministerial_advice_complete` works | Required |
-| Return path to director works | Required |
-| Audit events logged for all Ministerial Advisor actions | Required |
+| Transition from `ministerial_advice_complete` → `awaiting_minister_decision` works | Required |
+| Transition from `awaiting_minister_decision` → `minister_approved` works | Required |
+| Transition from `awaiting_minister_decision` → `returned_to_advisor` works | Required |
+| Transition from `returned_to_advisor` → `in_ministerial_advice` works | Required |
+| Transition from `minister_approved` → `approved_for_council` works | Required |
+| Direct transition from `ministerial_advice_complete` → `approved_for_council` BLOCKED | Required |
+| Audit events logged for all Minister decision actions | Required |
 | UI badges render correctly | Required |
 | Status transitions appear in Change Status dropdown | Required |
 | Woningregistratie workflow unchanged | Required |
@@ -286,7 +217,7 @@ needs_more_docs → screening (loop)
 | Bouwsubsidie only | ENFORCED |
 | No Woningregistratie changes | ENFORCED |
 | No public wizard changes | ENFORCED |
-| No user account creation | ENFORCED |
+| No new RLS policies needed | CONFIRMED (Minister role already has access) |
 | Restore points required | PLANNED |
 | Audit trail mandatory | DESIGNED |
 
@@ -294,32 +225,20 @@ needs_more_docs → screening (loop)
 
 ## Security Considerations
 
-- Ministerial Advisor has national-level SELECT access to subsidy_case
-- Ministerial Advisor has national-level UPDATE access for status changes only
-- All Ministerial Advisor actions logged to audit_event
-- RLS policies enforce authentication
-- No anonymous access granted
-- Role explicitly excluded from Woningregistratie tables
+- Minister already has national-level SELECT access to subsidy_case
+- Minister already has national-level UPDATE access for status changes
+- All Minister decision actions will be logged to audit_event
+- No additional RLS policies required
+- Authentication enforced by existing policies
 
 ---
 
-## Risk Assessment
-
-| Risk | Mitigation |
-|------|------------|
-| Migration fails | Restore point allows rollback |
-| RLS policy conflicts | National scope avoids district complexity |
-| UI transition breaks | STATUS_TRANSITIONS follows established pattern |
-| Audit gaps | All transitions log via existing pattern |
-
----
-
-## Active Roles After Phase 4E (11 total)
+## Active Roles After Phase 4F (11 total - unchanged)
 
 | Role | Service | Status |
 |------|---------|--------|
 | system_admin | Both | ACTIVE |
-| minister | Both | ACTIVE |
+| **minister** | **Both** | **DECISION AUTHORITY ENFORCED** |
 | project_leader | Both | ACTIVE |
 | frontdesk_bouwsubsidie | Bouwsubsidie | ACTIVE |
 | frontdesk_housing | Woningregistratie | ACTIVE |
@@ -328,7 +247,46 @@ needs_more_docs → screening (loop)
 | social_field_worker | Bouwsubsidie | ACTIVE |
 | technical_inspector | Bouwsubsidie | ACTIVE |
 | director | Bouwsubsidie | ACTIVE |
-| **ministerial_advisor** | **Bouwsubsidie** | **NEW - ACTIVE** |
+| ministerial_advisor | Bouwsubsidie | ACTIVE |
+
+---
+
+## Complete Bouwsubsidie Decision Chain (Post-Phase 4F)
+
+| Step | Role | Status(es) | Phase |
+|------|------|------------|-------|
+| 1 | Frontdesk | received → in_social_review | V1.1 |
+| 2 | Social Field Worker | in_social_review → social_completed | 4A |
+| 3 | Technical Inspector | in_technical_review → technical_approved | 4B |
+| 4 | Admin Officer | in_admin_review → admin_complete | 4C |
+| 5 | Project Leader/Frontdesk | screening → fieldwork | V1.1 |
+| 6 | Director | awaiting_director_approval → director_approved | 4D |
+| 7 | Ministerial Advisor | in_ministerial_advice → ministerial_advice_complete | 4E |
+| 8 | **Minister** | **awaiting_minister_decision → minister_approved** | **4F** |
+| 9 | System | approved_for_council → council_doc_generated → finalized | V1.1 |
+
+---
+
+## Risk Assessment
+
+| Risk | Mitigation |
+|------|------------|
+| Trigger update fails | Restore point allows rollback |
+| Existing dossiers in `ministerial_advice_complete` blocked | These will need to transition through new path |
+| UI transition breaks | STATUS_TRANSITIONS follows established pattern |
+| Audit gaps | All transitions log via existing pattern |
+
+---
+
+## Migration Path for Existing Dossiers
+
+Any dossier currently in `ministerial_advice_complete` status will:
+- No longer be able to transition directly to `approved_for_council`
+- Must transition to `awaiting_minister_decision` first
+- Then to `minister_approved`
+- Then to `approved_for_council`
+
+This is intentional enforcement of the 7-step decision chain.
 
 ---
 
@@ -338,32 +296,30 @@ After implementation:
 
 ```
 IMPLEMENTED
-- ministerial_advisor role added to app_role enum
-- is_national_role() function updated
-- 10 RLS policies for ministerial_advisor
 - 3 new workflow states added
-- TypeScript types updated
-- Audit actions added
+- validate_subsidy_case_transition() trigger updated
+- Direct path from ministerial_advice_complete to approved_for_council BLOCKED
+- TypeScript audit actions added
 - Status badges and transitions updated
-- Menu visibility updated
+- Documentation complete
 
 PARTIAL
 - None
 
 SKIPPED
-- Minister final decision enforcement (deferred)
+- New RLS policies (not needed - Minister already has access)
+- Menu visibility changes (not needed - Minister already has access)
 - Woningregistratie changes (out of scope)
 - User account creation (operational, not implementation)
 
 VERIFICATION
-- Database enum verified
-- RLS policies verified
 - Workflow transitions verified
+- Blocking enforcement verified
 - UI rendering verified
 
 RESTORE POINTS
-- RESTORE_POINT_V1.3_PHASE4E_START.md
-- RESTORE_POINT_V1.3_PHASE4E_COMPLETE.md
+- RESTORE_POINT_V1.3_PHASE4F_START.md
+- RESTORE_POINT_V1.3_PHASE4F_COMPLETE.md
 
 BLOCKERS / ERRORS
 - NONE
@@ -378,5 +334,13 @@ After completing implementation:
 - Await explicit authorization for next phase
 
 ---
+
+## Phase 4F Summary
+
+This phase completes the Bouwsubsidie ministerial decision chain by:
+1. Enforcing Minister approval as the final decision authority
+2. Blocking any bypass of ministerial decision step
+3. Providing return path for additional advice if needed
+4. Maintaining full audit trail for all Minister actions
 
 **Ready for implementation upon approval.**

@@ -129,6 +129,13 @@ export const MENU_ITEMS: MenuItemWithRoles[] = [
     isTitle: true,
   },
   {
+    key: 'archive',
+    label: 'Archive',
+    icon: 'mingcute:archive-line',
+    url: '/archive',
+    allowedRoles: ['system_admin', 'minister', 'project_leader', 'director', 'ministerial_advisor', 'audit'],
+  },
+  {
     key: 'audit-log',
     label: 'Audit Log',
     icon: 'mingcute:file-security-line',

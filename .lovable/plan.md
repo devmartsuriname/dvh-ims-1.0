@@ -1,119 +1,142 @@
 
 
-# DVH-IMS V1.5 -- Phase 1 Planning: Archive (Read-Only)
+# DVH-IMS V1.5 Phase 1 Implementation — Archive (Read-Only)
 
-**Type:** Phase planning document (no implementation)
-**Scope:** Single new file
-
----
-
-## Deliverable
-
-Create file: `docs/DVH-IMS-V1.5/V1.5_Phase1_Archive_Planning.md`
+**Type:** Implementation
+**Phase:** V1.5 Phase 1 — Operational Transparency
+**Status:** AUTHORIZED
 
 ---
 
-## Document Structure
+## Step 1: Pre-Implementation Restore Point
 
-### Header
-- Title: "DVH-IMS V1.5 -- Phase 1 Planning: Archive (Read-Only)"
-- Status: PROPOSED -- NOT APPROVED
-- Date: 2026-02-07
-- Authority: Delroy
-
-### Section 1: Phase Objective
-Provide legally traceable, read-only access to completed dossiers for audit and oversight purposes. Improve operational transparency without modifying any existing workflow, decision logic, or data.
-
-### Section 2: Definition of "Archived Case"
-A case qualifies for archive visibility when it has reached a **terminal state**:
-- `closed_approved`
-- `closed_rejected`
-
-These are the only two terminal states in the V1.2 Dossier State Model (Section 4). Cases in any other state (draft, submitted, review_approved, revision_requested, approved, rejected, escalated, resolved) are **not** archive-eligible -- they remain active operational records.
-
-Both Bouwsubsidie and Woningregistratie dossiers in terminal states are archive-eligible.
-
-### Section 3: Role Visibility Matrix (Conceptual)
-Define which roles may access the archive and what they can see:
-
-| Role | Archive Access | Visible Data Scope |
-|------|---------------|-------------------|
-| system_admin | Yes | All districts, all services |
-| minister | Yes | All districts, Bouwsubsidie only |
-| project_leader | Yes | All districts, all services |
-| director | Yes | All districts, Bouwsubsidie only |
-| ministerial_advisor | Yes | All districts, Bouwsubsidie only |
-| audit | Yes | All districts, all services |
-| frontdesk_bouwsubsidie | No | N/A |
-| frontdesk_housing | No | N/A |
-| admin_staff | No | N/A |
-| social_field_worker | No | N/A |
-| technical_inspector | No | N/A |
-
-Archive access is limited to oversight, governance, and audit roles. Operational roles do not access the archive -- they work with active case views.
-
-### Section 4: Archive vs Active Case Views
-Clarify how archive access differs from active case management:
-- Archive is **read-only** -- no actions, no state changes, no edits
-- Archive shows **decision outcomes** and the **audit trail** for completed cases
-- Active case views show **in-progress** cases with available actions per role
-- Archive may include: case summary, decision chain history, status history timeline, associated documents (read-only links)
-- Archive does NOT include: action buttons, edit forms, or workflow triggers
-
-### Section 5: Scope Boundaries
-
-**In Scope (Phase 1):**
-- Functional definition of archive eligibility
-- Role-based archive access rules
-- Conceptual information layout (what data is shown)
-- Governance and audit requirements for archive access
-
-**Explicitly Out of Scope:**
-- Editing or reopening archived cases
-- Workflow changes or new states
-- New decision logic
-- Financial calculations or budget logic
-- Payment or disbursement handling
-- PDF report generation (deferred to later in Phase 1 or Phase 2)
-- Performance optimizations (conceptual notes only)
-- CSV/batch export (enhancement, not core archive)
-
-### Section 6: Governance and Audit Considerations
-- **Immutability:** Archived data must reflect the exact state at closure. No post-hoc modifications.
-- **Legal defensibility:** The archive must faithfully reproduce the decision chain as recorded in `status_history` and `audit_event`. No derived or computed summaries that could diverge from the legal record.
-- **Retention:** Archived cases must remain accessible indefinitely. No automatic purge or expiration.
-- **Access logging:** Every archive access (view of a closed case) should be logged to `audit_event` with action type indicating read/view of archived record. This supports accountability for who reviewed what and when.
-- **Data integrity:** Archive views must pull from the same source tables as active views -- no data duplication or separate archive storage.
-
-### Section 7: Dependencies and Risks
-**Dependencies:**
-- V1.3 `status_history` table and `audit_event` table with correlation_id (implemented and verified)
-- V1.4 decision panel data (technical review, social review, director review, advisor review, minister decision) -- all persisted in existing tables
-- Existing RLS policies for dossier access (must be extended or new policies created for archive-specific read access)
-
-**Risks:**
-- **Misinterpretation risk:** Users might assume the archive represents the complete legal file. The archive shows system-recorded data only, not external correspondence or physical documents.
-- **Scope creep risk:** Requests for filtering, searching, or reporting within the archive could expand Phase 1 beyond its read-only transparency objective.
-- **Policy constraint:** Some roles (e.g., minister) may have political sensitivities around historical decision visibility. Requires confirmation that all listed roles should have unrestricted archive access.
-
-### Section 8: Open Questions and Decision Points
-
-| ID | Question | Impact |
-|----|----------|--------|
-| Q1 | Should archive access be logged as a distinct audit event type (e.g., ARCHIVE_VIEWED)? | Audit granularity |
-| Q2 | Should the archive include Woningregistratie cases or Bouwsubsidie only for V1.5 Phase 1? | Scope boundary |
-| Q3 | Is there a requirement to restrict archive visibility by district for any role? | RLS design |
-| Q4 | Should the archive display the full audit trail (all events) or a summarized decision chain? | Information density |
-| Q5 | Are there any cases currently in terminal states that should be excluded from the archive (e.g., test data)? | Data quality |
-
-### Section 9: Execution Gate
-- Phase 1 planning is complete
-- No Phase 1 implementation has started
-- Implementation requires separate authorization
+Create `docs/restore-points/v1.5/RESTORE_POINT_V1.5_PHASE1_PRE_IMPLEMENTATION.md` documenting current system state before any changes.
 
 ---
 
-## Technical Notes
+## Step 2: Update Audit Logging Types
 
-No code, schema, RLS, or UI changes. Single documentation file only.
+**File:** `src/hooks/useAuditLog.ts`
+
+- Add `ARCHIVE_VIEWED` to the `AuditAction` type union
+- No other changes to this file
+
+---
+
+## Step 3: Add Archive Menu Item
+
+**File:** `src/assets/data/menu-items.ts`
+
+Add an "Archive" entry under the GOVERNANCE section (before "Audit Log"):
+
+- Key: `archive`
+- Label: `Archive`
+- Icon: `mingcute:archive-line`
+- URL: `/archive`
+- Allowed roles: `system_admin`, `minister`, `project_leader`, `director`, `ministerial_advisor`, `audit`
+
+---
+
+## Step 4: Add Archive Routes
+
+**File:** `src/routes/index.tsx`
+
+Add three routes to `governanceRoutes`:
+- `/archive` -- Archive list page
+- `/archive/subsidy/:id` -- Subsidy archive detail (read-only)
+- `/archive/housing/:id` -- Housing archive detail (read-only)
+
+Add lazy imports for the three new page components.
+
+---
+
+## Step 5: Archive List Page
+
+**New file:** `src/app/(admin)/archive/page.tsx`
+
+- Role gate: only `system_admin`, `minister`, `project_leader`, `director`, `ministerial_advisor`, `audit`
+- Two tabs: "Bouwsubsidie" and "Woningregistratie"
+- Bouwsubsidie tab: queries `subsidy_case` WHERE `status` IN (`finalized`, `rejected`) with applicant person join
+- Woningregistratie tab: queries `housing_registration` WHERE `current_status` IN (`finalized`, `rejected`) with applicant person join
+- Each row shows: case/reference number, applicant name, district, terminal status badge, date
+- Row click navigates to `/archive/subsidy/:id` or `/archive/housing/:id`
+- No action buttons, no "New Case" button, no edit controls
+- Uses Grid.js table (matching existing CaseTable pattern)
+
+---
+
+## Step 6: Subsidy Archive Detail Page
+
+**New file:** `src/app/(admin)/archive/subsidy/[id]/page.tsx`
+
+- Role gate (same as list page)
+- On mount: logs `ARCHIVE_VIEWED` audit event with entity_type `subsidy_case` and entity_id
+- Fetches: subsidy_case, subsidy_case_status_history, subsidy_document_upload, social_report, technical_report, generated_document, audit_event (filtered by entity)
+- Tabs (all read-only, no action controls):
+  - **Overview**: Case info (reuses layout from existing detail page but without "Change Status" card)
+  - **Documents**: Uploaded documents table (read-only, no verify buttons)
+  - **Social Report**: Read-only display of social_report JSON
+  - **Technical Report**: Read-only display of technical_report JSON
+  - **Director Review**: Read-only display (visible for all archive cases that reached director stage)
+  - **Advisor Review**: Read-only display (visible for cases that reached advisor stage)
+  - **Minister Decision**: Read-only display (visible for cases that reached minister stage)
+  - **Status History**: Full timeline from `subsidy_case_status_history`
+  - **Audit Trail**: Full `audit_event` log filtered by `entity_id = case.id` AND `entity_type = 'subsidy_case'`
+- Back button navigates to `/archive`
+- NO status change controls, NO edit forms, NO workflow triggers
+
+---
+
+## Step 7: Housing Archive Detail Page
+
+**New file:** `src/app/(admin)/archive/housing/[id]/page.tsx`
+
+- Role gate (same as list page)
+- On mount: logs `ARCHIVE_VIEWED` audit event with entity_type `housing_registration` and entity_id
+- Fetches: housing_registration, housing_registration_status_history, housing_document_upload, housing_urgency, audit_event (filtered by entity)
+- Tabs (all read-only):
+  - **Overview**: Registration info (reuses layout from existing detail page but without "Change Status" card)
+  - **Urgency**: Read-only display of urgency assessments (no add form)
+  - **Documents**: Uploaded documents table (read-only, no verify buttons)
+  - **Status History**: Full timeline from `housing_registration_status_history`
+  - **Audit Trail**: Full `audit_event` log filtered by `entity_id = registration.id` AND `entity_type = 'housing_registration'`
+- Back button navigates to `/archive`
+- NO status change controls, NO edit forms, NO workflow triggers
+
+---
+
+## Step 8: Post-Implementation Restore Point and Completion Report
+
+Create `docs/restore-points/v1.5/RESTORE_POINT_V1.5_PHASE1_POST_IMPLEMENTATION.md` with Phase 1 Completion Report including all mandatory sections.
+
+---
+
+## Hard Constraints Compliance
+
+| Constraint | Status |
+|-----------|--------|
+| Read-only archive views only | Enforced -- no action buttons, no forms, no mutations |
+| No new tables or schema changes | Compliant -- uses existing tables only |
+| No data duplication | Compliant -- queries same source tables |
+| No workflow or state changes | Compliant -- no status transitions in archive |
+| No financial calculations | Compliant |
+| No PDF generation | Compliant |
+| No CSV/export | Compliant |
+| ARCHIVE_VIEWED audit logging | Implemented on every detail page load |
+| Immutability enforced | UI-level: no edit controls rendered |
+
+---
+
+## Files Summary
+
+| File | Action |
+|------|--------|
+| `docs/restore-points/v1.5/RESTORE_POINT_V1.5_PHASE1_PRE_IMPLEMENTATION.md` | Create |
+| `src/hooks/useAuditLog.ts` | Modify (add ARCHIVE_VIEWED) |
+| `src/assets/data/menu-items.ts` | Modify (add Archive menu item) |
+| `src/routes/index.tsx` | Modify (add 3 archive routes) |
+| `src/app/(admin)/archive/page.tsx` | Create |
+| `src/app/(admin)/archive/subsidy/[id]/page.tsx` | Create |
+| `src/app/(admin)/archive/housing/[id]/page.tsx` | Create |
+| `docs/restore-points/v1.5/RESTORE_POINT_V1.5_PHASE1_POST_IMPLEMENTATION.md` | Create |
 

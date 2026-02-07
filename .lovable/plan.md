@@ -1,76 +1,119 @@
 
 
-# DVH-IMS V1.5 -- Intake Focus Confirmation and Phase Direction
+# DVH-IMS V1.5 -- Phase 1 Planning: Archive (Read-Only)
 
-**Type:** Intake continuation document
+**Type:** Phase planning document (no implementation)
 **Scope:** Single new file
 
 ---
 
 ## Deliverable
 
-Create file: `docs/DVH-IMS-V1.5/V1.5_Intake_Focus_Confirmation.md`
+Create file: `docs/DVH-IMS-V1.5/V1.5_Phase1_Archive_Planning.md`
 
 ---
 
 ## Document Structure
 
-### Header and Status
-- Title: "DVH-IMS V1.5 -- Intake Focus Confirmation and Phase Direction"
+### Header
+- Title: "DVH-IMS V1.5 -- Phase 1 Planning: Archive (Read-Only)"
 - Status: PROPOSED -- NOT APPROVED
 - Date: 2026-02-07
 - Authority: Delroy
 
-### Section 1: Primary Strategic Focus
-State the explicit V1.5 focus as **Operational Stability and Production Readiness**, covering:
-- Operational transparency: Review Archive (read-only, legally traceable decision history)
-- Operational control: Case assignment persistence and workload distribution
-- Admin adoption: Dutch (NL) localization of the admin portal
-- System robustness: Scale Packs (server-side pagination, KPI aggregations, async search)
+### Section 1: Phase Objective
+Provide legally traceable, read-only access to completed dossiers for audit and oversight purposes. Improve operational transparency without modifying any existing workflow, decision logic, or data.
 
-Reference the corresponding inventory items (1.1, 1.16, 1.17, 1.7, 1.8, 1.9).
+### Section 2: Definition of "Archived Case"
+A case qualifies for archive visibility when it has reached a **terminal state**:
+- `closed_approved`
+- `closed_rejected`
 
-### Section 2: Explicit De-Prioritization
-Mark the following as NOT PRIMARY for V1.5, with clear "deferred" positioning:
-- Financial Assessment Service Formalization (1.3)
-- Subsidy Allocation Formal Workflow (1.4)
-- Approved Amount Editing by Minister (1.11)
-- External Financial Processing (1.15)
+These are the only two terminal states in the V1.2 Dossier State Model (Section 4). Cases in any other state (draft, submitted, review_approved, revision_requested, approved, rejected, escalated, resolved) are **not** archive-eligible -- they remain active operational records.
 
-Note: these items remain in the inventory for future planning but are not candidates for V1.5 scope.
+Both Bouwsubsidie and Woningregistratie dossiers in terminal states are archive-eligible.
 
-### Section 3: Proposed Phase Direction
-Conceptual grouping only -- no design, no schema, no UI:
+### Section 3: Role Visibility Matrix (Conceptual)
+Define which roles may access the archive and what they can see:
 
-- **Phase 1: Operational Transparency (Archive)**
-  - Review Archive UI for completed/closed dossiers
-  - PDF report generation for decision summaries
-  - Role-scoped read-only access for oversight roles
+| Role | Archive Access | Visible Data Scope |
+|------|---------------|-------------------|
+| system_admin | Yes | All districts, all services |
+| minister | Yes | All districts, Bouwsubsidie only |
+| project_leader | Yes | All districts, all services |
+| director | Yes | All districts, Bouwsubsidie only |
+| ministerial_advisor | Yes | All districts, Bouwsubsidie only |
+| audit | Yes | All districts, all services |
+| frontdesk_bouwsubsidie | No | N/A |
+| frontdesk_housing | No | N/A |
+| admin_staff | No | N/A |
+| social_field_worker | No | N/A |
+| technical_inspector | No | N/A |
 
-- **Phase 2: Operational Control (Assignments)**
-  - Persistent case-to-worker assignment tracking
-  - Visit scheduling persistence
-  - Integration with existing V1.4 field work interfaces
+Archive access is limited to oversight, governance, and audit roles. Operational roles do not access the archive -- they work with active case views.
 
-- **Phase 3: Adoption and Scale Readiness**
-  - Admin Portal NL localization
-  - Scale Pack A (server-side pagination)
-  - Scale Pack B (dashboard KPI aggregations)
-  - Scale Pack C (form selector async search)
+### Section 4: Archive vs Active Case Views
+Clarify how archive access differs from active case management:
+- Archive is **read-only** -- no actions, no state changes, no edits
+- Archive shows **decision outcomes** and the **audit trail** for completed cases
+- Active case views show **in-progress** cases with available actions per role
+- Archive may include: case summary, decision chain history, status history timeline, associated documents (read-only links)
+- Archive does NOT include: action buttons, edit forms, or workflow triggers
 
-### Section 4: Governance Confirmation
-Explicit statements:
-- No implementation is proposed
-- No prioritization implies approval
-- All items remain subject to formal authorization
-- Each phase requires individual authorization before execution
+### Section 5: Scope Boundaries
 
-### Section 5: Closing Statement
-Exact text as specified in the task.
+**In Scope (Phase 1):**
+- Functional definition of archive eligibility
+- Role-based archive access rules
+- Conceptual information layout (what data is shown)
+- Governance and audit requirements for archive access
+
+**Explicitly Out of Scope:**
+- Editing or reopening archived cases
+- Workflow changes or new states
+- New decision logic
+- Financial calculations or budget logic
+- Payment or disbursement handling
+- PDF report generation (deferred to later in Phase 1 or Phase 2)
+- Performance optimizations (conceptual notes only)
+- CSV/batch export (enhancement, not core archive)
+
+### Section 6: Governance and Audit Considerations
+- **Immutability:** Archived data must reflect the exact state at closure. No post-hoc modifications.
+- **Legal defensibility:** The archive must faithfully reproduce the decision chain as recorded in `status_history` and `audit_event`. No derived or computed summaries that could diverge from the legal record.
+- **Retention:** Archived cases must remain accessible indefinitely. No automatic purge or expiration.
+- **Access logging:** Every archive access (view of a closed case) should be logged to `audit_event` with action type indicating read/view of archived record. This supports accountability for who reviewed what and when.
+- **Data integrity:** Archive views must pull from the same source tables as active views -- no data duplication or separate archive storage.
+
+### Section 7: Dependencies and Risks
+**Dependencies:**
+- V1.3 `status_history` table and `audit_event` table with correlation_id (implemented and verified)
+- V1.4 decision panel data (technical review, social review, director review, advisor review, minister decision) -- all persisted in existing tables
+- Existing RLS policies for dossier access (must be extended or new policies created for archive-specific read access)
+
+**Risks:**
+- **Misinterpretation risk:** Users might assume the archive represents the complete legal file. The archive shows system-recorded data only, not external correspondence or physical documents.
+- **Scope creep risk:** Requests for filtering, searching, or reporting within the archive could expand Phase 1 beyond its read-only transparency objective.
+- **Policy constraint:** Some roles (e.g., minister) may have political sensitivities around historical decision visibility. Requires confirmation that all listed roles should have unrestricted archive access.
+
+### Section 8: Open Questions and Decision Points
+
+| ID | Question | Impact |
+|----|----------|--------|
+| Q1 | Should archive access be logged as a distinct audit event type (e.g., ARCHIVE_VIEWED)? | Audit granularity |
+| Q2 | Should the archive include Woningregistratie cases or Bouwsubsidie only for V1.5 Phase 1? | Scope boundary |
+| Q3 | Is there a requirement to restrict archive visibility by district for any role? | RLS design |
+| Q4 | Should the archive display the full audit trail (all events) or a summarized decision chain? | Information density |
+| Q5 | Are there any cases currently in terminal states that should be excluded from the archive (e.g., test data)? | Data quality |
+
+### Section 9: Execution Gate
+- Phase 1 planning is complete
+- No Phase 1 implementation has started
+- Implementation requires separate authorization
 
 ---
 
-## Technical Details
+## Technical Notes
 
-No code, schema, RLS, or UI changes. New documentation file only.
+No code, schema, RLS, or UI changes. Single documentation file only.
 

@@ -54,24 +54,26 @@
 
 ---
 
-## 3. Version State
+## 3. Version State (Updated 2026-02-07)
 
 | Version | Phase | Status |
 |---------|-------|--------|
 | V1.4 | Phase 1 — Control Queue & My Visits | **CLOSED** |
 | V1.4 | Phase 2 — Schedule Visits (Read-Only) | **CLOSED** |
 | V1.4 | Phase 3 — Social Review & Technical Review Interfaces | **CLOSED** |
-| V1.4 | Phase 4 — Decision Interfaces | **NOT STARTED** |
-| V1.4 | Phase 5 — Review Archive & Polish | **NOT STARTED** |
+| V1.4 | Phase 4 — Director, Ministerial Advisor, Minister Decision Interfaces | **CLOSED** |
+| V1.4 | Phase 5 — Review Archive & Polish | **NOT AUTHORIZED** |
+
+> **Note:** Phase 5 was proposed but never authorized. It is NOT part of V1.4.
 
 ---
 
-## 4. Governance Confirmation
+## 4. Governance Confirmation (Updated 2026-02-07)
 
-- ✅ No Phase 4 planning has been started
-- ✅ No Phase 4 implementation has been started
-- ✅ No scope has leaked beyond V1.4 Phases 1–3
+- ✅ All authorized phases (1–4) are CLOSED
+- ✅ Phase 5 was never authorized and has no artifacts
 - ✅ The system remains audit-safe and legally defensible
 - ✅ All audit logging uses existing `useAuditLog` hook and append-only `audit_event` table
 - ✅ All RLS policies remain unchanged from V1.3 closure state
 - ✅ Backend transition engine remains unchanged from V1.3 closure state
+- ✅ DVH-IMS V1.4 is formally CLOSED AND FROZEN

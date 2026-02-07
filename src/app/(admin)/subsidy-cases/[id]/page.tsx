@@ -7,6 +7,8 @@ import { supabase } from '@/integrations/supabase/client'
 import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
 import { createAdminNotification } from '@/hooks/useAdminNotifications'
+import SocialReviewForm from './components/SocialReviewForm'
+import TechnicalReviewForm from './components/TechnicalReviewForm'
 
 interface SubsidyCase {
   id: string
@@ -499,54 +501,22 @@ const SubsidyCaseDetail = () => {
 
         {/* Social Report Tab */}
         <Tab eventKey="social-report" title="Social Report">
-          <Card>
-            <CardHeader className="d-flex justify-content-between align-items-center">
-              <CardTitle as="h5">Social Report</CardTitle>
-              {socialReport?.is_finalized && (
-                <Badge bg="success">Finalized</Badge>
-              )}
-            </CardHeader>
-            <CardBody>
-              {socialReport ? (
-                <div>
-                  <p className="text-muted">
-                    Last updated: {new Date(socialReport.updated_at).toLocaleString()}
-                  </p>
-                  <pre className="bg-light p-3 rounded">
-                    {JSON.stringify(socialReport.report_json, null, 2)}
-                  </pre>
-                </div>
-              ) : (
-                <p className="text-muted text-center py-4">No social report found</p>
-              )}
-            </CardBody>
-          </Card>
+          <SocialReviewForm
+            caseId={subsidyCase.id}
+            caseStatus={subsidyCase.status}
+            report={socialReport}
+            onReportUpdated={fetchCase}
+          />
         </Tab>
 
         {/* Technical Report Tab */}
         <Tab eventKey="technical-report" title="Technical Report">
-          <Card>
-            <CardHeader className="d-flex justify-content-between align-items-center">
-              <CardTitle as="h5">Technical Report</CardTitle>
-              {technicalReport?.is_finalized && (
-                <Badge bg="success">Finalized</Badge>
-              )}
-            </CardHeader>
-            <CardBody>
-              {technicalReport ? (
-                <div>
-                  <p className="text-muted">
-                    Last updated: {new Date(technicalReport.updated_at).toLocaleString()}
-                  </p>
-                  <pre className="bg-light p-3 rounded">
-                    {JSON.stringify(technicalReport.report_json, null, 2)}
-                  </pre>
-                </div>
-              ) : (
-                <p className="text-muted text-center py-4">No technical report found</p>
-              )}
-            </CardBody>
-          </Card>
+          <TechnicalReviewForm
+            caseId={subsidyCase.id}
+            caseStatus={subsidyCase.status}
+            report={technicalReport}
+            onReportUpdated={fetchCase}
+          />
         </Tab>
 
         {/* History Tab */}

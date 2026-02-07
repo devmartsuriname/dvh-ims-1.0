@@ -9,6 +9,26 @@ import { useAuditLog } from '@/hooks/useAuditLog'
 import { createAdminNotification } from '@/hooks/useAdminNotifications'
 import SocialReviewForm from './components/SocialReviewForm'
 import TechnicalReviewForm from './components/TechnicalReviewForm'
+import DirectorReviewPanel from './components/DirectorReviewPanel'
+import AdvisorReviewPanel from './components/AdvisorReviewPanel'
+import MinisterDecisionPanel from './components/MinisterDecisionPanel'
+
+// Tab visibility sets (governance-binding)
+const DIRECTOR_TAB_STATUSES = new Set([
+  'awaiting_director_approval', 'returned_to_director', 'director_approved',
+  'returned_to_screening', 'in_ministerial_advice', 'returned_to_advisor',
+  'ministerial_advice_complete', 'awaiting_minister_decision', 'minister_approved',
+  'approved_for_council', 'council_doc_generated', 'finalized',
+])
+const ADVISOR_TAB_STATUSES = new Set([
+  'in_ministerial_advice', 'returned_to_advisor', 'ministerial_advice_complete',
+  'returned_to_director', 'awaiting_minister_decision', 'minister_approved',
+  'approved_for_council', 'council_doc_generated', 'finalized',
+])
+const MINISTER_TAB_STATUSES = new Set([
+  'awaiting_minister_decision', 'returned_to_advisor', 'minister_approved',
+  'approved_for_council', 'council_doc_generated', 'finalized',
+])
 
 interface SubsidyCase {
   id: string
@@ -518,6 +538,62 @@ const SubsidyCaseDetail = () => {
             onReportUpdated={fetchCase}
           />
         </Tab>
+
+        {/* Director Review Tab */}
+        {DIRECTOR_TAB_STATUSES.has(subsidyCase.status) && (
+          <Tab eventKey="director-review" title="Director Review">
+            <DirectorReviewPanel
+              caseId={subsidyCase.id}
+              caseStatus={subsidyCase.status}
+              subsidyCase={subsidyCase}
+              socialReport={socialReport}
+              technicalReport={technicalReport}
+              documents={documents}
+              requirements={requirements}
+              statusHistory={statusHistory}
+              onStatusChange={handleStatusChange}
+              statusReason={statusReason}
+              setStatusReason={setStatusReason}
+              fetchCase={fetchCase}
+            />
+          </Tab>
+        )}
+
+        {/* Ministerial Advisor Tab */}
+        {ADVISOR_TAB_STATUSES.has(subsidyCase.status) && (
+          <Tab eventKey="advisor-review" title="Ministerial Advisor">
+            <AdvisorReviewPanel
+              caseId={subsidyCase.id}
+              caseStatus={subsidyCase.status}
+              subsidyCase={subsidyCase}
+              socialReport={socialReport}
+              technicalReport={technicalReport}
+              statusHistory={statusHistory}
+              onStatusChange={handleStatusChange}
+              statusReason={statusReason}
+              setStatusReason={setStatusReason}
+              fetchCase={fetchCase}
+            />
+          </Tab>
+        )}
+
+        {/* Minister Decision Tab */}
+        {MINISTER_TAB_STATUSES.has(subsidyCase.status) && (
+          <Tab eventKey="minister-decision" title="Minister Decision">
+            <MinisterDecisionPanel
+              caseId={subsidyCase.id}
+              caseStatus={subsidyCase.status}
+              subsidyCase={subsidyCase}
+              socialReport={socialReport}
+              technicalReport={technicalReport}
+              statusHistory={statusHistory}
+              onStatusChange={handleStatusChange}
+              statusReason={statusReason}
+              setStatusReason={setStatusReason}
+              fetchCase={fetchCase}
+            />
+          </Tab>
+        )}
 
         {/* History Tab */}
         <Tab eventKey="history" title="History">

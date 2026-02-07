@@ -1,202 +1,292 @@
 
 
-# DVH-IMS V1.4 Phase 3 — Social Review and Technical Review Interfaces
+# DVH-IMS V1.4 Phase 4 — Director Review, Ministerial Advisor, and Minister Decision Interfaces
 
 ## Phase Boundaries Confirmation
 
-- Phase 3 is PLANNING ONLY
+- Phase 4 is PLANNING ONLY
 - No implementation will be started
 - No new database tables or columns
 - No RLS changes
 - No workflow or status changes
 - No new roles
-- No decision logic
-- No Director or Minister UI included
+- No automation of decisions
+- No budget calculation logic
+- No notification logic
 
 ---
 
 ## 1. Functional Intent
 
-### A. Social Review Interface
+### A. Director Review Interface
 
-**Problem it solves:** Social field workers currently have no structured form to fill in social assessment data. The existing case detail page renders `report_json` as raw JSON. This interface provides a structured form for capturing household social conditions during field visits.
+**Decision responsibility:** Organizational approval of the subsidy dossier on behalf of the department, before it enters the ministerial advisory and political decision chain.
 
-**What it does NOT solve:** It does not decide case outcomes, assign cases, trigger status transitions automatically, or replace the existing status change mechanism on the case detail page.
+**What it does NOT do:** Does not calculate budgets, does not assign amounts, does not trigger automatic status transitions, does not replace the existing status change mechanism on the case detail page, does not interact with Raadvoorstel generation.
 
-**Role:** `social_field_worker`
+**Role:** `director`
 
-**Workflow status:** `in_social_review` (primary), `returned_to_intake` (re-review after return)
+**Workflow status:** `awaiting_director_approval` (primary), `returned_to_director` (re-review after ministerial return)
 
-**Nature:** PRODUCES information (writes to `social_report.report_json` and `social_report.is_finalized`). Does NOT decide outcomes.
-
-### B. Technical Review Interface
-
-**Problem it solves:** Technical inspectors have no structured form for recording construction/property inspection findings. Same raw JSON rendering issue as social reports.
-
-**What it does NOT solve:** Same boundaries as social review — no decisions, no automatic status transitions, no case assignment.
-
-**Role:** `technical_inspector`
-
-**Workflow status:** `in_technical_review` (primary), `returned_to_social` (re-review scenarios)
-
-**Nature:** PRODUCES information. Does NOT decide outcomes.
+**Nature:** REVIEWS and DECIDES (organizational approval or return). The Director makes a formal binary decision: approve to proceed to ministerial chain, or return for further screening.
 
 ---
 
-## 2. Data and Report Structure Analysis
+### B. Ministerial Advisor Interface
 
-### A. Social Report
+**Decision responsibility:** Provides a formal advisory opinion (paraaf/paraph) on the dossier for the Minister. This opinion is mandatory before the Minister can act. The advisor does not decide the case outcome; they advise.
 
-**Tables READ:**
-- `subsidy_case` — case_number, status, district_code, applicant_person_id, household_id
-- `person` — first_name, last_name, national_id (applicant context)
-- `household` — household_size, district_code
-- `address` — address_line_1, address_line_2, district_code (visit location)
-- `social_report` — report_json, is_finalized, updated_at (existing report data)
-- `subsidy_case_status_history` — history context (read-only display)
+**What it does NOT do:** Does not approve or reject the subsidy. Does not trigger status transitions automatically. Does not override the Director's approval. Does not interact with budget or financial logic.
 
-**Tables WRITTEN:**
-- `social_report` — UPDATE `report_json` (structured form data), UPDATE `is_finalized`, `finalized_at`, `finalized_by`
-- `audit_event` — INSERT (mandatory: actor, action, entity, timestamp, reason)
+**Role:** `ministerial_advisor`
 
-**Finalization:** Set `is_finalized = true`, `finalized_at = NOW()`, `finalized_by = auth.uid()`. Once finalized, RLS prevents further updates (existing policy checks `is_finalized = false` implicitly via status constraints — when status moves to `social_completed`, the social field worker loses UPDATE access).
+**Workflow status:** `in_ministerial_advice` (primary), `returned_to_advisor` (re-review after Minister return)
 
-**Visibility:** Social field workers can only see reports for cases in their district at qualifying statuses. Other roles (frontdesk, admin_staff, national roles) can read finalized reports via existing `role_select_social_report` policy.
-
-### B. Technical Report
-
-**Tables READ:** Same as social report, substituting `technical_report` for `social_report`.
-
-**Tables WRITTEN:**
-- `technical_report` — UPDATE `report_json`, `is_finalized`, `finalized_at`, `finalized_by`
-- `audit_event` — INSERT
-
-**Finalization:** Same mechanism as social report. When case moves to `technical_approved`, inspector loses UPDATE access via RLS.
-
-**Visibility:** Technical inspectors see reports only for cases in their district at qualifying statuses.
-
-### What existing schema CANNOT represent (no changes proposed):
-- Structured field definitions within `report_json` are application-level, not schema-level. The form fields will be defined in frontend code and serialized into the existing `jsonb` column. This is sufficient for V1.4.
+**Nature:** ADVISES. Produces a formal advisory opinion. The advisor may recommend approval, recommend rejection, or recommend return. This is advice, not a decision.
 
 ---
 
-## 3. UI Surface Concept
+### C. Minister Decision Interface
 
-### Entry Point
-Both interfaces are accessed from the existing case detail page (`/subsidy-cases/:id`). The current "Social Report" and "Technical Report" tabs (lines 500-550) will be replaced with structured review forms instead of raw JSON display.
+**Decision responsibility:** Final political authority on whether the subsidy is granted. The Minister's approval is the last gate before Raadvoorstel generation and council submission.
 
-No new routes required. The existing tab structure within the case detail page serves as the entry point.
+**What it does NOT do:** Does not calculate amounts, does not generate the Raadvoorstel, does not override RLS, does not trigger automatic document generation. Status transitions remain manual.
 
-### Social Review Interface (Tab: "Social Report")
+**Role:** `minister`
 
-**Sections:**
-1. **Case Context Panel (read-only)** — Case number, applicant name, address, household size, district. Provides field worker with visit context.
-2. **Social Assessment Form (editable when not finalized)** — Structured form fields serialized into `report_json`:
-   - Housing condition assessment (dropdown/select)
-   - Household income category (dropdown/select)
-   - Number of dependents (numeric)
-   - Employment status of applicant (dropdown/select)
-   - Social observations (textarea, free text)
-   - Recommendation (dropdown: favorable / unfavorable / needs_further_review)
-3. **Finalization Section** — "Finalize Report" button with confirmation dialog. Once finalized, form becomes read-only. Button disabled until all mandatory fields are completed.
-4. **Audit Note** — Reason field required before finalization, logged to `audit_event`.
+**Workflow status:** `awaiting_minister_decision` (primary)
 
-### Technical Review Interface (Tab: "Technical Report")
-
-**Sections:**
-1. **Case Context Panel (read-only)** — Same as social review.
-2. **Technical Inspection Form (editable when not finalized)** — Structured form fields serialized into `report_json`:
-   - Property type (dropdown: existing_structure / new_construction / renovation)
-   - Structural condition (dropdown: good / fair / poor / unsafe)
-   - Estimated construction cost (numeric, SRD)
-   - Land ownership verified (boolean)
-   - Building permit status (dropdown: present / absent / not_applicable)
-   - Technical observations (textarea, free text)
-   - Technical recommendation (dropdown: approved / rejected / needs_revision)
-3. **Finalization Section** — Same pattern as social review.
-4. **Audit Note** — Same pattern.
-
-### Safeguards Against Premature Submission
-- "Finalize Report" button disabled until all mandatory form fields are filled
-- Confirmation dialog before finalization: "Once finalized, this report cannot be edited. Are you sure?"
-- Auto-save draft on form changes (UPDATE `report_json` without setting `is_finalized`)
-- Clear visual distinction between draft state (editable, warning badge) and finalized state (read-only, success badge)
+**Nature:** DECIDES. The Minister makes the final approval or return decision. Any deviation from the Ministerial Advisor's recommendation must be explicitly motivated and logged.
 
 ---
 
-## 4. Governance and Audit Considerations
+## 2. Decision Surface Definition
 
-### Independence Between Reviews
-- Social and technical reviews are enforced as independent by RLS: `social_field_worker` cannot access `technical_report` table, and vice versa
-- STATUS_TRANSITIONS enforce sequencing: social must complete before technical begins (`social_completed` -> `in_technical_review`)
-- No cross-contamination risk at the data level
+### A. Director — Information Visibility
 
-### Risks of Partial or Premature Submission
-- **Risk:** Field worker saves partial form data, then case status is changed by another role before completion
-  - **Mitigation:** Draft saves to `report_json` are harmless. Finalization is a separate explicit action. Status changes are controlled by frontdesk/admin roles, not by the field worker
-- **Risk:** Finalized report contains errors but cannot be edited
-  - **Mitigation:** This is by design (audit integrity). Corrections require a `returned_to_social` or `returned_to_technical` status change, which creates a new review cycle
+**Required visible:**
+- Case overview (case number, applicant, district, household, requested amount)
+- Social report summary (finalized, read-only) — recommendation + key fields
+- Technical report summary (finalized, read-only) — recommendation + key fields
+- Document checklist status (all required documents verified or not)
+- Status history (full chronological trail)
+
+**Must be hidden:** Nothing explicitly hidden from the Director. The Director sees the complete dossier up to this point.
+
+**Prior recommendations:** Social and Technical recommendations are shown as read-only summaries with their respective field worker recommendations clearly labeled.
+
+**Dissent/negative presentation:** If either social or technical recommendation is "unfavorable" or "needs_revision"/"rejected", this is visually flagged with a warning badge.
+
+---
+
+### B. Ministerial Advisor — Information Visibility
+
+**Required visible:**
+- Case overview
+- Social report summary (finalized, read-only)
+- Technical report summary (finalized, read-only)
+- Director's approval confirmation and any motivation provided
+- Status history
+
+**Must be hidden:** Nothing explicitly hidden. The advisor needs full dossier context to provide informed advice.
+
+**Prior recommendations:** Social, Technical, and Director decision are all visible as read-only summaries. The advisor sees the full chain of assessments.
+
+**Dissent/negative presentation:** Negative assessments from prior steps are shown with warning badges. The advisor can reference disagreements in their advice motivation.
+
+---
+
+### C. Minister — Information Visibility
+
+**Required visible:**
+- Case overview
+- Social report recommendation (summary only, not full form)
+- Technical report recommendation (summary only, not full form)
+- Director approval status
+- Ministerial Advisor's formal advice and motivation (full text, read-only)
+- Status history
+
+**Must be hidden:** Detailed field-level social/technical data is condensed into summaries. The Minister sees recommendations and advice, not raw assessment data.
+
+**Prior recommendations:** All prior recommendations are visible as a consolidated decision chain summary.
+
+**Dissent/negative presentation:** If the Ministerial Advisor recommended rejection, this is prominently displayed. If the Minister decides to deviate from the advisor's recommendation, the motivation field explicitly requires acknowledgment of the deviation, and this is logged immutably.
+
+---
+
+## 3. Data and Audit Analysis
+
+### Data Sources READ (all three interfaces)
+
+| Table | Fields | Purpose |
+|-------|--------|---------|
+| `subsidy_case` | case_number, status, district_code, applicant_person_id, household_id, requested_amount, approved_amount | Case context |
+| `person` | first_name, last_name, national_id | Applicant identity |
+| `household` | household_size, district_code | Household context |
+| `social_report` | report_json, is_finalized, finalized_at | Social assessment (read-only) |
+| `technical_report` | report_json, is_finalized, finalized_at | Technical assessment (read-only) |
+| `subsidy_document_upload` | file_name, is_verified | Document completeness |
+| `subsidy_case_status_history` | from_status, to_status, reason, changed_at | Decision trail |
+| `audit_event` | action, reason, metadata_json | Audit context (read-only) |
+
+### Decision Recording (Conceptual)
+
+Decisions are NOT recorded in separate decision tables. They are captured through:
+
+1. **Status transition** — The existing `handleStatusChange` on the case detail page records status changes to `subsidy_case.status` and `subsidy_case_status_history`
+2. **Audit event** — The `logEvent` call writes to `audit_event` with action types:
+   - Director: `DIRECTOR_REVIEW_STARTED`, `DIRECTOR_APPROVED`, `DIRECTOR_RETURNED`
+   - Advisor: `MINISTERIAL_ADVICE_STARTED`, `MINISTERIAL_ADVICE_COMPLETED`, `MINISTERIAL_ADVICE_RETURNED`
+   - Minister: `MINISTER_DECISION_STARTED`, `MINISTER_APPROVED`, `MINISTER_RETURNED`
+3. **Reason capture** — The mandatory `statusReason` field in the existing status change UI captures the motivation, which is stored in both `status_history.reason` and `audit_event.reason`
+
+No new tables or columns are required. The existing status transition mechanism + audit logging is sufficient.
 
 ### Audit Traceability
-- Every finalization writes to `audit_event` (entity_type: `social_report` or `technical_report`, action: `SOCIAL_ASSESSMENT_COMPLETED` or `TECHNICAL_INSPECTION_COMPLETED`)
-- Draft saves do not require audit events (they are intermediate working states)
-- The existing `useAuditLog` hook already supports these action types
+
+- Every decision action writes to `audit_event` (append-only, INSERT-only)
+- Actor role is captured automatically via `useAuditLog`
+- `correlation_id` groups related events
+- Status history provides chronological decision chain
+- Minister deviation from advisor recommendation is captured in the reason field and metadata
+
+---
+
+## 4. Governance and Legal Considerations
+
+### Risks of Premature or Biased Decisions
+
+- **Risk:** Director approves without reviewing social/technical reports
+  - **Mitigation:** UI displays report finalization status prominently. If either report is not finalized, a visual warning is shown (but no programmatic block — the backend transition engine already validates status sequencing)
+
+- **Risk:** Minister decides without seeing advisor's formal advice
+  - **Mitigation:** The backend transition engine enforces `ministerial_advice_complete` before `awaiting_minister_decision`. The advisor's advice is displayed prominently on the Minister's decision surface.
+
+- **Risk:** Advisor or Minister copies prior recommendations without independent judgment
+  - **Mitigation:** Each decision actor must provide their own mandatory motivation text. The motivation is logged separately and attributed to the specific actor and role.
+
+### Risks of Decision Reversal
+
+- **Risk:** A decision, once recorded, might need reversal
+  - **Mitigation:** Decisions are immutable once logged. The only mechanism for correction is the "return" path (e.g., `returned_to_screening`, `returned_to_director`, `returned_to_advisor`), which creates a new review cycle with its own audit trail. There is no "undo" or "overwrite" of decisions.
+
+### Separation Between Review and Decision Authority
+
+- Social field worker and technical inspector PRODUCE information (Phase 3)
+- Director REVIEWS the complete dossier and provides organizational approval
+- Ministerial Advisor ADVISES based on the full chain
+- Minister DECIDES with full visibility of prior advice
+- Each step is sequentially enforced by the backend transition engine
+- No role can skip steps or act out of turn
+
+### Return for Revision
+
+- Director can return to screening (`returned_to_screening`)
+- Advisor can return to Director (`returned_to_director`)
+- Minister can return to Advisor (`returned_to_advisor`)
+- Each return creates a new status history entry and audit event
+- Returned cases re-enter the review cycle at the appropriate step
 
 ---
 
 ## 5. Scope Separation — Explicitly OUT OF SCOPE
 
-- Director review interface (Phase 4)
-- Ministerial advisor review interface (Phase 4)
-- Minister decision interface (Phase 4)
-- Escalation or override logic
-- Automatic status transitions upon finalization (status changes remain manual via existing UI)
-- Structured report field schema enforcement at database level
-- Report versioning or amendment tracking
-- File/photo attachments to reports
+- Review Archive UI (Phase 5)
+- Reporting dashboards
+- Appeals / bezwaar / beroep
+- Automation or AI assistance
+- Financial disbursement logic
+- Budget calculation or approval amount logic
+- Raadvoorstel generation interface changes
+- Notification enhancements
+- Role changes or new roles
+- Schema changes
+- RLS changes
+- Woningregistratie module
 
 ---
 
-## 6. Technical Implementation Summary
+## 6. UI Surface Concept (No Design)
 
-### Files to Modify
-| File | Change |
-|------|--------|
-| `src/app/(admin)/subsidy-cases/[id]/page.tsx` | Replace raw JSON display in Social Report and Technical Report tabs with structured review forms |
+### Implementation Approach
+
+All three decision interfaces will be implemented as NEW TABS on the existing case detail page (`/subsidy-cases/:id`), following the exact same Darkone pattern used for Social and Technical Report tabs in Phase 3.
+
+### A. Director Review Tab
+
+- **Visible when:** Case status is `awaiting_director_approval` or `returned_to_director`, OR case has passed through Director approval (historical view)
+- **Sections:**
+  1. Dossier summary panel (read-only): case info, applicant, district, requested amount
+  2. Social report summary (read-only): recommendation + key findings from finalized report
+  3. Technical report summary (read-only): recommendation + key findings from finalized report
+  4. Document completeness indicator (read-only)
+  5. Director motivation textarea (editable only for `director` role at qualifying status)
+  6. Governance subtitle: "This review panel supports the organizational approval step. Status transitions remain manual and role-controlled."
+- **Role guard:** Only `director` can interact with the motivation field and see action buttons. Other authorized roles see read-only view of any recorded Director decision.
+
+### B. Ministerial Advisor Tab
+
+- **Visible when:** Case status is `in_ministerial_advice` or `returned_to_advisor`, OR case has passed through advisory step
+- **Sections:**
+  1. Dossier summary panel (read-only)
+  2. Social + Technical summaries (read-only)
+  3. Director approval confirmation with Director's motivation (read-only)
+  4. Advisor's formal advice textarea (editable only for `ministerial_advisor` role at qualifying status)
+  5. Advisor recommendation dropdown: recommend_approval / recommend_rejection / recommend_return
+  6. Governance subtitle
+- **Role guard:** Only `ministerial_advisor` can interact. Others see read-only.
+
+### C. Minister Decision Tab
+
+- **Visible when:** Case status is `awaiting_minister_decision`, OR case has passed through Minister decision
+- **Sections:**
+  1. Consolidated decision chain summary (read-only): Social recommendation, Technical recommendation, Director approval, Advisor recommendation and advice text
+  2. Minister's decision motivation textarea (editable only for `minister` role)
+  3. If Minister's decision diverges from Advisor's recommendation: explicit deviation acknowledgment required
+  4. Governance subtitle
+- **Role guard:** Only `minister` can interact. Others see read-only.
+
+### Safeguards Against Premature Action
+
+- Motivation/advice textareas are mandatory before any status change can be triggered
+- Confirmation dialog before each decision action (same pattern as Phase 3 finalization)
+- No auto-save of decision motivations (unlike Phase 3 drafts — decisions are recorded only upon explicit confirmation)
+- Report finalization warnings displayed if reports are not finalized
+
+---
+
+## 7. Technical Implementation Summary
 
 ### Files to Create
 | File | Purpose |
 |------|---------|
-| `src/app/(admin)/subsidy-cases/[id]/components/SocialReviewForm.tsx` | Structured social assessment form component |
-| `src/app/(admin)/subsidy-cases/[id]/components/TechnicalReviewForm.tsx` | Structured technical inspection form component |
-| `restore-points/v1.4/RESTORE_POINT_V1.4_PHASE3_START.md` | Pre-implementation restore point |
-| `restore-points/v1.4/RESTORE_POINT_V1.4_PHASE3_COMPLETE.md` | Post-implementation restore point |
+| `src/app/(admin)/subsidy-cases/[id]/components/DirectorReviewPanel.tsx` | Director organizational approval interface |
+| `src/app/(admin)/subsidy-cases/[id]/components/AdvisorReviewPanel.tsx` | Ministerial Advisor advisory interface |
+| `src/app/(admin)/subsidy-cases/[id]/components/MinisterDecisionPanel.tsx` | Minister final decision interface |
 
-### No New Routes, No Menu Changes
-Both interfaces live within the existing case detail page tabs.
+### Files to Modify
+| File | Change |
+|------|--------|
+| `src/app/(admin)/subsidy-cases/[id]/page.tsx` | Add three new tabs for Director, Advisor, and Minister panels |
 
-### Dependencies
-- Existing `useAuditLog` hook for audit event logging
-- Existing `useUserRole` hook for role detection (to show/hide edit capabilities)
-- Existing RLS policies (no changes)
-- Existing `STATUS_BADGES` and `STATUS_TRANSITIONS` maps (no changes)
+### No New Routes, No Menu Changes, No Schema Changes
 
 ---
 
-## 7. Open Questions
+## 8. Open Questions
 
-1. **Structured report fields:** The form fields listed above (housing condition, income category, property type, structural condition, etc.) are proposed based on typical subsidy assessment requirements. Do you want to provide an authoritative field list, or are the proposed fields acceptable for V1.4?
+1. **Decision motivation persistence:** Director/Advisor/Minister motivations are currently captured in the status change reason field (`statusReason`). Should these decision-specific motivations also be stored in a structured `report_json`-like field on an existing table, or is the status_history + audit_event combination sufficient? (Current analysis: sufficient, no schema changes needed.)
 
-2. **Auto-save behavior:** Should draft saves happen on every field change (immediate) or on explicit "Save Draft" button click?
+2. **Minister deviation acknowledgment:** When the Minister deviates from the Advisor's recommendation, should the deviation acknowledgment be a simple checkbox ("I acknowledge my decision differs from the advisory recommendation") or a separate mandatory text field explaining the deviation? Both approaches are possible within existing audit structures.
 
-3. **Report return cycle:** When a case is returned (e.g., `returned_to_social`), should the existing report be editable again, or should a new report record be created? Current schema supports 1:1 (one report per case), so editing the existing report is the only option without schema changes.
+3. **Tab visibility for non-decision roles:** Should `admin_staff`, `project_leader`, `system_admin`, and `audit` roles see the Director/Advisor/Minister tabs in read-only mode at all times, or only after the case has reached the relevant status? (Recommendation: show tabs once case reaches or passes the relevant status, to avoid confusion on cases still in social/technical review.)
 
 ---
 
-## 8. Phase 3 Planning Status
+## 9. Phase 4 Planning Status
 
-Phase 3 planning is READY FOR REVIEW, pending resolution of the three open questions above.
+Phase 4 planning is READY FOR REVIEW, pending resolution of the three open questions above.
 
-No Phase 3 implementation has been started.
-Awaiting explicit Phase 3 authorization.
+No Phase 4 implementation has been started.
+Awaiting explicit Phase 4 authorization.
 

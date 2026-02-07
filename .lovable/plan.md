@@ -1,142 +1,148 @@
 
+# DVH-IMS V1.5 — Phase 2 Planning: Assignments
 
-# DVH-IMS V1.5 Phase 1 Implementation — Archive (Read-Only)
-
-**Type:** Implementation
-**Phase:** V1.5 Phase 1 — Operational Transparency
-**Status:** AUTHORIZED
+**Type:** Planning document (no implementation)
+**Scope:** Single new file creation
 
 ---
 
-## Step 1: Pre-Implementation Restore Point
+## Deliverable
 
-Create `docs/restore-points/v1.5/RESTORE_POINT_V1.5_PHASE1_PRE_IMPLEMENTATION.md` documenting current system state before any changes.
-
----
-
-## Step 2: Update Audit Logging Types
-
-**File:** `src/hooks/useAuditLog.ts`
-
-- Add `ARCHIVE_VIEWED` to the `AuditAction` type union
-- No other changes to this file
+Create file: `docs/DVH-IMS-V1.5/V1.5_Phase2_Assignments_Planning.md`
 
 ---
 
-## Step 3: Add Archive Menu Item
+## Document Structure
 
-**File:** `src/assets/data/menu-items.ts`
+### Header
+- Title: "DVH-IMS V1.5 -- Phase 2 Planning: Assignments"
+- Status: PROPOSED -- NOT APPROVED
+- Date: 2026-02-07
+- Authority: Delroy
 
-Add an "Archive" entry under the GOVERNANCE section (before "Audit Log"):
+### Section 1: Phase Objective
+Provide operational visibility into case-to-worker assignments and visit scheduling for Bouwsubsidie dossiers. Enable managerial oversight of workload distribution without altering decision authority or workflow logic.
 
-- Key: `archive`
-- Label: `Archive`
-- Icon: `mingcute:archive-line`
-- URL: `/archive`
-- Allowed roles: `system_admin`, `minister`, `project_leader`, `director`, `ministerial_advisor`, `audit`
+### Section 2: Definition of "Assignment" in DVH-IMS Context
+Two distinct assignment concepts exist in DVH-IMS:
+
+**A) Case Assignment (Bouwsubsidie)**
+- The link between an active dossier and the worker currently responsible for progressing it
+- Currently implicit: the system routes cases to role-based queues (Control Queue, My Visits) but does NOT persist a named worker-to-case relationship
+- V1.5 Phase 2 aims to make this explicit and persistent
+
+**B) Visit Schedule (Bouwsubsidie)**
+- The record of planned and completed field visits (social assessment, technical inspection)
+- Currently implicit: workers pick cases from their queue but no scheduled date/time is persisted
+- V1.5 Phase 2 aims to make visit scheduling durable
+
+**Distinction from existing `assignment_record` table:**
+The existing `assignment_record` table is a Woningregistratie concept (housing unit allocation to a household). It is NOT related to case-to-worker operational assignments. These are separate domains per the service separation protocol.
+
+### Section 3: Assignment Model (Conceptual)
+
+**Case Assignment is person-based:**
+- A specific user (worker) is assigned to a specific dossier
+- Assignment is role-contextual: a social_field_worker is assigned for social review; a technical_inspector for technical review
+- Multiple concurrent assignments per dossier are possible (parallel review steps)
+- Assignment does not confer decision authority -- it indicates operational responsibility
+
+**Visit Schedule is person-based and time-bound:**
+- A visit links a worker, a dossier, a date/time, and a visit type (social / technical)
+- Visits have a simple lifecycle: scheduled, completed, cancelled
+- No automatic workflow triggers from visit status changes
+
+### Section 4: Assignment Lifecycle (Conceptual)
+
+**Case Assignment lifecycle:**
+1. UNASSIGNED -- Case is in a role queue but no specific worker claimed/was assigned
+2. ASSIGNED -- A specific worker is linked to the case for a given review step
+3. REASSIGNED -- Case transferred to a different worker (previous assignment closed, new one created)
+4. COMPLETED -- Worker completed their review step; assignment is closed
+
+**Visit Schedule lifecycle:**
+1. SCHEDULED -- Visit planned with date, time, location
+2. COMPLETED -- Visit took place
+3. CANCELLED -- Visit cancelled (reason recorded)
+
+### Section 5: Role Interaction Matrix (Conceptual)
+
+| Role | Can Assign | Can Reassign | Can View Own | Can View All | Can Schedule Visit |
+|------|-----------|-------------|-------------|-------------|-------------------|
+| system_admin | Yes (all) | Yes (all) | Yes | Yes | Yes |
+| project_leader | Yes (all) | Yes (all) | Yes | Yes | Yes |
+| admin_staff | Yes (own district) | Yes (own district) | Yes | District | Yes |
+| frontdesk_bouwsubsidie | No | No | Yes | No | No |
+| social_field_worker | Self-assign only | No | Yes | No | No |
+| technical_inspector | Self-assign only | No | Yes | No | No |
+| director | No | No | No | Yes (read-only) | No |
+| ministerial_advisor | No | No | No | Yes (read-only) | No |
+| minister | No | No | No | Yes (read-only) | No |
+| audit | No | No | No | Yes (read-only) | No |
+
+### Section 6: Relationship to Existing Dossier States
+- Assignments exist alongside dossier states but do NOT drive state transitions
+- A case in `in_social_review` may be unassigned (in queue) or assigned (to a specific worker)
+- State changes remain governed by the existing backend transition engine
+- Assignment changes are operational metadata, not workflow events
+
+### Section 7: Scope Boundaries
+
+**In Scope (Phase 2):**
+- Conceptual definition of case assignment and visit scheduling
+- Role-based assignment and visibility rules
+- Assignment and visit lifecycle definitions
+- Governance and audit requirements
+- Relationship to existing operational views (Control Queue, My Visits, Schedule Visits)
+
+**Explicitly Out of Scope:**
+- Decision-making authority changes
+- New dossier states
+- Workflow automation triggered by assignments
+- Performance metrics, KPIs, or workload analytics
+- Time tracking
+- Notifications or escalations
+- Schema or RLS changes
+- Any implementation detail (UI, data model, API)
+- Woningregistratie case assignments (separate service domain)
+
+### Section 8: Governance and Audit Considerations
+- **Traceability:** Every assignment creation, reassignment, and completion must be logged to `audit_event` with actor, timestamp, dossier_id, assigned_worker, and action type
+- **Separation of concerns:** Assignment (operational control) must never be conflated with decision authority. Assigning a worker does not grant approval/rejection power beyond their existing role
+- **Accountability:** Reassignment must preserve the full history -- who was previously assigned, who reassigned, and why
+- **Immutability:** Assignment history is append-only; completed or cancelled assignments cannot be deleted or modified
+
+### Section 9: Dependencies and Risks
+
+**Dependencies:**
+- V1.4 Control Queue, My Visits, and Schedule Visits interfaces (implemented and operational)
+- V1.3 backend transition engine and role model (11 active roles)
+- Existing `subsidy_case` table and status model
+
+**Risks:**
+- **Scope creep:** Assignments could easily expand into workload balancing, auto-routing, or performance tracking. Strict boundaries required.
+- **Implicit vs explicit tension:** The current system works with implicit role-based queues. Introducing explicit assignments may create confusion if both models coexist without clear UX distinction.
+- **District boundary enforcement:** If admin_staff can assign within their district, the system must reliably enforce district scoping for assignment operations.
+- **Data volume:** Visit scheduling persistence introduces new data that grows linearly with case volume. No immediate concern but noted for Scale Pack awareness.
+
+### Section 10: Open Questions and Decision Points
+
+| ID | Question | Impact |
+|----|----------|--------|
+| Q1 | Should case assignment be mandatory (every case must have an assigned worker) or optional (cases can remain in role queues)? | Assignment model design |
+| Q2 | Should visit scheduling support recurring visits or single visits only? | Data model complexity |
+| Q3 | Should reassignment require a reason/justification? | Audit granularity |
+| Q4 | Should oversight roles (director, minister) see assignment data inline on dossier detail pages or only in a dedicated assignments view? | UI integration scope |
+| Q5 | Should the existing Schedule Visits page (V1.4) be enhanced in-place or should a new persistent scheduling interface be created? | Implementation approach |
+| Q6 | Is there a maximum number of concurrent assignments per worker that should be enforced or tracked? | Workload management |
+
+### Section 11: Execution Gate
+- Phase 2 planning is complete
+- No Phase 2 implementation has started
+- Implementation requires separate authorization
 
 ---
 
-## Step 4: Add Archive Routes
+## Technical Notes
 
-**File:** `src/routes/index.tsx`
-
-Add three routes to `governanceRoutes`:
-- `/archive` -- Archive list page
-- `/archive/subsidy/:id` -- Subsidy archive detail (read-only)
-- `/archive/housing/:id` -- Housing archive detail (read-only)
-
-Add lazy imports for the three new page components.
-
----
-
-## Step 5: Archive List Page
-
-**New file:** `src/app/(admin)/archive/page.tsx`
-
-- Role gate: only `system_admin`, `minister`, `project_leader`, `director`, `ministerial_advisor`, `audit`
-- Two tabs: "Bouwsubsidie" and "Woningregistratie"
-- Bouwsubsidie tab: queries `subsidy_case` WHERE `status` IN (`finalized`, `rejected`) with applicant person join
-- Woningregistratie tab: queries `housing_registration` WHERE `current_status` IN (`finalized`, `rejected`) with applicant person join
-- Each row shows: case/reference number, applicant name, district, terminal status badge, date
-- Row click navigates to `/archive/subsidy/:id` or `/archive/housing/:id`
-- No action buttons, no "New Case" button, no edit controls
-- Uses Grid.js table (matching existing CaseTable pattern)
-
----
-
-## Step 6: Subsidy Archive Detail Page
-
-**New file:** `src/app/(admin)/archive/subsidy/[id]/page.tsx`
-
-- Role gate (same as list page)
-- On mount: logs `ARCHIVE_VIEWED` audit event with entity_type `subsidy_case` and entity_id
-- Fetches: subsidy_case, subsidy_case_status_history, subsidy_document_upload, social_report, technical_report, generated_document, audit_event (filtered by entity)
-- Tabs (all read-only, no action controls):
-  - **Overview**: Case info (reuses layout from existing detail page but without "Change Status" card)
-  - **Documents**: Uploaded documents table (read-only, no verify buttons)
-  - **Social Report**: Read-only display of social_report JSON
-  - **Technical Report**: Read-only display of technical_report JSON
-  - **Director Review**: Read-only display (visible for all archive cases that reached director stage)
-  - **Advisor Review**: Read-only display (visible for cases that reached advisor stage)
-  - **Minister Decision**: Read-only display (visible for cases that reached minister stage)
-  - **Status History**: Full timeline from `subsidy_case_status_history`
-  - **Audit Trail**: Full `audit_event` log filtered by `entity_id = case.id` AND `entity_type = 'subsidy_case'`
-- Back button navigates to `/archive`
-- NO status change controls, NO edit forms, NO workflow triggers
-
----
-
-## Step 7: Housing Archive Detail Page
-
-**New file:** `src/app/(admin)/archive/housing/[id]/page.tsx`
-
-- Role gate (same as list page)
-- On mount: logs `ARCHIVE_VIEWED` audit event with entity_type `housing_registration` and entity_id
-- Fetches: housing_registration, housing_registration_status_history, housing_document_upload, housing_urgency, audit_event (filtered by entity)
-- Tabs (all read-only):
-  - **Overview**: Registration info (reuses layout from existing detail page but without "Change Status" card)
-  - **Urgency**: Read-only display of urgency assessments (no add form)
-  - **Documents**: Uploaded documents table (read-only, no verify buttons)
-  - **Status History**: Full timeline from `housing_registration_status_history`
-  - **Audit Trail**: Full `audit_event` log filtered by `entity_id = registration.id` AND `entity_type = 'housing_registration'`
-- Back button navigates to `/archive`
-- NO status change controls, NO edit forms, NO workflow triggers
-
----
-
-## Step 8: Post-Implementation Restore Point and Completion Report
-
-Create `docs/restore-points/v1.5/RESTORE_POINT_V1.5_PHASE1_POST_IMPLEMENTATION.md` with Phase 1 Completion Report including all mandatory sections.
-
----
-
-## Hard Constraints Compliance
-
-| Constraint | Status |
-|-----------|--------|
-| Read-only archive views only | Enforced -- no action buttons, no forms, no mutations |
-| No new tables or schema changes | Compliant -- uses existing tables only |
-| No data duplication | Compliant -- queries same source tables |
-| No workflow or state changes | Compliant -- no status transitions in archive |
-| No financial calculations | Compliant |
-| No PDF generation | Compliant |
-| No CSV/export | Compliant |
-| ARCHIVE_VIEWED audit logging | Implemented on every detail page load |
-| Immutability enforced | UI-level: no edit controls rendered |
-
----
-
-## Files Summary
-
-| File | Action |
-|------|--------|
-| `docs/restore-points/v1.5/RESTORE_POINT_V1.5_PHASE1_PRE_IMPLEMENTATION.md` | Create |
-| `src/hooks/useAuditLog.ts` | Modify (add ARCHIVE_VIEWED) |
-| `src/assets/data/menu-items.ts` | Modify (add Archive menu item) |
-| `src/routes/index.tsx` | Modify (add 3 archive routes) |
-| `src/app/(admin)/archive/page.tsx` | Create |
-| `src/app/(admin)/archive/subsidy/[id]/page.tsx` | Create |
-| `src/app/(admin)/archive/housing/[id]/page.tsx` | Create |
-| `docs/restore-points/v1.5/RESTORE_POINT_V1.5_PHASE1_POST_IMPLEMENTATION.md` | Create |
-
+No code, schema, RLS, or UI changes. Single documentation file only.

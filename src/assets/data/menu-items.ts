@@ -58,6 +58,13 @@ export const MENU_ITEMS: MenuItemWithRoles[] = [
     allowedRoles: ['social_field_worker', 'technical_inspector'],
   },
   {
+    key: 'schedule-visits',
+    label: 'Schedule Visits',
+    icon: 'mingcute:calendar-2-line',
+    url: '/schedule-visits',
+    allowedRoles: ['admin_staff', 'project_leader', 'system_admin', 'audit'],
+  },
+  {
     key: 'subsidy-cases',
     label: 'Subsidy Cases',
     icon: 'mingcute:file-check-line',

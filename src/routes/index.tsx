@@ -16,6 +16,8 @@ const HouseholdList = lazy(() => import('@/app/(admin)/households/page'))
 const HouseholdDetail = lazy(() => import('@/app/(admin)/households/[id]/page'))
 const SubsidyCaseList = lazy(() => import('@/app/(admin)/subsidy-cases/page'))
 const SubsidyCaseDetail = lazy(() => import('@/app/(admin)/subsidy-cases/[id]/page'))
+const ControlQueue = lazy(() => import('@/app/(admin)/control-queue/page'))
+const MyVisits = lazy(() => import('@/app/(admin)/my-visits/page'))
 
 // Woning Registratie Routes
 const HousingRegistrationList = lazy(() => import('@/app/(admin)/housing-registrations/page'))
@@ -101,6 +103,8 @@ const sharedCoreRoutes: RoutesProps[] = [
 ]
 
 const bouwsubsidieRoutes: RoutesProps[] = [
+  { path: '/control-queue', name: 'Control Queue', element: <ControlQueue /> },
+  { path: '/my-visits', name: 'My Visits', element: <MyVisits /> },
   { path: '/subsidy-cases', name: 'Subsidy Cases', element: <SubsidyCaseList /> },
   { path: '/subsidy-cases/:id', name: 'Subsidy Case Detail', element: <SubsidyCaseDetail /> },
 ]

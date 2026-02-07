@@ -44,11 +44,25 @@ export const MENU_ITEMS: MenuItemWithRoles[] = [
     isTitle: true,
   },
   {
+    key: 'control-queue',
+    label: 'Control Queue',
+    icon: 'mingcute:task-line',
+    url: '/control-queue',
+    allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'social_field_worker', 'technical_inspector', 'admin_staff', 'audit', 'director', 'ministerial_advisor'],
+  },
+  {
+    key: 'my-visits',
+    label: 'My Visits',
+    icon: 'mingcute:location-line',
+    url: '/my-visits',
+    allowedRoles: ['social_field_worker', 'technical_inspector'],
+  },
+  {
     key: 'subsidy-cases',
     label: 'Subsidy Cases',
     icon: 'mingcute:file-check-line',
     url: '/subsidy-cases',
-    allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'admin_staff', 'audit', 'director', 'ministerial_advisor'],
+    allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'social_field_worker', 'technical_inspector', 'admin_staff', 'audit', 'director', 'ministerial_advisor'],
   },
   {
     key: 'woning-registratie',

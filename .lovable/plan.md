@@ -1,176 +1,342 @@
 
-# DVH-IMS V1.4 Phase 4 — Implementation Plan
 
-## Phase Boundaries
+# DVH-IMS V1.5 -- Intake Preparation (Out-of-Scope Inventory)
 
-- No new database tables, columns, or schema migrations
-- No RLS policy changes
-- No workflow or status transition changes
-- No new roles
-- No automatic decisions or status transitions
-- No financial calculation, notification, or AI logic
-- Decision motivations stored ONLY in status_history + audit_event
+**Document Type:** Intake Preparation -- Classification Only
+**Date:** 2026-02-07
+**Authority:** Delroy
+**Status:** PREPARATION ONLY -- NOT AN INTAKE
 
 ---
 
-## Implementation Steps
+## NON-AUTHORIZATION STATEMENT
 
-### Step 1: Create Pre-Implementation Restore Point
-
-Create `restore-points/v1.4/RESTORE_POINT_V1.4_PHASE4_START.md` documenting current state before any changes.
-
-### Step 2: Create DirectorReviewPanel.tsx
-
-New file: `src/app/(admin)/subsidy-cases/[id]/components/DirectorReviewPanel.tsx`
-
-**Props:** Receives `caseId`, `caseStatus`, `subsidyCase` (overview data), `socialReport`, `technicalReport`, `documents`, `requirements`, `statusHistory`, `onStatusChange` callback, `statusReason`/`setStatusReason` from parent.
-
-**Sections:**
-1. Dossier summary panel (read-only): case number, applicant, district, requested amount, household size
-2. Social report summary (read-only): extracts recommendation + key fields from `socialReport.report_json`. Warning badge if recommendation is "unfavorable" or "needs_further_review"
-3. Technical report summary (read-only): extracts recommendation + key fields from `technicalReport.report_json`. Warning badge if recommendation is "rejected" or "needs_revision"
-4. Document completeness indicator: counts verified vs total mandatory documents
-5. Director motivation textarea: editable ONLY when role is `director` AND status is `awaiting_director_approval` or `returned_to_director`
-6. Action buttons: "Approve" (triggers `director_approved`) and "Return to Screening" (triggers `returned_to_screening`), each with confirmation modal requiring mandatory motivation text
-7. Governance subtitle text
-
-**Decision recording:** Calls parent's `handleStatusChange` which writes to `status_history` and `audit_event`. Additionally calls `logEvent` with action `DIRECTOR_APPROVED` or `DIRECTOR_RETURNED`.
-
-**Read-only mode:** Non-director roles see the panel with all fields disabled and any previously recorded Director decision from status history.
-
-### Step 3: Create AdvisorReviewPanel.tsx
-
-New file: `src/app/(admin)/subsidy-cases/[id]/components/AdvisorReviewPanel.tsx`
-
-**Props:** Same pattern as Director panel plus `statusHistory` for extracting Director's recorded motivation.
-
-**Sections:**
-1. Dossier summary panel (read-only)
-2. Social + Technical report summaries (read-only, same extraction as Director panel)
-3. Director approval confirmation: reads from `statusHistory` to find the `director_approved` entry, shows Director's motivation (reason field)
-4. Advisor recommendation dropdown: `recommend_approval` / `recommend_rejection` / `recommend_return`
-5. Advisor formal advice textarea: mandatory free-text field
-6. Action buttons: "Submit Advice" (triggers `ministerial_advice_complete`) and "Return to Director" (triggers `returned_to_director`), each with confirmation modal
-7. Governance subtitle text
-
-**Editable ONLY** for `ministerial_advisor` role at `in_ministerial_advice` or `returned_to_advisor` status.
-
-**No auto-save** of advice text (governance rule: decisions recorded only on explicit confirmation).
-
-### Step 4: Create MinisterDecisionPanel.tsx
-
-New file: `src/app/(admin)/subsidy-cases/[id]/components/MinisterDecisionPanel.tsx`
-
-**Props:** Same pattern, plus needs advisor's recommendation and advice from `statusHistory`.
-
-**Sections:**
-1. Consolidated decision chain summary (read-only):
-   - Social recommendation (summary label from report_json)
-   - Technical recommendation (summary label from report_json)
-   - Director approval status + motivation (from status history)
-   - Advisor recommendation + full advice text (from status history)
-2. Minister's decision motivation textarea (mandatory)
-3. Deviation detection: compares Minister's chosen action against Advisor's recommendation. If Advisor recommended rejection but Minister approves (or vice versa), a MANDATORY deviation explanation textarea appears. This is NOT a checkbox -- it is a separate required text field.
-4. Action buttons: "Approve" (triggers `minister_approved`) and "Return to Advisor" (triggers `returned_to_advisor`), each with confirmation modal
-5. Governance subtitle text
-
-**Editable ONLY** for `minister` role at `awaiting_minister_decision` status.
-
-**Deviation logic:** The deviation explanation is appended to the reason field stored in both `status_history.reason` and `audit_event.reason`, formatted as: `"[Decision motivation]. DEVIATION FROM ADVISORY: [deviation explanation]"`.
-
-### Step 5: Integrate Tabs in Case Detail Page
-
-Modify `src/app/(admin)/subsidy-cases/[id]/page.tsx`:
-
-**Tab visibility logic** (governance-binding rule):
-- Director Review tab: visible when status has reached or passed `awaiting_director_approval` (includes `awaiting_director_approval`, `returned_to_director`, `director_approved`, and all subsequent statuses)
-- Ministerial Advisor tab: visible when status has reached or passed `in_ministerial_advice`
-- Minister Decision tab: visible when status has reached or passed `awaiting_minister_decision`
-
-Implementation: define ordered status arrays and check if current status index is at or beyond the relevant threshold.
-
-Tabs are inserted between the Technical Report tab and the History tab, in order: Director Review, Ministerial Advisor, Minister Decision.
-
-Each tab component receives the existing state variables as props (subsidyCase, socialReport, technicalReport, documents, requirements, statusHistory, handleStatusChange, statusReason, setStatusReason, fetchCase).
-
-### Step 6: Create Post-Implementation Restore Point
-
-Create `restore-points/v1.4/RESTORE_POINT_V1.4_PHASE4_COMPLETE.md` documenting completed state.
+- This is NOT a V1.5 intake
+- No prioritization has been done
+- No scope has been approved
+- No implementation is authorized
+- This document serves solely as a consolidated inventory of items explicitly excluded from V1.3 and V1.4
 
 ---
 
-## Files Summary
+## 1. Consolidated Out-of-Scope Inventory
 
-| Action | File |
-|--------|------|
-| Create | `restore-points/v1.4/RESTORE_POINT_V1.4_PHASE4_START.md` |
-| Create | `src/app/(admin)/subsidy-cases/[id]/components/DirectorReviewPanel.tsx` |
-| Create | `src/app/(admin)/subsidy-cases/[id]/components/AdvisorReviewPanel.tsx` |
-| Create | `src/app/(admin)/subsidy-cases/[id]/components/MinisterDecisionPanel.tsx` |
-| Modify | `src/app/(admin)/subsidy-cases/[id]/page.tsx` |
-| Create | `restore-points/v1.4/RESTORE_POINT_V1.4_PHASE4_COMPLETE.md` |
+### 1.1 Review Archive UI
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.4 (Phase 5 -- never authorized) |
+| Reference | `V1.4_Bouwsubsidie_Admin_UI_Deepening_Proposed_Scope.md` -- Module B.6; `DVH-IMS-V1.4_Version_Closure.md` -- Section 3 |
+| Description | Filterable historical archive of completed decisions with CSV/PDF export, accessible to project_leader, director, ministerial_advisor, minister, audit |
+
+### 1.2 Decision History Dashboards / Reporting Aggregations
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (planning only), V1.3 (deferred as Scale Pack B), V1.4 (out of scope) |
+| Reference | `DVH-IMS-V1.2_Deferred_Items_Manifest.md` -- S-04; `DVH-IMS-V1.2_Implementation_Roadmap.md` -- Phase 3 exclusions ("Reporting dashboards"); `V1.4_Bouwsubsidie_Admin_UI_Deepening_Proposed_Scope.md` -- Module B.6 exclusions ("Statistical analytics", "Trend visualization") |
+| Description | Database-level KPI aggregations, trend charts, and cross-dossier statistical reporting |
+
+### 1.3 Financial Assessment Service Formalization (S-01)
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (documentation only), V1.3 (not in authorized scope), V1.4 (out of scope) |
+| Reference | `DVH-IMS-V1.2_Deferred_Items_Manifest.md` -- S-01; `DVH-IMS-V1.3_Strategy_Input.md` -- Cluster 2 |
+| Description | Formalize budget/eligibility logic for Bouwsubsidie into a documented, testable service layer |
+
+### 1.4 Subsidy Allocation Formal Workflow (S-02)
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (documentation only), V1.3 (not in authorized scope), V1.4 (out of scope) |
+| Reference | `DVH-IMS-V1.2_Deferred_Items_Manifest.md` -- S-02; `DVH-IMS-V1.3_Strategy_Input.md` -- Cluster 2 |
+| Description | Formalize allocation flow beyond approved_amount field, including budget ceilings and disbursement tracking |
+
+### 1.5 External Notification Channels (Email/SMS/Push)
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (planning only), V1.3 (explicitly excluded), V1.4 (out of scope) |
+| Reference | `DVH-IMS-V1.2_Notifications_and_Escalations.md` -- Section 2.2; `V1.3_CLOSURE_STATEMENT.md` -- Skipped items; `DVH-IMS-V1.2_Tasks_and_Phases.md` -- Section 11 |
+| Description | SMS, email, WhatsApp, or push notification delivery to citizens and staff |
+
+### 1.6 SLA Tracking and Deadline Enforcement
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (documented as reminders/escalation model only), V1.3 (admin notifications only -- no SLA), V1.4 (out of scope) |
+| Reference | `DVH-IMS-V1.2_Notifications_and_Escalations.md` -- Tier 2 (Reminders) and Tier 3 (Escalations) |
+| Description | Automated deadline tracking with soft/hard thresholds, escalation triggers to supervisors/directors |
+
+### 1.7 Scale Pack A -- Admin Listings Server-Side Pagination (SP-A)
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (planning only), V1.3 (deferred), V1.4 (out of scope) |
+| Reference | `DVH-IMS-V1.2_Scale_Readiness_Roadmap.md` -- Scale Pack A; `DVH-IMS-V1.2_Deferred_Items_Manifest.md` -- SP-A |
+| Description | Server-side pagination for all admin data tables to support large dataset volumes |
+
+### 1.8 Scale Pack B -- Dashboard KPI Aggregations (SP-B)
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (planning only), V1.3 (deferred), V1.4 (out of scope) |
+| Reference | `DVH-IMS-V1.2_Scale_Readiness_Roadmap.md` -- Scale Pack B; `DVH-IMS-V1.2_Deferred_Items_Manifest.md` -- SP-B |
+| Description | Database-level KPI calculations replacing client-side computation |
+
+### 1.9 Scale Pack C -- Form Selector Async Search (SP-C)
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (planning only), V1.3 (deferred), V1.4 (out of scope) |
+| Reference | `DVH-IMS-V1.2_Scale_Readiness_Roadmap.md` -- Scale Pack C; `DVH-IMS-V1.2_Deferred_Items_Manifest.md` -- SP-C |
+| Description | Typeahead/async search patterns for form dropdowns to replace preloaded selectors |
+
+### 1.10 Appeals / Bezwaar / Beroep
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (not documented), V1.3 (not in scope), V1.4 (not in scope) |
+| Reference | No V1.2/V1.3/V1.4 document addresses appeals; implicitly excluded as no workflow states, roles, or UI exist for this |
+| Description | Formal objection and appeal process after ministerial decision (rejected or approved) |
+
+### 1.11 Approved Amount Editing by Minister
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.4 (governance decision) |
+| Reference | `DVH-IMS-V1.4_Version_Closure.md` -- Section 4 (Intentional Deviations) |
+| Description | Allowing the Minister to edit the approved_amount field during the decision step |
+
+### 1.12 Digital Signature / Paraaf Capture
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.4 (out of scope per Module B.4 and B.5) |
+| Reference | `V1.4_Bouwsubsidie_Admin_UI_Deepening_Proposed_Scope.md` -- Modules B.4 and B.5 exclusions |
+| Description | Digital signature capture for Director, Advisor, or Minister decisions |
+
+### 1.13 External Agency / Ministry Integration
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (out of scope), V1.3 (not in scope), V1.4 (not in scope) |
+| Reference | `DVH-IMS-V1.2_Roles_and_Authority_Matrix.md` -- Section 3.2; `DVH-IMS-V1.2_Tasks_and_Phases.md` -- Section 11 |
+| Description | Integration with external government ministries or cross-agency authority delegation |
+
+### 1.14 Automated Decision Engines / AI Support
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (out of scope), V1.3 (not in scope), V1.4 (hard constraint) |
+| Reference | `DVH-IMS-V1.2_Roles_and_Authority_Matrix.md` -- Section 3.2; `DVH-IMS-V1.2_Tasks_and_Phases.md` -- Section 11 |
+| Description | Any automated decision-making, recommendation engine, or AI-assisted case evaluation |
+
+### 1.15 Payment / Disbursement Processing
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (out of scope), V1.3 (not in scope), V1.4 (hard constraint) |
+| Reference | `DVH-IMS-V1.2_Tasks_and_Phases.md` -- Section 11 ("Payment processing") |
+| Description | Financial disbursement, payment tracking, or bank integration for approved subsidies |
+
+### 1.16 Case Assignment Table / Visit Scheduling Persistence
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.4 (deferred to V1.5+) |
+| Reference | `V1.4_Bouwsubsidie_Admin_UI_Deepening_Proposed_Scope.md` -- Section 5.2 (Future Consideration V1.5+) |
+| Description | New `case_assignment` and/or `visit_schedule` tables to enable persistent assignment of cases to field workers |
+
+### 1.17 Admin Portal Localization (NL)
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.3 (deferred to V1.4+), V1.4 (not in scope) |
+| Reference | `V1.3_CLOSURE_STATEMENT.md` -- Skipped items |
+| Description | Dutch language localization for the Admin interface (public-facing NL was completed in V1.3) |
+
+### 1.18 Woningregistratie Role Chain
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.3 (out of scope), V1.4 (out of scope) |
+| Reference | `V1.3_CLOSURE_STATEMENT.md` -- Skipped items; `V1.4_Bouwsubsidie_Admin_UI_Deepening_Proposed_Scope.md` -- Section 5.3 |
+| Description | Implementing the role-based workflow chain for the Woning Registratie module (separate from Bouwsubsidie) |
+
+### 1.19 Batch Operations (Approval, Assignment, Decision)
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.4 (out of scope per Modules A.1, B.3, B.5) |
+| Reference | `V1.4_Bouwsubsidie_Admin_UI_Deepening_Proposed_Scope.md` -- Module A.1 exclusions ("Bulk operations"), B.3 exclusions ("Batch approval"), B.5 exclusions ("Multi-case batch decisions") |
+| Description | Ability to process multiple cases simultaneously in queues or decision panels |
+
+### 1.20 Cross-Dossier Automation / Insights
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (out of scope) |
+| Reference | `DVH-IMS-V1.2_Tasks_and_Phases.md` -- Section 11 ("Cross-dossier automation"); `DVH-IMS-V1.2_Services_Module_Decomposition.md` |
+| Description | Automated detection of patterns, duplicates, or relationships across dossiers |
+
+### 1.21 PDF Report Generation (from Review Forms)
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.4 (out of scope per Modules B.1, B.6) |
+| Reference | `V1.4_Bouwsubsidie_Admin_UI_Deepening_Proposed_Scope.md` -- Module B.1 exclusions ("PDF report generation"), Module B.6 ("ExportButton" never authorized) |
+| Description | Generating PDF exports of technical/social reports or decision summaries |
+
+### 1.22 Map/GPS Integration for Field Visits
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.4 (out of scope per Module A.2) |
+| Reference | `V1.4_Bouwsubsidie_Admin_UI_Deepening_Proposed_Scope.md` -- Module A.2 exclusions ("GPS/Map integration") |
+| Description | External map services, route optimization, or GPS-based visit tracking |
+
+### 1.23 Delegation / Deputy Authority
+
+| Attribute | Detail |
+|-----------|--------|
+| Excluded From | V1.2 (out of scope), V1.4 (out of scope per Module B.5) |
+| Reference | `DVH-IMS-V1.2_Roles_and_Authority_Matrix.md` -- Section 3.2 ("Cross-agency authority delegation"); `V1.4_Bouwsubsidie_Admin_UI_Deepening_Proposed_Scope.md` -- Module B.5 exclusions ("Delegation authority") |
+| Description | Allowing decision-makers to delegate authority to deputies or substitutes |
 
 ---
 
-## Technical Details
+## 2. Categorization for V1.5
 
-### Status Ordering for Tab Visibility
+### Category A: Decision Transparency and Archives
 
-```text
-STATUS_ORDER = [
-  'received', 'in_social_review', 'returned_to_intake', 'social_completed',
-  'in_technical_review', 'returned_to_social', 'technical_approved',
-  'in_admin_review', 'returned_to_technical', 'admin_complete',
-  'screening', 'needs_more_docs', 'fieldwork',
-  'awaiting_director_approval', 'returned_to_director', 'director_approved',
-  'returned_to_screening',
-  'in_ministerial_advice', 'returned_to_advisor', 'ministerial_advice_complete',
-  'returned_to_director',
-  'awaiting_minister_decision', 'returned_to_advisor', 'minister_approved',
-  'approved_for_council', 'council_doc_generated', 'finalized', 'rejected'
-]
-```
+| ID | Item |
+|----|------|
+| 1.1 | Review Archive UI |
+| 1.2 | Decision History Dashboards / Reporting Aggregations |
+| 1.21 | PDF Report Generation |
+| 1.19 | Batch Operations |
 
-Rather than index-based ordering (which is fragile with return statuses), use explicit sets:
+### Category B: Financial and Budget Modules
 
-- Director tab visible statuses: `awaiting_director_approval`, `returned_to_director`, `director_approved`, `returned_to_screening`, `in_ministerial_advice`, `returned_to_advisor`, `ministerial_advice_complete`, `awaiting_minister_decision`, `minister_approved`, `approved_for_council`, `council_doc_generated`, `finalized`
-- Advisor tab visible statuses: `in_ministerial_advice`, `returned_to_advisor`, `ministerial_advice_complete`, `returned_to_director`, `awaiting_minister_decision`, `minister_approved`, `approved_for_council`, `council_doc_generated`, `finalized`
-- Minister tab visible statuses: `awaiting_minister_decision`, `returned_to_advisor`, `minister_approved`, `approved_for_council`, `council_doc_generated`, `finalized`
+| ID | Item |
+|----|------|
+| 1.3 | Financial Assessment Service Formalization |
+| 1.4 | Subsidy Allocation Formal Workflow |
+| 1.11 | Approved Amount Editing by Minister |
+| 1.15 | Payment / Disbursement Processing |
 
-### Extracting Prior Decisions from Status History
+### Category C: Citizen Communication and Notifications
 
-Director's motivation is extracted by finding the most recent `statusHistory` entry where `to_status === 'director_approved'` and reading its `reason` field.
+| ID | Item |
+|----|------|
+| 1.5 | External Notification Channels |
+| 1.6 | SLA Tracking and Deadline Enforcement |
 
-Advisor's recommendation and advice are extracted from the most recent entry where `to_status === 'ministerial_advice_complete'` and reading its `reason` field.
+### Category D: Operational Tooling
 
-### Confirmation Dialog Pattern
+| ID | Item |
+|----|------|
+| 1.16 | Case Assignment Table / Visit Scheduling Persistence |
+| 1.22 | Map/GPS Integration |
+| 1.17 | Admin Portal Localization (NL) |
 
-Each action button opens a Bootstrap Modal (same pattern as Phase 3 finalization modals) with:
-- Warning text describing the action's permanence
-- Mandatory motivation/reason textarea
-- Cancel and Confirm buttons
-- Spinner on confirm while processing
+### Category E: Scale and Performance
 
-### Audit Events
+| ID | Item |
+|----|------|
+| 1.7 | Scale Pack A -- Server-Side Pagination |
+| 1.8 | Scale Pack B -- Dashboard KPI Aggregations |
+| 1.9 | Scale Pack C -- Form Selector Async Search |
 
-| Action | audit_event.action | Entity |
-|--------|-------------------|--------|
-| Director approves | DIRECTOR_APPROVED | subsidy_case |
-| Director returns | DIRECTOR_RETURNED | subsidy_case |
-| Advisor submits advice | MINISTERIAL_ADVICE_COMPLETED | subsidy_case |
-| Advisor returns to director | MINISTERIAL_ADVICE_RETURNED | subsidy_case |
-| Minister approves | MINISTER_APPROVED | subsidy_case |
-| Minister returns to advisor | MINISTER_RETURNED | subsidy_case |
+### Category F: Governance and Legal Extensions
+
+| ID | Item |
+|----|------|
+| 1.10 | Appeals / Bezwaar / Beroep |
+| 1.12 | Digital Signature / Paraaf Capture |
+| 1.23 | Delegation / Deputy Authority |
+
+### Category G: System Integrations
+
+| ID | Item |
+|----|------|
+| 1.13 | External Agency / Ministry Integration |
+| 1.14 | Automated Decision Engines / AI Support |
+| 1.20 | Cross-Dossier Automation / Insights |
+
+### Category H: Module Expansion
+
+| ID | Item |
+|----|------|
+| 1.18 | Woningregistratie Role Chain |
 
 ---
 
-## Explicitly NOT Implemented
+## 3. Dependency and Risk Notation
 
-- No Review Archive UI (Phase 5)
-- No reporting dashboards
-- No appeals logic
-- No automation or AI
-- No financial disbursement
-- No Raadvoorstel changes
-- No notification enhancements
-- No schema, RLS, or role changes
+### Category A: Decision Transparency and Archives
+
+- **Legal/Policy:** None -- read-only views of existing data
+- **Schema/RLS:** None for basic archive; possible new views for aggregations
+- **Workflow:** No changes required
+
+### Category B: Financial and Budget Modules
+
+- **Legal/Policy:** HIGH -- Budget ceilings and disbursement involve financial governance and government accounting rules
+- **Schema/RLS:** YES -- Likely requires new columns (budget tracking, disbursement status) and possibly new tables
+- **Workflow:** POSSIBLE -- Disbursement may introduce post-approval workflow states
+
+### Category C: Citizen Communication and Notifications
+
+- **Legal/Policy:** HIGH -- Legal obligations for citizen notification deadlines (Landsverordening / National Ordinance)
+- **Schema/RLS:** YES -- Notification queue/log tables, delivery tracking
+- **Workflow:** YES -- SLA enforcement may trigger automatic escalation events
+
+### Category D: Operational Tooling
+
+- **Legal/Policy:** LOW -- Administrative efficiency features
+- **Schema/RLS:** YES -- case_assignment table required for visit scheduling persistence
+- **Workflow:** NO -- Operates within existing workflow states
+
+### Category E: Scale and Performance
+
+- **Legal/Policy:** NONE -- Infrastructure-level optimization
+- **Schema/RLS:** YES -- Database views, indexes, pagination queries
+- **Workflow:** NO -- No workflow impact
+
+### Category F: Governance and Legal Extensions
+
+- **Legal/Policy:** HIGH -- Appeals require legal framework definition; digital signatures require legal validity assessment
+- **Schema/RLS:** YES -- Appeals require new states, tables, and RLS policies; signatures require storage infrastructure
+- **Workflow:** YES -- Appeals introduce entirely new workflow paths post-decision
+
+### Category G: System Integrations
+
+- **Legal/Policy:** HIGH -- Cross-agency data sharing requires formal agreements
+- **Schema/RLS:** POSSIBLE -- Integration endpoints, API keys, external entity references
+- **Workflow:** POSSIBLE -- Depends on integration scope
+
+### Category H: Module Expansion
+
+- **Legal/Policy:** MEDIUM -- Woning Registratie has different regulatory framework than Bouwsubsidie
+- **Schema/RLS:** YES -- Role chain enforcement requires RLS and trigger updates for housing workflow
+- **Workflow:** YES -- Requires defining and enforcing Woningregistratie-specific workflow states
+
+---
+
+## 4. Non-Authorization Statement (Final)
+
+- This document is NOT a V1.5 intake
+- No prioritization has been done
+- No scope has been approved
+- No implementation is authorized
+- No design decisions have been made
+- This document exists solely as a reference inventory for future planning discussions
+
+---
+
+V1.5 intake has not been started.
+This document is for preparation only.
+Awaiting explicit authorization to start V1.5 intake.

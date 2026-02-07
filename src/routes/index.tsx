@@ -34,6 +34,9 @@ const AllocationAssignments = lazy(() => import('@/app/(admin)/allocation-assign
 
 // Governance Routes
 const AuditLog = lazy(() => import('@/app/(admin)/audit-log/page'))
+const ArchiveList = lazy(() => import('@/app/(admin)/archive/page'))
+const ArchiveSubsidyDetail = lazy(() => import('@/app/(admin)/archive/subsidy/[id]/page'))
+const ArchiveHousingDetail = lazy(() => import('@/app/(admin)/archive/housing/[id]/page'))
 
 // Auth Routes
 const AuthSignIn = lazy(() => import('@/app/(other)/auth/sign-in/page'))
@@ -126,6 +129,9 @@ const allocationRoutes: RoutesProps[] = [
 ]
 
 const governanceRoutes: RoutesProps[] = [
+  { path: '/archive', name: 'Archive', element: <ArchiveList /> },
+  { path: '/archive/subsidy/:id', name: 'Archive Subsidy Detail', element: <ArchiveSubsidyDetail /> },
+  { path: '/archive/housing/:id', name: 'Archive Housing Detail', element: <ArchiveHousingDetail /> },
   { path: '/audit-log', name: 'Audit Log', element: <AuditLog /> },
 ]
 

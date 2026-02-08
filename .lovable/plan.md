@@ -1,119 +1,101 @@
 
 
-# DVH-IMS V1.5 Phase 2 Implementation Plan — Assignments
+# DVH-IMS V1.5 — Test and Stabilization: Operational Documentation Package
 
-**Status:** IMPLEMENTATION PLAN
-**Scope:** Bouwsubsidie operational case assignments (person-based)
-**Authority:** Delroy
-
----
-
-## Step 0: Pre-Implementation Restore Point
-
-Create documentation file: `restore-points/v1.5/RESTORE_POINT_V1.5_PHASE2_PRE_IMPLEMENTATION.md`
-- Timestamp, current state summary, confirmation that no assignment tables/logic exist yet
+**Type:** Documentation-only (no code changes)
+**Status:** Test and Stabilization Window — NO new features
 
 ---
 
-## Step 1: Database — Create `case_assignment` Table
+## Deliverables — 7 Documents
 
-New table `case_assignment` with the following columns:
+All files created under `docs/DVH-IMS-V1.5/operations/`
 
-| Column | Type | Nullable | Notes |
-|--------|------|----------|-------|
-| id | uuid (PK, default gen_random_uuid()) | NO | |
-| subsidy_case_id | uuid (FK -> subsidy_case.id) | NO | The dossier |
-| assigned_user_id | uuid (FK -> auth.users.id) | NO | The worker |
-| assigned_role | text | NO | Role context (e.g. 'social_field_worker') |
-| assignment_status | text | NO | 'assigned', 'reassigned', 'completed', 'revoked' |
-| assigned_by | uuid (FK -> auth.users.id) | NO | Who made the assignment |
-| reason | text | NO | Mandatory justification |
-| created_at | timestamptz | NO | |
+### 1. Admin Manual (`01_Admin_Manual.md`)
+**Audience:** system_admin, project_leader
 
-**RLS Policies:**
+Covers:
+- User management (creating accounts, assigning roles via user_roles table)
+- Role model overview (11 roles, national vs district-scoped)
+- Module overview (Bouwsubsidie, Woning Registratie, Allocation Engine)
+- Case Assignments management (assign, reassign, revoke workers)
+- Archive access and audit log review
+- Schedule Visits overview
+- Dashboard usage
 
-1. **INSERT** -- Only `system_admin` and `project_leader` can insert (uses existing `has_any_role` function)
-2. **SELECT** -- Authenticated users can read: own assignments (assigned_user_id = auth.uid()) OR oversight/management roles (system_admin, project_leader, director, ministerial_advisor, minister, audit, admin_staff)
-3. **UPDATE/DELETE** -- Denied (append-only; status changes = new row)
+### 2. Frontdesk Working Instructions (`02_Frontdesk_Instructions.md`)
+**Audience:** frontdesk_bouwsubsidie, frontdesk_housing
 
-**Design note:** Append-only model. Reassignment or revocation creates a new row marking the previous assignment as 'reassigned' or 'revoked', plus a new 'assigned' row for the new worker. This preserves full history per governance requirements.
+Covers:
+- Bouwsubsidie frontdesk: intake processing, subsidy case creation, control queue usage
+- Housing frontdesk: registration processing, waiting list management, allocation decisions
+- Shared core: person and household lookup
+- What frontdesk roles CANNOT do (no assignments, no decisions, no archive)
 
----
+### 3. Field Worker Flows (`03_Field_Worker_Flows.md`)
+**Audience:** social_field_worker, technical_inspector
 
-## Step 2: Audit Logging Integration
+Covers:
+- My Visits page usage
+- Control Queue (read access)
+- Viewing assigned cases via Case Assignments
+- Submitting social reports (social_field_worker)
+- Submitting technical inspection reports (technical_inspector)
+- What field workers CANNOT do (no assignments, no decisions, no schedule management)
 
-- Add `'CASE_ASSIGNED'`, `'CASE_REASSIGNED'`, `'CASE_REVOKED'`, `'CASE_ASSIGNMENT_COMPLETED'` to `AuditAction` type in `src/hooks/useAuditLog.ts`
-- Add `'case_assignment'` to `EntityType` union
-- Every assignment action will call `logAuditEvent` with: actor, action, target user (in metadata), dossier_id (entity_id), and mandatory reason
+### 4. Director and Minister Read-Only Guide (`04_Director_Minister_Guide.md`)
+**Audience:** director, ministerial_advisor, minister
 
----
+Covers:
+- Dashboard overview access
+- Control Queue (read-only oversight)
+- Subsidy Cases (read-only, decision authority per workflow)
+- Case Assignments (read-only oversight)
+- Archive access (national-level, read-only)
+- Audit Log access
+- What oversight roles CANNOT do (no assignments, no data mutations)
 
-## Step 3: React Hook — `useCaseAssignments`
+### 5. Audit and Compliance Guide (`05_Audit_Compliance_Guide.md`)
+**Audience:** audit role
 
-New file: `src/hooks/useCaseAssignments.ts`
+Covers:
+- Audit Log page: filtering by date, action, entity type, actor
+- Archive: accessing terminal dossiers (finalized/rejected)
+- Verifying assignment audit trails (CASE_ASSIGNED, CASE_REASSIGNED, etc.)
+- Understanding audit event fields (actor, action, entity, reason, metadata)
+- Read-only access boundaries
+- What the audit role CANNOT do (no mutations of any kind)
 
-Provides:
-- `fetchAssignments(subsidyCaseId?)` -- fetch active assignments, optionally filtered by case
-- `assignWorker(subsidyCaseId, targetUserId, targetRole, reason)` -- create assignment + audit log
-- `reassignWorker(currentAssignmentId, newUserId, reason)` -- mark old as 'reassigned', create new + audit
-- `revokeAssignment(assignmentId, reason)` -- mark as 'revoked' + audit
-- `completeAssignment(assignmentId, reason)` -- mark as 'completed' + audit
-- Role-gated: write operations check for `system_admin` or `project_leader` before executing
+### 6. Bug Reporting and Incident Handling (`06_Bug_Reporting_Process.md`)
+**Audience:** All roles
 
----
+Covers:
+- How to report a bug (what to include: steps, role, expected vs actual)
+- Severity classification (critical, major, minor)
+- Authorized fix scope during stabilization (functional/UX defects only)
+- Escalation path (report to Delroy)
+- What is NOT a bug (feature requests, scope expansion)
 
-## Step 4: Admin UI — Case Assignments Page
+### 7. System Boundaries — What NOT To Do (`07_System_Boundaries.md`)
+**Audience:** All roles
 
-New route: `/case-assignments`
-New file: `src/app/(admin)/case-assignments/page.tsx`
-
-**Layout (Darkone Admin patterns, minimal):**
-- PageTitle: "Case Assignments" under "Bouwsubsidie" subName
-- Grid.js table showing active assignments: Case #, Assigned Worker, Role, Status, Assigned By, Date, Reason
-- "Assign Worker" button (visible only to system_admin / project_leader)
-- Assignment modal with: case selector, worker selector (filtered by role), role context, mandatory reason field
-
-**Components:**
-- `src/app/(admin)/case-assignments/components/AssignmentFormModal.tsx` -- Form modal for assign/reassign
-- Role check: only system_admin and project_leader see action buttons
-
----
-
-## Step 5: Menu & Routing
-
-- Add route `{ path: '/case-assignments', name: 'Case Assignments', element: <CaseAssignments /> }` to `bouwsubsidieRoutes` in `src/routes/index.tsx`
-- Add menu item in `src/assets/data/menu-items.ts` under BOUWSUBSIDIE section:
-  - Key: `case-assignments`
-  - Label: `Case Assignments`
-  - Icon: `mingcute:user-check-line`
-  - Allowed roles: `system_admin`, `project_leader` (write access), plus `social_field_worker`, `technical_inspector`, `admin_staff` (view own), plus `director`, `ministerial_advisor`, `minister`, `audit` (read-only oversight)
-
----
-
-## Step 6: Post-Implementation Restore Point
-
-Create: `restore-points/v1.5/RESTORE_POINT_V1.5_PHASE2_POST_IMPLEMENTATION.md`
-
----
-
-## Explicit Out-of-Scope Confirmation
-
-The following will NOT be implemented:
-- No changes to decision authority or dossier states
-- No workflow automation or routing
-- No workload balancing, KPIs, or time tracking
-- No notifications or escalations
-- No coupling to Archive, Decision, or Woningregistratie flows
-- No background jobs
-- Visit scheduling persistence is NOT included (only case-to-worker assignments)
+Covers:
+- No direct database access outside the application
+- No manual role changes without system_admin authorization
+- No bypassing the 8-step decision chain
+- Assignments do NOT affect dossier status
+- No automation, notifications, or KPI tracking exists
+- No citizen accounts — public wizards are anonymous
+- No cross-module data sharing beyond Person/Household
+- Archive is strictly read-only
+- Audit log is append-only and immutable
 
 ---
 
-## Technical Notes
+## Governance Compliance
 
-- Table uses append-only pattern (no UPDATE/DELETE via RLS) for immutability
-- RLS uses existing `has_role` / `has_any_role` security definer functions
-- Audit logging uses existing `logAuditEvent` utility
-- UI follows Darkone Admin patterns (Card, Grid.js, Bootstrap)
-- The existing `assignment_record` table (Woningregistratie) is untouched
+- All documents reflect the system AS-IS (V1.5 Phase 1 + Phase 2)
+- No code changes included
+- No new features described or implied
+- Period clearly marked as "Test and Stabilization"
 

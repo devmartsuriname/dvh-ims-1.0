@@ -72,6 +72,13 @@ export const MENU_ITEMS: MenuItemWithRoles[] = [
     allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'social_field_worker', 'technical_inspector', 'admin_staff', 'audit', 'director', 'ministerial_advisor'],
   },
   {
+    key: 'case-assignments',
+    label: 'Case Assignments',
+    icon: 'mingcute:user-check-line',
+    url: '/case-assignments',
+    allowedRoles: ['system_admin', 'project_leader', 'social_field_worker', 'technical_inspector', 'admin_staff', 'director', 'ministerial_advisor', 'minister', 'audit'],
+  },
+  {
     key: 'woning-registratie',
     label: 'WONING REGISTRATIE',
     isTitle: true,

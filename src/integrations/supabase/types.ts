@@ -353,6 +353,47 @@ export type Database = {
         }
         Relationships: []
       }
+      case_assignment: {
+        Row: {
+          assigned_by: string
+          assigned_role: string
+          assigned_user_id: string
+          assignment_status: string
+          created_at: string
+          id: string
+          reason: string
+          subsidy_case_id: string
+        }
+        Insert: {
+          assigned_by: string
+          assigned_role: string
+          assigned_user_id: string
+          assignment_status?: string
+          created_at?: string
+          id?: string
+          reason: string
+          subsidy_case_id: string
+        }
+        Update: {
+          assigned_by?: string
+          assigned_role?: string
+          assigned_user_id?: string
+          assignment_status?: string
+          created_at?: string
+          id?: string
+          reason?: string
+          subsidy_case_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_assignment_subsidy_case_id_fkey"
+            columns: ["subsidy_case_id"]
+            isOneToOne: false
+            referencedRelation: "subsidy_case"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_point: {
         Row: {
           contact_type: string

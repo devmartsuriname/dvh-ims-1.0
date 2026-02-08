@@ -19,6 +19,7 @@ const SubsidyCaseDetail = lazy(() => import('@/app/(admin)/subsidy-cases/[id]/pa
 const ControlQueue = lazy(() => import('@/app/(admin)/control-queue/page'))
 const MyVisits = lazy(() => import('@/app/(admin)/my-visits/page'))
 const ScheduleVisits = lazy(() => import('@/app/(admin)/schedule-visits/page'))
+const CaseAssignments = lazy(() => import('@/app/(admin)/case-assignments/page'))
 
 // Woning Registratie Routes
 const HousingRegistrationList = lazy(() => import('@/app/(admin)/housing-registrations/page'))
@@ -112,6 +113,7 @@ const bouwsubsidieRoutes: RoutesProps[] = [
   { path: '/schedule-visits', name: 'Schedule Visits', element: <ScheduleVisits /> },
   { path: '/subsidy-cases', name: 'Subsidy Cases', element: <SubsidyCaseList /> },
   { path: '/subsidy-cases/:id', name: 'Subsidy Case Detail', element: <SubsidyCaseDetail /> },
+  { path: '/case-assignments', name: 'Case Assignments', element: <CaseAssignments /> },
 ]
 
 const woningRegistratieRoutes: RoutesProps[] = [

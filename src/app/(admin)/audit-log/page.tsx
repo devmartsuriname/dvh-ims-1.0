@@ -3,7 +3,7 @@ import PageTitle from '@/components/PageTitle'
 import { useUserRole } from '@/hooks/useUserRole'
 import AuditLogTable from './components/AuditLogTable'
 
-const ALLOWED_ROLES = ['system_admin', 'minister', 'project_leader', 'audit'] as const
+const ALLOWED_ROLES = ['system_admin', 'minister', 'project_leader', 'audit', 'director', 'ministerial_advisor'] as const
 
 const AuditLogPage = () => {
   const { roles, loading, hasAnyRole } = useUserRole()

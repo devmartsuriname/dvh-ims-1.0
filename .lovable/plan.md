@@ -1,86 +1,46 @@
 
 
-# DVH-IMS V1.5 — Activate Remaining Test Accounts
+# DVH-IMS V1.5 — Fix Audit Log Access Mismatch
 
-**Type:** Activation task (SQL only, no schema or code changes)
-**Status:** Test & Stabilization Window
-
----
-
-## Current State
-
-All 4 accounts exist in Supabase Auth and have `app_user_profile` records with `is_active = false`. No role records exist yet.
-
-| Email | UUID | Profile | Role | Active |
-|-------|------|---------|------|--------|
-| veldwerker@volkshuisvesting.sr | 51b7a3cd-b8ba-4041-a628-8ecee1e34cc9 | Exists | NONE | false |
-| inspecteur@volkshuisvesting.sr | 919c5378-a3a5-4158-a95c-0007386eda42 | Exists | NONE | false |
-| directeur@volkshuisvesting.sr | 19b054bb-dff1-4c5f-bdb7-40de9c31e4ea | Exists | NONE | false |
-| adviseur@volkshuisvesting.sr | c7260e3a-dadf-45eb-8be0-69ed20d42267 | Exists | NONE | false |
+**Type:** UX bugfix (single line change)
+**Scope:** `src/app/(admin)/audit-log/page.tsx`
 
 ---
 
-## SQL to Execute (Single Migration)
+## Change
 
-The following SQL will be run via the database migration tool:
+Update the `ALLOWED_ROLES` constant on line 4 to include `director` and `ministerial_advisor`:
 
-```sql
--- 1. Assign roles
-INSERT INTO public.user_roles (user_id, role) VALUES
-  ('51b7a3cd-b8ba-4041-a628-8ecee1e34cc9', 'social_field_worker'),
-  ('919c5378-a3a5-4158-a95c-0007386eda42', 'technical_inspector'),
-  ('19b054bb-dff1-4c5f-bdb7-40de9c31e4ea', 'director'),
-  ('c7260e3a-dadf-45eb-8be0-69ed20d42267', 'ministerial_advisor');
+```
+// BEFORE
+const ALLOWED_ROLES = ['system_admin', 'minister', 'project_leader', 'audit'] as const
 
--- 2. Activate profiles + assign districts where applicable
-UPDATE public.app_user_profile SET is_active = true, district_code = 'PAR'
-  WHERE user_id = '51b7a3cd-b8ba-4041-a628-8ecee1e34cc9';
-
-UPDATE public.app_user_profile SET is_active = true, district_code = 'PAR'
-  WHERE user_id = '919c5378-a3a5-4158-a95c-0007386eda42';
-
-UPDATE public.app_user_profile SET is_active = true
-  WHERE user_id = '19b054bb-dff1-4c5f-bdb7-40de9c31e4ea';
-
-UPDATE public.app_user_profile SET is_active = true
-  WHERE user_id = 'c7260e3a-dadf-45eb-8be0-69ed20d42267';
-
--- 3. Audit logging for each activation
-INSERT INTO public.audit_event (entity_type, entity_id, action, actor_user_id, actor_role, reason, metadata_json)
-VALUES
-  ('app_user_profile', '51b7a3cd-b8ba-4041-a628-8ecee1e34cc9', 'USER_ACTIVATED', 'aef3d169-3b1d-4148-b0fa-f36fc08d1cd4', 'system_admin', 'Test account activation for V1.5 stabilization', '{"email":"veldwerker@volkshuisvesting.sr","role":"social_field_worker","district":"PAR"}'::jsonb),
-  ('app_user_profile', '919c5378-a3a5-4158-a95c-0007386eda42', 'USER_ACTIVATED', 'aef3d169-3b1d-4148-b0fa-f36fc08d1cd4', 'system_admin', 'Test account activation for V1.5 stabilization', '{"email":"inspecteur@volkshuisvesting.sr","role":"technical_inspector","district":"PAR"}'::jsonb),
-  ('app_user_profile', '19b054bb-dff1-4c5f-bdb7-40de9c31e4ea', 'USER_ACTIVATED', 'aef3d169-3b1d-4148-b0fa-f36fc08d1cd4', 'system_admin', 'Test account activation for V1.5 stabilization', '{"email":"directeur@volkshuisvesting.sr","role":"director"}'::jsonb),
-  ('app_user_profile', 'c7260e3a-dadf-45eb-8be0-69ed20d42267', 'USER_ACTIVATED', 'aef3d169-3b1d-4148-b0fa-f36fc08d1cd4', 'system_admin', 'Test account activation for V1.5 stabilization', '{"email":"adviseur@volkshuisvesting.sr","role":"ministerial_advisor"}'::jsonb);
+// AFTER
+const ALLOWED_ROLES = ['system_admin', 'minister', 'project_leader', 'audit', 'director', 'ministerial_advisor'] as const
 ```
 
 ---
 
-## District Scoping Rationale
+## What This Does
 
-| Role | District | Reason |
-|------|----------|--------|
-| social_field_worker | PAR | District-scoped role per active role model |
-| technical_inspector | PAR | District-scoped role per active role model |
-| director | NULL | National-level oversight role |
-| ministerial_advisor | NULL | National-level oversight role |
+- Removes the redirect for `director` and `ministerial_advisor` when they click the Audit Log menu item
+- Grants read-only page access (the page only displays data; no write actions exist)
+- Aligns the page guard with the existing menu visibility in `menu-items.ts`
 
----
+## What This Does NOT Do
 
-## Post-Activation Verification
-
-After migration, a verification query will confirm:
-- All 4 accounts have `is_active = true`
-- All 4 accounts have correct role in `user_roles`
-- District codes are correctly set
-- Audit events are recorded
-
----
-
-## No Code Changes
-
-- No schema modifications
-- No TypeScript changes
+- No schema changes
+- No RLS changes
+- No menu changes
 - No workflow changes
-- Migration-only task
+- No new write permissions
+
+---
+
+## Verification
+
+- `directeur@volkshuisvesting.sr` (director) can open `/audit-log` without redirect
+- `adviseur@volkshuisvesting.sr` (ministerial_advisor) can open `/audit-log` without redirect
+- All other role access remains unchanged
+- Audit log data remains read-only and immutable
 

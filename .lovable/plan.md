@@ -1,109 +1,70 @@
 
 
-# DVH-IMS V1.5 — Fix: Uploaded Documents Not Visible in Admin Case Detail
+# DVH-IMS V1.5 — Fix: Document Backfill for BS-2026-000001
 
-**Type:** Bug fix (data-layer mismatch)
-**Severity:** Production-blocking
-**Scope:** Edge function only (1 file)
+**Type:** Data backfill (SQL migration)
+**Severity:** Production-blocking (test data integrity)
+**Scope:** One-time data INSERT only
 
 ---
 
 ## Root Cause
 
-**Data structure mismatch between wizard and edge function.**
+**Missing database records, NOT an access or UI issue.**
 
-The wizard sends documents in this structure:
-```text
-documents: [
-  {
-    id: "ID_COPY",
-    document_code: "ID_COPY",
-    label: "...",
-    is_mandatory: true,
-    uploaded_file: {         <-- nested object
-      file_path: "bouwsubsidie/abc/ID_COPY_123.pdf",
-      file_name: "my-id.pdf",
-      file_size: 12345,
-      uploaded_at: "2026-02-09T..."
-    }
-  }
-]
-```
+BS-2026-000001 (`d5106ad7-d39e-4946-b6cd-0cbbeae53052`) was submitted on 2026-02-09 16:29 UTC — **before** the edge function fix was deployed at ~21:49 UTC. The old code attempted flat access (`doc.file_path` instead of `doc.uploaded_file.file_path`), which resolved to `undefined` and violated the `NOT NULL` constraint on `subsidy_document_upload.file_path`. The INSERT failed silently.
 
-But the edge function reads `doc.file_path` and `doc.file_name` directly (flat access), which resolves to `undefined`.
+**Result:** Zero rows in `subsidy_document_upload` for this case. The UI query is correct but returns an empty set.
 
-Since `file_path` and `file_name` are `NOT NULL` columns in `subsidy_document_upload`, the INSERT fails with a constraint violation. The error is logged but execution continues, resulting in **zero document records** linked to the case.
+| Evidence Point | BS-2026-000001 | BS-2026-000002 |
+|----------------|----------------|----------------|
+| Case exists | Yes | Yes |
+| Document upload rows | **0** | 2 |
+| Submitted before fix | Yes | No |
+| Edge function version | Old (flat access) | Fixed (nested access) |
 
-**This is a bug, not by-design behavior.**
+This is **not** an RLS issue, **not** a UI bug, and **not** a version gap in query logic. It is a one-time data loss caused by the pre-fix edge function.
 
 ---
 
-## Evidence
+## Fix
 
-| Check | Result |
-|-------|--------|
-| `subsidy_document_upload` row count | **0 rows** (empty table) |
-| `subsidy_document_requirement` rows | 8 rows present (correct) |
-| `file_path` column constraint | `NOT NULL` |
-| Wizard sends `uploaded_file.file_path` | Confirmed (nested) |
-| Edge function reads `doc.file_path` | Confirmed (flat -- undefined) |
-| RLS SELECT policies for admin roles | Correct (national roles + district-scoped frontdesk/admin) |
-| Storage bucket `citizen-uploads` | Exists, public |
-| UI query in case detail page | Correct (`subsidy_document_upload` by `case_id`) |
+### Step 1 — Verify uploaded files exist in storage
 
-**Conclusion:** RLS, storage, and UI are all correct. The sole issue is the edge function not extracting from the nested `uploaded_file` object.
+Before inserting records, confirm the files were actually uploaded to the `citizen-uploads` bucket during the BS-2026-000001 submission. If files do not exist in storage, backfill records cannot be created (no orphan references).
 
----
+### Step 2 — Backfill missing document records
 
-## Fix (Minimal)
+If files exist, insert the corresponding `subsidy_document_upload` rows via SQL migration:
 
-### File: `supabase/functions/submit-bouwsubsidie-application/index.ts`
-
-**Change 1 — Document extraction logic (lines 447-465)**
-
-Replace flat property access with nested `uploaded_file` extraction. Also skip documents that have no uploaded file (optional documents the citizen didn't upload).
-
-Before:
-```typescript
-for (const doc of input.documents) {
-  const requirementId = requirementMap.get(doc.document_code)
-  if (requirementId) {
-    const { error: docError } = await supabase
-      .from('subsidy_document_upload')
-      .insert({
-        case_id: caseId,
-        requirement_id: requirementId,
-        file_path: doc.file_path,
-        file_name: doc.file_name,
-        uploaded_by: null,
-        is_verified: false
-      })
+```sql
+-- Backfill document records for BS-2026-000001
+-- These were lost due to the pre-fix edge function flat-access bug
+INSERT INTO public.subsidy_document_upload (case_id, requirement_id, file_path, file_name, uploaded_by, is_verified)
+SELECT
+  'd5106ad7-d39e-4946-b6cd-0cbbeae53052'::uuid,
+  r.id,
+  '<confirmed_storage_path>',
+  '<confirmed_file_name>',
+  NULL,
+  false
+FROM public.subsidy_document_requirement r
+WHERE r.document_code = '<matching_code>';
+-- One INSERT per confirmed file
 ```
 
-After:
-```typescript
-for (const doc of input.documents) {
-  // Skip documents without an uploaded file (optional docs not uploaded)
-  const uploadedFile = (doc as any).uploaded_file
-  if (!uploadedFile?.file_path) continue
+The exact file paths and names will be confirmed from storage before execution.
 
-  const requirementId = requirementMap.get(doc.document_code)
-  if (requirementId) {
-    const { error: docError } = await supabase
-      .from('subsidy_document_upload')
-      .insert({
-        case_id: caseId,
-        requirement_id: requirementId,
-        file_path: uploadedFile.file_path,
-        file_name: uploadedFile.file_name,
-        uploaded_by: null,
-        is_verified: false
-      })
-```
+### Step 3 — If files do NOT exist in storage
 
-**Change 2 — Input validation mapping (line 146)**
+If the citizen did not actually upload files during the BS-2026-000001 submission (test may have been done before document upload was functional), then:
 
-Update the validation function to pass through the full document objects (including the nested `uploaded_file`) rather than casting to the flat `DocumentUploadInput` interface.
+- No backfill is possible
+- The case legitimately has zero documents
+- The UI correctly shows "No documents uploaded yet"
+- This is expected behavior, not a bug
+
+In this scenario, the finding is reclassified as **expected test data state** and no fix is needed.
 
 ---
 
@@ -112,30 +73,24 @@ Update the validation function to pass through the full document objects (includ
 - No schema changes
 - No RLS policy changes
 - No UI changes
+- No edge function changes
 - No workflow/status logic changes
-- No storage bucket changes
-- No new dependencies
 
 ---
 
-## Verification Checklist
+## Recurrence Statement
 
-| Test | Expected |
-|------|----------|
-| Submit wizard with mandatory docs uploaded | Edge function logs "Linked 6 documents to case" |
-| `subsidy_document_upload` rows exist for case | Rows with correct `file_path`, `file_name`, `case_id` |
-| Admin case detail > Documents tab | Shows uploaded documents |
-| Document download via signed URL | File downloads successfully |
-| Optional docs not uploaded | Skipped gracefully (no errors) |
-| Audit event logged | Upload event recorded |
-| Security scan | No new warnings |
+**This issue cannot recur under the current architecture.**
+
+The edge function fix (deployed 2026-02-09 21:49 UTC) correctly handles the nested `uploaded_file` structure. All future submissions — manual or system — use this single code path. There are no alternate submission paths. The backfill addresses the one-time historical gap only.
 
 ---
 
-## Technical Details
+## Execution Order
 
-- **Affected file:** `supabase/functions/submit-bouwsubsidie-application/index.ts`
-- **Lines modified:** ~447-465 (document linking loop) and ~146 (validation mapping)
-- **Deploy required:** Edge function redeployment
-- **Restore point:** Will be created before changes
+1. Check `citizen-uploads` bucket for BS-2026-000001 files
+2. If files exist: create SQL migration to insert missing rows
+3. If files do not exist: report as expected state, no action needed
+4. Verify documents appear in Admin Case Detail
+5. Report
 

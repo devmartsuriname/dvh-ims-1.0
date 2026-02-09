@@ -143,7 +143,7 @@ function validateInput(data: unknown): { valid: true; data: BouwsubsidieInput } 
       household_size: input.household_size as number,
       household_members: input.household_members as BouwsubsidieInput['household_members'],
       reason: input.reason as string | undefined,
-      documents: input.documents as DocumentUploadInput[] | undefined,
+      documents: Array.isArray(input.documents) ? input.documents : undefined,
     }
   }
 }
@@ -445,21 +445,25 @@ Deno.serve(async (req) => {
       )
       
       for (const doc of input.documents) {
-        const requirementId = requirementMap.get(doc.document_code)
+        // Skip documents without an uploaded file (optional docs not uploaded)
+        const uploadedFile = (doc as any).uploaded_file
+        if (!uploadedFile?.file_path) continue
+
+        const requirementId = requirementMap.get((doc as any).document_code)
         if (requirementId) {
           const { error: docError } = await supabase
             .from('subsidy_document_upload')
             .insert({
               case_id: caseId,
               requirement_id: requirementId,
-              file_path: doc.file_path,
-              file_name: doc.file_name,
+              file_path: uploadedFile.file_path,
+              file_name: uploadedFile.file_name,
               uploaded_by: null, // Public submission
               is_verified: false
             })
           
           if (docError) {
-            console.error(`[submit-bouwsubsidie] Failed to link document ${doc.document_code}:`, docError.message)
+            console.error(`[submit-bouwsubsidie] Failed to link document ${(doc as any).document_code}:`, docError.message)
           } else {
             documentsLinked++
           }

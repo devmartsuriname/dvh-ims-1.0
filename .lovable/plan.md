@@ -1,122 +1,141 @@
 
 
-# DVH-IMS V1.5 — Security Findings Remediation Plan
+# DVH-IMS V1.5 — Fix: Uploaded Documents Not Visible in Admin Case Detail
 
-**Type:** Security-critical RLS and Auth hardening
-**Scope:** RLS policy changes only + one Auth dashboard setting
-**Risk:** Low (all public flows use service role key; no behavioral change)
-
----
-
-## Summary of Findings and Fixes
-
-| # | Finding | Scanner | Severity | Fix Type |
-|---|---------|---------|----------|----------|
-| 1 | housing_document_requirement publicly readable | supabase_lov | WARN | Drop 2 policies, add 1 role-based SELECT |
-| 2 | subsidy_document_requirement "no SELECT policies" | supabase_lov | WARN | FALSE POSITIVE — policy already exists. Delete finding. |
-| 3 | RLS Policy Always True (12 anon INSERT policies) | supabase | WARN | Drop all 12 anon INSERT policies with `WITH CHECK (true)` |
-| 4 | Leaked Password Protection Disabled | supabase | WARN | Manual: User enables in Supabase Auth dashboard |
-| 5 | Medium severity dependency vulnerabilities | supabase | INFO | Review only, no action |
+**Type:** Bug fix (data-layer mismatch)
+**Severity:** Production-blocking
+**Scope:** Edge function only (1 file)
 
 ---
 
-## Fix 1: housing_document_requirement — Remove Public Exposure
+## Root Cause
 
-**Root cause:** Two SELECT policies allow unrestricted read access:
-- `anon_can_select_housing_document_requirement` (anon, USING true)
-- `authenticated_can_select_housing_document_requirement` (authenticated, USING true)
+**Data structure mismatch between wizard and edge function.**
 
-**Action:**
-```sql
-DROP POLICY "anon_can_select_housing_document_requirement" ON public.housing_document_requirement;
-DROP POLICY "authenticated_can_select_housing_document_requirement" ON public.housing_document_requirement;
-
-CREATE POLICY "role_select_housing_document_requirement" ON public.housing_document_requirement
-FOR SELECT TO authenticated
-USING (
-  is_national_role(auth.uid())
-  OR has_role(auth.uid(), 'frontdesk_housing'::app_role)
-  OR has_role(auth.uid(), 'frontdesk_bouwsubsidie'::app_role)
-  OR has_role(auth.uid(), 'admin_staff'::app_role)
-);
+The wizard sends documents in this structure:
+```text
+documents: [
+  {
+    id: "ID_COPY",
+    document_code: "ID_COPY",
+    label: "...",
+    is_mandatory: true,
+    uploaded_file: {         <-- nested object
+      file_path: "bouwsubsidie/abc/ID_COPY_123.pdf",
+      file_name: "my-id.pdf",
+      file_size: 12345,
+      uploaded_at: "2026-02-09T..."
+    }
+  }
+]
 ```
 
-**Impact:** The public housing wizard calls the `submit-housing-registration` edge function which uses the service role key (bypasses RLS). No public-facing flow reads this table directly from the browser. Zero functional impact.
+But the edge function reads `doc.file_path` and `doc.file_name` directly (flat access), which resolves to `undefined`.
+
+Since `file_path` and `file_name` are `NOT NULL` columns in `subsidy_document_upload`, the INSERT fails with a constraint violation. The error is logged but execution continues, resulting in **zero document records** linked to the case.
+
+**This is a bug, not by-design behavior.**
 
 ---
 
-## Fix 2: subsidy_document_requirement — False Positive
+## Evidence
 
-**Root cause:** The scanner reported "no SELECT policies," but the database already contains:
-- `role_select_subsidy_document_requirement` with proper role checks for `system_admin`, `minister`, `project_leader`, `audit`, `frontdesk_bouwsubsidie`, `admin_staff`
+| Check | Result |
+|-------|--------|
+| `subsidy_document_upload` row count | **0 rows** (empty table) |
+| `subsidy_document_requirement` rows | 8 rows present (correct) |
+| `file_path` column constraint | `NOT NULL` |
+| Wizard sends `uploaded_file.file_path` | Confirmed (nested) |
+| Edge function reads `doc.file_path` | Confirmed (flat -- undefined) |
+| RLS SELECT policies for admin roles | Correct (national roles + district-scoped frontdesk/admin) |
+| Storage bucket `citizen-uploads` | Exists, public |
+| UI query in case detail page | Correct (`subsidy_document_upload` by `case_id`) |
 
-**Action:** Delete the security finding via the manage_security_finding tool. No SQL changes needed.
-
----
-
-## Fix 3: RLS Policy Always True — Remove 12 Unnecessary Anon INSERT Policies
-
-**Root cause:** 12 tables have `anon` INSERT policies with `WITH CHECK (true)`, originally created to support public wizard submissions. However, ALL public submission flows use edge functions with the **service role key**, which bypasses RLS entirely. These policies are dead code that creates unnecessary attack surface.
-
-**Policies to drop:**
-
-| Table | Policy Name |
-|-------|-------------|
-| address | anon_can_insert_address |
-| contact_point | anon_can_insert_contact_point |
-| household | anon_can_insert_household |
-| household_member | anon_can_insert_household_member |
-| housing_document_upload | anon_can_insert_housing_document_upload |
-| housing_registration | anon_can_insert_housing_registration |
-| housing_registration_status_history | anon_can_insert_housing_status_history |
-| person | anon_can_insert_person |
-| public_status_access | anon_can_insert_public_status_access |
-| subsidy_case | anon_can_insert_subsidy_case |
-| subsidy_case_status_history | anon_can_insert_subsidy_status_history |
-| subsidy_document_upload | anon_can_insert_document_upload |
-
-**NOT removed** (has proper conditions, not flagged):
-- `anon_can_insert_audit_event` — has condition `(actor_user_id IS NULL AND actor_role = 'public')`
-
-**Impact:** Edge functions use service role key and are unaffected. No browser-side code inserts directly into these tables as anon. Zero functional impact.
+**Conclusion:** RLS, storage, and UI are all correct. The sole issue is the edge function not extracting from the nested `uploaded_file` object.
 
 ---
 
-## Fix 4: Leaked Password Protection — Manual Dashboard Action
+## Fix (Minimal)
 
-**Action required by Delroy:**
-1. Go to Supabase Dashboard > Authentication > Settings > Security
-2. Enable "Leaked Password Protection"
-3. Save
+### File: `supabase/functions/submit-bouwsubsidie-application/index.ts`
 
-This cannot be done via SQL migration or code. It is a dashboard-only setting.
+**Change 1 — Document extraction logic (lines 447-465)**
 
----
+Replace flat property access with nested `uploaded_file` extraction. Also skip documents that have no uploaded file (optional documents the citizen didn't upload).
 
-## Fix 5: Dependency Vulnerabilities — Review Only
+Before:
+```typescript
+for (const doc of input.documents) {
+  const requirementId = requirementMap.get(doc.document_code)
+  if (requirementId) {
+    const { error: docError } = await supabase
+      .from('subsidy_document_upload')
+      .insert({
+        case_id: caseId,
+        requirement_id: requirementId,
+        file_path: doc.file_path,
+        file_name: doc.file_name,
+        uploaded_by: null,
+        is_verified: false
+      })
+```
 
-**Assessment:** These are INFO-level notices about medium-severity vulnerabilities in npm dependencies. No immediate action required within the stabilization window. Recommend deferring to next maintenance cycle unless a specific CVE is identified as exploitable in this application context.
+After:
+```typescript
+for (const doc of input.documents) {
+  // Skip documents without an uploaded file (optional docs not uploaded)
+  const uploadedFile = (doc as any).uploaded_file
+  if (!uploadedFile?.file_path) continue
+
+  const requirementId = requirementMap.get(doc.document_code)
+  if (requirementId) {
+    const { error: docError } = await supabase
+      .from('subsidy_document_upload')
+      .insert({
+        case_id: caseId,
+        requirement_id: requirementId,
+        file_path: uploadedFile.file_path,
+        file_name: uploadedFile.file_name,
+        uploaded_by: null,
+        is_verified: false
+      })
+```
+
+**Change 2 — Input validation mapping (line 146)**
+
+Update the validation function to pass through the full document objects (including the nested `uploaded_file`) rather than casting to the flat `DocumentUploadInput` interface.
 
 ---
 
 ## What This Does NOT Change
 
 - No schema changes
-- No workflow or business logic changes
+- No RLS policy changes
 - No UI changes
-- No role or permission model changes
-- No edge function changes
-- Anon SELECT policies with proper conditions (status lookup) are preserved
-- The `audit_event` anon INSERT policy with proper conditions is preserved
+- No workflow/status logic changes
+- No storage bucket changes
+- No new dependencies
 
 ---
 
-## Execution Order
+## Verification Checklist
 
-1. Run single SQL migration (Fix 1 + Fix 3 combined)
-2. Delete false-positive finding (Fix 2)
-3. Instruct user on dashboard setting (Fix 4)
-4. Re-run security scan
-5. Verify zero warnings remain
-6. Report
+| Test | Expected |
+|------|----------|
+| Submit wizard with mandatory docs uploaded | Edge function logs "Linked 6 documents to case" |
+| `subsidy_document_upload` rows exist for case | Rows with correct `file_path`, `file_name`, `case_id` |
+| Admin case detail > Documents tab | Shows uploaded documents |
+| Document download via signed URL | File downloads successfully |
+| Optional docs not uploaded | Skipped gracefully (no errors) |
+| Audit event logged | Upload event recorded |
+| Security scan | No new warnings |
+
+---
+
+## Technical Details
+
+- **Affected file:** `supabase/functions/submit-bouwsubsidie-application/index.ts`
+- **Lines modified:** ~447-465 (document linking loop) and ~146 (validation mapping)
+- **Deploy required:** Edge function redeployment
+- **Restore point:** Will be created before changes
 

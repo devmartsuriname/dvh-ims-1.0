@@ -14,7 +14,7 @@ export const MENU_ITEMS: MenuItemWithRoles[] = [
   },
   {
     key: 'dashboards',
-    label: 'dashboard',
+    label: 'Dashboard',
     icon: 'mingcute:home-3-line',
     url: '/dashboards',
     allowedRoles: ['system_admin', 'minister', 'project_leader', 'frontdesk_bouwsubsidie', 'frontdesk_housing', 'admin_staff', 'audit', 'director', 'ministerial_advisor'],

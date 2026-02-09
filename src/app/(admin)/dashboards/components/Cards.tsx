@@ -64,7 +64,7 @@ const StatCard = ({ count, icon, series, title }: CardsType) => {
       <CardBody>
         <Row>
           <Col xs={6}>
-            <p className="text-muted mb-0 text-truncate">{title}</p>
+            <p className="text-muted mb-0">{title}</p>
             <h3 className="text-dark mt-2 mb-0">{count}</h3>
           </Col>
           <Col xs={6}>

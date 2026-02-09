@@ -74,7 +74,7 @@ export const MENU_ITEMS: MenuItemWithRoles[] = [
   {
     key: 'case-assignments',
     label: 'Case Assignments',
-    icon: 'mingcute:user-check-line',
+    icon: 'mingcute:user-add-line',
     url: '/case-assignments',
     allowedRoles: ['system_admin', 'project_leader', 'social_field_worker', 'technical_inspector', 'admin_staff', 'director', 'ministerial_advisor', 'minister', 'audit'],
   },

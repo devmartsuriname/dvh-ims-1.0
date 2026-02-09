@@ -1,44 +1,52 @@
 
+# DVH-IMS V1.5 — Test Execution Pack and Bug Triage Protocol
 
-# DVH-IMS V1.5 — Case Assignments Icon Fix
-
-**Type:** UI parity bugfix (single value change)
-**Scope:** `src/assets/data/menu-items.ts`, line 77
+**Type:** Documentation-only (no code changes)
+**Output:** Single consolidated document at `/docs/DVH-IMS-V1.5/Test_and_Stabilization/Test_Execution_Pack.md`
 
 ---
 
-## Root Cause
+## Deliverable
 
-The icon value `mingcute:user-check-line` does **not exist** in the MingCute icon set on Iconify. The `@iconify/react` component silently renders nothing when an icon name is invalid -- no error, no fallback, just an empty `<span>`. This is why the icon is missing in editor, preview, AND live.
+One comprehensive markdown document containing all three sections specified in the instruction:
 
-All other menu items use valid MingCute icon names and render correctly.
+### Part A: Role-Based Test Scenarios (10 scenarios)
 
-## Fix
+Each scenario covers one role with preconditions, actions, expected results, and PASS/FAIL criteria:
 
-Replace the invalid icon name with a valid MingCute icon. The replacement must:
-- Exist in the MingCute Iconify set
-- Semantically represent "assigning users to cases"
-- Follow the `-line` style used by all other menu icons
+1. `frontdesk_bouwsubsidie` -- Control Queue intake, document verification
+2. `frontdesk_housing` -- Housing registration review, document verification
+3. `admin_staff` -- Administrative review panel, dossier read access
+4. `social_field_worker` -- Social review form, draft/finalize flow
+5. `technical_inspector` -- Technical review form, draft/finalize flow
+6. `project_leader` -- Case assignments (create/reassign/revoke), policy review
+7. `director` -- Director approval panel, archive read access, audit log read access
+8. `ministerial_advisor` -- Advisory review panel, archive read access, audit log read access
+9. `minister` -- Ministerial decision panel, archive read access
+10. `system_admin` -- Full admin access, assignment management, all modules visible
+11. `audit` -- Read-only verification across all permitted modules
 
-**Proposed icon:** `mingcute:user-add-line` (confirmed valid via Iconify/Streamline). This represents user assignment -- adding/assigning a person to something.
+### Part B: End-to-End Workflow Tests (5 tests)
 
-```
-// Line 77 in src/assets/data/menu-items.ts
-// FROM:
-icon: 'mingcute:user-check-line',
-// TO:
-icon: 'mingcute:user-add-line',
-```
+1. Bouwsubsidie full lifecycle (intake through archive)
+2. Woningregistratie lifecycle (intake through archive)
+3. Assignments lifecycle (assign, reassign, revoke, complete + audit entries)
+4. Audit Log verification (fields, role-based visibility)
+5. Archive verification (read-only enforcement, search, access restrictions)
 
-## What This Does NOT Change
-- No layout changes
-- No backend changes
-- No role or permission changes
-- No new features
+### Part C: Bug Triage Protocol
 
-## Verification
-After fix, the Case Assignments icon will be visible in:
-- Editor preview
-- Browser preview
-- Live domain (after publish)
+- Four severity levels: Blocker, Major, Minor, Cosmetic
+- Required bug report fields aligned with existing `06_Bug_Reporting_Process.md`
+- Rules: reproducibility requirement, authorization gate, restore point mandate
+- Acceptance criteria: PASS/FAIL/BLOCKER definitions
 
+---
+
+## Technical Notes
+
+- Directory `docs/DVH-IMS-V1.5/Test_and_Stabilization/` will be created
+- Single file: `Test_Execution_Pack.md`
+- References existing operational docs and the Admin Access Matrix
+- Aligned with the existing bug reporting process in `06_Bug_Reporting_Process.md` (no duplication, cross-references where appropriate)
+- All test scenarios reference exact routes and role identifiers as implemented in the codebase

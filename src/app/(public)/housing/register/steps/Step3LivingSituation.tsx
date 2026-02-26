@@ -1,4 +1,4 @@
-import { Card, Row, Col, Form } from 'react-bootstrap'
+import { Row, Col, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -49,9 +49,7 @@ const Step3LivingSituation = ({ formData, updateFormData, onNext, onBack }: Wiza
       onBack={onBack} 
       onNext={handleSubmit(onSubmit)}
     >
-      <Card className="border-0 shadow-none">
-        <Card.Body className="p-0">
-          <Form>
+      <Form>
             <Row className="g-3">
               <Col xs={12}>
                 <TextFormInput 
@@ -101,7 +99,7 @@ const Step3LivingSituation = ({ formData, updateFormData, onNext, onBack }: Wiza
                   control={control} 
                   containerClassName="mb-0" 
                 />
-                <div className="text-muted small mt-1">{t('housing.step3.monthlyRentHelp')}</div>
+                <Form.Text className="text-muted">{t('housing.step3.monthlyRentHelp')}</Form.Text>
               </Col>
               <Col md={6}>
                 <Form.Group>
@@ -115,13 +113,11 @@ const Step3LivingSituation = ({ formData, updateFormData, onNext, onBack }: Wiza
                   {errors.number_of_residents?.message && (
                     <div className="text-danger small mt-1">{String(errors.number_of_residents.message)}</div>
                   )}
-                  <div className="text-muted small mt-1">{t('housing.step3.residentsHelp')}</div>
+                  <Form.Text className="text-muted">{t('housing.step3.residentsHelp')}</Form.Text>
                 </Form.Group>
               </Col>
             </Row>
-          </Form>
-        </Card.Body>
-      </Card>
+      </Form>
     </WizardStep>
   )
 }

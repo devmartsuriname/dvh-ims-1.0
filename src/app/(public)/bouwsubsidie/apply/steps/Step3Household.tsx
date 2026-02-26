@@ -1,4 +1,4 @@
-import { Card, Row, Col, Form } from 'react-bootstrap'
+import { Row, Col, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -49,10 +49,8 @@ const Step3Household = ({ formData, updateFormData, onNext, onBack }: WizardStep
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
-      <Card className="border-0 shadow-none">
-        <Card.Body className="p-0">
-          <Form>
-            <Row className="g-3">
+      <Form>
+        <Row className="g-3">
               <Col md={6}>
                 <Form.Group>
                   <Form.Label>{t('bouwsubsidie.step3.householdSize')}</Form.Label>
@@ -92,10 +90,8 @@ const Step3Household = ({ formData, updateFormData, onNext, onBack }: WizardStep
                   </Form.Text>
                 </Form.Group>
               </Col>
-            </Row>
-          </Form>
-        </Card.Body>
-      </Card>
+        </Row>
+      </Form>
     </WizardStep>
   )
 }

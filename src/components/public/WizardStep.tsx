@@ -50,7 +50,7 @@ const WizardStep = ({
   }
 
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="border-0 shadow-none">
       <CardBody className="p-4">
         {/* Step Header */}
         <div className="mb-4">

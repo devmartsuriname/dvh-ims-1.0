@@ -1,4 +1,4 @@
-import { Card, Row, Col, Form } from 'react-bootstrap'
+import { Row, Col, Form } from 'react-bootstrap'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
@@ -28,8 +28,7 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
       nextDisabled={!acknowledged}
       nextLabel={t('common.beginRegistration')}
     >
-      <Card className="border-0 shadow-none mb-4">
-        <Card.Body className="p-0">
+      <div>
           {/* Important Notice */}
           <div className="bg-light rounded p-3 mb-4">
             <div className="d-flex align-items-start">
@@ -113,8 +112,7 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
               }
             />
           </div>
-        </Card.Body>
-      </Card>
+      </div>
     </WizardStep>
   )
 }

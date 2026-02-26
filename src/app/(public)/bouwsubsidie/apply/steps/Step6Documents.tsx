@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback } from 'react'
-import { Card, Alert, Badge, Button, Spinner, ProgressBar } from 'react-bootstrap'
+import { Card, Alert, Badge, Button, Spinner, ProgressBar, Row, Col } from 'react-bootstrap'
 import { useDropzone } from 'react-dropzone'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/integrations/supabase/client'
@@ -72,7 +72,7 @@ const DocumentUploadItem = ({
   }
 
   return (
-    <Card className={`mb-3 ${hasUpload ? 'border-success' : document.is_mandatory ? 'border-warning' : ''}`}>
+    <Card className={`${hasUpload ? 'border-success' : document.is_mandatory ? 'border-warning' : ''}`}>
       <Card.Body className="p-3">
         <div className="d-flex align-items-start justify-content-between mb-2">
           <div className="d-flex align-items-start flex-grow-1">
@@ -82,7 +82,7 @@ const DocumentUploadItem = ({
                   ? 'bg-success bg-opacity-10' 
                   : 'bg-secondary bg-opacity-10'
               }`}
-              style={{ width: 40, height: 40, minWidth: 40 }}
+              style={{ width: 32, height: 32, minWidth: 32 }}
             >
               <IconifyIcon 
                 icon={hasUpload ? 'mingcute:check-line' : 'mingcute:document-line'}
@@ -132,7 +132,7 @@ const DocumentUploadItem = ({
           <>
             <div
               {...getRootProps()}
-              className={`border border-2 border-dashed rounded p-4 text-center cursor-pointer ${
+              className={`border border-2 border-dashed rounded p-3 text-center cursor-pointer ${
                 isDragActive ? 'border-primary bg-primary bg-opacity-10' : 'border-secondary'
               } ${isUploading ? 'opacity-50' : ''}`}
               style={{ cursor: isUploading ? 'not-allowed' : 'pointer' }}
@@ -342,18 +342,44 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
         </div>
       </Alert>
 
-      {/* Document Upload List */}
-      {formData.documents.map(doc => (
-        <DocumentUploadItem
-          key={doc.id}
-          document={doc}
-          onUpload={handleUpload}
-          onRemove={handleRemove}
-          isUploading={uploadingDocId === doc.id}
-          uploadProgress={uploadingDocId === doc.id ? uploadProgress : 0}
-          error={uploadErrors[doc.id] || null}
-        />
-      ))}
+      {/* Required Documents Section */}
+      <h6 className="fw-semibold mb-3">{t('bouwsubsidie.step6.mandatory')} ({mandatoryDocs.length})</h6>
+      <Row className="g-3 mb-4">
+        {formData.documents.filter(d => d.is_mandatory).map(doc => (
+          <Col md={6} key={doc.id}>
+            <DocumentUploadItem
+              document={doc}
+              onUpload={handleUpload}
+              onRemove={handleRemove}
+              isUploading={uploadingDocId === doc.id}
+              uploadProgress={uploadingDocId === doc.id ? uploadProgress : 0}
+              error={uploadErrors[doc.id] || null}
+            />
+          </Col>
+        ))}
+      </Row>
+
+      {/* Optional Documents Section */}
+      {formData.documents.some(d => !d.is_mandatory) && (
+        <>
+          <hr className="my-3" />
+          <h6 className="fw-semibold mb-3">{t('bouwsubsidie.step6.optional')} ({formData.documents.filter(d => !d.is_mandatory).length})</h6>
+          <Row className="g-3">
+            {formData.documents.filter(d => !d.is_mandatory).map(doc => (
+              <Col md={6} key={doc.id}>
+                <DocumentUploadItem
+                  document={doc}
+                  onUpload={handleUpload}
+                  onRemove={handleRemove}
+                  isUploading={uploadingDocId === doc.id}
+                  uploadProgress={uploadingDocId === doc.id ? uploadProgress : 0}
+                  error={uploadErrors[doc.id] || null}
+                />
+              </Col>
+            ))}
+          </Row>
+        </>
+      )}
 
       {/* Summary */}
       <Card className={`mt-4 ${allMandatoryUploaded ? 'border-success' : 'border-warning'}`}>

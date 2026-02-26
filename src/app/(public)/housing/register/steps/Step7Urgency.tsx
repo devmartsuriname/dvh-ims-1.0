@@ -1,4 +1,4 @@
-import { Card, Row, Col, Form } from 'react-bootstrap'
+import { Row, Col, Form } from 'react-bootstrap'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import WizardStep from '@/components/public/WizardStep'
@@ -33,8 +33,7 @@ const Step7Urgency = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
       onBack={onBack}
       onNext={handleSubmit}
     >
-      <Card className="border-0 shadow-none">
-        <Card.Body className="p-0">
+      <div>
           {/* Info Notice */}
           <div className="bg-light rounded p-3 mb-4">
             <div className="d-flex align-items-start">
@@ -102,15 +101,14 @@ const Step7Urgency = ({ formData, updateFormData, onNext, onBack }: WizardStepPr
                     onChange={(e) => setUrgencyDetails(e.target.value)}
                     placeholder={t('housing.step7.detailsPlaceholder')}
                   />
-                  <div className="text-muted small mt-1">
+                  <Form.Text className="text-muted">
                     {t('housing.step7.detailsHelp')}
-                  </div>
+                    </Form.Text>
                 </Form.Group>
               </Col>
             )}
           </Row>
-        </Card.Body>
-      </Card>
+      </div>
     </WizardStep>
   )
 }

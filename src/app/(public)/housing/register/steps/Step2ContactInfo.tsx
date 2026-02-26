@@ -1,4 +1,4 @@
-import { Card, Row, Col, Form } from 'react-bootstrap'
+import { Row, Col, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -47,10 +47,8 @@ const Step2ContactInfo = ({ formData, updateFormData, onNext, onBack }: WizardSt
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
-      <Card className="border-0 shadow-none">
-        <Card.Body className="p-0">
-          <Form>
-            <Row className="g-3">
+      <Form>
+        <Row className="g-3">
               <Col md={6}>
                 <TextFormInput
                   name="phone_number"
@@ -77,10 +75,8 @@ const Step2ContactInfo = ({ formData, updateFormData, onNext, onBack }: WizardSt
                   <div className="text-danger small mt-1">{String(errors.email.message)}</div>
                 )}
               </Col>
-            </Row>
-          </Form>
-        </Card.Body>
-      </Card>
+        </Row>
+      </Form>
     </WizardStep>
   )
 }

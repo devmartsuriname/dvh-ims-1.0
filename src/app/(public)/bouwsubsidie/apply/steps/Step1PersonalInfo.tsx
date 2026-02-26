@@ -1,4 +1,4 @@
-import { Card, Row, Col, Form } from 'react-bootstrap'
+import { Row, Col, Form } from 'react-bootstrap'
 import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -66,9 +66,7 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
-      <Card className="border-0 shadow-none">
-        <Card.Body className="p-0">
-          <Form>
+      <Form>
             <Row className="g-3">
               <Col md={6}>
                 <TextFormInput
@@ -148,9 +146,7 @@ const Step1PersonalInfo = ({ formData, updateFormData, onNext, onBack }: WizardS
                 </Form.Group>
               </Col>
             </Row>
-          </Form>
-        </Card.Body>
-      </Card>
+      </Form>
     </WizardStep>
   )
 }

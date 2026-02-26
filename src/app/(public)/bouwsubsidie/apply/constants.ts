@@ -55,6 +55,18 @@ export const WIZARD_STEPS = [
 ] as const
 
 /**
+ * Phase groups for cognitive grouping in progress bar
+ * V1.7 — Presentation only, no logic impact
+ */
+export const PHASE_GROUPS = [
+  { labelKey: 'wizard.phases.personal', steps: [0, 1, 2] },
+  { labelKey: 'wizard.phases.household', steps: [3, 4] },
+  { labelKey: 'wizard.phases.application', steps: [5] },
+  { labelKey: 'wizard.phases.documents', steps: [6] },
+  { labelKey: 'wizard.phases.review', steps: [7, 8] },
+]
+
+/**
  * Initial form data with empty document upload slots
  */
 export const INITIAL_FORM_DATA = {

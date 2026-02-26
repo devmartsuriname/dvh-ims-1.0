@@ -78,10 +78,22 @@ export const WIZARD_STEPS = [
   { titleKey: 'wizard.steps.reason' },
   { titleKey: 'wizard.steps.income' },
   { titleKey: 'wizard.steps.urgency' },
-  { titleKey: 'wizard.steps.documents' },  // NEW: Step 8 - Documents
-  { titleKey: 'wizard.steps.review' },      // Moved from step 8 to step 9
-  { titleKey: 'wizard.steps.receipt' },     // Moved from step 9 to step 10
+  { titleKey: 'wizard.steps.documents' },
+  { titleKey: 'wizard.steps.review' },
+  { titleKey: 'wizard.steps.receipt' },
 ] as const
+
+/**
+ * Phase groups for cognitive grouping in progress bar
+ * V1.7 — Presentation only, no logic impact
+ */
+export const PHASE_GROUPS = [
+  { labelKey: 'wizard.phases.personal', steps: [0, 1, 2] },
+  { labelKey: 'wizard.phases.livingSituation', steps: [3, 4, 5] },
+  { labelKey: 'wizard.phases.income', steps: [6] },
+  { labelKey: 'wizard.phases.urgencyDocs', steps: [7, 8] },
+  { labelKey: 'wizard.phases.review', steps: [9, 10] },
+]
 
 export const INITIAL_FORM_DATA = {
   // Step 1 - Personal (aligned with Edge Function contract)

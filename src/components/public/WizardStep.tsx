@@ -18,10 +18,10 @@ interface WizardStepProps {
 
 /**
  * WizardStep - Wrapper component for wizard step content
- * V1.3 Phase 5A — Localized with i18n
+ * V1.7 — Mobile-first with sticky bottom navigation
  * 
- * Darkone 1:1 with react-bootstrap
- * Provides navigation buttons and step container
+ * Mobile (<768px): Sticky bottom nav bar, inline nav hidden
+ * Desktop (>=768px): Standard inline navigation bar
  */
 const WizardStep = ({
   title,
@@ -49,6 +49,44 @@ const WizardStep = ({
     return t('common.back')
   }
 
+  const NavigationButtons = ({ className = '' }: { className?: string }) => (
+    <div className={`d-flex justify-content-between align-items-center ${className}`}>
+      <div>
+        {!isFirstStep && (
+          <Button
+            variant="outline-secondary"
+            onClick={onBack}
+            disabled={isSubmitting}
+          >
+            <IconifyIcon icon="mingcute:arrow-left-line" className="me-1" />
+            {getBackLabel()}
+          </Button>
+        )}
+      </div>
+      <div>
+        <Button
+          variant="primary"
+          onClick={onNext}
+          disabled={isSubmitting || nextDisabled}
+        >
+          {isSubmitting ? (
+            <>
+              <Spinner size="sm" className="me-2" />
+              {t('common.processing')}
+            </>
+          ) : (
+            <>
+              {getNextLabel()}
+              {!isLastStep && (
+                <IconifyIcon icon="mingcute:arrow-right-line" className="ms-1" />
+              )}
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
+  )
+
   return (
     <Card className="border-0 shadow-none">
       <CardBody className="p-4">
@@ -60,48 +98,29 @@ const WizardStep = ({
           )}
         </div>
 
-        {/* Step Content */}
-        <div className="mb-4">
+        {/* Step Content — extra bottom padding on mobile for sticky nav */}
+        <div className="mb-4 pb-md-0" style={{ paddingBottom: 72 }}>
           {children}
         </div>
 
-        {/* Navigation */}
-        <div className="d-flex justify-content-between align-items-center pt-3 border-top">
-          <div>
-            {!isFirstStep && (
-              <Button 
-                variant="outline-secondary" 
-                onClick={onBack}
-                disabled={isSubmitting}
-              >
-                <IconifyIcon icon="mingcute:arrow-left-line" className="me-1" />
-                {getBackLabel()}
-              </Button>
-            )}
-          </div>
-          <div>
-            <Button 
-              variant="primary" 
-              onClick={onNext}
-              disabled={isSubmitting || nextDisabled}
-            >
-              {isSubmitting ? (
-                <>
-                  <Spinner size="sm" className="me-2" />
-                  {t('common.processing')}
-                </>
-              ) : (
-                <>
-                  {getNextLabel()}
-                  {!isLastStep && (
-                    <IconifyIcon icon="mingcute:arrow-right-line" className="ms-1" />
-                  )}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
+        {/* Desktop Navigation (>=768px) */}
+        <NavigationButtons className="pt-3 border-top d-none d-md-flex" />
       </CardBody>
+
+      {/* Mobile Sticky Bottom Navigation (<768px) */}
+      <div
+        className="d-block d-md-none bg-white border-top"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1020,
+          padding: '12px 16px',
+        }}
+      >
+        <NavigationButtons />
+      </div>
     </Card>
   )
 }

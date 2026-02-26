@@ -463,13 +463,15 @@
     },
     "documents": {
       "ID_COPY": "Kopie ID-kaart (voor- en achterkant)",
-      "INCOME_PROOF": "Inkomensverklaring (recente loonstroken)",
+      "INCOME_PROOF": "Inkomensverklaring (AOV/loonstrook)",
       "LAND_TITLE": "Grondbewijs of erfpachtovereenkomst",
       "CONSTRUCTION_PLAN": "Bouwplan of tekening",
       "COST_ESTIMATE": "Gedetailleerde kostenbegroting",
       "BUILDING_PERMIT": "Bouwvergunning (indien van toepassing)",
       "BANK_STATEMENT": "Bankafschrift (laatste 3 maanden)",
-      "HOUSEHOLD_COMP": "Huishoudsamenstelling"
+      "HOUSEHOLD_COMP": "Huishoudsamenstelling",
+      "CBB_EXTRACT": "CBB uittreksel / Nationaliteit verklaring",
+      "FAMILY_EXTRACT": "Gezinuittreksel"
     }
   },
   "validation": {

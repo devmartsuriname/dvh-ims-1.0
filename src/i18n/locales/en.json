@@ -463,13 +463,15 @@
     },
     "documents": {
       "ID_COPY": "Copy of ID (front and back)",
-      "INCOME_PROOF": "Income proof (recent pay slips)",
+      "INCOME_PROOF": "Income proof (AOV/pay slip)",
       "LAND_TITLE": "Land title or lease agreement",
       "CONSTRUCTION_PLAN": "Construction plan or drawing",
       "COST_ESTIMATE": "Detailed cost estimate",
       "BUILDING_PERMIT": "Building permit (if applicable)",
       "BANK_STATEMENT": "Bank statement (last 3 months)",
-      "HOUSEHOLD_COMP": "Household composition"
+      "HOUSEHOLD_COMP": "Household composition",
+      "CBB_EXTRACT": "CBB extract / Nationality declaration",
+      "FAMILY_EXTRACT": "Family extract"
     }
   },
   "validation": {

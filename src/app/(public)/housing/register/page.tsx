@@ -7,7 +7,7 @@ import PublicHeader from '@/components/public/PublicHeader'
 import PublicFooter from '@/components/public/PublicFooter'
 import WizardProgress, { type WizardStep } from '@/components/public/WizardProgress'
 import { HousingFormData, SubmissionResult } from './types'
-import { WIZARD_STEPS, INITIAL_FORM_DATA } from './constants'
+import { WIZARD_STEPS, INITIAL_FORM_DATA, PHASE_GROUPS } from './constants'
 
 import Step0Introduction from './steps/Step0Introduction'
 import Step1PersonalInfo from './steps/Step1PersonalInfo'
@@ -172,12 +172,14 @@ const HousingRegistrationWizard = () => {
           {currentStep < 10 && (
             <WizardProgress 
               steps={progressSteps} 
-              currentStep={currentStep} 
+              currentStep={currentStep}
+              phaseGroups={PHASE_GROUPS}
+              onBack={currentStep > 0 ? handleBack : undefined}
             />
           )}
           
           <Card className="border-0 shadow-sm">
-            <Card.Body className="p-4">
+            <Card.Body className="p-3 p-md-4">
               {renderStep()}
             </Card.Body>
           </Card>

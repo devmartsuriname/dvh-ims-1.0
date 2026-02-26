@@ -70,6 +70,16 @@
       "reason": "Reason",
       "income": "Income",
       "urgency": "Urgency"
+    },
+    "phases": {
+      "personal": "Personal",
+      "household": "Household",
+      "application": "Application",
+      "documents": "Documents",
+      "review": "Review",
+      "livingSituation": "Housing & Situation",
+      "income": "Income",
+      "urgencyDocs": "Urgency & Documents"
     }
   },
   "housing": {

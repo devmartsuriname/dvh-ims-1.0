@@ -70,6 +70,16 @@
       "reason": "Reden",
       "income": "Inkomen",
       "urgency": "Urgentie"
+    },
+    "phases": {
+      "personal": "Persoonlijk",
+      "household": "Huishouden",
+      "application": "Aanvraag",
+      "documents": "Documenten",
+      "review": "Controle",
+      "livingSituation": "Woning & Situatie",
+      "income": "Inkomen",
+      "urgencyDocs": "Urgentie & Documenten"
     }
   },
   "housing": {

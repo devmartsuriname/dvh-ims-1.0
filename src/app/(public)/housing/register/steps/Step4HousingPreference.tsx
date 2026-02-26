@@ -1,4 +1,4 @@
-import { Card, Row, Col, Form } from 'react-bootstrap'
+import { Row, Col, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -46,9 +46,7 @@ const Step4HousingPreference = ({ formData, updateFormData, onNext, onBack }: Wi
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
-      <Card className="border-0 shadow-none">
-        <Card.Body className="p-0">
-          <Form>
+      <Form>
             <Row className="g-3">
               <Col md={6}>
                 <Form.Group>
@@ -91,14 +89,12 @@ const Step4HousingPreference = ({ formData, updateFormData, onNext, onBack }: Wi
               </Col>
             </Row>
 
-            <div className="bg-light rounded p-3 mt-4">
+            <div className="bg-light rounded p-3 mt-3">
               <p className="text-muted small mb-0">
                 <strong>{t('common.optional')}:</strong> {t('housing.step4.note')}
               </p>
             </div>
           </Form>
-        </Card.Body>
-      </Card>
     </WizardStep>
   )
 }

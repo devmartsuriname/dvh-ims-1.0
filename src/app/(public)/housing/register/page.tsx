@@ -167,7 +167,7 @@ const HousingRegistrationWizard = () => {
       <PublicHeader />
       
       <main className="flex-grow-1 py-4 bg-light">
-        <Container style={{ maxWidth: 800 }}>
+        <Container style={{ maxWidth: 860 }}>
           {/* Progress indicator - hide on receipt step */}
           {currentStep < 10 && (
             <WizardProgress 

@@ -1,4 +1,4 @@
-import { Card, Row, Col, Form } from 'react-bootstrap'
+import { Row, Col, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -41,9 +41,7 @@ const Step5Reason = ({ formData, updateFormData, onNext, onBack }: WizardStepPro
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
-      <Card className="border-0 shadow-none">
-        <Card.Body className="p-0">
-          <Form>
+      <Form>
             <Row className="g-3">
               <Col xs={12}>
                 <Form.Group>
@@ -64,12 +62,9 @@ const Step5Reason = ({ formData, updateFormData, onNext, onBack }: WizardStepPro
                   )}
                 </Form.Group>
               </Col>
-            </Row>
-          </Form>
-        </Card.Body>
-      </Card>
+        </Row>
+      </Form>
     </WizardStep>
   )
 }
-
 export default Step5Reason

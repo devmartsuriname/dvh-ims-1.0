@@ -1,4 +1,4 @@
-import { Card, Row, Col, Form } from 'react-bootstrap'
+import { Row, Col, Form } from 'react-bootstrap'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -46,9 +46,7 @@ const Step6Income = ({ formData, updateFormData, onNext, onBack }: WizardStepPro
       onBack={onBack}
       onNext={handleSubmit(onSubmit)}
     >
-      <Card className="border-0 shadow-none">
-        <Card.Body className="p-0">
-          <Form>
+      <Form>
             <Row className="g-3">
               <Col xs={12}>
                 <Form.Group>
@@ -78,7 +76,7 @@ const Step6Income = ({ formData, updateFormData, onNext, onBack }: WizardStepPro
                   control={control}
                   containerClassName="mb-0"
                 />
-                <div className="text-muted small mt-1">{t('common.optional')}</div>
+                <Form.Text className="text-muted">{t('common.optional')}</Form.Text>
               </Col>
 
               <Col md={6}>
@@ -89,18 +87,16 @@ const Step6Income = ({ formData, updateFormData, onNext, onBack }: WizardStepPro
                   control={control}
                   containerClassName="mb-0"
                 />
-                <div className="text-muted small mt-1">{t('housing.step6.monthlyIncomePartnerHelp')}</div>
+                <Form.Text className="text-muted">{t('housing.step6.monthlyIncomePartnerHelp')}</Form.Text>
               </Col>
             </Row>
 
-            <div className="bg-light rounded p-3 mt-4">
+            <div className="bg-light rounded p-3 mt-3">
               <p className="text-muted small mb-0">
                 <strong>{t('common.optional')}:</strong> {t('housing.step6.note')}
               </p>
             </div>
-          </Form>
-        </Card.Body>
-      </Card>
+      </Form>
     </WizardStep>
   )
 }

@@ -1,70 +1,48 @@
-# DVH-IMS V1.7.x -- apexcharts TS1540: Already Resolved (No Changes Needed)
 
-## Root Cause Analysis
 
-The TS1540 error originates from `node_modules/apexcharts/types/apexcharts.d.ts` — a third-party type declaration file.
+# DVH-IMS V1.7.x -- Hide "Personeelsportaal" Button on Mobile
 
-The recommended fix (`skipLibCheck: true`) is **already enabled** in all three TypeScript config files:
+## Analysis
 
-- `tsconfig.json` (line 9): `"skipLibCheck": true`
-- `tsconfig.app.json` (line 6): `"skipLibCheck": true`
-- `tsconfig.node.json` (line 5): `"skipLibCheck": true`
+The "Personeelsportaal" button is rendered in a single location: `src/components/public/PublicHeader.tsx` (line 34). It is a `Link` inside a `div` with Bootstrap flex classes. There is no separate MobileNav or Offcanvas component — the header is a single responsive component.
 
-## Conclusion
+## Approach
 
-The TS1540 diagnostic appearing in the Lovable editor is an **editor-level artifact** — the Lovable IDE TypeScript language server may not fully respect `skipLibCheck` when surfacing diagnostics inline. The Vite build pipeline does respect it, so this error does not affect builds or runtime.
+Add Bootstrap's responsive display utility class `d-none d-md-inline-block` to the Personeelsportaal `Link` element. This hides it below the `md` breakpoint (768px) and shows it at `md` and above.
 
-This mirrors the accordion visibility issue: editor-only, not reproducible in production builds.
+- **Desktop (>=768px):** Visible (unchanged)
+- **Mobile (<768px):** Hidden
+- **Tablet (768px+):** Visible (follows `md` breakpoint)
 
-## Recommendation
+No logic changes. No routing changes. No DOM removal. Pure CSS visibility control via Bootstrap utility class.
 
-**No code or config changes required.** Mark as: "Editor-only TS diagnostic artifact — skipLibCheck already active — Won't fix."
+## Changes
 
-STOP GATE — Verification Evidence Required (TS1540 “Editor-Only” Closure)
+### 1. `src/components/public/PublicHeader.tsx` (line 34)
 
-Before formally closing this item as “Won’t Fix — Editor-only TS diagnostic artifact”, the following verification evidence must be provided:
+Add `d-none d-md-inline-block` to the Link's className:
 
-1) Build Verification
+```tsx
+// Before
+<Link to="/auth/sign-in" className="btn btn-outline-primary btn-sm">
 
-   - Confirm that the project build command (e.g., npm/pnpm run build or equivalent) completes successfully.
+// After
+<Link to="/auth/sign-in" className="btn btn-outline-primary btn-sm d-none d-md-inline-block">
+```
 
-   - Capture and include the build summary output.
+### 2. Documentation
 
-   - Explicitly confirm: No TypeScript errors during build.
+- Create `docs/restore-points/v1.7/RESTORE_POINT_V1.7x_HIDE_STAFFPORTAL_MOBILE.md`
+- Update `docs/DVH-IMS-V1.0_1.1/architecture.md` and `docs/DVH-IMS-V1.0_1.1/backend.md` with short note
 
-2) TypeScript No-Emit Check (if supported in this environment)
+### Summary
 
-   - Run: tsc -p [tsconfig.app](http://tsconfig.app).json --noEmit
+| Item | Detail |
+|------|--------|
+| Files changed | 1 component, 2 docs, 1 restore point |
+| Breakpoint | Bootstrap `md` (768px) |
+| Desktop | Visible |
+| Tablet (>=768px) | Visible |
+| Mobile (<768px) | Hidden |
+| Logic impact | None |
 
-   - Or the equivalent TypeScript check used by the app.
-
-   - Confirm that TS1540 does NOT appear in this check.
-
-3) If direct CLI execution is not possible in Lovable:
-
-   - Provide confirmation that the Lovable Vite build pipeline completes without TS errors.
-
-   - Include a log snippet or build success confirmation.
-
-   - Explicitly state: “Editor-only diagnostic; not reproducible in build pipeline.”
-
-Closure Rule:
-
-- Only after the above verification is confirmed may this item be marked:
-
-  “Won’t Fix — Editor-only TS diagnostic artifact (skipLibCheck already enabled).”
-
-After documentation + restore point update:
-
-HARD STOP — Await further instruction.  
-  
-  
-Deliverables (if approved)
-
-Since no code changes are needed, deliverables reduce to:
-
-1. Restore Point `.md` documenting the decision
-2. Short notes in `backend.md` and `architecture.md` explaining TS1540 is an editor artifact and `skipLibCheck` is already enabled
-3. Checklist report with SKIPPED status and justification
-
-No config files will be modified.

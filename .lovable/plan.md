@@ -1,182 +1,109 @@
-# DVH-IMS v1.7.x — Security Hardening Execution Plan
+# DVH-IMS v1.7.x — Phase 5: Production Promotion Package
 
-## Hard Gate: CLEARED
+## Overview
 
-All 3 public Edge Functions (`lookup-public-status`, `submit-bouwsubsidie-application`, `submit-housing-registration`) use `SUPABASE_SERVICE_ROLE_KEY` to write audit events. The service role key bypasses RLS entirely. The `anon_can_insert_audit_event` policy is confirmed redundant and safe to drop.
+Create 4 governance documents for the production promotion of the security hardening migration. Documentation only — no execution, no source changes, no DB access.
 
-**Evidence:**
+## Deliverables
 
-- `lookup-public-status/index.ts` line 181-182: `createClient(supabaseUrl, supabaseServiceKey)`
-- `submit-bouwsubsidie-application/index.ts` line 269-270: same pattern
-- `submit-housing-registration/index.ts` line 286-287: same pattern
+### 1. Production Migration Script
 
-No browser-side anonymous audit inserts exist anywhere in the codebase.
+**File:** `docs/migrations/v1.7/PROD_SECURITY_HARDENING_ANON_RLS.sql`
 
----
+Clean, transactional SQL matching the staging migration exactly:
 
-## Phase 2 — Execute Migration (STAGING)
+- `BEGIN; ... COMMIT;` wrapper
+- 6x `DROP POLICY IF EXISTS` statements (idempotent)
+- Header comment block: version, context ID, date, purpose
+- Labeled `PRODUCTION VERSION`
 
-Run a single transactional SQL migration via the migration tool:
+### 2. Production Rollback Script
 
-```sql
-BEGIN;
-DROP POLICY IF EXISTS "anon_can_select_person_for_status" ON person;
-DROP POLICY IF EXISTS "anon_can_select_subsidy_case_status" ON subsidy_case;
-DROP POLICY IF EXISTS "anon_can_select_housing_registration_status" ON housing_registration;
-DROP POLICY IF EXISTS "anon_can_select_subsidy_status_history" ON subsidy_case_status_history;
-DROP POLICY IF EXISTS "anon_can_select_housing_status_history" ON housing_registration_status_history;
-DROP POLICY IF EXISTS "anon_can_insert_audit_event" ON audit_event;
-COMMIT;
-```
+**File:** `docs/migrations/v1.7/ROLLBACK_SECURITY_HARDENING_ANON_RLS.sql`
 
-NOT dropped: `anon_can_select_public_status_access` (design-intentional, no PII).
+Recreates all 6 dropped policies with exact original USING/WITH CHECK clauses. Sourced directly from the existing rollback SQL in the staging restore point document. Includes:
 
----
+- `BEGIN; ... COMMIT;` wrapper
+- Header comment with rollback trigger criteria
+- Safe to run independently (uses `CREATE POLICY` — will error if policies already exist, which is the correct safety behavior)
 
-## Phase 3 — Functional Validation (STAGING)
+### 3. Production Validation Checklist
 
-After migration, validate via read queries and Edge Function invocations:
+**File:** `docs/checklists/v1.7/PROD_VALIDATION_CHECKLIST_SECURITY_HARDENING.md`
 
-1. **Public status lookup** — invoke `lookup-public-status` Edge Function with test data to confirm subsidy and housing lookups still return expected status fields (service role bypasses RLS).
-2. **Admin dashboard** — run authenticated SELECT queries against `person`, `subsidy_case`, `audit_event` to confirm no new denials for admin roles.
-3. **Audit logging** — confirm authenticated role-based INSERT policies still work (e.g., `role_insert_audit_event` for system_admin).
-4. **Negative tests** — run anonymous SELECT queries against `person`, `subsidy_case`, `housing_registration`, `subsidy_case_status_history`, `housing_registration_status_history` to confirm RLS denial (0 rows returned).
+Structured checklist with 4 sections:
 
----
+- **A) Pre-Execution Checks** — staging PASS confirmed, restore point exists, no open HIGH findings, Edge Function health
+- **B) Execution Verification** — `pg_policies` query to confirm removal, anon SELECT denial test, Edge Function lookup test
+- **C) Post-Execution Security Scan** — run scan, compare with staging, confirm no new HIGH/CRITICAL
+- **D) Rollback Criteria** — failure triggers (Edge Function errors, admin access denied, new HIGH findings), authorization (Delroy), time window (1 hour post-migration)
 
-## Phase 4 — Post-Migration Security Scan
+### 4. Production Restore Point Template
 
-Re-run security scan tool and compare:
+**File:** `docs/restore-points/v1.7/PROD_RESTORE_POINT_TEMPLATE_SECURITY_HARDENING.md`
 
+Template with placeholders for:
 
-| Finding                                       | Before             | After     |
-| --------------------------------------------- | ------------------ | --------- |
-| `anon_can_select_person_for_status`           | ERROR              | REMOVED   |
-| `anon_can_select_subsidy_case_status`         | ERROR              | REMOVED   |
-| `anon_can_select_housing_registration_status` | ERROR              | REMOVED   |
-| `anon_can_select_subsidy_status_history`      | ERROR              | REMOVED   |
-| `anon_can_select_housing_status_history`      | ERROR              | REMOVED   |
-| `anon_can_insert_audit_event`                 | WARN               | REMOVED   |
-| `anon_can_select_public_status_access`        | DESIGN-INTENTIONAL | UNCHANGED |
+- Execution timestamp, executor name
+- Before/after snapshot references
+- Security scan ID references
+- Sign-off block (executor + authorizer)
+
+## Files Created (4 total)
 
 
----
-
-## Documentation Deliverables
-
-1. **Restore point**: `docs/restore-points/v1.7/RESTORE_POINT_V1.7_SECURITY_HARDENING_ANON_RLS.md`
-2. **Update**: `docs/backend.md` — note removal of redundant anon policies
-3. **Update**: `docs/DVH-IMS-V1.0_1.1/architecture.md` — update RLS section
-
----
-
-## Files Changed
+| File                                                                         | Purpose                     |
+| ---------------------------------------------------------------------------- | --------------------------- |
+| `docs/migrations/v1.7/PROD_SECURITY_HARDENING_ANON_RLS.sql`                  | Production migration script |
+| `docs/migrations/v1.7/ROLLBACK_SECURITY_HARDENING_ANON_RLS.sql`              | Production rollback script  |
+| `docs/checklists/v1.7/PROD_VALIDATION_CHECKLIST_SECURITY_HARDENING.md`       | Validation checklist        |
+| `docs/restore-points/v1.7/PROD_RESTORE_POINT_TEMPLATE_SECURITY_HARDENING.md` | Restore point template      |
 
 
-| File                                                                         | Action                               |
-| ---------------------------------------------------------------------------- | ------------------------------------ |
-| SQL migration                                                                | Drop 6 policies (via migration tool) |
-| `docs/restore-points/v1.7/RESTORE_POINT_V1.7_SECURITY_HARDENING_ANON_RLS.md` | Created                              |
-| `docs/backend.md`                                                            | Updated                              |
-| `docs/DVH-IMS-V1.0_1.1/architecture.md`                                      | Updated                              |
+## NOTE — Production Promotion Deferred
 
+Phase 5 documentation is accepted.
 
-No source code changes. No Edge Function changes. No routing changes.  
+However:
+
+We are NOT proceeding with Production Promotion at this stage.
+
+The following applies:
+
+1. Production migration will remain on HOLD.
+
+2. No production SQL execution is authorized.
+
+3. No production environment changes are permitted.
+
+4. Production promotion will only be reconsidered after:
+
+   - Remaining open tasks are completed
+
+   - Wizard enhancement refinements are finalized
+
+   - ApexCharts TS1540 issue is resolved
+
+   - Full UI polish pass is completed
+
+   - Additional security backlog items are reviewed
+
+Immediate focus returns to:
+
+- Remaining frontend enhancements
+
+- Open technical warnings
+
+- UX refinement backlog
+
+- Stability improvements
+
+Production phase is LOCKED until explicitly reopened.  
   
-DVH-IMS v1.7.x — Security Hardening: Execute Migration (STAGING) + Validate + Scan
+Constraints
 
-DOCUMENTATION + CHECKLIST REQUIRED. HARD STOP AFTER PHASE 4.
-
-Scope:
-
-- STAGING only.
-
-- Execute the approved SQL migration to drop redundant anonymous RLS policies.
-
-- Perform functional + negative validation.
-
-- Re-run security scan and report before/after.
-
-- Do NOT change any source code or Edge Function code.
-
-Phase 2 — Execute Migration (STAGING)
-
-1) Run a single transactional SQL migration via the migration tool EXACTLY as defined:
-
-   BEGIN;
-
-   DROP POLICY IF EXISTS "anon_can_select_person_for_status" ON person;
-
-   DROP POLICY IF EXISTS "anon_can_select_subsidy_case_status" ON subsidy_case;
-
-   DROP POLICY IF EXISTS "anon_can_select_housing_registration_status" ON housing_registration;
-
-   DROP POLICY IF EXISTS "anon_can_select_subsidy_status_history" ON subsidy_case_status_history;
-
-   DROP POLICY IF EXISTS "anon_can_select_housing_status_history" ON housing_registration_status_history;
-
-   DROP POLICY IF EXISTS "anon_can_insert_audit_event" ON audit_event;
-
-   COMMIT;
-
-2) Confirm explicitly that policy "anon_can_select_public_status_access" remains UNCHANGED.
-
-Phase 3 — Functional Validation (STAGING)
-
-A) Public status lookup (critical):
-
-   - Invoke Edge Function `lookup-public-status` with known test data.
-
-   - Confirm response fields and status values match pre-migration behavior.
-
-B) Admin dashboard:
-
-   - Authenticated admin role can still SELECT from person, subsidy_case, audit_event without new denials.
-
-C) Audit logging:
-
-   - Confirm role-based INSERT into audit_event still works (admin/system role).
-
-D) Negative tests (anon):
-
-   - Anonymous SELECT queries against person, subsidy_case, housing_registration, subsidy_case_status_history, housing_registration_status_history return 0 rows / denied.
-
-Phase 4 — Post-Migration Security Scan
-
-- Re-run the security scan tool.
-
-- Provide a before/after comparison showing the 6 policies are REMOVED.
-
-- Confirm no new HIGH/CRITICAL findings were introduced.
-
-Documentation Deliverables
-
-1) Create restore point:
-
-   docs/restore-points/v1.7/RESTORE_POINT_V1.7_SECURITY_HARDENING_ANON_[RLS.md](http://RLS.md)
-
-   Include: what changed, why safe, exact SQL, validation results, rollback note.
-
-2) Update:
-
-   docs/[backend.md](http://backend.md) — note removal of redundant anon policies + rationale (service role Edge Functions bypass RLS).
-
-3) Update:
-
-   docs/DVH-IMS-V1.0_1.1/[architecture.md](http://architecture.md) — update RLS/security section accordingly.
-
-Rollback Note (must be included in restore point doc)
-
-- If public status lookup validation fails, immediately STOP and re-create the dropped policies (same names) with prior logic, then report.
-
-Checklist Report Format (required)
-
-- IMPLEMENTED / PARTIAL / SKIPPED / VERIFICATION / BLOCKERS
-
-- Include proof: function invocation results + scan screenshot/summary.
-
-HARD STOP
-
-- After Phase 4, stop and await explicit production authorization for any next phase.
-
-## HARD STOP after Phase 4. Await explicit production authorization for Phase 5.
+- No SQL execution against any environment
+- No source code changes
+- No Edge Function modifications
+- HARD STOP after documentation delivery
+- Await explicit written production authorization

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { PublicHeader, PublicFooter } from '@/components/public'
-import bgPattern from '@/assets/images/bg-pattern-1.png'
+import heroImage from '@/assets/images/hero-community.png'
 
 /**
  * Public Landing Page - VolksHuisvesting Suriname
@@ -24,7 +24,7 @@ const LandingPage = () => {
       <section 
         className="py-5 position-relative"
         style={{
-          backgroundImage: `url(${bgPattern})`,
+          backgroundImage: `url(${heroImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
@@ -32,7 +32,7 @@ const LandingPage = () => {
         {/* Dark overlay for readability */}
         <div 
           className="position-absolute top-0 start-0 w-100 h-100" 
-          style={{ backgroundColor: 'rgba(30, 41, 59, 0.85)' }}
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.60)' }}
         />
         
         <Container className="position-relative">

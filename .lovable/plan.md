@@ -1,92 +1,119 @@
+# DVH-IMS v1.7.x — Data-Layer Audit Execution Plan (Documentation Only)
+
+## Scope
+
+READ-ONLY audit. No DB writes, no code changes, no migrations. Output is 3 documentation files only.
+
+## Audit Findings (from read-only DB queries + code inspection)
+
+### Source of Truth Mapping -- CONFIRMED
 
 
-# DVH-IMS v1.7.x — Smoke Test Plan (Docs Sync Admin / Wizard)
+| Consumer                       | Source File                                                             | Import Used                                             |
+| ------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------- |
+| Bouwsubsidie Wizard            | `src/app/(public)/bouwsubsidie/apply/constants.ts`                      | Local `REQUIRED_DOCUMENTS` (7 items, codes aligned)     |
+| Housing Wizard                 | `src/app/(public)/housing/register/constants.ts`                        | Local `REQUIRED_DOCUMENTS` (6 items, codes aligned)     |
+| Admin Subsidy Detail (sidebar) | `src/app/(admin)/subsidy-cases/[id]/page.tsx`                           | `BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS` from shared config |
+| Admin Housing Detail (sidebar) | `src/app/(admin)/housing-registrations/[id]/page.tsx`                   | `HOUSING_DOCUMENT_REQUIREMENTS` from shared config      |
+| DirectorReviewPanel            | `src/app/(admin)/subsidy-cases/[id]/components/DirectorReviewPanel.tsx` | `BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS` from shared config |
 
-## Static Code Analysis: PASS
 
-All admin views correctly import from the shared `src/config/documentRequirements.ts`. No hardcoded lists, no deprecated documents, no duplicated definitions.
+No fallback/hardcoded lists detected anywhere in `src/`.
 
-### Alignment Verification (Code-Level)
+### DB vs Shared Config Comparison
 
-| Service | Shared Config | Wizard Constants | Admin Detail | DirectorReview | Match |
-|---------|--------------|-----------------|--------------|----------------|-------|
-| Bouwsubsidie | 5M + 2O | 5M + 2O (same codes) | Uses shared config | Uses shared config | YES |
-| Housing | 3M + 3O | 3M + 3O (same codes) | Uses shared config | N/A | YES |
+**Bouwsubsidie (`subsidy_document_requirement` -- 10 rows in DB, 7 in config):**
 
-### Document Code Cross-Check
 
-**Bouwsubsidie** (all 3 sources aligned):
-- ID_COPY (mandatory) -- wizard, config, admin
-- INCOME_PROOF (mandatory) -- wizard, config, admin
-- LAND_TITLE (mandatory) -- wizard, config, admin
-- BANK_STATEMENT (mandatory) -- wizard, config, admin
-- HOUSEHOLD_COMP (mandatory) -- wizard, config, admin
-- CBB_EXTRACT (optional) -- wizard, config, admin
-- FAMILY_EXTRACT (optional) -- wizard, config, admin
+| document_code     | DB name                                   | Config name                               | Mandatory (DB) | Mandatory (Config) | Status               |
+| ----------------- | ----------------------------------------- | ----------------------------------------- | -------------- | ------------------ | -------------------- |
+| BANK_STATEMENT    | Bank Statement                            | Bank Statement                            | true           | true               | MATCH                |
+| CBB_EXTRACT       | CBB uittreksel / Nationaliteit verklaring | CBB uittreksel / Nationaliteit verklaring | false          | false              | MATCH                |
+| FAMILY_EXTRACT    | Gezinuittreksel                           | Gezinuittreksel                           | false          | false              | MATCH                |
+| HOUSEHOLD_COMP    | Household Composition                     | Household Composition                     | true           | true               | MATCH                |
+| ID_COPY           | Copy of ID                                | Copy of ID                                | true           | true               | MATCH                |
+| INCOME_PROOF      | Inkomensverklaring (AOV/loonstrook)       | Inkomensverklaring (AOV/loonstrook)       | true           | true               | MATCH                |
+| LAND_TITLE        | Land Title / Deed                         | Land Title / Deed                         | true           | true               | MATCH                |
+| BUILDING_PERMIT   | Building Permit                           | --                                        | false          | --                 | DEPRECATED (DB only) |
+| CONSTRUCTION_PLAN | Construction Plan                         | --                                        | false          | --                 | DEPRECATED (DB only) |
+| COST_ESTIMATE     | Cost Estimate                             | --                                        | false          | --                 | DEPRECATED (DB only) |
 
-**Housing** (all 3 sources aligned):
-- ID_COPY (mandatory) -- wizard, config, admin
-- INCOME_PROOF (mandatory) -- wizard, config, admin
-- RESIDENCE_PROOF (mandatory) -- wizard, config, admin
-- FAMILY_COMPOSITION (optional) -- wizard, config, admin
-- MEDICAL_CERT (optional) -- wizard, config, admin
-- EMERGENCY_PROOF (optional) -- wizard, config, admin
 
-### Deprecated Documents Check: PASS
-Construction Plan, Cost Estimate, Building Permit do NOT appear in shared config or admin views.
+**Housing (`housing_document_requirement` -- 6 rows in DB, 6 in config):**
 
----
 
-## Runtime Smoke Test Plan
+| document_code      | DB name                    | Config name         | Mandatory Match | Name Match   |
+| ------------------ | -------------------------- | ------------------- | --------------- | ------------ |
+| ID_COPY            | Copy of ID                 | Copy of ID          | YES             | YES          |
+| INCOME_PROOF       | Proof of Income            | Income Proof        | YES             | **MISMATCH** |
+| RESIDENCE_PROOF    | Proof of Current Residence | Residence Proof     | YES             | **MISMATCH** |
+| FAMILY_COMPOSITION | Family Composition         | Family Composition  | YES             | YES          |
+| MEDICAL_CERT       | Medical Certificate        | Medical Certificate | YES             | YES          |
+| EMERGENCY_PROOF    | Emergency Documentation    | Emergency Proof     | YES             | **MISMATCH** |
 
-Since this is a smoke test with no code changes expected, the runtime validation requires browser-based testing against the live staging preview.
 
-### Test A: Bouwsubsidie
+### Risk Register
 
-1. Navigate to Admin > Subsidy Cases > select any existing case with uploaded documents
-2. Open Documents tab
-3. **Verify Required Documents sidebar** shows exactly 7 items (5 mandatory with *, 2 optional without *)
-4. **Verify names match**: Copy of ID, Inkomensverklaring (AOV/loonstrook), Land Title / Deed, Bank Statement, Household Composition, CBB uittreksel / Nationaliteit verklaring, Gezinuittreksel
-5. **Verify checkmark logic**: uploaded docs show green check, missing show grey X
-6. **Verify Director Review tab** (if case is in director-eligible status): Document Completeness badge shows correct X/5 count
-7. Screenshot evidence
+1. **3 Housing label mismatches** -- DB `document_name` differs from shared config `document_name` for INCOME_PROOF, RESIDENCE_PROOF, EMERGENCY_PROOF. Impact: LOW (admin sidebar reads from config, not DB). Could cause confusion if archive views display DB names alongside config names.
+2. **3 Bouwsubsidie deprecated DB rows** -- BUILDING_PERMIT, CONSTRUCTION_PLAN, COST_ESTIMATE persist in DB but are excluded from all UI. Impact: NONE currently. Recommended cleanup in future.
+3. **Wizard constants duplication** -- Both wizard `constants.ts` files maintain separate `REQUIRED_DOCUMENTS` arrays (not importing from shared config). Codes and mandatory flags match, but lists are technically duplicated. Recommend future refactor to derive from shared config.
 
-### Test B: Housing Registration
+## Deliverables
 
-1. Navigate to Admin > Housing Registrations > select any existing registration with uploaded documents
-2. Open Documents tab
-3. **Verify Required Documents sidebar** shows exactly 6 items (3 mandatory with *, 3 optional without *)
-4. **Verify names match**: Copy of ID, Income Proof, Residence Proof, Family Composition, Medical Certificate, Emergency Proof
-5. **Verify checkmark logic**: uploaded docs show green check, missing show grey X
-6. Screenshot evidence
+### 1. Create: `docs/audits/v1.7/DATA_LAYER_AUDIT_DOCS_CONFIG_SYNC.md`
 
-### Test C: Console / Layout
+Full audit report containing:
 
-1. Check browser console for React key warnings or errors on both Documents tabs
-2. Verify no layout overflow or shift in the sidebar panel
+- Source of truth mapping table
+- DB query summaries (read-only) with exact column values
+- Counts verification (Bouwsubsidie: 7 config / 10 DB; Housing: 6/6)
+- Label mismatch detail table
+- Risk register (3 items)
+- Verification checklist (all items PASS except 2 WARNING)
 
----
+### 2. Update: `docs/DVH-IMS-V1.0_1.1/architecture.md`
 
-## Potential Data-Layer Concern (Non-Blocking)
+Add entry to Change History table at line 155:
 
-The Uploaded Documents table in the Bouwsubsidie admin shows `doc.requirement?.document_name` from the database `subsidy_document_requirement` join. If DB records have stale names (e.g., old labels), the Uploaded column could display different names than the Required sidebar. This is NOT a code bug -- it would be a data migration concern. Same pattern exists for Housing with `housing_document_requirement`.
+- Date: 2026-02-27
+- Change: Data-layer audit completed for document config sync
+- Summary: 3 housing label mismatches (non-blocking), 3 bouwsubsidie deprecated DB rows (no UI impact)
 
-**Recommendation**: If names mismatch at runtime, a one-time DB update of `document_name` in the requirement tables would resolve it. No code change needed.
+### 3. Update: `docs/backend.md`
 
----
+Add new section after the existing v1.7.x smoke test section:
 
-## Execution Approach
+- DB vs Config label mismatches (Housing: 3 items)
+- Deprecated DB rows (Bouwsubsidie: 3 items)
+- Recommended follow-ups (not executed)
 
-1. Use browser automation to navigate to admin views and capture screenshots
-2. Compare rendered lists against shared config definitions
-3. Report PASS/FAIL per test item
-4. Update docs/backend.md and docs/architecture.md with smoke test outcome
-5. No code changes unless a FAIL is found (minimal fix only, with approval)
+## NOTE — Governance Guardrails for Data-Layer Audit  
+1) Environment Restriction (Mandatory)  
+All read-only queries and inspections must be executed against STAGING environment only.  
+Production database access — including read-only queries — is NOT authorized for this audit.  
+  
+2) Hard Stop Rule  
+After documentation deliverables are created/updated:  
+- docs/audits/v1.7/DATA_LAYER_AUDIT_DOCS_CONFIG_[SYNC.md](http://SYNC.md)  
+- docs/[backend.md](http://backend.md)  
+- docs/DVH-IMS-V1.0_1.1/[architecture.md](http://architecture.md)  
+  
+You must STOP immediately.  
+  
+No schema changes.  
+No DB updates.  
+No data cleanup.  
+No follow-up fixes.  
+No refactors.  
+  
+Any remediation (e.g., label alignment or deprecated DB rows cleanup) requires a separate approved change request.  
+  
+Await explicit written instruction before proceeding beyond documentation.  
+  
+Constraints Confirmed
 
-## Files to Update (Documentation Only, Post-Test)
-
-| File | Update |
-|------|--------|
-| `docs/backend.md` | Add smoke test outcome for v1.7.x doc sync |
-| `docs/DVH-IMS-V1.0_1.1/architecture.md` | Note shared config validation status |
-
+- No DB WRITE statements executed
+- No source code modifications
+- No migrations applied
+- No RLS changes
+- Documentation output only

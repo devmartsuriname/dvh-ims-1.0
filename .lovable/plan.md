@@ -1,109 +1,92 @@
-# DVH-IMS v1.7.x — Phase 5: Production Promotion Package
-
-## Overview
-
-Create 4 governance documents for the production promotion of the security hardening migration. Documentation only — no execution, no source changes, no DB access.
-
-## Deliverables
-
-### 1. Production Migration Script
-
-**File:** `docs/migrations/v1.7/PROD_SECURITY_HARDENING_ANON_RLS.sql`
-
-Clean, transactional SQL matching the staging migration exactly:
-
-- `BEGIN; ... COMMIT;` wrapper
-- 6x `DROP POLICY IF EXISTS` statements (idempotent)
-- Header comment block: version, context ID, date, purpose
-- Labeled `PRODUCTION VERSION`
-
-### 2. Production Rollback Script
-
-**File:** `docs/migrations/v1.7/ROLLBACK_SECURITY_HARDENING_ANON_RLS.sql`
-
-Recreates all 6 dropped policies with exact original USING/WITH CHECK clauses. Sourced directly from the existing rollback SQL in the staging restore point document. Includes:
-
-- `BEGIN; ... COMMIT;` wrapper
-- Header comment with rollback trigger criteria
-- Safe to run independently (uses `CREATE POLICY` — will error if policies already exist, which is the correct safety behavior)
-
-### 3. Production Validation Checklist
-
-**File:** `docs/checklists/v1.7/PROD_VALIDATION_CHECKLIST_SECURITY_HARDENING.md`
-
-Structured checklist with 4 sections:
-
-- **A) Pre-Execution Checks** — staging PASS confirmed, restore point exists, no open HIGH findings, Edge Function health
-- **B) Execution Verification** — `pg_policies` query to confirm removal, anon SELECT denial test, Edge Function lookup test
-- **C) Post-Execution Security Scan** — run scan, compare with staging, confirm no new HIGH/CRITICAL
-- **D) Rollback Criteria** — failure triggers (Edge Function errors, admin access denied, new HIGH findings), authorization (Delroy), time window (1 hour post-migration)
-
-### 4. Production Restore Point Template
-
-**File:** `docs/restore-points/v1.7/PROD_RESTORE_POINT_TEMPLATE_SECURITY_HARDENING.md`
-
-Template with placeholders for:
-
-- Execution timestamp, executor name
-- Before/after snapshot references
-- Security scan ID references
-- Sign-off block (executor + authorizer)
-
-## Files Created (4 total)
 
 
-| File                                                                         | Purpose                     |
-| ---------------------------------------------------------------------------- | --------------------------- |
-| `docs/migrations/v1.7/PROD_SECURITY_HARDENING_ANON_RLS.sql`                  | Production migration script |
-| `docs/migrations/v1.7/ROLLBACK_SECURITY_HARDENING_ANON_RLS.sql`              | Production rollback script  |
-| `docs/checklists/v1.7/PROD_VALIDATION_CHECKLIST_SECURITY_HARDENING.md`       | Validation checklist        |
-| `docs/restore-points/v1.7/PROD_RESTORE_POINT_TEMPLATE_SECURITY_HARDENING.md` | Restore point template      |
+# DVH-IMS v1.7.x — Smoke Test Plan (Docs Sync Admin / Wizard)
 
+## Static Code Analysis: PASS
 
-## NOTE — Production Promotion Deferred
+All admin views correctly import from the shared `src/config/documentRequirements.ts`. No hardcoded lists, no deprecated documents, no duplicated definitions.
 
-Phase 5 documentation is accepted.
+### Alignment Verification (Code-Level)
 
-However:
+| Service | Shared Config | Wizard Constants | Admin Detail | DirectorReview | Match |
+|---------|--------------|-----------------|--------------|----------------|-------|
+| Bouwsubsidie | 5M + 2O | 5M + 2O (same codes) | Uses shared config | Uses shared config | YES |
+| Housing | 3M + 3O | 3M + 3O (same codes) | Uses shared config | N/A | YES |
 
-We are NOT proceeding with Production Promotion at this stage.
+### Document Code Cross-Check
 
-The following applies:
+**Bouwsubsidie** (all 3 sources aligned):
+- ID_COPY (mandatory) -- wizard, config, admin
+- INCOME_PROOF (mandatory) -- wizard, config, admin
+- LAND_TITLE (mandatory) -- wizard, config, admin
+- BANK_STATEMENT (mandatory) -- wizard, config, admin
+- HOUSEHOLD_COMP (mandatory) -- wizard, config, admin
+- CBB_EXTRACT (optional) -- wizard, config, admin
+- FAMILY_EXTRACT (optional) -- wizard, config, admin
 
-1. Production migration will remain on HOLD.
+**Housing** (all 3 sources aligned):
+- ID_COPY (mandatory) -- wizard, config, admin
+- INCOME_PROOF (mandatory) -- wizard, config, admin
+- RESIDENCE_PROOF (mandatory) -- wizard, config, admin
+- FAMILY_COMPOSITION (optional) -- wizard, config, admin
+- MEDICAL_CERT (optional) -- wizard, config, admin
+- EMERGENCY_PROOF (optional) -- wizard, config, admin
 
-2. No production SQL execution is authorized.
+### Deprecated Documents Check: PASS
+Construction Plan, Cost Estimate, Building Permit do NOT appear in shared config or admin views.
 
-3. No production environment changes are permitted.
+---
 
-4. Production promotion will only be reconsidered after:
+## Runtime Smoke Test Plan
 
-   - Remaining open tasks are completed
+Since this is a smoke test with no code changes expected, the runtime validation requires browser-based testing against the live staging preview.
 
-   - Wizard enhancement refinements are finalized
+### Test A: Bouwsubsidie
 
-   - ApexCharts TS1540 issue is resolved
+1. Navigate to Admin > Subsidy Cases > select any existing case with uploaded documents
+2. Open Documents tab
+3. **Verify Required Documents sidebar** shows exactly 7 items (5 mandatory with *, 2 optional without *)
+4. **Verify names match**: Copy of ID, Inkomensverklaring (AOV/loonstrook), Land Title / Deed, Bank Statement, Household Composition, CBB uittreksel / Nationaliteit verklaring, Gezinuittreksel
+5. **Verify checkmark logic**: uploaded docs show green check, missing show grey X
+6. **Verify Director Review tab** (if case is in director-eligible status): Document Completeness badge shows correct X/5 count
+7. Screenshot evidence
 
-   - Full UI polish pass is completed
+### Test B: Housing Registration
 
-   - Additional security backlog items are reviewed
+1. Navigate to Admin > Housing Registrations > select any existing registration with uploaded documents
+2. Open Documents tab
+3. **Verify Required Documents sidebar** shows exactly 6 items (3 mandatory with *, 3 optional without *)
+4. **Verify names match**: Copy of ID, Income Proof, Residence Proof, Family Composition, Medical Certificate, Emergency Proof
+5. **Verify checkmark logic**: uploaded docs show green check, missing show grey X
+6. Screenshot evidence
 
-Immediate focus returns to:
+### Test C: Console / Layout
 
-- Remaining frontend enhancements
+1. Check browser console for React key warnings or errors on both Documents tabs
+2. Verify no layout overflow or shift in the sidebar panel
 
-- Open technical warnings
+---
 
-- UX refinement backlog
+## Potential Data-Layer Concern (Non-Blocking)
 
-- Stability improvements
+The Uploaded Documents table in the Bouwsubsidie admin shows `doc.requirement?.document_name` from the database `subsidy_document_requirement` join. If DB records have stale names (e.g., old labels), the Uploaded column could display different names than the Required sidebar. This is NOT a code bug -- it would be a data migration concern. Same pattern exists for Housing with `housing_document_requirement`.
 
-Production phase is LOCKED until explicitly reopened.  
-  
-Constraints
+**Recommendation**: If names mismatch at runtime, a one-time DB update of `document_name` in the requirement tables would resolve it. No code change needed.
 
-- No SQL execution against any environment
-- No source code changes
-- No Edge Function modifications
-- HARD STOP after documentation delivery
-- Await explicit written production authorization
+---
+
+## Execution Approach
+
+1. Use browser automation to navigate to admin views and capture screenshots
+2. Compare rendered lists against shared config definitions
+3. Report PASS/FAIL per test item
+4. Update docs/backend.md and docs/architecture.md with smoke test outcome
+5. No code changes unless a FAIL is found (minimal fix only, with approval)
+
+## Files to Update (Documentation Only, Post-Test)
+
+| File | Update |
+|------|--------|
+| `docs/backend.md` | Add smoke test outcome for v1.7.x doc sync |
+| `docs/DVH-IMS-V1.0_1.1/architecture.md` | Note shared config validation status |
+

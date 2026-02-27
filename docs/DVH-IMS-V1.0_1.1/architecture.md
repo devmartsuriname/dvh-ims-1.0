@@ -650,3 +650,11 @@ Only completed and current steps show `bg-primary` underline. Future steps alway
 **Re-open criteria:** Only if the issue reproduces in Live Preview with a clear repro path.
 
 **Restore Point:** `V1.7x-Accordion-WontFix`
+
+---
+
+## V1.7.x — Wizard Step Label Optimization (2026-02-27)
+
+Wizard step labels optimized for single-line rendering. Changed 3 translation values in `src/i18n/locales/nl.json`: personalInfo→Gegevens, contact→Contact, receipt→Receipt. No logic changes.
+
+**Restore Point:** `V1.7x-StepLabels`

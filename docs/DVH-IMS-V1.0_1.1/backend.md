@@ -736,3 +736,9 @@ No backend, DB, RLS, or Edge Function impact.
 **Decision:** Editor-only rendering artifact — No production fix required.
 
 Validated in Live Preview: PASS. Editor-only artifact observed; no production fix required. No files changed.
+
+---
+
+## V1.7.x — Wizard Step Label Optimization (2026-02-27)
+
+Wizard step labels optimized for single-line rendering. Changed 3 translation values in `src/i18n/locales/nl.json`: personalInfo→Gegevens, contact→Contact, receipt→Receipt. No backend, DB, RLS, or Edge Function impact.

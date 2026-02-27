@@ -32,7 +32,7 @@ const LandingPage = () => {
         {/* Dark overlay for readability */}
         <div 
           className="position-absolute top-0 start-0 w-100 h-100" 
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.60)' }}
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.72)' }}
         />
         
         <Container className="position-relative">

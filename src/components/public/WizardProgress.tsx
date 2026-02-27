@@ -88,18 +88,13 @@ const WizardProgress = ({ steps, currentStep, phaseGroups, onBack }: WizardProgr
               </small>
             )}
             {/* Step counter + title */}
-            <div className="d-flex justify-content-between align-items-baseline">
-              <span className="fw-semibold small">
-                {t('common.stepOf', {
-                  current: currentStep + 1,
-                  total: steps.length,
-                  defaultValue: `Stap ${currentStep + 1} van ${steps.length}`,
-                })}
-              </span>
-              <span className="text-muted small text-truncate ms-2" style={{ maxWidth: '50%' }}>
-                {steps[currentStep]?.title}
-              </span>
-            </div>
+            <span className="fw-semibold small">
+              {t('common.stepOf', {
+                current: currentStep + 1,
+                total: steps.length,
+                defaultValue: `Stap ${currentStep + 1} van ${steps.length}`,
+              })}
+            </span>
           </div>
         </div>
         <ProgressBar
@@ -204,28 +199,11 @@ const WizardProgress = ({ steps, currentStep, phaseGroups, onBack }: WizardProgr
                   />
                 )}
 
-                {/* Phase label (show on first step of phase) */}
-                {showPhaseLabel && (
-                  <small
-                    className="text-muted text-center position-absolute"
-                    style={{
-                      fontSize: '0.6rem',
-                      top: 80,
-                      whiteSpace: 'nowrap',
-                      left: '50%',
-                      transform: 'translateX(-25%)',
-                    }}
-                  >
-                    {t(phase.labelKey)}
-                  </small>
-                )}
               </div>
             )
           })}
         </div>
 
-        {/* Extra spacing when phase labels are shown */}
-        {phaseGroups && <div style={{ height: 16 }} />}
       </div>
     </div>
   )

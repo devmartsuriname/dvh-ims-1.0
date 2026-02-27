@@ -666,3 +666,11 @@ Wizard step labels optimized for single-line rendering. Changed 3 translation va
 TS1540 error from `node_modules/apexcharts/types/apexcharts.d.ts` is an editor-only diagnostic artifact. `skipLibCheck: true` is already enabled in all tsconfig files. Vite build pipeline completes without this error. No code or config changes applied.
 
 **Restore Point:** `V1.7x-TS1540-WontFix`
+
+---
+
+## V1.7.x — Hide "Personeelsportaal" on Mobile (2026-02-27)
+
+Added `d-none d-md-inline-block` to the Staff Portal link in `PublicHeader.tsx`. Button hidden below Bootstrap `md` breakpoint (768px), visible on tablet/desktop. CSS-only visibility control — no routing, auth, or DOM changes.
+
+**Restore Point:** `V1.7x-HideStaffPortalMobile`

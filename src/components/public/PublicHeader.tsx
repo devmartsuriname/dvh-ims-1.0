@@ -31,7 +31,7 @@ const PublicHeader = () => {
           </Link>
           <div className="d-flex align-items-center gap-3">
             <LanguageSwitcher />
-            <Link to="/auth/sign-in" className="btn btn-outline-primary btn-sm">
+            <Link to="/auth/sign-in" className="btn btn-outline-primary btn-sm d-none d-md-inline-block">
               {t('common.staffPortal')}
             </Link>
           </div>

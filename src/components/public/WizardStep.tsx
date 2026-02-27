@@ -1,4 +1,4 @@
-import { Card, CardBody, Button, Spinner } from 'react-bootstrap'
+import { Button, Spinner } from 'react-bootstrap'
 import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 
@@ -88,24 +88,22 @@ const WizardStep = ({
   )
 
   return (
-    <Card className="border-0 shadow-none">
-      <CardBody className="p-4">
-        {/* Step Header */}
-        <div className="mb-4">
-          <h4 className="fw-bold mb-1">{title}</h4>
-          {description && (
-            <p className="text-muted mb-0">{description}</p>
-          )}
-        </div>
+    <>
+      {/* Step Header */}
+      <div className="mb-4">
+        <h4 className="fw-bold mb-1">{title}</h4>
+        {description && (
+          <p className="text-muted mb-0">{description}</p>
+        )}
+      </div>
 
-        {/* Step Content — extra bottom padding on mobile for sticky nav */}
-        <div className="mb-4 pb-md-0" style={{ paddingBottom: 72 }}>
-          {children}
-        </div>
+      {/* Step Content — extra bottom padding on mobile for sticky nav */}
+      <div className="mb-4 pb-md-0" style={{ paddingBottom: 72 }}>
+        {children}
+      </div>
 
-        {/* Desktop Navigation (>=768px) */}
-        <NavigationButtons className="pt-3 border-top d-none d-md-flex" />
-      </CardBody>
+      {/* Desktop Navigation (>=768px) */}
+      <NavigationButtons className="pt-3 border-top d-none d-md-flex" />
 
       {/* Mobile Sticky Bottom Navigation (<768px) */}
       <div
@@ -121,7 +119,7 @@ const WizardStep = ({
       >
         <NavigationButtons />
       </div>
-    </Card>
+    </>
   )
 }
 

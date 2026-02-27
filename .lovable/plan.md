@@ -1,48 +1,40 @@
 
 
-# DVH-IMS V1.7.x -- Hide "Personeelsportaal" Button on Mobile
+# DVH-IMS V1.7.x — TRUE Global Logo Description Update
 
-## Analysis
+## Change
 
-The "Personeelsportaal" button is rendered in a single location: `src/components/public/PublicHeader.tsx` (line 34). It is a `Link` inside a `div` with Bootstrap flex classes. There is no separate MobileNav or Offcanvas component — the header is a single responsive component.
+**Single value update** in `src/i18n/locales/nl.json` (line 30):
 
-## Approach
+| Key | Before | After |
+|-----|--------|-------|
+| `header.ministry` | Ministerie van Sociale Zaken en Volkshuisvesting | Min-Sozavo-IMS |
 
-Add Bootstrap's responsive display utility class `d-none d-md-inline-block` to the Personeelsportaal `Link` element. This hides it below the `md` breakpoint (768px) and shows it at `md` and above.
+## What This Affects
 
-- **Desktop (>=768px):** Visible (unchanged)
-- **Mobile (<768px):** Hidden
-- **Tablet (768px+):** Visible (follows `md` breakpoint)
+- **PublicHeader.tsx** — renders `t('header.ministry')` under the logo (public pages + auth pages)
+- No other component uses this key
 
-No logic changes. No routing changes. No DOM removal. Pure CSS visibility control via Bootstrap utility class.
+## What Does NOT Change
 
-## Changes
+- **Footer.tsx** — keeps full legal name (hardcoded copyright)
+- **index.html** — keeps full legal name in meta author tag
+- **nl.json informational text** — `housing.step0.aboutText` and `wizard.help.text` reference the ministry name in context (not branding descriptors) — unchanged
+- **nl.json `footer.copyright`** — keeps full legal name
+- **Admin sidebar (LogoBox.tsx)** — logo image only, no descriptor text exists
+- **Auth pages (SignIn, SignUp, ResetPassword)** — logo image only, no descriptor text
+- **Error pages (404)** — logo image only, no descriptor text
+- Logo images, routing, styling, layout structure
 
-### 1. `src/components/public/PublicHeader.tsx` (line 34)
+## Admin Panel Confirmation
 
-Add `d-none d-md-inline-block` to the Link's className:
+The admin panel header/sidebar (`LogoBox.tsx`, `TopNavigationBar`, `VerticalNavigationBar`) renders only the logo image with no ministry descriptor text. No admin-side changes needed.
 
-```tsx
-// Before
-<Link to="/auth/sign-in" className="btn btn-outline-primary btn-sm">
+## Deliverables
 
-// After
-<Link to="/auth/sign-in" className="btn btn-outline-primary btn-sm d-none d-md-inline-block">
-```
-
-### 2. Documentation
-
-- Create `docs/restore-points/v1.7/RESTORE_POINT_V1.7x_HIDE_STAFFPORTAL_MOBILE.md`
-- Update `docs/DVH-IMS-V1.0_1.1/architecture.md` and `docs/DVH-IMS-V1.0_1.1/backend.md` with short note
-
-### Summary
-
-| Item | Detail |
-|------|--------|
-| Files changed | 1 component, 2 docs, 1 restore point |
-| Breakpoint | Bootstrap `md` (768px) |
-| Desktop | Visible |
-| Tablet (>=768px) | Visible |
-| Mobile (<768px) | Hidden |
-| Logic impact | None |
+1. Update `src/i18n/locales/nl.json` line 30
+2. Create `docs/restore-points/v1.7/RESTORE_POINT_V1.7_TRUE_GLOBAL_LOGO_UPDATE.md`
+3. Update `docs/DVH-IMS-V1.0_1.1/architecture.md`
+4. Update `docs/DVH-IMS-V1.0_1.1/backend.md`
+5. Browser verification (public desktop + mobile, admin desktop)
 

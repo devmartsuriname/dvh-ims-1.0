@@ -53,3 +53,43 @@ Administrative Edge Functions enforce JWT validation and role-based allowlist ch
 - **Append-only:** All writes are INSERT-only.
 - **Preserved during resets:** Audit events are never cleared during data resets.
 - **Access:** Authenticated roles (`audit`, `system_admin`, `minister`, `project_leader`) can SELECT. Role-specific INSERT policies enforce `actor_user_id = auth.uid()`.
+
+---
+
+## v1.7.x — Document Requirements Sync & Smoke Test (2026-02-27)
+
+### Shared Config Source of Truth
+
+**File:** `src/config/documentRequirements.ts`
+
+All document requirement definitions for both public wizards and admin case detail views are synchronized via this single shared configuration module.
+
+### Smoke Test Results
+
+| Test | Service | Result | Evidence |
+|------|---------|--------|----------|
+| A | Bouwsubsidie | **PASS** | Required Documents sidebar: 5 mandatory (✅ green + *), 2 optional (⚪ grey). Names match shared config exactly. No deprecated docs visible. |
+| B | Woningregistratie | **PASS** | Required Documents sidebar: 3 mandatory (✅ green + *), 3 optional (⚪ grey). Names match shared config exactly. |
+| C | Console/Layout | **PASS** | No React key warnings, no errors. Only pre-existing React Router v6 deprecation warnings. |
+
+### Verified Document Lists
+
+**Bouwsubsidie (7 items):**
+- Copy of ID * ✅
+- Inkomensverklaring (AOV/loonstrook) * ✅
+- Land Title / Deed * ✅
+- Bank Statement * ✅
+- Household Composition * ✅
+- CBB uittreksel / Nationaliteit verklaring ⚪
+- Gezinuittreksel ⚪
+
+**Woningregistratie (6 items):**
+- Copy of ID * ✅
+- Income Proof * ✅
+- Residence Proof * ✅
+- Family Composition ⚪
+- Medical Certificate ⚪
+- Emergency Proof ⚪
+
+### Deprecated Documents Confirmed Absent
+Construction Plan, Cost Estimate, Building Permit — NOT present in shared config, wizard, or admin views.

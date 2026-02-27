@@ -57,14 +57,14 @@
   "wizard": {
     "steps": {
       "introduction": "Introductie",
-      "personalInfo": "Persoonsgegevens",
-      "contact": "Contactgegevens",
+      "personalInfo": "Gegevens",
+      "contact": "Contact",
       "household": "Huishouden",
       "address": "Adres",
       "application": "Aanvraag",
       "documents": "Documenten",
       "review": "Controleren",
-      "receipt": "Ontvangstbewijs",
+      "receipt": "Receipt",
       "livingSituation": "Woonsituatie",
       "preference": "Voorkeur",
       "reason": "Reden",

@@ -674,3 +674,11 @@ TS1540 error from `node_modules/apexcharts/types/apexcharts.d.ts` is an editor-o
 Added `d-none d-md-inline-block` to the Staff Portal link in `PublicHeader.tsx`. Button hidden below Bootstrap `md` breakpoint (768px), visible on tablet/desktop. CSS-only visibility control — no routing, auth, or DOM changes.
 
 **Restore Point:** `V1.7x-HideStaffPortalMobile`
+
+---
+
+## V1.7.x — TRUE Global Logo Description Update (2026-02-27)
+
+Updated `header.ministry` i18n key from "Ministerie van Sociale Zaken en Volkshuisvesting" to "Min-Sozavo-IMS". Applies globally via `PublicHeader.tsx` on all public and auth pages. Admin panel verified — no descriptor text exists. Footer and meta tags retain full legal name.
+
+**Restore Point:** `V1.7x-TrueGlobalLogoUpdate`

@@ -93,3 +93,39 @@ All document requirement definitions for both public wizards and admin case deta
 
 ### Deprecated Documents Confirmed Absent
 Construction Plan, Cost Estimate, Building Permit — NOT present in shared config, wizard, or admin views.
+
+---
+
+## v1.7.x — Data-Layer Audit Findings (2026-02-27)
+
+**Audit Report:** `docs/audits/v1.7/DATA_LAYER_AUDIT_DOCS_CONFIG_SYNC.md`
+
+### DB vs Config Label Mismatches (Housing)
+
+3 rows in `housing_document_requirement` have different `document_name` values than the shared config:
+
+| document_code | DB Name | Config Name |
+|---------------|---------|-------------|
+| INCOME_PROOF | Proof of Income | Income Proof |
+| RESIDENCE_PROOF | Proof of Current Residence | Residence Proof |
+| EMERGENCY_PROOF | Emergency Documentation | Emergency Proof |
+
+**Impact:** LOW — Admin sidebar renders from shared config. Archive views render from DB join. Users may see different labels in the same session.
+
+### Deprecated DB Rows (Bouwsubsidie)
+
+3 deprecated entries remain in `subsidy_document_requirement`:
+
+| document_code | DB Name | Status |
+|---------------|---------|--------|
+| BUILDING_PERMIT | Building Permit | Deprecated — excluded from all active UI |
+| CONSTRUCTION_PLAN | Construction Plan | Deprecated — excluded from all active UI |
+| COST_ESTIMATE | Cost Estimate | Deprecated — excluded from all active UI |
+
+**Impact:** NONE — These rows are never rendered. Only visible if historical uploads reference them in archive columns.
+
+### Recommended Follow-ups (NOT executed)
+
+1. **DB label alignment:** One-time UPDATE to align 3 housing `document_name` values with shared config. Requires separate change request.
+2. **Deprecated row cleanup:** Soft-delete or add `is_active` flag to 3 bouwsubsidie deprecated entries. Requires separate change request.
+3. **Wizard constants refactor:** Derive wizard `REQUIRED_DOCUMENTS` from shared config instead of maintaining separate arrays. Requires separate task.

@@ -708,3 +708,55 @@ All admin modals standardized to consistent size and positioning.
 - All modals follow same Darkone pattern
 
 **Restore Point:** `RESTORE_POINT_MODAL_STANDARDIZATION_COMPLETE`
+
+---
+
+## V1.7.x — WizardProgress Active Step Underline Fix (2026-02-27)
+
+### Change
+
+**File:** `src/components/public/WizardProgress.tsx` (line 191)
+
+Step underline color logic changed from phase-group to step-index comparison:
+
+```typescript
+// BEFORE
+phase.steps.includes(currentStep) ? 'bg-primary' : 'bg-light'
+
+// AFTER
+index <= currentStep ? 'bg-primary' : 'bg-light'
+```
+
+No backend, DB, RLS, or Edge Function impact.
+
+---
+
+## V1.7.x — DocumentUploadAccordion Visibility (2026-02-27)
+
+**Decision:** Editor-only rendering artifact — No production fix required.
+
+Validated in Live Preview: PASS. Editor-only artifact observed; no production fix required. No files changed.
+
+---
+
+## V1.7.x — Wizard Step Label Optimization (2026-02-27)
+
+Wizard step labels optimized for single-line rendering. Changed 3 translation values in `src/i18n/locales/nl.json`: personalInfo→Gegevens, contact→Contact, receipt→Receipt. No backend, DB, RLS, or Edge Function impact.
+
+---
+
+## V1.7.x — apexcharts TS1540 (Won't Fix) (2026-02-27)
+
+TS1540 error from `node_modules/apexcharts/types/apexcharts.d.ts` is an editor-only diagnostic artifact. `skipLibCheck: true` already enabled in all tsconfig files. Vite build completes without this error. No code, config, backend, DB, or RLS changes. No runtime impact.
+
+---
+
+## V1.7.x — Hide "Personeelsportaal" on Mobile (2026-02-27)
+
+Added `d-none d-md-inline-block` to Staff Portal link in `PublicHeader.tsx`. CSS-only visibility change. No backend, DB, RLS, or Edge Function impact.
+
+---
+
+## V1.7.x — TRUE Global Logo Description Update (2026-02-27)
+
+Updated `header.ministry` i18n key in `nl.json`. Frontend-only i18n string change. No backend, DB, RLS, or Edge Function impact.

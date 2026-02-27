@@ -682,3 +682,11 @@ Added `d-none d-md-inline-block` to the Staff Portal link in `PublicHeader.tsx`.
 Updated `header.ministry` i18n key from "Ministerie van Sociale Zaken en Volkshuisvesting" to "Min-Sozavo-IMS". Applies globally via `PublicHeader.tsx` on all public and auth pages. Admin panel verified — no descriptor text exists. Footer and meta tags retain full legal name.
 
 **Restore Point:** `V1.7x-TrueGlobalLogoUpdate`
+
+---
+
+## V1.7.x — Hero Image & Overlay Update (2026-02-27)
+
+Replaced hero background from `bg-pattern-1.png` (abstract pattern) to AI-generated `hero-community.png` (1920x1080, Surinamese family community scene). Overlay changed from `rgba(30, 41, 59, 0.85)` to `rgba(0, 0, 0, 0.60)`. Image subjects centered in middle 60% for safe `background-size: cover` cropping across all viewports. No changes to hero height, typography, buttons, or layout.
+
+**Restore Point:** `V1.7x-HeroImageOverlayUpdate`

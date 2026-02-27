@@ -23,12 +23,17 @@ const LandingPage = () => {
       {/* Hero Section with Background Image + Dark Overlay */}
       <section 
         className="py-5 position-relative"
-        style={{
-          backgroundImage: `url(${heroImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
       >
+        {/* B&W background image layer */}
+        <div 
+          className="position-absolute top-0 start-0 w-100 h-100"
+          style={{
+            backgroundImage: `url(${heroImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'grayscale(100%)',
+          }}
+        />
         {/* Dark overlay for readability */}
         <div 
           className="position-absolute top-0 start-0 w-100 h-100" 

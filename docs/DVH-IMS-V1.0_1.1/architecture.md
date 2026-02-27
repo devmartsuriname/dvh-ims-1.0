@@ -610,3 +610,43 @@ All admin modals MUST follow this standardized pattern:
 - ❌ Mixed positioning behaviors
 
 **Restore Point:** `RESTORE_POINT_MODAL_STANDARDIZATION_COMPLETE`
+
+---
+
+## V1.7.x — WizardProgress Active Step Underline Fix (2026-02-27)
+
+### Change
+
+**File:** `src/components/public/WizardProgress.tsx`
+
+Replaced phase-level underline coloring with step-level logic:
+
+```
+BEFORE: phase.steps.includes(currentStep) ? 'bg-primary' : 'bg-light'
+AFTER:  index <= currentStep ? 'bg-primary' : 'bg-light'
+```
+
+Only completed and current steps show `bg-primary` underline. Future steps always show `bg-light`.
+
+### Impact
+
+- Applies to both Bouwsubsidie (9 steps) and Woningregistratie (11 steps) via shared `WizardProgress` component.
+- No DB, RLS, validation, or i18n changes.
+
+**Restore Point:** `V1.7x-WizardProgress-Underline-Fix`
+
+---
+
+## V1.7.x — DocumentUploadAccordion Visibility (2026-02-27)
+
+### Decision: Editor-Only Artifact — Won't Fix
+
+**Observation:** Expanding accordion items on the Documents step sometimes shows a blank/white area in the Lovable editor preview.
+
+**Validation:** Tested in Live Preview (production-like): dropzone renders correctly for both Bouwsubsidie and Woningregistratie wizards. No production issue.
+
+**Action:** No code changes applied. No CSS, Tab.Pane, or layout modifications.
+
+**Re-open criteria:** Only if the issue reproduces in Live Preview with a clear repro path.
+
+**Restore Point:** `V1.7x-Accordion-WontFix`

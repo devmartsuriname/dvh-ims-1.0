@@ -708,3 +708,31 @@ All admin modals standardized to consistent size and positioning.
 - All modals follow same Darkone pattern
 
 **Restore Point:** `RESTORE_POINT_MODAL_STANDARDIZATION_COMPLETE`
+
+---
+
+## V1.7.x — WizardProgress Active Step Underline Fix (2026-02-27)
+
+### Change
+
+**File:** `src/components/public/WizardProgress.tsx` (line 191)
+
+Step underline color logic changed from phase-group to step-index comparison:
+
+```typescript
+// BEFORE
+phase.steps.includes(currentStep) ? 'bg-primary' : 'bg-light'
+
+// AFTER
+index <= currentStep ? 'bg-primary' : 'bg-light'
+```
+
+No backend, DB, RLS, or Edge Function impact.
+
+---
+
+## V1.7.x — DocumentUploadAccordion Visibility (2026-02-27)
+
+**Decision:** Editor-only rendering artifact — No production fix required.
+
+Validated in Live Preview: PASS. Editor-only artifact observed; no production fix required. No files changed.

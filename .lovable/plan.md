@@ -1,86 +1,55 @@
-# DVH-IMS V1.7 -- Wizard Header Restructure
+# DVH-IMS V1.7.x -- WizardProgress Active Step Underline Fix
 
-## Chosen Model: Option A
+## Root Cause
 
-Step circles + step titles only on desktop. Phase labels removed from header. Phase grouping remains as subtle colored line segments beneath circles.
+In `WizardProgress.tsx` line 190-191, the phase underline segment uses:
 
----
-
-## Before / After
-
-### Desktop (>=768px)
-
-**Before**: Circles with numbers/checks + step title labels below circles + phase group underline bars + phase group text labels below underlines = 4 visual layers competing.
-
-**After**: Circles with numbers/checks + step title labels below circles + phase group underline bars (no text). Phase text labels removed entirely. Result: 3 clean layers with the underline being a subtle visual grouping cue, not a label.
-
-### Mobile (<768px)
-
-**Before**: Back arrow + phase label + "Stap X van Y" + step title text (right-aligned) + progress bar = 4 text elements in 56px bar.
-
-**After**: Back arrow + phase label + "Stap X van Y" + progress bar. Step title text removed from sticky bar (it already appears as h4 in the content area below). Result: 3 text elements, no redundancy with the page h4.
-
----
-
-## Implementation (2 changes in 1 file)
-
-### File: `src/components/public/WizardProgress.tsx`
-
-**Change 1 -- Mobile**: Remove the step title `<span>` on line 99-101 that shows `steps[currentStep]?.title` in the sticky bar. The `d-flex justify-content-between` wrapper simplifies to just the step counter.
-
-**Change 2 -- Desktop**: Remove the phase label `<small>` block (lines 207-221) that renders `t(phase.labelKey)` text below the underline segments. Also remove the extra spacing div on line 228. The colored underline segments remain as the sole phase grouping indicator.
-
-### No other files changed.
-
----
-
-## Resulting Visual Hierarchy
-
-```text
-DESKTOP:
-  [1] ---- [2] ---- [3] ---- [4] ---- ...
-  Intro   Persoon  Contact  Huish.   ...
-  ========         ========          (subtle colored underlines, no text)
-
-MOBILE (sticky bar):
-  < Persoonlijk
-    Stap 2 van 9
-  [====-------] (progress bar)
-
-  (below, in card):
-  h4: "Persoonlijke Gegevens"
+```
+phase.steps.includes(currentStep) ? 'bg-primary' : 'bg-light'
 ```
 
----
+This colors ALL steps in the current phase group with `bg-primary`. When on Step 1 (index 0), if steps 0-2 share the "Persoonlijk" phase group, steps 2 and 3 also show a primary-colored underline -- creating the false impression they are active/reached.
 
-NOTE — Scope Confirmation
+## Fix (Single File, ~2 Lines Changed)
 
-This WizardProgress.tsx component is shared by BOTH:
+**File**: `src/components/public/WizardProgress.tsx`
 
-1. Bouwsubsidie Wizard
+**Change**: Replace the phase underline color logic (line 191) from phase-level to step-level:
 
-2. Woningregistratie Wizard
+```text
+BEFORE: phase.steps.includes(currentStep) ? 'bg-primary' : 'bg-light'
+AFTER:  index <= currentStep ? 'bg-primary' : 'bg-light'
+```
 
-The header restructuring must be verified visually and functionally in BOTH flows.
+This ensures only completed steps and the current step show the primary-colored underline. Future steps always show `bg-light`, regardless of phase grouping.
 
-Acceptance criteria:
+## Result
 
-- Desktop header cleaned in both services
+- Phase grouping structure is preserved (rounded corners on first/last step of each phase remain).
+- The underline acts as a progress indicator: filled up to current step, empty beyond.
+- Consistent with the filled progress line already rendered above the circles.
 
-- Mobile sticky bar cleaned in both services
+## Scope Confirmation
 
-- No layout regressions in either flow
+- No DB, validation, submission, RLS, or i18n changes.
+- No mobile layout changes (mobile uses progress bar, not underline segments).
+- Applies to both Bouwsubsidie (9 steps) and Woningregistratie (11 steps) via the shared component.
 
-- Phase underline grouping works correctly in both wizards
+Note: Verification Detail:
 
-- Step counter remains accurate
+Confirm correct behavior when:
 
-Do not consider task complete until both services are verified.  
+- currentStep = 0 (first step)
+
+- currentStep = last step
+
+- Transition from last step of one phase to first step of next phase
+
+Ensure no visual jump or underline gap at phase boundaries.  
   
-Technical Detail
+Deliverables
 
-- Lines removed: ~18 lines total
-- No props changed, no interface changes
-- `phaseGroups` prop still used for underline color logic
-- `getCurrentPhase()` still used for mobile phase label
-- No validation, submission, or i18n key changes
+1. Code fix in WizardProgress.tsx
+2. Restore point file
+3. Doc updates (backend.md, architecture.md)
+4. Browser verification screenshots for both wizards (Step 1 + Step 2, desktop + mobile)

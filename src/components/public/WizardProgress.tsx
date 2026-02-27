@@ -188,7 +188,7 @@ const WizardProgress = ({ steps, currentStep, phaseGroups, onBack }: WizardProgr
                 {phase && (
                   <div
                     className={`mt-1 ${
-                      phase.steps.includes(currentStep) ? 'bg-primary' : 'bg-light'
+                      index <= currentStep ? 'bg-primary' : 'bg-light'
                     }`}
                     style={{
                       height: 3,

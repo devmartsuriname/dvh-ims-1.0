@@ -754,3 +754,9 @@ TS1540 error from `node_modules/apexcharts/types/apexcharts.d.ts` is an editor-o
 ## V1.7.x — Hide "Personeelsportaal" on Mobile (2026-02-27)
 
 Added `d-none d-md-inline-block` to Staff Portal link in `PublicHeader.tsx`. CSS-only visibility change. No backend, DB, RLS, or Edge Function impact.
+
+---
+
+## V1.7.x — TRUE Global Logo Description Update (2026-02-27)
+
+Updated `header.ministry` i18n key in `nl.json`. Frontend-only i18n string change. No backend, DB, RLS, or Edge Function impact.

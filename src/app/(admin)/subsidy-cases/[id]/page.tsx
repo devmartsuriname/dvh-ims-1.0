@@ -4,6 +4,7 @@ import { Card, CardBody, CardHeader, CardTitle, Row, Col, Button, Spinner, Badge
 import PageTitle from '@/components/PageTitle'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
+import { BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS } from '@/config/documentRequirements'
 import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
 import { createAdminNotification } from '@/hooks/useAdminNotifications'
@@ -73,12 +74,7 @@ interface DocumentUpload {
   }
 }
 
-interface DocumentRequirement {
-  id: string
-  document_code: string
-  document_name: string
-  is_mandatory: boolean
-}
+// DocumentRequirement now sourced from shared config: @/config/documentRequirements
 
 interface Report {
   id: string
@@ -159,7 +155,7 @@ const SubsidyCaseDetail = () => {
   const [subsidyCase, setSubsidyCase] = useState<SubsidyCase | null>(null)
   const [statusHistory, setStatusHistory] = useState<StatusHistory[]>([])
   const [documents, setDocuments] = useState<DocumentUpload[]>([])
-  const [requirements, setRequirements] = useState<DocumentRequirement[]>([])
+  const requirements = BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS
   const [socialReport, setSocialReport] = useState<Report | null>(null)
   const [technicalReport, setTechnicalReport] = useState<Report | null>(null)
   const [generatedDocuments, setGeneratedDocuments] = useState<GeneratedDocument[]>([])
@@ -174,7 +170,7 @@ const SubsidyCaseDetail = () => {
 
     setLoading(true)
     
-    const [caseRes, historyRes, docsRes, reqsRes, socialRes, technicalRes, genDocsRes] = await Promise.all([
+    const [caseRes, historyRes, docsRes, socialRes, technicalRes, genDocsRes] = await Promise.all([
       supabase
         .from('subsidy_case')
         .select(`
@@ -197,10 +193,7 @@ const SubsidyCaseDetail = () => {
         `)
         .eq('case_id', id)
         .order('uploaded_at', { ascending: false }),
-      supabase
-        .from('subsidy_document_requirement')
-        .select('*')
-        .order('document_name'),
+      // Requirements now sourced from shared config — no DB fetch needed
       supabase
         .from('social_report')
         .select('*')
@@ -227,7 +220,7 @@ const SubsidyCaseDetail = () => {
     setSubsidyCase(caseRes.data)
     setStatusHistory(historyRes.data || [])
     setDocuments(docsRes.data || [])
-    setRequirements(reqsRes.data || [])
+    // requirements sourced from BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS constant
     setSocialReport(socialRes.data)
     setTechnicalReport(technicalRes.data)
     setGeneratedDocuments(genDocsRes.data || [])
@@ -500,7 +493,7 @@ const SubsidyCaseDetail = () => {
                     {requirements.map((req) => {
                       const uploaded = documents.find(d => d.requirement?.document_code === req.document_code)
                       return (
-                        <li key={req.id} className="d-flex align-items-center gap-2 mb-2">
+                        <li key={req.document_code} className="d-flex align-items-center gap-2 mb-2">
                           <IconifyIcon
                             icon={uploaded ? 'mingcute:check-circle-fill' : 'mingcute:close-circle-line'}
                             className={uploaded ? 'text-success' : 'text-muted'}
@@ -549,7 +542,6 @@ const SubsidyCaseDetail = () => {
               socialReport={socialReport}
               technicalReport={technicalReport}
               documents={documents}
-              requirements={requirements}
               statusHistory={statusHistory}
               onStatusChange={handleStatusChange}
               statusReason={statusReason}

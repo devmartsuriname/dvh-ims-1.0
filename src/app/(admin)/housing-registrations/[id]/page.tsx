@@ -4,6 +4,7 @@ import { Card, CardBody, CardHeader, CardTitle, Row, Col, Button, Spinner, Badge
 import PageTitle from '@/components/PageTitle'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
+import { HOUSING_DOCUMENT_REQUIREMENTS } from '@/config/documentRequirements'
 import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
 import { createAdminNotification } from '@/hooks/useAdminNotifications'
@@ -467,72 +468,92 @@ const HousingRegistrationDetail = () => {
 
         {/* Documents Tab */}
         <Tab eventKey="documents" title={`Documents (${documents.length})`}>
-          <Card>
-            <CardHeader>
-              <CardTitle as="h5">Uploaded Documents</CardTitle>
-            </CardHeader>
-            <CardBody>
-              {documents.length === 0 ? (
-                <p className="text-muted text-center py-4">No documents uploaded</p>
-              ) : (
-                <Table hover responsive>
-                  <thead>
-                    <tr>
-                      <th>Document</th>
-                      <th>Required</th>
-                      <th>File</th>
-                      <th>Verified</th>
-                      <th>Uploaded</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {documents.map((doc) => (
-                      <tr key={doc.id}>
-                        <td>
-                          <span className="fw-medium">{doc.requirement?.document_name || doc.file_name}</span>
-                          <br />
-                          <small className="text-muted">{doc.requirement?.document_code}</small>
-                        </td>
-                        <td>
-                          <Badge bg={doc.requirement?.is_mandatory ? 'danger' : 'secondary'}>
-                            {doc.requirement?.is_mandatory ? 'Required' : 'Optional'}
-                          </Badge>
-                        </td>
-                        <td>
-                          <Button
-                            variant="outline-primary"
-                            size="sm"
-                            href={getDocumentUrl(doc.file_path)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <IconifyIcon icon="mingcute:download-2-line" className="me-1" />
-                            {doc.file_name}
-                          </Button>
-                        </td>
-                        <td>
-                          <Form.Check
-                            type="switch"
-                            id={`verify-${doc.id}`}
-                            checked={doc.is_verified}
-                            onChange={() => handleDocumentVerification(doc.id, doc.is_verified)}
-                            disabled={verifyingDocId === doc.id}
-                            label={doc.is_verified ? 'Verified' : 'Unverified'}
+          <Row>
+            <Col lg={8}>
+              <Card>
+                <CardHeader>
+                  <CardTitle as="h5">Uploaded Documents</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  {documents.length === 0 ? (
+                    <p className="text-muted text-center py-4">No documents uploaded</p>
+                  ) : (
+                    <Table hover responsive>
+                      <thead>
+                        <tr>
+                          <th>Document</th>
+                          <th>File</th>
+                          <th>Uploaded</th>
+                          <th>Verified</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {documents.map((doc) => (
+                          <tr key={doc.id}>
+                            <td>{doc.requirement?.document_name || doc.file_name}</td>
+                            <td>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                href={getDocumentUrl(doc.file_path)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <IconifyIcon icon="mingcute:download-2-line" className="me-1" />
+                                {doc.file_name}
+                              </Button>
+                            </td>
+                            <td>{new Date(doc.uploaded_at).toLocaleDateString()}</td>
+                            <td>
+                              <Form.Check
+                                type="switch"
+                                id={`verify-${doc.id}`}
+                                checked={doc.is_verified}
+                                onChange={() => handleDocumentVerification(doc.id, doc.is_verified)}
+                                disabled={verifyingDocId === doc.id}
+                                label={doc.is_verified ? 'Verified' : 'Pending'}
+                              />
+                              {doc.verified_at && (
+                                <small className="text-muted d-block">
+                                  {new Date(doc.verified_at).toLocaleDateString()}
+                                </small>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  )}
+                </CardBody>
+              </Card>
+            </Col>
+            <Col lg={4}>
+              <Card>
+                <CardHeader>
+                  <CardTitle as="h5">Required Documents</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  <ul className="list-unstyled mb-0">
+                    {HOUSING_DOCUMENT_REQUIREMENTS.map((req) => {
+                      const uploaded = documents.find(d => d.requirement?.document_code === req.document_code)
+                      return (
+                        <li key={req.document_code} className="d-flex align-items-center gap-2 mb-2">
+                          <IconifyIcon
+                            icon={uploaded ? 'mingcute:check-circle-fill' : 'mingcute:close-circle-line'}
+                            className={uploaded ? 'text-success' : 'text-muted'}
                           />
-                          {doc.verified_at && (
-                            <small className="text-muted d-block">
-                              {new Date(doc.verified_at).toLocaleDateString()}
-                            </small>
-                          )}
-                        </td>
-                        <td>{new Date(doc.uploaded_at).toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              )}
-            </CardBody>
-          </Card>
+                          <span className={req.is_mandatory ? 'fw-medium' : ''}>
+                            {req.document_name}
+                            {req.is_mandatory && <span className="text-danger"> *</span>}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
         </Tab>
 
         {/* Allocation Tab */}

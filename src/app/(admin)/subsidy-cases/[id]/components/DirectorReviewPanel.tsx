@@ -22,12 +22,8 @@ interface DocumentUpload {
   }
 }
 
-interface DocumentRequirement {
-  id: string
-  document_code: string
-  document_name: string
-  is_mandatory: boolean
-}
+// DocumentRequirement now sourced from shared config
+import { BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS } from '@/config/documentRequirements'
 
 interface DirectorReviewPanelProps {
   caseId: string
@@ -42,7 +38,7 @@ interface DirectorReviewPanelProps {
   socialReport: { id: string; report_json: any; is_finalized: boolean; finalized_at: string | null } | null
   technicalReport: { id: string; report_json: any; is_finalized: boolean; finalized_at: string | null } | null
   documents: DocumentUpload[]
-  requirements: DocumentRequirement[]
+  // requirements now from shared config
   statusHistory: StatusHistoryEntry[]
   onStatusChange: (newStatus: string) => Promise<void>
   statusReason: string
@@ -59,7 +55,7 @@ const DirectorReviewPanel = ({
   socialReport,
   technicalReport,
   documents,
-  requirements,
+  // requirements from shared config
   statusHistory,
   onStatusChange,
   statusReason,
@@ -87,7 +83,7 @@ const DirectorReviewPanel = ({
   const technicalWarning = ['rejected', 'needs_revision'].includes(technicalRecommendation)
 
   // Document completeness
-  const mandatoryReqs = requirements.filter(r => r.is_mandatory)
+  const mandatoryReqs = BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS.filter(r => r.is_mandatory)
   const verifiedMandatory = mandatoryReqs.filter(req =>
     documents.some(d => d.requirement?.document_code === req.document_code && d.is_verified)
   )

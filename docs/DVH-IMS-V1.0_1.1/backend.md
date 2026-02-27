@@ -742,3 +742,9 @@ Validated in Live Preview: PASS. Editor-only artifact observed; no production fi
 ## V1.7.x — Wizard Step Label Optimization (2026-02-27)
 
 Wizard step labels optimized for single-line rendering. Changed 3 translation values in `src/i18n/locales/nl.json`: personalInfo→Gegevens, contact→Contact, receipt→Receipt. No backend, DB, RLS, or Edge Function impact.
+
+---
+
+## V1.7.x — apexcharts TS1540 (Won't Fix) (2026-02-27)
+
+TS1540 error from `node_modules/apexcharts/types/apexcharts.d.ts` is an editor-only diagnostic artifact. `skipLibCheck: true` already enabled in all tsconfig files. Vite build completes without this error. No code, config, backend, DB, or RLS changes. No runtime impact.

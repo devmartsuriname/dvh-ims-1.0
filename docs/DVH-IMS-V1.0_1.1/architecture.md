@@ -658,3 +658,11 @@ Only completed and current steps show `bg-primary` underline. Future steps alway
 Wizard step labels optimized for single-line rendering. Changed 3 translation values in `src/i18n/locales/nl.json`: personalInfo→Gegevens, contact→Contact, receipt→Receipt. No logic changes.
 
 **Restore Point:** `V1.7x-StepLabels`
+
+---
+
+## V1.7.x — apexcharts TS1540 (Won't Fix) (2026-02-27)
+
+TS1540 error from `node_modules/apexcharts/types/apexcharts.d.ts` is an editor-only diagnostic artifact. `skipLibCheck: true` is already enabled in all tsconfig files. Vite build pipeline completes without this error. No code or config changes applied.
+
+**Restore Point:** `V1.7x-TS1540-WontFix`

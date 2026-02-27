@@ -13,7 +13,7 @@ Replaced hero background image from `bg-pattern-1.png` to AI-generated `hero-com
 - Resolution: 1920x1080 (16:9)
 - Subjects centered in middle 60% of frame
 - Safe for `background-size: cover` at all viewports
-- Generated via flux2.dev model
+- Generated via flux2.dev model (second pass — Nano Banana Pro unavailable, flux2.dev used at 1920x1080 native)
 
 ## Files Changed
 

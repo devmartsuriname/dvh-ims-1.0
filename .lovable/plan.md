@@ -1,55 +1,42 @@
-# DVH-IMS V1.7.x -- WizardProgress Active Step Underline Fix
 
-## Root Cause
 
-In `WizardProgress.tsx` line 190-191, the phase underline segment uses:
+# DVH-IMS V1.7.x -- Wizard Step Label Optimization
 
-```
-phase.steps.includes(currentStep) ? 'bg-primary' : 'bg-light'
-```
+## What Changes
 
-This colors ALL steps in the current phase group with `bg-primary`. When on Step 1 (index 0), if steps 0-2 share the "Persoonlijk" phase group, steps 2 and 3 also show a primary-colored underline -- creating the false impression they are active/reached.
+**Single file**: `src/i18n/locales/nl.json`
 
-## Fix (Single File, ~2 Lines Changed)
+Three translation values under `wizard.steps`:
 
-**File**: `src/components/public/WizardProgress.tsx`
+| Key | Before | After |
+|-----|--------|-------|
+| `wizard.steps.personalInfo` | Persoonsgegevens | Gegevens |
+| `wizard.steps.contact` | Contactgegevens | Contact |
+| `wizard.steps.receipt` | Ontvangstbewijs | Receipt |
 
-**Change**: Replace the phase underline color logic (line 191) from phase-level to step-level:
+## What Does NOT Change
 
-```text
-BEFORE: phase.steps.includes(currentStep) ? 'bg-primary' : 'bg-light'
-AFTER:  index <= currentStep ? 'bg-primary' : 'bg-light'
-```
+- Step IDs, enums, routing keys, validation keys, database references
+- Form section titles inside step pages (e.g., `housing.step1.title` stays "Persoonsgegevens", `bouwsubsidie.step1.title` stays "Persoonsgegevens")
+- Review section headers (`sectionPersonal`, `sectionContact`) stay unchanged
+- WizardProgress.tsx logic untouched
+- Step order, numbering, underline logic, progress fill logic all unchanged
+- Constants files (`constants.ts`) use `titleKey` references which resolve through i18n -- no changes needed there
 
-This ensures only completed steps and the current step show the primary-colored underline. Future steps always show `bg-light`, regardless of phase grouping.
+## Why Only nl.json
 
-## Result
+Both wizards share the same `wizard.steps.*` translation keys (confirmed in both `bouwsubsidie/apply/constants.ts` and `housing/register/constants.ts`). The labels render through `t(step.titleKey)` in `WizardProgress.tsx`. Changing the translation value applies to both services automatically.
 
-- Phase grouping structure is preserved (rounded corners on first/last step of each phase remain).
-- The underline acts as a progress indicator: filled up to current step, empty beyond.
-- Consistent with the filled progress line already rendered above the circles.
+## Scope
 
-## Scope Confirmation
+- Lines ~60-67 in `src/i18n/locales/nl.json`
+- 3 string replacements, zero logic changes
 
-- No DB, validation, submission, RLS, or i18n changes.
-- No mobile layout changes (mobile uses progress bar, not underline segments).
-- Applies to both Bouwsubsidie (9 steps) and Woningregistratie (11 steps) via the shared component.
+## Deliverables
 
-Note: Verification Detail:
+1. Code change in `src/i18n/locales/nl.json`
+2. Restore point `.md`
+3. Doc updates (`backend.md`, `architecture.md`)
+4. Browser verification screenshots (desktop + mobile, both wizards)
+5. Smoke test PASS/FAIL table
 
-Confirm correct behavior when:
-
-- currentStep = 0 (first step)
-
-- currentStep = last step
-
-- Transition from last step of one phase to first step of next phase
-
-Ensure no visual jump or underline gap at phase boundaries.  
-  
-Deliverables
-
-1. Code fix in WizardProgress.tsx
-2. Restore point file
-3. Doc updates (backend.md, architecture.md)
-4. Browser verification screenshots for both wizards (Step 1 + Step 2, desktop + mobile)

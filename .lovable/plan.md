@@ -1,40 +1,60 @@
 
 
-# DVH-IMS V1.7.x — TRUE Global Logo Description Update
+# DVH-IMS V1.7.x — Hero Image Generation & Overlay Update
 
-## Change
+## Approach
 
-**Single value update** in `src/i18n/locales/nl.json` (line 30):
+Use the Nano banana pro model (`google/gemini-3-pro-image-preview`) to generate a purpose-built hero image matching the required style, then integrate it into the landing page.
 
-| Key | Before | After |
-|-----|--------|-------|
-| `header.ministry` | Ministerie van Sociale Zaken en Volkshuisvesting | Min-Sozavo-IMS |
+## Steps
 
-## What This Affects
+### 1. Generate Hero Image
 
-- **PublicHeader.tsx** — renders `t('header.ministry')` under the logo (public pages + auth pages)
-- No other component uses this key
+Prompt the AI image model with:
+- Scene: Surinamese community scene — smiling adults with children in a supportive, warm setting
+- Tone: Hopeful, government-appropriate, professional
+- Composition: Subjects centered in the middle 60% of the frame, with breathing room on edges for safe cropping at all viewports
+- Aspect ratio: 16:9 landscape (1920x1080)
+- No text, no watermarks
 
-## What Does NOT Change
+Model: `google/gemini-3-pro-image-preview` (higher quality)
 
-- **Footer.tsx** — keeps full legal name (hardcoded copyright)
-- **index.html** — keeps full legal name in meta author tag
-- **nl.json informational text** — `housing.step0.aboutText` and `wizard.help.text` reference the ministry name in context (not branding descriptors) — unchanged
-- **nl.json `footer.copyright`** — keeps full legal name
-- **Admin sidebar (LogoBox.tsx)** — logo image only, no descriptor text exists
-- **Auth pages (SignIn, SignUp, ResetPassword)** — logo image only, no descriptor text
-- **Error pages (404)** — logo image only, no descriptor text
-- Logo images, routing, styling, layout structure
+### 2. Save Image to Project
 
-## Admin Panel Confirmation
+Save the generated image as `src/assets/images/hero-community.png` (base64 decode from generation response).
 
-The admin panel header/sidebar (`LogoBox.tsx`, `TopNavigationBar`, `VerticalNavigationBar`) renders only the logo image with no ministry descriptor text. No admin-side changes needed.
+Note: Vite will handle bundling. WebP conversion is not natively available in-browser generation — the PNG output from the model will be optimized by Vite's asset pipeline. If the file exceeds 500KB, a follow-up compression pass can be discussed.
 
-## Deliverables
+### 3. Update `src/app/(public)/landing/page.tsx`
 
-1. Update `src/i18n/locales/nl.json` line 30
-2. Create `docs/restore-points/v1.7/RESTORE_POINT_V1.7_TRUE_GLOBAL_LOGO_UPDATE.md`
-3. Update `docs/DVH-IMS-V1.0_1.1/architecture.md`
-4. Update `docs/DVH-IMS-V1.0_1.1/backend.md`
-5. Browser verification (public desktop + mobile, admin desktop)
+Two changes:
+- **Import**: Change from `bg-pattern-1.png` to `hero-community.png`
+- **Overlay**: Change `rgba(30, 41, 59, 0.85)` to `rgba(0, 0, 0, 0.60)`
+
+No changes to hero height, typography, buttons, or layout structure.
+
+### 4. Documentation
+
+- Create `docs/restore-points/v1.7/RESTORE_POINT_V1.7_HERO_IMAGE_OVERLAY_UPDATE.md`
+- Update `docs/DVH-IMS-V1.0_1.1/architecture.md` under Public UI section
+
+### 5. Browser Verification
+
+Desktop and mobile screenshots to confirm:
+- No face cropping at standard viewports
+- Text contrast remains strong with overlay
+- No overflow or layout shift
+
+## Files Changed
+
+| File | Action |
+|------|--------|
+| `src/assets/images/hero-community.png` | New (AI-generated) |
+| `src/app/(public)/landing/page.tsx` | Import + overlay opacity |
+| `docs/restore-points/v1.7/RESTORE_POINT_V1.7_HERO_IMAGE_OVERLAY_UPDATE.md` | New |
+| `docs/DVH-IMS-V1.0_1.1/architecture.md` | Updated |
+
+## Limitation
+
+AI image generation produces PNG. True WebP conversion requires a build plugin or external tool — not available in-project. The generated PNG will be optimized by Vite's default asset handling. File size will be assessed after generation.
 

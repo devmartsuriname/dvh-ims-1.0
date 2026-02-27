@@ -150,6 +150,7 @@ All 23 database tables have Row-Level Security (RLS) enabled with a Phase 1 allo
 | 2026-01-07 | RLS Security Model section added | Phase 8 security audit |
 | 2026-01-09 | Governance routes added (/audit-log) | Admin v1.1-A Audit Log Interface |
 | 2026-01-09 | Grid button pattern standardized | Admin v1.1-A Minor Fixes |
+| 2026-02-27 | Dropped 6 redundant anon RLS policies (5 SELECT + 1 INSERT) | v1.7.x Security Hardening — Edge Functions use service role key, anon policies were redundant |
 
 ---
 

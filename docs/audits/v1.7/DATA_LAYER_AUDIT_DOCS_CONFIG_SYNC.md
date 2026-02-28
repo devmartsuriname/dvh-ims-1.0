@@ -174,6 +174,44 @@ No sensitive data captured. No DB writes executed.
 
 ---
 
+## 9A. Phase 6 — DB Label Alignment (Housing)
+
+**Executed:** 2026-02-27  
+**Environment:** Staging ONLY  
+**Authorization:** Delroy (approved plan)
+
+### Changes Applied
+
+| document_code | Old DB Name | New DB Name (aligned to config) | is_mandatory (unchanged) |
+|---------------|-------------|--------------------------------|--------------------------|
+| INCOME_PROOF | Proof of Income | Income Proof | true |
+| RESIDENCE_PROOF | Proof of Current Residence | Residence Proof | true |
+| EMERGENCY_PROOF | Emergency Documentation | Emergency Proof | false |
+
+### Verification (Post-Update Query)
+
+```sql
+SELECT document_code, document_name, is_mandatory
+FROM housing_document_requirement
+WHERE document_code IN ('INCOME_PROOF', 'RESIDENCE_PROOF', 'EMERGENCY_PROOF')
+ORDER BY document_code;
+```
+
+**Result:** All 3 labels now match `src/config/documentRequirements.ts`. `is_mandatory` flags unchanged.
+
+### Migration Files
+
+| File | Purpose |
+|------|---------|
+| `docs/migrations/v1.7/STAGING_LABEL_ALIGNMENT_HOUSING.sql` | Forward migration (3 UPDATEs) |
+| `docs/migrations/v1.7/STAGING_LABEL_ALIGNMENT_HOUSING_ROLLBACK.sql` | Rollback to original DB names |
+
+### Risk Register Update
+
+Risk #1 (3 Housing label mismatches) — Status changed from **⚠️ WARNING** to **✅ RESOLVED (Staging)**. Production promotion requires separate approved change request.
+
+---
+
 ## 10. Conclusion
 
 The document requirements configuration is correctly synchronized between admin views and the shared config module. Public wizards use aligned but duplicated local constants. Three non-blocking risks are identified for future remediation under separate change requests.

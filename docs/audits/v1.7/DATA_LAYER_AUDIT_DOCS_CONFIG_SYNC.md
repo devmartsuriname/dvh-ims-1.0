@@ -212,6 +212,61 @@ Risk #1 (3 Housing label mismatches) — Status changed from **⚠️ WARNING** 
 
 ---
 
+## 9B. Phase 7 — Deprecated Subsidy Docs Cleanup (Staging)
+
+**Executed:** 2026-02-28  
+**Environment:** Staging ONLY  
+**Authorization:** Delroy (approved plan)
+
+### Method: Soft-Deprecation via `is_active` column
+
+Hard DELETE was blocked by FK constraint: `subsidy_document_upload.requirement_id` references `subsidy_document_requirement.id`. 9 historical uploads reference the 3 deprecated requirement IDs.
+
+**Schema Change:** Added `is_active BOOLEAN NOT NULL DEFAULT true` to `subsidy_document_requirement`. All existing rows default to `true`.
+
+### Changes Applied
+
+| document_code | document_name | is_mandatory (unchanged) | is_active (new) |
+|---------------|---------------|--------------------------|-----------------|
+| BUILDING_PERMIT | Building Permit | false | **false** |
+| CONSTRUCTION_PLAN | Construction Plan | false | **false** |
+| COST_ESTIMATE | Cost Estimate | false | **false** |
+
+### Verification (Post-Update Query)
+
+```sql
+SELECT document_code, document_name, is_mandatory, is_active
+FROM subsidy_document_requirement
+ORDER BY document_code;
+```
+
+**Results:**
+- 3 deprecated rows: `is_active = false` ✅
+- 7 active rows: `is_active = true` ✅
+- Total row count: 10 ✅
+- `is_mandatory` flags: unchanged ✅
+
+### Migration Files
+
+| File | Purpose |
+|------|---------|
+| `docs/migrations/v1.7/STAGING_DEPRECATED_SUBSIDY_DOCS_CLEANUP.sql` | Forward migration (schema + 3 UPDATEs) |
+| `docs/migrations/v1.7/STAGING_DEPRECATED_SUBSIDY_DOCS_CLEANUP_ROLLBACK.sql` | Rollback (re-enable rows + drop column) |
+
+### Risk Register Update
+
+Risk #2 (3 Bouwsubsidie deprecated DB rows) — Status changed from **⚠️ WARNING** to **✅ RESOLVED (Staging)**. Rows preserved with `is_active = false`. Production promotion requires separate approved change request.
+
+### Future DB-Driven Queries
+
+Any future DB-driven requirement listing MUST explicitly filter:
+
+```sql
+WHERE is_active = true
+```
+
+---
+
 ## 10. Conclusion
 
 The document requirements configuration is correctly synchronized between admin views and the shared config module. Public wizards use aligned but duplicated local constants. Three non-blocking risks are identified for future remediation under separate change requests.

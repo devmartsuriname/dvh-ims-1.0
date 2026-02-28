@@ -1018,6 +1018,7 @@ export type Database = {
           document_code: string
           document_name: string
           id: string
+          is_active: boolean
           is_mandatory: boolean
         }
         Insert: {
@@ -1026,6 +1027,7 @@ export type Database = {
           document_code: string
           document_name: string
           id?: string
+          is_active?: boolean
           is_mandatory?: boolean
         }
         Update: {
@@ -1034,6 +1036,7 @@ export type Database = {
           document_code?: string
           document_name?: string
           id?: string
+          is_active?: boolean
           is_mandatory?: boolean
         }
         Relationships: []

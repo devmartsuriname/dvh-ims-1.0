@@ -126,6 +126,30 @@ Construction Plan, Cost Estimate, Building Permit — NOT present in shared conf
 
 ### Recommended Follow-ups (NOT executed)
 
-1. **DB label alignment:** One-time UPDATE to align 3 housing `document_name` values with shared config. Requires separate change request.
-2. **Deprecated row cleanup:** Soft-delete or add `is_active` flag to 3 bouwsubsidie deprecated entries. Requires separate change request.
+1. ~~**DB label alignment:** One-time UPDATE to align 3 housing `document_name` values with shared config.~~ → **✅ RESOLVED (Staging) — Phase 6**
+2. ~~**Deprecated row cleanup:** Soft-delete or add `is_active` flag to 3 bouwsubsidie deprecated entries.~~ → **✅ RESOLVED (Staging) — Phase 7**
 3. **Wizard constants refactor:** Derive wizard `REQUIRED_DOCUMENTS` from shared config instead of maintaining separate arrays. Requires separate task.
+
+---
+
+## v1.7.x — Phase 7: Deprecated Subsidy Docs Cleanup (2026-02-28)
+
+### Schema Change
+
+Added `is_active BOOLEAN NOT NULL DEFAULT true` to `subsidy_document_requirement`. Non-breaking additive change.
+
+### Data Update
+
+3 deprecated document requirements soft-deprecated (`is_active = false`):
+
+| document_code | document_name | Status |
+|---------------|---------------|--------|
+| BUILDING_PERMIT | Building Permit | `is_active = false` |
+| CONSTRUCTION_PLAN | Construction Plan | `is_active = false` |
+| COST_ESTIMATE | Cost Estimate | `is_active = false` |
+
+**Reason:** FK constraint (`subsidy_document_upload.requirement_id`) blocked hard DELETE. 9 historical uploads reference these rows.
+
+**Migration:** `docs/migrations/v1.7/STAGING_DEPRECATED_SUBSIDY_DOCS_CLEANUP.sql`  
+**Rollback:** `docs/migrations/v1.7/STAGING_DEPRECATED_SUBSIDY_DOCS_CLEANUP_ROLLBACK.sql`  
+**Environment:** Staging ONLY. Production promotion requires separate approval.

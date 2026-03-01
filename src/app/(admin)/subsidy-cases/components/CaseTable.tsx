@@ -118,8 +118,8 @@ const CaseTable = () => {
                   name: 'Applicant',
                   sort: { compare: (a: string, b: string) => a.localeCompare(b) },
                   formatter: (_cell: string, row: any) => {
-                    const firstName = row.cells[2].data as string
-                    const lastName = row.cells[3].data as string
+                    const firstName = row.cells[1].data as string
+                    const lastName = row.cells[2].data as string
                     return html(renderApplicantAvatarHtml(firstName || undefined, lastName || undefined))
                   }
                 },

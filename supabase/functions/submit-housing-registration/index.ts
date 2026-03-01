@@ -116,7 +116,7 @@ function validateInput(data: unknown): { valid: true; data: HousingInput } | { v
   
   // Validate email format
   if (input.email && typeof input.email === 'string') {
-    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(input.email)) {
       errors.push({ field: 'email', message: 'Invalid email format' })
     }
@@ -124,7 +124,7 @@ function validateInput(data: unknown): { valid: true; data: HousingInput } | { v
   
   // Validate date format (YYYY-MM-DD)
   if (input.date_of_birth && typeof input.date_of_birth === 'string') {
-    const dateRegex = /^\\d{4}-\\d{2}-\\d{2}$/
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
     if (!dateRegex.test(input.date_of_birth)) {
       errors.push({ field: 'date_of_birth', message: 'Date must be in YYYY-MM-DD format' })
     }
@@ -217,26 +217,27 @@ async function generateReferenceNumber(supabase: any): Promise<string> {
   const year = new Date().getFullYear()
   const prefix = 'WR'
   
-  // Query for the highest reference number this year
+  // Query ALL reference numbers this year and find the numeric maximum
+  // This avoids string-sorting issues with mixed padding (e.g., '2966' vs '002967')
   const { data } = await supabase
     .from('housing_registration')
     .select('reference_number')
     .like('reference_number', `${prefix}-${year}-%`)
-    .order('reference_number', { ascending: false })
-    .limit(1)
   
-  let nextNum = 1
-  if (data && data.length > 0 && data[0]?.reference_number) {
-    const parts = (data[0].reference_number as string).split('-')
-    if (parts.length === 3) {
-      const lastNum = parseInt(parts[2], 10)
-      if (!isNaN(lastNum)) {
-        nextNum = lastNum + 1
+  let maxNum = 0
+  if (data && Array.isArray(data)) {
+    for (const row of data) {
+      const parts = (row.reference_number as string).split('-')
+      if (parts.length === 3) {
+        const num = parseInt(parts[2], 10)
+        if (!isNaN(num) && num > maxNum) {
+          maxNum = num
+        }
       }
     }
   }
   
-  return `${prefix}-${year}-${String(nextNum).padStart(6, '0')}`
+  return `${prefix}-${year}-${String(maxNum + 1).padStart(6, '0')}`
 }
 
 Deno.serve(async (req) => {

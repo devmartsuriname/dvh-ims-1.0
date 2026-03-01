@@ -691,6 +691,14 @@ Updated `header.ministry` i18n key from "Ministerie van Sociale Zaken en Volkshu
 
 ---
 
+## V1.7.x — CRITICAL BUGFIX: Housing Registration Regex Validation (2026-03-01)
+
+Fixed double-escaped regex literals in `submit-housing-registration` edge function (lines 119, 127). `\\s`/`\\d` → `\s`/`\d`. This was causing 100% validation failure on all housing submissions. Bouwsubsidie unaffected (correct escaping). No DB/RLS/frontend changes.
+
+**Restore Point:** `RESTORE_POINT_V1_7_HOUSING_SUBMIT_DEEP_DIAG`
+
+---
+
 ## V1.7.x — Hero Image & Overlay Update (2026-02-27)
 
 Replaced hero background from `bg-pattern-1.png` (abstract pattern) to AI-generated `hero-community.png` (1920x1080, Surinamese family community scene). Overlay changed from `rgba(30, 41, 59, 0.85)` to `rgba(0, 0, 0, 0.60)`. Image subjects centered in middle 60% for safe `background-size: cover` cropping across all viewports. No changes to hero height, typography, buttons, or layout.

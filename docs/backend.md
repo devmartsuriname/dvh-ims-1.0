@@ -197,6 +197,18 @@ Both public wizard `REQUIRED_DOCUMENTS` arrays refactored to derive from the sha
 
 ---
 
+## v1.7.x — CRITICAL BUGFIX: Housing Registration Regex Validation (2026-03-01)
+
+**Root Cause:** Double-escaped backslashes in regex literals (`\\s` / `\\d`) in `submit-housing-registration` edge function caused 100% validation failure on email and date_of_birth fields. No submission could ever pass validation.
+
+**Fix:** Corrected regex escaping on lines 119 and 127 to single-escaped (`\s` / `\d`), matching the working `submit-bouwsubsidie-application` function.
+
+**Files:** `supabase/functions/submit-housing-registration/index.ts` (2 lines changed)
+**RCA:** `docs/incidents/v1.7/INCIDENT_HOUSING_SUBMIT_FAILURE_RCA.md`
+**Restore Point:** `RESTORE_POINT_V1_7_HOUSING_SUBMIT_DEEP_DIAG`
+
+---
+
 ## v1.7.x — Phase 7: Deprecated Subsidy Docs Cleanup (2026-02-28)
 
 ### Schema Change

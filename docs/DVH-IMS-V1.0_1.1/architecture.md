@@ -704,3 +704,11 @@ Fixed double-escaped regex literals in `submit-housing-registration` edge functi
 Replaced hero background from `bg-pattern-1.png` (abstract pattern) to AI-generated `hero-community.png` (1920x1080, Surinamese family community scene). Overlay changed from `rgba(30, 41, 59, 0.85)` to `rgba(0, 0, 0, 0.60)`. Image subjects centered in middle 60% for safe `background-size: cover` cropping across all viewports. No changes to hero height, typography, buttons, or layout.
 
 **Restore Point:** `V1.7x-HeroImageOverlayUpdate`
+
+---
+
+## V1.7.x — Applicant List Avatar Initials Fallback (2026-03-01)
+
+Replaced static/missing applicant avatars in admin list views (Dashboard widgets, Subsidy Cases list, Housing Registrations list) with deterministic initials-based avatars. New component `src/components/applicants/ApplicantInitialsAvatar.tsx` — scoped to list rows only, no global avatar changes. Uses existing Darkone `.avatar-xs` / `.avatar-title` classes. Defensive initials logic handles missing name data. No DB/RLS/edge function changes.
+
+**Restore Point:** `RESTORE_POINT_V1_7_APPLICANT_LIST_AVATAR_INITIALS`

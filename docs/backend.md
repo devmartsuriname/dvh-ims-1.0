@@ -230,3 +230,47 @@ Added `is_active BOOLEAN NOT NULL DEFAULT true` to `subsidy_document_requirement
 **Migration:** `docs/migrations/v1.7/STAGING_DEPRECATED_SUBSIDY_DOCS_CLEANUP.sql`  
 **Rollback:** `docs/migrations/v1.7/STAGING_DEPRECATED_SUBSIDY_DOCS_CLEANUP_ROLLBACK.sql`  
 **Environment:** Staging ONLY. Production promotion requires separate approval.
+
+---
+
+## v1.7.x — Applicant List Avatar Initials Fallback (2026-03-01)
+
+### Change
+
+Replaced static/missing applicant avatars in admin list views with deterministic initials-based avatars. Each applicant row now shows a colored circle with the applicant's initials (e.g., CP, HD, EG) instead of a repeated default avatar image or plain text.
+
+### Scope
+
+| Location | Before | After |
+|----------|--------|-------|
+| Dashboard: Recent Subsidy Cases | Static `avatar-2.jpg` for all rows | Initials avatar per applicant |
+| Dashboard: Recent Housing Registrations | Static `avatar-2.jpg` for all rows | Initials avatar per applicant |
+| Subsidy Cases list (`/subsidy-cases`) | Plain text, no avatar | Initials avatar + name |
+| Housing Registrations list (`/housing-registrations`) | Plain text, no avatar | Initials avatar + name |
+
+### Initials Logic (Defensive)
+
+- Both `first_name` + `last_name`: first char of each, uppercased
+- Only one name: first two chars
+- No name data: renders "?"
+
+### Deterministic Color
+
+Stable hash of full name → mapped to 8 Bootstrap bg classes. Same name always produces the same color.
+
+### Files
+
+| File | Action |
+|------|--------|
+| `src/components/applicants/ApplicantInitialsAvatar.tsx` | CREATE — React component + `renderApplicantAvatarHtml` utility |
+| `src/app/(admin)/dashboards/components/User.tsx` | EDIT — replaced `<img avatar2>` with `<ApplicantInitialsAvatar>` |
+| `src/app/(admin)/subsidy-cases/components/CaseTable.tsx` | EDIT — Applicant column uses `html()` formatter with initials |
+| `src/app/(admin)/housing-registrations/components/RegistrationTable.tsx` | EDIT — Applicant column uses `html()` formatter with initials |
+
+### Constraints
+
+- No DB/schema/RLS/edge function changes
+- No global avatar component modifications
+- Uses existing Darkone `.avatar-xs`, `.avatar-title`, `.rounded-circle` CSS classes
+
+**Restore Point:** `docs/restore-points/v1.7/RESTORE_POINT_V1_7_APPLICANT_LIST_AVATAR_INITIALS.md`

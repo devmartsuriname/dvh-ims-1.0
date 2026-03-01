@@ -1,7 +1,7 @@
-import avatar2 from '@/assets/images/users/avatar-2.jpg'
 import { Card, CardBody, CardHeader, Col, Row } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import { useRecentCases, useRecentRegistrations } from '../hooks/useDashboardData'
+import ApplicantInitialsAvatar from '@/components/applicants/ApplicantInitialsAvatar'
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -59,7 +59,7 @@ const User = () => {
                           <td>{caseItem.case_number}</td>
                           <td>{formatDate(caseItem.created_at)}</td>
                           <td>
-                            <img src={avatar2} alt="avatar" className="img-fluid avatar-xs rounded-circle" />
+                            <ApplicantInitialsAvatar firstName={caseItem.person?.first_name} lastName={caseItem.person?.last_name} />
                             <span className="align-middle ms-1">
                               {caseItem.person?.first_name} {caseItem.person?.last_name}
                             </span>
@@ -114,7 +114,7 @@ const User = () => {
                           <td>{reg.reference_number}</td>
                           <td>{formatDate(reg.created_at)}</td>
                           <td>
-                            <img src={avatar2} alt="avatar" className="img-fluid avatar-xs rounded-circle" />
+                            <ApplicantInitialsAvatar firstName={reg.person?.first_name} lastName={reg.person?.last_name} />
                             <span className="align-middle ms-1">
                               {reg.person?.first_name} {reg.person?.last_name}
                             </span>

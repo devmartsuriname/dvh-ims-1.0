@@ -54,7 +54,15 @@ const ApplicantInitialsAvatar = ({ firstName, lastName, size = 'xs' }: Applicant
   return (
     <span
       className={`${sizeClass} rounded-circle avatar-title ${colorClass} d-inline-flex`}
-      style={{ fontSize: size === 'xs' ? '0.65rem' : '0.75rem', fontWeight: 600 }}
+      style={{
+        fontSize: size === 'xs' ? '0.65rem' : '0.75rem',
+        fontWeight: 600,
+        width: size === 'xs' ? '1.5rem' : '2.25rem',
+        height: size === 'xs' ? '1.5rem' : '2.25rem',
+        minWidth: size === 'xs' ? '1.5rem' : '2.25rem',
+        minHeight: size === 'xs' ? '1.5rem' : '2.25rem',
+        lineHeight: 1,
+      }}
       aria-label={`Applicant: ${fullName} (${initials})`}
       title={fullName}
     >
@@ -69,7 +77,7 @@ export function renderApplicantAvatarHtml(firstName?: string, lastName?: string)
   const colorClass = getColorClass(firstName, lastName)
   const fullName = [firstName, lastName].filter(Boolean).join(' ') || 'Unknown'
 
-  return `<span class="avatar-xs rounded-circle avatar-title ${colorClass} d-inline-flex" style="font-size:0.65rem;font-weight:600" aria-label="Applicant: ${fullName} (${initials})" title="${fullName}">${initials}</span><span class="align-middle ms-1">${fullName !== 'Unknown' ? fullName : '-'}</span>`
+  return `<div style="display:flex;align-items:center"><span class="avatar-xs rounded-circle avatar-title ${colorClass} d-inline-flex" style="font-size:0.65rem;font-weight:600;width:1.5rem;height:1.5rem;min-width:1.5rem;min-height:1.5rem;line-height:1" aria-label="Applicant: ${fullName} (${initials})" title="${fullName}">${initials}</span><span class="ms-1">${fullName !== 'Unknown' ? fullName : '-'}</span></div>`
 }
 
 export default ApplicantInitialsAvatar

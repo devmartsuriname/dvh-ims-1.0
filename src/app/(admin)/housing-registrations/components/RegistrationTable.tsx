@@ -8,6 +8,7 @@ import RegistrationFormModal from './RegistrationFormModal'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
 import { notify } from '@/utils/notify'
+import { renderApplicantAvatarHtml } from '@/components/applicants/ApplicantInitialsAvatar'
 
 interface HousingRegistration {
   id: string
@@ -104,7 +105,8 @@ const RegistrationTable = () => {
             <Grid
               data={registrations.map((r) => [
                 r.reference_number,
-                r.person ? `${r.person.first_name} ${r.person.last_name}` : '-',
+                r.person?.first_name || '',
+                r.person?.last_name || '',
                 r.district_code,
                 r.current_status,
                 r.urgency_score ?? '-',
@@ -114,7 +116,16 @@ const RegistrationTable = () => {
               ])}
               columns={[
                 { name: 'Reference #' },
-                { name: 'Applicant' },
+                {
+                  name: 'Applicant',
+                  sort: { compare: (a: string, b: string) => a.localeCompare(b) },
+                  formatter: (_cell: string, row: any) => {
+                    const firstName = row.cells[2].data as string
+                    const lastName = row.cells[3].data as string
+                    return html(renderApplicantAvatarHtml(firstName || undefined, lastName || undefined))
+                  }
+                },
+                { name: 'Last Name', hidden: true },
                 { name: 'District' },
                 { 
                   name: 'Status',

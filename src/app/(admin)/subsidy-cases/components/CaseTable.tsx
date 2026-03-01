@@ -8,6 +8,7 @@ import CaseFormModal from './CaseFormModal'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
 import { notify } from '@/utils/notify'
+import { renderApplicantAvatarHtml } from '@/components/applicants/ApplicantInitialsAvatar'
 
 interface SubsidyCase {
   id: string
@@ -102,7 +103,8 @@ const CaseTable = () => {
             <Grid
               data={cases.map((c) => [
                 c.case_number,
-                c.person ? `${c.person.first_name} ${c.person.last_name}` : '-',
+                c.person?.first_name || '',
+                c.person?.last_name || '',
                 c.person?.national_id || '-',
                 c.district_code,
                 c.status,
@@ -112,7 +114,16 @@ const CaseTable = () => {
               ])}
               columns={[
                 { name: 'Case #' },
-                { name: 'Applicant' },
+                {
+                  name: 'Applicant',
+                  sort: { compare: (a: string, b: string) => a.localeCompare(b) },
+                  formatter: (_cell: string, row: any) => {
+                    const firstName = row.cells[2].data as string
+                    const lastName = row.cells[3].data as string
+                    return html(renderApplicantAvatarHtml(firstName || undefined, lastName || undefined))
+                  }
+                },
+                { name: 'Last Name', hidden: true },
                 { name: 'National ID' },
                 { name: 'District' },
                 { 

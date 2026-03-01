@@ -11,6 +11,7 @@
  */
 
 import type { DocumentUpload } from './types'
+import { HOUSING_DOCUMENT_REQUIREMENTS } from '@/config/documentRequirements'
 
 export const HOUSING_TYPES = [
   { value: 'house', labelKey: 'housing.housingTypes.house' },
@@ -53,17 +54,31 @@ export const GENDER_OPTIONS = [
 ] as const
 
 /**
- * Required documents for housing registration
- * Phase 5C - Document Upload Implementation
+ * Housing i18n label map — camelCase keys don't match document_code
+ * Explicit mapping required for correct translation lookup
  */
-export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] = [
-  { id: 'ID_COPY', document_code: 'ID_COPY', label: 'housing.step8documents.docIdCopy', is_mandatory: true },
-  { id: 'INCOME_PROOF', document_code: 'INCOME_PROOF', label: 'housing.step8documents.docIncomeProof', is_mandatory: true },
-  { id: 'RESIDENCE_PROOF', document_code: 'RESIDENCE_PROOF', label: 'housing.step8documents.docResidenceProof', is_mandatory: true },
-  { id: 'FAMILY_COMPOSITION', document_code: 'FAMILY_COMPOSITION', label: 'housing.step8documents.docFamilyComposition', is_mandatory: false },
-  { id: 'MEDICAL_CERT', document_code: 'MEDICAL_CERT', label: 'housing.step8documents.docMedicalCert', is_mandatory: false },
-  { id: 'EMERGENCY_PROOF', document_code: 'EMERGENCY_PROOF', label: 'housing.step8documents.docEmergencyProof', is_mandatory: false },
-]
+const HOUSING_LABEL_MAP: Record<string, string> = {
+  ID_COPY: 'housing.step8documents.docIdCopy',
+  INCOME_PROOF: 'housing.step8documents.docIncomeProof',
+  RESIDENCE_PROOF: 'housing.step8documents.docResidenceProof',
+  FAMILY_COMPOSITION: 'housing.step8documents.docFamilyComposition',
+  MEDICAL_CERT: 'housing.step8documents.docMedicalCert',
+  EMERGENCY_PROOF: 'housing.step8documents.docEmergencyProof',
+}
+
+/**
+ * Required documents for housing registration
+ * Derived from shared config — single source of truth
+ * 
+ * V1.7.x Phase 8: Refactored from local array to shared config import
+ */
+export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] =
+  HOUSING_DOCUMENT_REQUIREMENTS.map(req => ({
+    id: req.document_code,
+    document_code: req.document_code,
+    label: HOUSING_LABEL_MAP[req.document_code],
+    is_mandatory: req.is_mandatory,
+  }))
 
 /**
  * Wizard steps with translation keys

@@ -128,7 +128,33 @@ Construction Plan, Cost Estimate, Building Permit — NOT present in shared conf
 
 1. ~~**DB label alignment:** One-time UPDATE to align 3 housing `document_name` values with shared config.~~ → **✅ RESOLVED (Staging) — Phase 6**
 2. ~~**Deprecated row cleanup:** Soft-delete or add `is_active` flag to 3 bouwsubsidie deprecated entries.~~ → **✅ RESOLVED (Staging) — Phase 7**
-3. **Wizard constants refactor:** Derive wizard `REQUIRED_DOCUMENTS` from shared config instead of maintaining separate arrays. Requires separate task.
+3. ~~**Wizard constants refactor:** Derive wizard `REQUIRED_DOCUMENTS` from shared config instead of maintaining separate arrays.~~ → **✅ RESOLVED — Phase 8**
+
+---
+
+## v1.7.x — Phase 8: Wizard Constants Refactor (2026-03-01)
+
+### Change
+
+Both public wizard `REQUIRED_DOCUMENTS` arrays refactored to derive from the shared config (`src/config/documentRequirements.ts`) instead of maintaining duplicate local arrays.
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `src/app/(public)/bouwsubsidie/apply/constants.ts` | Local array → import from `BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS` + prefix mapping |
+| `src/app/(public)/housing/register/constants.ts` | Local array → import from `HOUSING_DOCUMENT_REQUIREMENTS` + explicit label map |
+
+### Mapping Strategy
+
+- **Bouwsubsidie:** Simple prefix convention (`bouwsubsidie.documents.` + `document_code`)
+- **Housing:** Explicit `HOUSING_LABEL_MAP` (i18n keys use camelCase suffixes, not document_code)
+
+### Verification
+
+- Bouwsubsidie: 7 documents (5 mandatory, 2 optional) — unchanged
+- Housing: 6 documents (3 mandatory, 3 optional) — unchanged
+- No DB changes, no schema changes, no RLS changes
 
 ---
 

@@ -9,6 +9,7 @@
  */
 
 import type { DocumentUpload } from './types'
+import { BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS } from '@/config/documentRequirements'
 
 export const APPLICATION_REASONS = [
   { value: 'new_construction', labelKey: 'bouwsubsidie.reasons.new_construction' },
@@ -26,21 +27,17 @@ export const GENDER_OPTIONS = [
 
 /**
  * Document requirements for Bouwsubsidie
- * Aligned with subsidy_document_requirement table
+ * Derived from shared config — single source of truth
  * 
- * V1.3 Phase 5A: Updated with is_mandatory flag
+ * V1.7.x Phase 8: Refactored from local array to shared config import
  */
-export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] = [
-  // 5 mandatory documents
-  { id: 'ID_COPY', document_code: 'ID_COPY', label: 'bouwsubsidie.documents.ID_COPY', is_mandatory: true },
-  { id: 'INCOME_PROOF', document_code: 'INCOME_PROOF', label: 'bouwsubsidie.documents.INCOME_PROOF', is_mandatory: true },
-  { id: 'LAND_TITLE', document_code: 'LAND_TITLE', label: 'bouwsubsidie.documents.LAND_TITLE', is_mandatory: true },
-  { id: 'BANK_STATEMENT', document_code: 'BANK_STATEMENT', label: 'bouwsubsidie.documents.BANK_STATEMENT', is_mandatory: true },
-  { id: 'HOUSEHOLD_COMP', document_code: 'HOUSEHOLD_COMP', label: 'bouwsubsidie.documents.HOUSEHOLD_COMP', is_mandatory: true },
-  // 2 optional documents
-  { id: 'CBB_EXTRACT', document_code: 'CBB_EXTRACT', label: 'bouwsubsidie.documents.CBB_EXTRACT', is_mandatory: false },
-  { id: 'FAMILY_EXTRACT', document_code: 'FAMILY_EXTRACT', label: 'bouwsubsidie.documents.FAMILY_EXTRACT', is_mandatory: false },
-]
+export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] =
+  BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS.map(req => ({
+    id: req.document_code,
+    document_code: req.document_code,
+    label: `bouwsubsidie.documents.${req.document_code}`,
+    is_mandatory: req.is_mandatory,
+  }))
 
 export const WIZARD_STEPS = [
   { titleKey: 'wizard.steps.introduction' },

@@ -1,127 +1,115 @@
-# DVH-IMS v1.7.x — CRITICAL BUGFIX: Housing Registration Submit Failure
+# DVH-IMS v1.7.x — Applicant List Avatar Fix (Initials Fallback)
 
-## Root Cause Analysis (DETERMINISTIC, PROVEN)
+## Current State
 
-### What Fails
+Three locations render applicant info in list/table rows:
 
-Edge function `submit-housing-registration` **always** rejects every submission at the INPUT VALIDATION stage (line 119 and 127). The function never reaches the database layer.
+1. **Dashboard widget** (`src/app/(admin)/dashboards/components/User.tsx`) — "Recent Subsidy Cases" (line 62) and "Recent Housing Registrations" (line 117) both use a hardcoded static avatar image (`avatar-2.jpg`) for every row.
+2. **Subsidy Cases list** (`src/app/(admin)/subsidy-cases/components/CaseTable.tsx`) — Grid.js table, Applicant column is plain text (no avatar at all).
+3. **Housing Registrations list** (`src/app/(admin)/housing-registrations/components/RegistrationTable.tsx`) — Grid.js table, Applicant column is plain text (no avatar at all).
 
-### Evidence
+None of these use a shared Avatar component — the dashboard uses raw `<img>` tags, and the Grid.js tables use string data. This means changes are fully isolated with zero global side-effect risk.
 
-Every edge function log entry shows the same validation failure:
+## Implementation Steps
 
-```text
-Validation failed: [{"field":"email","message":"Invalid email format"},{"field":"date_of_birth","message":"Date must be in YYYY-MM-DD format"}]
-```
+### Step 0 — Restore Point
 
-Direct curl test with valid data (`test.user@example.com`, `1998-02-10`) also returns HTTP 400 with the same error. This confirms the issue is **deterministic and 100% reproducible** -- no submission can ever pass validation.
+Create `docs/restore-points/v1.7/RESTORE_POINT_V1_7_APPLICANT_LIST_AVATAR_INITIALS.md` listing all files to be touched and rollback instructions.
 
-### Why It Fails: Double-Escaped Regex in Housing Edge Function
+### Step 1 — Create ApplicantInitialsAvatar Component
 
-In `supabase/functions/submit-housing-registration/index.ts`, lines 119 and 127:
+**New file:** `src/components/applicants/ApplicantInitialsAvatar.tsx`
 
-```text
-// BROKEN (housing) -- double backslash in regex LITERAL
-const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/     // line 119
-const dateRegex = /^\\d{4}-\\d{2}-\\d{2}$/               // line 127
-```
+A small, self-contained component used ONLY in applicant list rows.
 
-In a JavaScript/TypeScript regex literal (`/.../`), `\\s` means a literal backslash + letter `s`, NOT the `\s` whitespace character class. Similarly `\\d` means literal backslash + `d`, NOT a digit. So:
+**Props:** `firstName?: string`, `lastName?: string`, `size?: 'xs' | 'sm'`
 
-- The email regex rejects ALL valid emails (it expects literal backslashes in the input)
-- The date regex rejects ALL valid dates like `1998-02-10` (it expects literal backslashes)
+**Initials logic (defensive):**
 
-### Proof by Comparison: Bouwsubsidie Works
+- Both names present: first char of each, uppercased
+- Only one name: first two chars (or one if single char)
+- No name at all: renders "?"
 
-In `supabase/functions/submit-bouwsubsidie-application/index.ts`, lines 106 and 114:
+**Deterministic color:** Simple hash of the full name string, mapped to a fixed palette of 8 Darkone-compatible Bootstrap background classes (e.g., `bg-primary`, `bg-success`, `bg-info`, `bg-warning`, `bg-danger`, `bg-secondary`, `bg-dark`, `bg-purple`). Same name always produces same color.
 
-```text
-// CORRECT (bouwsubsidie) -- single backslash in regex literal
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/          // line 106
-const dateRegex = /^\d{4}-\d{2}-\d{2}$/                  // line 114
-```
+**Accessibility:** `aria-label="Applicant: {Full Name} ({Initials})"`
 
-This is why Bouwsubsidie submissions succeed and Housing submissions always fail.
+**Styling:** Uses existing `.avatar-xs` / `.avatar-title` / `.rounded-circle` classes from `_avatar.scss`. No new CSS.
 
-### Category
+### Step 2 — Update Dashboard Widget (User.tsx)
 
-**Regex escaping bug in edge function validation.** NOT RLS, NOT DB constraint, NOT Phase 8 regression.
+Replace the two `<img src={avatar2}>` usages (lines 62 and 117) with the new `<ApplicantInitialsAvatar>` component, passing `firstName={item.person?.first_name}` and `lastName={item.person?.last_name}`.
 
-### Regression Window
+Remove the unused `avatar2` import.
 
-The double-escaped regex was introduced when `submit-housing-registration/index.ts` was last written/rewritten. The prior bugfix iteration (person upsert + reference number retry) included this double-escaping error in the regenerated file, masking the original constraint fix behind a new validation-layer bug.
+### Step 3 — Update Grid.js Tables (CaseTable + RegistrationTable)
 
-## Fix Proposal
+Since Grid.js uses `html()` string formatters, the Applicant column formatter will be updated to render an inline initials circle via raw HTML (same logic as the React component but as a template string).
 
-### Minimal Change: 2 Lines in 1 File
+Create a shared utility function `renderApplicantAvatarHtml(firstName, lastName)` in a small helper (or inline) that:
 
-**File:** `supabase/functions/submit-housing-registration/index.ts`
+- Computes initials + deterministic color class
+- Returns an HTML string: `<span class="avatar-xs rounded-circle avatar-title bg-{color} d-inline-flex" aria-label="...">{INITIALS}</span><span class="ms-1">{name}</span>`
 
-**Line 119** -- Fix email regex:
+Update the `data` mapping in both tables to pass `firstName` and `lastName` separately (instead of pre-concatenated), and update the Applicant column to use a `formatter` with `html()`.
 
-```text
-// Before (BROKEN):
-const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/
-// After (FIXED):
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-```
+### Step 4 — Documentation Updates
 
-**Line 127** -- Fix date regex:
+- Update `docs/backend.md` with a v1.7.x entry for this change.
+- Update `docs/DVH-IMS-V1.0_1.1/architecture.md` under Admin UI section.
 
-```text
-// Before (BROKEN):
-const dateRegex = /^\\d{4}-\\d{2}-\\d{2}$/
-// After (FIXED):
-const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-```
-
-### Additional Required Deliverables
-
-1. **Restore point:** `docs/restore-points/v1.7/RESTORE_POINT_V1_7_HOUSING_SUBMIT_DEEP_DIAG.md`
-2. **Incident RCA doc:** `docs/incidents/v1.7/INCIDENT_HOUSING_SUBMIT_FAILURE_RCA.md`
-3. **Documentation updates:** `docs/backend.md` and `docs/DVH-IMS-V1.0_1.1/architecture.md`
-4. **Build error note:** The pre-existing `TS1540` apexcharts type error is a known wontfix (see `RESTORE_POINT_V1.7x_TS1540_WONTFIX.md`) -- not related to this bug.
-
-### Risk Assessment
+### Files Changed Summary
 
 
-| Risk                        | Level | Mitigation                                                       |
-| --------------------------- | ----- | ---------------------------------------------------------------- |
-| Fix breaks other validation | NONE  | Only regex literals change; all other validation logic untouched |
-| Bouwsubsidie regression     | NONE  | Different file, not touched                                      |
-| DB/RLS impact               | NONE  | Fix is in input validation layer, before any DB call             |
+| File                                                                            | Action                                               |
+| ------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `src/components/applicants/ApplicantInitialsAvatar.tsx`                         | CREATE                                               |
+| `src/app/(admin)/dashboards/components/User.tsx`                                | EDIT — replace static avatar with initials component |
+| `src/app/(admin)/subsidy-cases/components/CaseTable.tsx`                        | EDIT — add initials avatar to Applicant column       |
+| `src/app/(admin)/housing-registrations/components/RegistrationTable.tsx`        | EDIT — add initials avatar to Applicant column       |
+| `docs/restore-points/v1.7/RESTORE_POINT_V1_7_APPLICANT_LIST_AVATAR_INITIALS.md` | CREATE                                               |
+| `docs/backend.md`                                                               | EDIT                                                 |
+| `docs/DVH-IMS-V1.0_1.1/architecture.md`                                         | EDIT                                                 |
 
 
-### Rollback Plan
+### NOTE — Approval Conditions (Hard Gates)
 
-Revert 2 regex lines to double-escaped versions (effectively re-breaks validation). Redeploy edge function. No DB rollback needed.
+You may proceed ONLY if the following conditions are strictly respected:
 
-### Verification Plan (Post-Fix)
+1) Scope Limitation
 
-1. Deploy updated edge function to staging
-2. Submit fresh housing registration end-to-end -- expect receipt screen
-3. Submit again with same national_id -- expect receipt (person reuse)
-4. Confirm record in `housing_registration` table with status `received`
-5. Quick bouwsubsidie smoke test -- confirm no regression
+   - Apply the initials avatar logic ONLY to applicant list contexts:
 
-**NOTE — Validation Layer Parity Check (Mandatory)**
+     • Housing Registrations list
 
-After fixing the housing regex, verify that validation rules in:
+     • Subsidy Cases list
 
-- submit-housing-registration
+     • Recent Subsidy Cases widget
 
-- submit-bouwsubsidie-application
+   - Do NOT modify global Avatar components.
 
-are fully aligned in structure and escaping style.
+   - Do NOT change profile pages, detail pages, header avatars, or admin user avatars.
 
-We must ensure no future divergence in shared validation logic.
+2) Zero-Risk Implementation
 
-If possible, extract shared validation helpers to a common module to prevent duplication drift (document only, not required for this fix).  
+   - No database, schema, RLS, or backend changes.
+
+   - No edge function modifications.
+
+   - No new CSS files or design refactors.
+
+   - Use existing Darkone/Tailwind utility classes only.
+
+   - If Grid.js HTML formatter is used, inject initials safely without adding new dependencies.
+
+If any of these conditions cannot be met exactly, STOP and report before proceeding.  
   
-  
-Constraints
+Risk Assessment
 
-- Staging environment only
-- No production promotion
-- No DB/schema/RLS changes
-- HARD STOP after verification + report
+
+| Risk                     | Level | Reason                                               |
+| ------------------------ | ----- | ---------------------------------------------------- |
+| Global avatar regression | NONE  | No shared Avatar component is modified               |
+| Layout break             | NONE  | Uses existing `.avatar-xs` + `.avatar-title` classes |
+| DB/RLS impact            | NONE  | No backend changes                                   |
+| Bouwsubsidie regression  | NONE  | Only Applicant column rendering changes              |

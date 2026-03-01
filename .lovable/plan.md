@@ -1,152 +1,127 @@
-# DVH-IMS v1.7.x — BUGFIX: Woningregistratie Submit Failure (Staging)
+# DVH-IMS v1.7.x — CRITICAL BUGFIX: Housing Registration Submit Failure
 
-## Root Cause (Confirmed from Edge Function Logs)
+## Root Cause Analysis (DETERMINISTIC, PROVEN)
 
-The edge function `submit-housing-registration` fails on two distinct database constraint violations:
+### What Fails
 
-1. `**person_national_id_key` unique constraint** -- When a citizen with the same `national_id` already exists in the `person` table (e.g., from a prior submission attempt or from a Bouwsubsidie application), the INSERT fails.
-2. `**housing_registration_reference_number_key` unique constraint** -- The reference number generator queries for the highest existing number, but a prior failed attempt may have already inserted that reference number (partially committed state).
+Edge function `submit-housing-registration` **always** rejects every submission at the INPUT VALIDATION stage (line 119 and 127). The function never reaches the database layer.
 
-**Failure sequence observed in logs:**
+### Evidence
 
-- Attempt 1: Reference `WR-2026-002967` generated, registration INSERT fails (duplicate reference_number from a prior run)
-- Attempt 2: Same reference `WR-2026-002967` generated again, person INSERT fails (person already created in attempt 1)
-
-**Why Bouwsubsidie works:** Same bug exists there but hasn't been triggered yet (no duplicate national_id in test data). Both functions share the same fragile pattern.
-
-**Category:** DB unique constraint violation (NOT an RLS issue, NOT a Phase 8 regression).
-
-## Fix Scope (Minimal, Housing Only)
-
-### Change 1: Edge Function -- Handle Existing Person (Upsert Pattern)
-
-In `supabase/functions/submit-housing-registration/index.ts`:
-
-Replace the person INSERT (lines 297-317) with a lookup-first-then-insert pattern:
+Every edge function log entry shows the same validation failure:
 
 ```text
-// Try to find existing person by national_id
-const { data: existingPerson } = await supabase
-  .from('person')
-  .select('id')
-  .eq('national_id', input.national_id)
-  .maybeSingle()
-
-let personId: string
-
-if (existingPerson) {
-  personId = existingPerson.id
-  console.log(`[submit-housing] Found existing person for national_id`)
-} else {
-  // Create new person
-  const { data: personData, error: personError } = await supabase
-    .from('person')
-    .insert({ ... })
-    .select('id')
-    .single()
-  
-  if (personError) { ... return error }
-  personId = personData.id
-}
+Validation failed: [{"field":"email","message":"Invalid email format"},{"field":"date_of_birth","message":"Date must be in YYYY-MM-DD format"}]
 ```
 
-### Change 2: Edge Function -- Retry Reference Number on Conflict
+Direct curl test with valid data (`test.user@example.com`, `1998-02-10`) also returns HTTP 400 with the same error. This confirms the issue is **deterministic and 100% reproducible** -- no submission can ever pass validation.
 
-Replace the single reference number generation with a retry loop (max 3 attempts) that catches duplicate reference_number errors:
+### Why It Fails: Double-Escaped Regex in Housing Edge Function
+
+In `supabase/functions/submit-housing-registration/index.ts`, lines 119 and 127:
 
 ```text
-let referenceNumber: string
-let registrationData: any
-let attempts = 0
-const MAX_ATTEMPTS = 3
-
-while (attempts < MAX_ATTEMPTS) {
-  referenceNumber = await generateReferenceNumber(supabase)
-  const { data, error } = await supabase
-    .from('housing_registration')
-    .insert({ reference_number: referenceNumber, ... })
-    .select('id')
-    .single()
-  
-  if (!error) {
-    registrationData = data
-    break
-  }
-  
-  if (error.message.includes('duplicate key') && error.message.includes('reference_number')) {
-    attempts++
-    continue
-  }
-  
-  // Non-duplicate error -- fail immediately
-  return error response
-}
+// BROKEN (housing) -- double backslash in regex LITERAL
+const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/     // line 119
+const dateRegex = /^\\d{4}-\\d{2}-\\d{2}$/               // line 127
 ```
 
-### Change 3: Improved Error Logging
+In a JavaScript/TypeScript regex literal (`/.../`), `\\s` means a literal backslash + letter `s`, NOT the `\s` whitespace character class. Similarly `\\d` means literal backslash + `d`, NOT a digit. So:
 
-Add a correlation ID to all error responses (console only, no PII) so failures can be traced:
+- The email regex rejects ALL valid emails (it expects literal backslashes in the input)
+- The date regex rejects ALL valid dates like `1998-02-10` (it expects literal backslashes)
+
+### Proof by Comparison: Bouwsubsidie Works
+
+In `supabase/functions/submit-bouwsubsidie-application/index.ts`, lines 106 and 114:
 
 ```text
-const correlationId = crypto.randomUUID()
-console.log(`[submit-housing] correlation=${correlationId} Processing submission`)
-// Include correlationId in all error console.error calls
+// CORRECT (bouwsubsidie) -- single backslash in regex literal
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/          // line 106
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/                  // line 114
 ```
 
-### Change 4: Documentation Updates
+This is why Bouwsubsidie submissions succeed and Housing submissions always fail.
 
-- Create `docs/restore-points/v1.7/RESTORE_POINT_V1_7_HOUSING_SUBMIT_FAIL.md`
-- Update `docs/backend.md` -- Add "Housing submit failure fix" entry
-- Update `docs/DVH-IMS-V1.0_1.1/architecture.md` -- Add Change History entry
+### Category
 
-## Files Modified
+**Regex escaping bug in edge function validation.** NOT RLS, NOT DB constraint, NOT Phase 8 regression.
+
+### Regression Window
+
+The double-escaped regex was introduced when `submit-housing-registration/index.ts` was last written/rewritten. The prior bugfix iteration (person upsert + reference number retry) included this double-escaping error in the regenerated file, masking the original constraint fix behind a new validation-layer bug.
+
+## Fix Proposal
+
+### Minimal Change: 2 Lines in 1 File
+
+**File:** `supabase/functions/submit-housing-registration/index.ts`
+
+**Line 119** -- Fix email regex:
+
+```text
+// Before (BROKEN):
+const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/
+// After (FIXED):
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+```
+
+**Line 127** -- Fix date regex:
+
+```text
+// Before (BROKEN):
+const dateRegex = /^\\d{4}-\\d{2}-\\d{2}$/
+// After (FIXED):
+const dateRegex = /^\d{4}-\d{2}-\d{2}$/
+```
+
+### Additional Required Deliverables
+
+1. **Restore point:** `docs/restore-points/v1.7/RESTORE_POINT_V1_7_HOUSING_SUBMIT_DEEP_DIAG.md`
+2. **Incident RCA doc:** `docs/incidents/v1.7/INCIDENT_HOUSING_SUBMIT_FAILURE_RCA.md`
+3. **Documentation updates:** `docs/backend.md` and `docs/DVH-IMS-V1.0_1.1/architecture.md`
+4. **Build error note:** The pre-existing `TS1540` apexcharts type error is a known wontfix (see `RESTORE_POINT_V1.7x_TS1540_WONTFIX.md`) -- not related to this bug.
+
+### Risk Assessment
 
 
-| File                                                                 | Change                                                                     |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| `supabase/functions/submit-housing-registration/index.ts`            | Person lookup-first pattern + reference number retry + correlation logging |
-| `docs/restore-points/v1.7/RESTORE_POINT_V1_7_HOUSING_SUBMIT_FAIL.md` | Restore point                                                              |
-| `docs/backend.md`                                                    | Bugfix entry                                                               |
-| `docs/DVH-IMS-V1.0_1.1/architecture.md`                              | Change History entry                                                       |
+| Risk                        | Level | Mitigation                                                       |
+| --------------------------- | ----- | ---------------------------------------------------------------- |
+| Fix breaks other validation | NONE  | Only regex literals change; all other validation logic untouched |
+| Bouwsubsidie regression     | NONE  | Different file, not touched                                      |
+| DB/RLS impact               | NONE  | Fix is in input validation layer, before any DB call             |
 
 
-## Files NOT Modified
+### Rollback Plan
 
-- No frontend/wizard code changes needed
-- No shared config changes
-- No DB schema or RLS changes
-- No Bouwsubsidie edge function changes (same bug exists but out of scope per instructions)
+Revert 2 regex lines to double-escaped versions (effectively re-breaks validation). Redeploy edge function. No DB rollback needed.
 
-## Verification Plan
+### Verification Plan (Post-Fix)
 
 1. Deploy updated edge function to staging
-2. Submit a housing registration with a NEW national_id -- should succeed
-3. Submit again with the SAME national_id -- should succeed (reuses existing person)
-4. Confirm record appears in `housing_registration` table with status `received`
-5. Quick Bouwsubsidie smoke test -- confirm no regression
+2. Submit fresh housing registration end-to-end -- expect receipt screen
+3. Submit again with same national_id -- expect receipt (person reuse)
+4. Confirm record in `housing_registration` table with status `received`
+5. Quick bouwsubsidie smoke test -- confirm no regression
 
+**NOTE — Validation Layer Parity Check (Mandatory)**
+
+After fixing the housing regex, verify that validation rules in:
+
+- submit-housing-registration
+
+- submit-bouwsubsidie-application
+
+are fully aligned in structure and escaping style.
+
+We must ensure no future divergence in shared validation logic.
+
+If possible, extract shared validation helpers to a common module to prevent duplication drift (document only, not required for this fix).  
   
-**NOTE — Transaction Safety Requirement (Mandatory)**
-
-All submission logic inside submit-housing-registration must execute within a single transactional boundary.
-
-Either:
-
-1) Use a database transaction (BEGIN / COMMIT / ROLLBACK via Supabase RPC or transaction wrapper), OR
-
-2) Implement compensating cleanup logic if any step after person creation fails.
-
-Reason:
-
-We must prevent partially committed state (e.g., person inserted but registration failed, or registration inserted but document linkage failed).
-
-If transactional safety cannot be guaranteed, DO NOT proceed with deployment.
-
-No partial commits allowed.  
   
 Constraints
 
 - Staging environment only
 - No production promotion
-- No DB/schema changes
+- No DB/schema/RLS changes
 - HARD STOP after verification + report

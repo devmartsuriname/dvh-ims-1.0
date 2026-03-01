@@ -1,134 +1,211 @@
-# DVH-IMS v1.7.x — Phase 7: Deprecated Bouwsubsidie Docs Cleanup (STAGING ONLY)
+# DVH-IMS v1.7.x — Phase 8: Wizard Constants Refactor
 
-## Preflight Findings (Step 0 — Complete)
+## Objective
 
-### Table Structure
+Eliminate duplicated `REQUIRED_DOCUMENTS` arrays in both wizard `constants.ts` files. Derive them from the shared config in `src/config/documentRequirements.ts`.
 
-- **Table:** `subsidy_document_requirement`
-- **Columns:** `id`, `document_code`, `document_name`, `description`, `is_mandatory`, `created_at`
-- **No soft-delete flag exists** (no `is_active`, `is_deprecated`, `archived_at`, or `deleted_at`)
+## Analysis: Before State
 
-### Target Rows Confirmed (3 rows)
+### Shared Config (`src/config/documentRequirements.ts`)
+
+- Shape: `{ document_code, document_name, is_mandatory }`
+- Bouwsubsidie: 7 items (5 mandatory, 2 optional)
+- Housing: 6 items (3 mandatory, 3 optional)
+
+### Wizard Constants (local `REQUIRED_DOCUMENTS`)
+
+- Shape: `{ id, document_code, label, is_mandatory }` (typed as `Omit<DocumentUpload, 'uploaded_file'>`)
+- `id` = same as `document_code`
+- `label` = i18n key (e.g., `bouwsubsidie.documents.ID_COPY`)
+- `document_code` and `is_mandatory` = identical to shared config
+
+### Gap
+
+Shared config has `document_name` (display string). Wizards need `label` (i18n key). A mapping function is required.
+
+## Code Parity Verification
 
 
-| document_code     | document_name     | is_mandatory | id           |
-| ----------------- | ----------------- | ------------ | ------------ |
-| BUILDING_PERMIT   | Building Permit   | false        | df8ae0c0-... |
-| CONSTRUCTION_PLAN | Construction Plan | false        | 4eae22a8-... |
-| COST_ESTIMATE     | Cost Estimate     | false        | 9138a3ae-... |
+| document_code  | Shared Config is_mandatory | Bouwsubsidie Wizard is_mandatory | Match |
+| -------------- | -------------------------- | -------------------------------- | ----- |
+| ID_COPY        | true                       | true                             | YES   |
+| INCOME_PROOF   | true                       | true                             | YES   |
+| LAND_TITLE     | true                       | true                             | YES   |
+| BANK_STATEMENT | true                       | true                             | YES   |
+| HOUSEHOLD_COMP | true                       | true                             | YES   |
+| CBB_EXTRACT    | false                      | false                            | YES   |
+| FAMILY_EXTRACT | false                      | false                            | YES   |
 
 
-### FK Reference Check -- BLOCKING FINDING
 
-- **FK constraint:** `subsidy_document_upload.requirement_id` references `subsidy_document_requirement.id`
-- **9 existing uploads** reference these 3 deprecated requirement IDs (3 per document_code)
-- **Hard DELETE is BLOCKED.** Deleting these rows would violate FK constraints and break historical upload records.
+| document_code      | Shared Config is_mandatory | Housing Wizard is_mandatory | Match |
+| ------------------ | -------------------------- | --------------------------- | ----- |
+| ID_COPY            | true                       | true                        | YES   |
+| INCOME_PROOF       | true                       | true                        | YES   |
+| RESIDENCE_PROOF    | true                       | true                        | YES   |
+| FAMILY_COMPOSITION | false                      | false                       | YES   |
+| MEDICAL_CERT       | false                      | false                       | YES   |
+| EMERGENCY_PROOF    | false                      | false                       | YES   |
 
-### Decision: SOFT-DEPRECATION via `is_active` column
 
-Since no soft-delete flag exists, Phase 7 will:
+Full parity confirmed. Safe to refactor.
 
-1. Add `is_active BOOLEAN NOT NULL DEFAULT true` to `subsidy_document_requirement` (schema change)
-2. Set `is_active = false` for the 3 deprecated rows (data change)
-3. All existing 7 active rows remain `is_active = true` by default
+## Implementation
 
-## Execution Plan
+### Step 1: Add helper function to shared config
 
-### Step 1: Schema Migration
-
-Add `is_active` column to `subsidy_document_requirement`:
-
-```text
-ALTER TABLE subsidy_document_requirement
-ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true;
-```
-
-This is a non-breaking additive change. All existing rows default to `is_active = true`.
-
-### Step 2: Data Updates (3 individual statements)
-
-```text
-UPDATE subsidy_document_requirement SET is_active = false WHERE document_code = 'BUILDING_PERMIT';
-UPDATE subsidy_document_requirement SET is_active = false WHERE document_code = 'CONSTRUCTION_PLAN';
-UPDATE subsidy_document_requirement SET is_active = false WHERE document_code = 'COST_ESTIMATE';
-```
-
-Each must affect exactly 1 row. If not, ABORT.
-
-### Step 3: Verification Queries
-
-- Confirm 3 deprecated rows have `is_active = false`
-- Confirm 7 active rows have `is_active = true`
-- Confirm total row count = 10
-
-### Step 4: Create Documentation Files
-
-1. **Create:** `docs/migrations/v1.7/STAGING_DEPRECATED_SUBSIDY_DOCS_CLEANUP.sql` (forward migration)
-2. **Create:** `docs/migrations/v1.7/STAGING_DEPRECATED_SUBSIDY_DOCS_CLEANUP_ROLLBACK.sql` (rollback: re-enable rows + drop column)
-3. **Update:** `docs/audits/v1.7/DATA_LAYER_AUDIT_DOCS_CONFIG_SYNC.md` -- Add section "9B. Phase 7"
-4. **Update:** `docs/backend.md` -- Add Phase 7 entry
-5. **Update:** `docs/DVH-IMS-V1.0_1.1/architecture.md` -- Add Change History entry
-
-### Step 5: UI Smoke Check (optional, admin sidebar reads from shared config not DB)
-
-The admin sidebar already excludes these 3 docs because it reads from `src/config/documentRequirements.ts`. The `is_active` flag is for data hygiene and future-proofing any DB-driven queries.
-
-## Rollback SQL
+Add to `src/config/documentRequirements.ts`:
 
 ```text
-UPDATE subsidy_document_requirement SET is_active = true WHERE document_code = 'BUILDING_PERMIT';
-UPDATE subsidy_document_requirement SET is_active = true WHERE document_code = 'CONSTRUCTION_PLAN';
-UPDATE subsidy_document_requirement SET is_active = true WHERE document_code = 'COST_ESTIMATE';
-ALTER TABLE subsidy_document_requirement DROP COLUMN is_active;
+/**
+ * Convert shared config to wizard DocumentUpload format
+ * Maps document_code to i18n label key using a prefix convention
+ */
+export function toWizardDocuments(
+  requirements: DocumentRequirementConfig[],
+  i18nPrefix: string
+): Array<{ id: string; document_code: string; label: string; is_mandatory: boolean }> {
+  return requirements.map(req => ({
+    id: req.document_code,
+    document_code: req.document_code,
+    label: `${i18nPrefix}.${req.document_code}`,
+    is_mandatory: req.is_mandatory,
+  }))
+}
 ```
 
-## Risk Summary
+### Step 2: Refactor Bouwsubsidie constants
+
+In `src/app/(public)/bouwsubsidie/apply/constants.ts`:
+
+- Remove the local `REQUIRED_DOCUMENTS` array (lines 27-43)
+- Import and derive:
+
+```text
+import { BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS, toWizardDocuments } from '@/config/documentRequirements'
+
+export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] =
+  toWizardDocuments(BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS, 'bouwsubsidie.documents')
+```
+
+### Step 3: Refactor Housing constants
+
+In `src/app/(public)/housing/register/constants.ts`:
+
+- Remove the local `REQUIRED_DOCUMENTS` array (lines 55-66)
+- Import and derive:
+
+```text
+import { HOUSING_DOCUMENT_REQUIREMENTS, toWizardDocuments } from '@/config/documentRequirements'
+
+export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] =
+  toWizardDocuments(HOUSING_DOCUMENT_REQUIREMENTS, 'housing.step8documents.doc')
+```
+
+**Note on Housing i18n prefix**: The housing wizard uses keys like `housing.step8documents.docIdCopy` where `docIdCopy` maps to `ID_COPY`. The prefix `housing.step8documents.doc` + document_code produces `housing.step8documents.docID_COPY` which does NOT match. This requires a code-to-label-suffix map for housing.
+
+**Revised approach for Housing**: Use an explicit label map instead of a simple prefix:
+
+```text
+const HOUSING_LABEL_MAP: Record<string, string> = {
+  ID_COPY: 'housing.step8documents.docIdCopy',
+  INCOME_PROOF: 'housing.step8documents.docIncomeProof',
+  RESIDENCE_PROOF: 'housing.step8documents.docResidenceProof',
+  FAMILY_COMPOSITION: 'housing.step8documents.docFamilyComposition',
+  MEDICAL_CERT: 'housing.step8documents.docMedicalCert',
+  EMERGENCY_PROOF: 'housing.step8documents.docEmergencyProof',
+}
+
+export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] =
+  HOUSING_DOCUMENT_REQUIREMENTS.map(req => ({
+    id: req.document_code,
+    document_code: req.document_code,
+    label: HOUSING_LABEL_MAP[req.document_code],
+    is_mandatory: req.is_mandatory,
+  }))
+```
+
+Similarly for Bouwsubsidie (uses `bouwsubsidie.documents.ID_COPY` which matches `bouwsubsidie.documents.` + `document_code`), the simple prefix works. But for consistency, both can use a label map or the prefix approach where it works.
+
+### Final approach (cleanest)
+
+1. **Bouwsubsidie**: Simple prefix (`bouwsubsidie.documents.` + document_code) -- works perfectly
+2. **Housing**: Explicit label map (i18n keys use camelCase suffixes, not document_code)
+
+No helper function needed on shared config. Each wizard derives locally from the imported shared config array.
+
+### Step 4: Documentation updates
+
+- `docs/backend.md` -- Add Phase 8 entry
+- `docs/DVH-IMS-V1.0_1.1/architecture.md` -- Add Change History entry
+
+## Files Modified
 
 
-| Risk                                           | Mitigation                                    |
-| ---------------------------------------------- | --------------------------------------------- |
-| FK blocks hard delete                          | Soft-deprecation chosen (is_active flag)      |
-| 9 historical uploads reference deprecated rows | Rows preserved, only flagged inactive         |
-| Admin sidebar already excludes these docs      | No UI change needed -- config-driven          |
-| New column could break existing queries        | `DEFAULT true` ensures backward compatibility |
+| File                                               | Change                                                    |
+| -------------------------------------------------- | --------------------------------------------------------- |
+| `src/app/(public)/bouwsubsidie/apply/constants.ts` | Remove local array, import from shared config             |
+| `src/app/(public)/housing/register/constants.ts`   | Remove local array, import from shared config + label map |
+| `docs/backend.md`                                  | Phase 8 entry                                             |
+| `docs/DVH-IMS-V1.0_1.1/architecture.md`            | Change History entry                                      |
 
 
-NOTE — Approval Gate for Phase 7 (Deprecated Subsidy Docs Cleanup)
+## Files NOT Modified
 
-You may proceed to APPROVE Phase 7 ONLY if the following two conditions are explicitly confirmed:
+- `src/config/documentRequirements.ts` -- No changes needed (source of truth stays as-is)
+- No DB changes, no RLS changes, no schema changes
+- No type files changed (DocumentUpload interface unchanged)
 
-1) Schema Change Authorization (Staging Only)
+  
+NOTE — Approval Gate for Phase 8 (Wizard Constants Refactor)
 
-The additive schema change (adding the `is_active` column to subsidy_document_requirement) is formally authorized for STAGING environment.
+You may proceed to APPROVE Phase 8 ONLY if the following two conditions are explicitly accepted as HARD GATES:
 
-No production schema changes are authorized at this stage.
+1) Housing i18n Verification (Mandatory)
 
-2) DB-Driven Rendering Confirmation
+Before finalizing the refactor, all keys defined in HOUSING_LABEL_MAP must be verified against the actual i18n resource files.
 
-It is confirmed that no active UI module, reporting layer, export process, ETL job, or downstream consumer relies directly on the subsidy_document_requirement table without filtering.
+- Every key must exist.
 
-Any future DB-driven requirement listing must explicitly filter:
+- No undefined labels allowed.
 
-    WHERE is_active = true
+- No fallback rendering.
 
-If either condition is NOT confirmed, do NOT proceed.
+If any key mismatch is detected → STOP and correct before proceeding.
 
-Return for scope adjustment before execution.
+2) No Behavioral Change Confirmation
+
+After refactor:
+
+- Bouwsubsidie required documents count must remain 7.
+
+- Woningregistratie required documents count must remain 6.
+
+- Mandatory vs optional flags must remain identical to current behavior.
+
+- No console errors.
+
+- No UI regressions in the Documents step of both wizards.
+
+If either condition is not satisfied, DO NOT proceed.
 
 HARD RULE:
 
-No production promotion.
+No DB changes.
 
-No additional schema changes.
+No schema changes.
 
-No scope expansion.
+No config structure changes.
 
-Await explicit confirmation before continuing.  
+Refactor only.
+
+Await explicit verification in the end-of-task report.  
   
-Constraints Confirmed
+  
+Constraints
 
-- Staging environment only
-- No source code changes
-- No config edits
-- No housing table modifications
-- HARD STOP after execution + documentation
+- No DB changes
+- No RLS changes
+- No schema changes
+- No production promotion
+- HARD STOP after report

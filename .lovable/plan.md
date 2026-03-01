@@ -1,211 +1,152 @@
-# DVH-IMS v1.7.x — Phase 8: Wizard Constants Refactor
+# DVH-IMS v1.7.x — BUGFIX: Woningregistratie Submit Failure (Staging)
 
-## Objective
+## Root Cause (Confirmed from Edge Function Logs)
 
-Eliminate duplicated `REQUIRED_DOCUMENTS` arrays in both wizard `constants.ts` files. Derive them from the shared config in `src/config/documentRequirements.ts`.
+The edge function `submit-housing-registration` fails on two distinct database constraint violations:
 
-## Analysis: Before State
+1. `**person_national_id_key` unique constraint** -- When a citizen with the same `national_id` already exists in the `person` table (e.g., from a prior submission attempt or from a Bouwsubsidie application), the INSERT fails.
+2. `**housing_registration_reference_number_key` unique constraint** -- The reference number generator queries for the highest existing number, but a prior failed attempt may have already inserted that reference number (partially committed state).
 
-### Shared Config (`src/config/documentRequirements.ts`)
+**Failure sequence observed in logs:**
 
-- Shape: `{ document_code, document_name, is_mandatory }`
-- Bouwsubsidie: 7 items (5 mandatory, 2 optional)
-- Housing: 6 items (3 mandatory, 3 optional)
+- Attempt 1: Reference `WR-2026-002967` generated, registration INSERT fails (duplicate reference_number from a prior run)
+- Attempt 2: Same reference `WR-2026-002967` generated again, person INSERT fails (person already created in attempt 1)
 
-### Wizard Constants (local `REQUIRED_DOCUMENTS`)
+**Why Bouwsubsidie works:** Same bug exists there but hasn't been triggered yet (no duplicate national_id in test data). Both functions share the same fragile pattern.
 
-- Shape: `{ id, document_code, label, is_mandatory }` (typed as `Omit<DocumentUpload, 'uploaded_file'>`)
-- `id` = same as `document_code`
-- `label` = i18n key (e.g., `bouwsubsidie.documents.ID_COPY`)
-- `document_code` and `is_mandatory` = identical to shared config
+**Category:** DB unique constraint violation (NOT an RLS issue, NOT a Phase 8 regression).
 
-### Gap
+## Fix Scope (Minimal, Housing Only)
 
-Shared config has `document_name` (display string). Wizards need `label` (i18n key). A mapping function is required.
+### Change 1: Edge Function -- Handle Existing Person (Upsert Pattern)
 
-## Code Parity Verification
+In `supabase/functions/submit-housing-registration/index.ts`:
 
-
-| document_code  | Shared Config is_mandatory | Bouwsubsidie Wizard is_mandatory | Match |
-| -------------- | -------------------------- | -------------------------------- | ----- |
-| ID_COPY        | true                       | true                             | YES   |
-| INCOME_PROOF   | true                       | true                             | YES   |
-| LAND_TITLE     | true                       | true                             | YES   |
-| BANK_STATEMENT | true                       | true                             | YES   |
-| HOUSEHOLD_COMP | true                       | true                             | YES   |
-| CBB_EXTRACT    | false                      | false                            | YES   |
-| FAMILY_EXTRACT | false                      | false                            | YES   |
-
-
-
-| document_code      | Shared Config is_mandatory | Housing Wizard is_mandatory | Match |
-| ------------------ | -------------------------- | --------------------------- | ----- |
-| ID_COPY            | true                       | true                        | YES   |
-| INCOME_PROOF       | true                       | true                        | YES   |
-| RESIDENCE_PROOF    | true                       | true                        | YES   |
-| FAMILY_COMPOSITION | false                      | false                       | YES   |
-| MEDICAL_CERT       | false                      | false                       | YES   |
-| EMERGENCY_PROOF    | false                      | false                       | YES   |
-
-
-Full parity confirmed. Safe to refactor.
-
-## Implementation
-
-### Step 1: Add helper function to shared config
-
-Add to `src/config/documentRequirements.ts`:
+Replace the person INSERT (lines 297-317) with a lookup-first-then-insert pattern:
 
 ```text
-/**
- * Convert shared config to wizard DocumentUpload format
- * Maps document_code to i18n label key using a prefix convention
- */
-export function toWizardDocuments(
-  requirements: DocumentRequirementConfig[],
-  i18nPrefix: string
-): Array<{ id: string; document_code: string; label: string; is_mandatory: boolean }> {
-  return requirements.map(req => ({
-    id: req.document_code,
-    document_code: req.document_code,
-    label: `${i18nPrefix}.${req.document_code}`,
-    is_mandatory: req.is_mandatory,
-  }))
+// Try to find existing person by national_id
+const { data: existingPerson } = await supabase
+  .from('person')
+  .select('id')
+  .eq('national_id', input.national_id)
+  .maybeSingle()
+
+let personId: string
+
+if (existingPerson) {
+  personId = existingPerson.id
+  console.log(`[submit-housing] Found existing person for national_id`)
+} else {
+  // Create new person
+  const { data: personData, error: personError } = await supabase
+    .from('person')
+    .insert({ ... })
+    .select('id')
+    .single()
+  
+  if (personError) { ... return error }
+  personId = personData.id
 }
 ```
 
-### Step 2: Refactor Bouwsubsidie constants
+### Change 2: Edge Function -- Retry Reference Number on Conflict
 
-In `src/app/(public)/bouwsubsidie/apply/constants.ts`:
-
-- Remove the local `REQUIRED_DOCUMENTS` array (lines 27-43)
-- Import and derive:
+Replace the single reference number generation with a retry loop (max 3 attempts) that catches duplicate reference_number errors:
 
 ```text
-import { BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS, toWizardDocuments } from '@/config/documentRequirements'
+let referenceNumber: string
+let registrationData: any
+let attempts = 0
+const MAX_ATTEMPTS = 3
 
-export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] =
-  toWizardDocuments(BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS, 'bouwsubsidie.documents')
-```
-
-### Step 3: Refactor Housing constants
-
-In `src/app/(public)/housing/register/constants.ts`:
-
-- Remove the local `REQUIRED_DOCUMENTS` array (lines 55-66)
-- Import and derive:
-
-```text
-import { HOUSING_DOCUMENT_REQUIREMENTS, toWizardDocuments } from '@/config/documentRequirements'
-
-export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] =
-  toWizardDocuments(HOUSING_DOCUMENT_REQUIREMENTS, 'housing.step8documents.doc')
-```
-
-**Note on Housing i18n prefix**: The housing wizard uses keys like `housing.step8documents.docIdCopy` where `docIdCopy` maps to `ID_COPY`. The prefix `housing.step8documents.doc` + document_code produces `housing.step8documents.docID_COPY` which does NOT match. This requires a code-to-label-suffix map for housing.
-
-**Revised approach for Housing**: Use an explicit label map instead of a simple prefix:
-
-```text
-const HOUSING_LABEL_MAP: Record<string, string> = {
-  ID_COPY: 'housing.step8documents.docIdCopy',
-  INCOME_PROOF: 'housing.step8documents.docIncomeProof',
-  RESIDENCE_PROOF: 'housing.step8documents.docResidenceProof',
-  FAMILY_COMPOSITION: 'housing.step8documents.docFamilyComposition',
-  MEDICAL_CERT: 'housing.step8documents.docMedicalCert',
-  EMERGENCY_PROOF: 'housing.step8documents.docEmergencyProof',
+while (attempts < MAX_ATTEMPTS) {
+  referenceNumber = await generateReferenceNumber(supabase)
+  const { data, error } = await supabase
+    .from('housing_registration')
+    .insert({ reference_number: referenceNumber, ... })
+    .select('id')
+    .single()
+  
+  if (!error) {
+    registrationData = data
+    break
+  }
+  
+  if (error.message.includes('duplicate key') && error.message.includes('reference_number')) {
+    attempts++
+    continue
+  }
+  
+  // Non-duplicate error -- fail immediately
+  return error response
 }
-
-export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] =
-  HOUSING_DOCUMENT_REQUIREMENTS.map(req => ({
-    id: req.document_code,
-    document_code: req.document_code,
-    label: HOUSING_LABEL_MAP[req.document_code],
-    is_mandatory: req.is_mandatory,
-  }))
 ```
 
-Similarly for Bouwsubsidie (uses `bouwsubsidie.documents.ID_COPY` which matches `bouwsubsidie.documents.` + `document_code`), the simple prefix works. But for consistency, both can use a label map or the prefix approach where it works.
+### Change 3: Improved Error Logging
 
-### Final approach (cleanest)
+Add a correlation ID to all error responses (console only, no PII) so failures can be traced:
 
-1. **Bouwsubsidie**: Simple prefix (`bouwsubsidie.documents.` + document_code) -- works perfectly
-2. **Housing**: Explicit label map (i18n keys use camelCase suffixes, not document_code)
+```text
+const correlationId = crypto.randomUUID()
+console.log(`[submit-housing] correlation=${correlationId} Processing submission`)
+// Include correlationId in all error console.error calls
+```
 
-No helper function needed on shared config. Each wizard derives locally from the imported shared config array.
+### Change 4: Documentation Updates
 
-### Step 4: Documentation updates
-
-- `docs/backend.md` -- Add Phase 8 entry
-- `docs/DVH-IMS-V1.0_1.1/architecture.md` -- Add Change History entry
+- Create `docs/restore-points/v1.7/RESTORE_POINT_V1_7_HOUSING_SUBMIT_FAIL.md`
+- Update `docs/backend.md` -- Add "Housing submit failure fix" entry
+- Update `docs/DVH-IMS-V1.0_1.1/architecture.md` -- Add Change History entry
 
 ## Files Modified
 
 
-| File                                               | Change                                                    |
-| -------------------------------------------------- | --------------------------------------------------------- |
-| `src/app/(public)/bouwsubsidie/apply/constants.ts` | Remove local array, import from shared config             |
-| `src/app/(public)/housing/register/constants.ts`   | Remove local array, import from shared config + label map |
-| `docs/backend.md`                                  | Phase 8 entry                                             |
-| `docs/DVH-IMS-V1.0_1.1/architecture.md`            | Change History entry                                      |
+| File                                                                 | Change                                                                     |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `supabase/functions/submit-housing-registration/index.ts`            | Person lookup-first pattern + reference number retry + correlation logging |
+| `docs/restore-points/v1.7/RESTORE_POINT_V1_7_HOUSING_SUBMIT_FAIL.md` | Restore point                                                              |
+| `docs/backend.md`                                                    | Bugfix entry                                                               |
+| `docs/DVH-IMS-V1.0_1.1/architecture.md`                              | Change History entry                                                       |
 
 
 ## Files NOT Modified
 
-- `src/config/documentRequirements.ts` -- No changes needed (source of truth stays as-is)
-- No DB changes, no RLS changes, no schema changes
-- No type files changed (DocumentUpload interface unchanged)
+- No frontend/wizard code changes needed
+- No shared config changes
+- No DB schema or RLS changes
+- No Bouwsubsidie edge function changes (same bug exists but out of scope per instructions)
+
+## Verification Plan
+
+1. Deploy updated edge function to staging
+2. Submit a housing registration with a NEW national_id -- should succeed
+3. Submit again with the SAME national_id -- should succeed (reuses existing person)
+4. Confirm record appears in `housing_registration` table with status `received`
+5. Quick Bouwsubsidie smoke test -- confirm no regression
 
   
-NOTE — Approval Gate for Phase 8 (Wizard Constants Refactor)
+**NOTE — Transaction Safety Requirement (Mandatory)**
 
-You may proceed to APPROVE Phase 8 ONLY if the following two conditions are explicitly accepted as HARD GATES:
+All submission logic inside submit-housing-registration must execute within a single transactional boundary.
 
-1) Housing i18n Verification (Mandatory)
+Either:
 
-Before finalizing the refactor, all keys defined in HOUSING_LABEL_MAP must be verified against the actual i18n resource files.
+1) Use a database transaction (BEGIN / COMMIT / ROLLBACK via Supabase RPC or transaction wrapper), OR
 
-- Every key must exist.
+2) Implement compensating cleanup logic if any step after person creation fails.
 
-- No undefined labels allowed.
+Reason:
 
-- No fallback rendering.
+We must prevent partially committed state (e.g., person inserted but registration failed, or registration inserted but document linkage failed).
 
-If any key mismatch is detected → STOP and correct before proceeding.
+If transactional safety cannot be guaranteed, DO NOT proceed with deployment.
 
-2) No Behavioral Change Confirmation
-
-After refactor:
-
-- Bouwsubsidie required documents count must remain 7.
-
-- Woningregistratie required documents count must remain 6.
-
-- Mandatory vs optional flags must remain identical to current behavior.
-
-- No console errors.
-
-- No UI regressions in the Documents step of both wizards.
-
-If either condition is not satisfied, DO NOT proceed.
-
-HARD RULE:
-
-No DB changes.
-
-No schema changes.
-
-No config structure changes.
-
-Refactor only.
-
-Await explicit verification in the end-of-task report.  
-  
+No partial commits allowed.  
   
 Constraints
 
-- No DB changes
-- No RLS changes
-- No schema changes
+- Staging environment only
 - No production promotion
-- HARD STOP after report
+- No DB/schema changes
+- HARD STOP after verification + report

@@ -1,58 +1,66 @@
 
 
-# Fix: Correct Grid.js Cell Indices for Applicant Initials Avatars
+# Fix: Applicant List Avatar Layout (Circle Stretch + Alignment)
 
-## Problem
+## Root Cause
 
-Both Grid.js tables have an off-by-one index bug in the Applicant column formatter:
+The `.avatar-xs` class sets `height: 1.5rem; width: 1.5rem`, but inside Grid.js table cells, the `<span>` stretches vertically because:
+- No explicit `min-width`/`min-height` to prevent collapse
+- No flex wrapper around the avatar + name pair in the `html()` output
+- The avatar `<span>` inherits table cell height, breaking the circle
 
-**CaseTable.tsx** (line 105-106):
-- Data array: `[case_number(0), firstName(1), lastName(2), national_id(3), ...]`
-- Formatter reads: `cells[2]` (lastName) and `cells[3]` (national_id) — WRONG
-- Should read: `cells[1]` (firstName) and `cells[2]` (lastName)
+In the Dashboard widget (`User.tsx`), the same issue occurs but is less severe because Bootstrap `<td>` has slightly different rendering than Grid.js cells.
 
-**RegistrationTable.tsx** (line 122-125):
-- Data array: `[reference_number(0), firstName(1), lastName(2), district(3), ...]`
-- Formatter reads: `cells[2]` (lastName) and `cells[3]` (district) — WRONG
-- Should read: `cells[1]` (firstName) and `cells[2]` (lastName)
+## Changes
 
-This causes incorrect initials and potentially garbled names on both list pages.
+### 1. `src/components/applicants/ApplicantInitialsAvatar.tsx`
 
-## Fix (2 files, 2 lines each)
+**React component** — add explicit inline `width`, `height`, `minWidth`, `minHeight`, `lineHeight` to the circle span to prevent table cell stretch:
 
-### 1. `src/app/(admin)/subsidy-cases/components/CaseTable.tsx`
-
-Change the Applicant formatter (lines 105-106):
-```
-// Before:
-const firstName = row.cells[2].data as string
-const lastName = row.cells[3].data as string
-
-// After:
-const firstName = row.cells[1].data as string
-const lastName = row.cells[2].data as string
+```tsx
+style={{
+  fontSize: size === 'xs' ? '0.65rem' : '0.75rem',
+  fontWeight: 600,
+  width: size === 'xs' ? '1.5rem' : '2.25rem',
+  height: size === 'xs' ? '1.5rem' : '2.25rem',
+  minWidth: size === 'xs' ? '1.5rem' : '2.25rem',
+  minHeight: size === 'xs' ? '1.5rem' : '2.25rem',
+  lineHeight: 1,
+}}
 ```
 
-### 2. `src/app/(admin)/housing-registrations/components/RegistrationTable.tsx`
+**HTML utility** (`renderApplicantAvatarHtml`) — wrap the output in a `<div>` with `display:flex; align-items:center;` and lock the circle dimensions inline:
 
-Change the Applicant formatter (lines 123-124):
+```html
+<div style="display:flex;align-items:center">
+  <span class="avatar-xs rounded-circle avatar-title {color} d-inline-flex"
+        style="font-size:0.65rem;font-weight:600;width:1.5rem;height:1.5rem;min-width:1.5rem;min-height:1.5rem;line-height:1"
+        aria-label="..." title="...">
+    {INITIALS}
+  </span>
+  <span class="ms-1">{name}</span>
+</div>
 ```
-// Before:
-const firstName = row.cells[2].data as string
-const lastName = row.cells[3].data as string
 
-// After:
-const firstName = row.cells[1].data as string
-const lastName = row.cells[2].data as string
-```
+### 2. No other files changed
 
-## Verification
+- `CaseTable.tsx`, `RegistrationTable.tsx`, `User.tsx` — no changes needed (they already call the component/utility correctly)
+- No CSS files added or modified
+- No backend/data changes
 
-After fix, confirm on both list pages:
-- Initials match actual applicant names (e.g., "Chantal Peroti" shows "CP", not "P-" or garbled)
-- Dashboard widget initials remain correct (no change needed there)
-- No layout regression
+## Before vs After
 
-## Risk: NONE
-- No DB/RLS/edge function changes
-- Only correcting array index references in 2 files
+| Aspect | Before | After |
+|--------|--------|-------|
+| Circle shape | Stretched vertically by table cell | Fixed 1.5rem x 1.5rem circle |
+| Vertical alignment | Misaligned with name text | Flex-centered with name |
+| Row height | Inconsistent (stretched by avatar) | Consistent (avatar doesn't expand row) |
+| Wrapper | None (raw spans in cell) | Flex container ensures horizontal alignment |
+
+## Verification Steps
+
+1. Dashboard widgets: circles are round, name aligned horizontally
+2. Subsidy Cases Grid.js list: circles are round, row height consistent
+3. Housing Registrations Grid.js list: same as above
+4. No layout regression in other table columns
+

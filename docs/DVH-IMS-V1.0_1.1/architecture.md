@@ -154,6 +154,7 @@ All 23 database tables have Row-Level Security (RLS) enabled with a Phase 1 allo
 | 2026-02-27 | Shared document config validated (`src/config/documentRequirements.ts`) | v1.7.x Docs Sync — Smoke test PASS for both Bouwsubsidie (7 items) and Housing (6 items). Admin views aligned with wizard config. |
 | 2026-02-27 | Data-layer audit completed for document config sync | v1.7.x Audit — 3 housing DB label mismatches (non-blocking), 3 bouwsubsidie deprecated DB rows (no UI impact), wizard constants duplication noted. Full report: `docs/audits/v1.7/DATA_LAYER_AUDIT_DOCS_CONFIG_SYNC.md` |
 | 2026-02-28 | Phase 7: Deprecated subsidy docs soft-deprecated (staging) | v1.7.x — Added `is_active` column to `subsidy_document_requirement`. Set `is_active = false` for BUILDING_PERMIT, CONSTRUCTION_PLAN, COST_ESTIMATE. Hard DELETE blocked by FK constraint (9 historical uploads). |
+| 2026-03-01 | Phase 8: Wizard constants refactored to shared config | v1.7.x — Both wizard `REQUIRED_DOCUMENTS` arrays now derived from `src/config/documentRequirements.ts`. Eliminates duplication. Bouwsubsidie uses prefix convention, Housing uses explicit label map. |
 
 ---
 

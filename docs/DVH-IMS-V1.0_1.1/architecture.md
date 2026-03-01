@@ -155,6 +155,7 @@ All 23 database tables have Row-Level Security (RLS) enabled with a Phase 1 allo
 | 2026-02-27 | Data-layer audit completed for document config sync | v1.7.x Audit — 3 housing DB label mismatches (non-blocking), 3 bouwsubsidie deprecated DB rows (no UI impact), wizard constants duplication noted. Full report: `docs/audits/v1.7/DATA_LAYER_AUDIT_DOCS_CONFIG_SYNC.md` |
 | 2026-02-28 | Phase 7: Deprecated subsidy docs soft-deprecated (staging) | v1.7.x — Added `is_active` column to `subsidy_document_requirement`. Set `is_active = false` for BUILDING_PERMIT, CONSTRUCTION_PLAN, COST_ESTIMATE. Hard DELETE blocked by FK constraint (9 historical uploads). |
 | 2026-03-01 | Phase 8: Wizard constants refactored to shared config | v1.7.x — Both wizard `REQUIRED_DOCUMENTS` arrays now derived from `src/config/documentRequirements.ts`. Eliminates duplication. Bouwsubsidie uses prefix convention, Housing uses explicit label map. |
+| 2026-03-01 | Bugfix: Housing submit failure (person upsert + ref retry) | v1.7.x — Edge function `submit-housing-registration` fixed for duplicate `person_national_id_key` and `housing_registration_reference_number_key` constraint violations. Person lookup-first pattern + reference number retry loop (max 3). Correlation ID added to all logs. |
 
 ---
 

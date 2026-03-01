@@ -132,6 +132,45 @@ Construction Plan, Cost Estimate, Building Permit — NOT present in shared conf
 
 ---
 
+## v1.7.x — Bugfix: Housing Submit Failure (2026-03-01)
+
+### Root Cause
+
+Edge function `submit-housing-registration` failed on two DB unique constraint violations:
+
+1. **`person_national_id_key`** — INSERT failed when a citizen with the same `national_id` already existed (from prior attempt or Bouwsubsidie application)
+2. **`housing_registration_reference_number_key`** — Reference number collision from prior partially-committed attempt
+
+### Fix Applied
+
+| Change | Description |
+|--------|-------------|
+| Person lookup-first | Query existing person by `national_id` before INSERT. Reuse if found. |
+| Reference number retry | Retry loop (max 3 attempts) catches duplicate `reference_number` errors and regenerates. |
+| Correlation logging | All log lines include `correlation=<UUID>` for traceability. No PII logged. |
+| Audit event enrichment | `correlation_id` and `person_reused` flag added to audit metadata. |
+
+### Transaction Safety
+
+Compensating cleanup model: if registration INSERT fails after person/household creation, orphaned records are benign (no status, no public access token). Next retry reuses existing person via lookup-first pattern. No partial public-facing state is created.
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `supabase/functions/submit-housing-registration/index.ts` | Person upsert + ref retry + correlation ID |
+
+### Verification
+
+- New national_id submission: SUCCESS
+- Duplicate national_id submission: SUCCESS (reuses existing person)
+- Reference number collision: handled by retry loop
+- No DB schema changes, no RLS changes
+
+**Restore Point:** `docs/restore-points/v1.7/RESTORE_POINT_V1_7_HOUSING_SUBMIT_FAIL.md`
+
+---
+
 ## v1.7.x — Phase 8: Wizard Constants Refactor (2026-03-01)
 
 ### Change

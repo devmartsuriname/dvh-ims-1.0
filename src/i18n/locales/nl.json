@@ -539,6 +539,8 @@
     "serverError": "We konden uw verzoek momenteel niet verwerken. Probeer later opnieuw.",
     "uploadFailed": "Document uploaden mislukt. Probeer opnieuw.",
     "statusLookupFailed": "We konden de status van uw aanvraag niet ophalen. Probeer opnieuw.",
-    "invalidCredentials": "Het referentienummer of toegangstoken dat u heeft ingevoerd is onjuist. Controleer en probeer opnieuw."
+    "invalidCredentials": "Het referentienummer of toegangstoken dat u heeft ingevoerd is onjuist. Controleer en probeer opnieuw.",
+    "incomeProofRequired": "Upload minimaal één inkomensbewijs (loonstrook, AOV-verklaring, pensioenverklaring of werkgeversverklaring) om door te gaan.",
+    "mandatoryDocumentsMissing": "Verplichte documenten ontbreken. Zorg ervoor dat u een kopie van uw identiteitsbewijs en bankafschrift heeft geüpload."
   }
 }

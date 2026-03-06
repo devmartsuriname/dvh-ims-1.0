@@ -539,6 +539,8 @@
     "serverError": "We were unable to process your request at this time. Please try again later.",
     "uploadFailed": "Document upload failed. Please try again.",
     "statusLookupFailed": "We were unable to retrieve your application status. Please try again.",
-    "invalidCredentials": "The reference number or access token you entered is incorrect. Please check and try again."
+    "invalidCredentials": "The reference number or access token you entered is incorrect. Please check and try again.",
+    "incomeProofRequired": "Please upload at least one income proof document (payslip, AOV statement, pension statement, or employer declaration) to proceed.",
+    "mandatoryDocumentsMissing": "Required documents are missing. Please ensure you have uploaded a copy of your ID and bank statement."
   }
 }

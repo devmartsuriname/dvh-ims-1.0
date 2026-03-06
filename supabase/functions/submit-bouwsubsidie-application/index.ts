@@ -264,6 +264,51 @@ Deno.serve(async (req) => {
     
     const input = validation.data
     
+    // === V1.8 Phase 3: Server-side document validation ===
+    const MANDATORY_DOCUMENT_CODES = ['ID_COPY', 'BANK_STATEMENT']
+    const INCOME_PROOF_CODES = ['PAYSLIP', 'AOV_STATEMENT', 'PENSION_STATEMENT', 'EMPLOYER_DECLARATION']
+    
+    const uploadedDocCodes = (input.documents || [])
+      .filter((doc: any) => doc.uploaded_file?.file_path)
+      .map((doc: any) => doc.document_code)
+    
+    const missingMandatory = MANDATORY_DOCUMENT_CODES.filter(code => !uploadedDocCodes.includes(code))
+    const hasIncomeProof = INCOME_PROOF_CODES.some(code => uploadedDocCodes.includes(code))
+    
+    if (missingMandatory.length > 0 || !hasIncomeProof) {
+      const validationType = missingMandatory.length > 0 ? 'mandatory_documents' : 'income_proof'
+      const errorCode = missingMandatory.length > 0 ? 'MANDATORY_DOCUMENTS_MISSING' : 'INCOME_PROOF_REQUIRED'
+      
+      // Audit log for blocked submission
+      const ipHash = await hashIP(clientIP)
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      const auditClient = createClient(supabaseUrl, supabaseServiceKey)
+      
+      await auditClient.from('audit_event').insert({
+        actor_user_id: null,
+        actor_role: 'public',
+        entity_type: 'subsidy_case',
+        entity_id: null,
+        action: 'SUBMISSION_VALIDATION_BLOCKED',
+        metadata_json: {
+          validation_type: validationType,
+          error_code: errorCode,
+          district_code: input.district,
+          submission_ip_hash: ipHash,
+          timestamp: new Date().toISOString()
+        }
+      })
+      
+      console.log(`[submit-bouwsubsidie] Submission blocked: ${errorCode}, district: ${input.district}`)
+      
+      return new Response(
+        JSON.stringify({ success: false, error: errorCode }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    // === End V1.8 Phase 3 document validation ===
+    
     // Create Supabase client with service role for database operations
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!

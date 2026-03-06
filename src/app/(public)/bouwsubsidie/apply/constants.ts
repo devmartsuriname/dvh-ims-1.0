@@ -37,6 +37,8 @@ export const REQUIRED_DOCUMENTS: Omit<DocumentUpload, 'uploaded_file'>[] =
     document_code: req.document_code,
     label: `bouwsubsidie.documents.${req.document_code}`,
     is_mandatory: req.is_mandatory,
+    category: req.category,
+    validation_group: req.validation_group,
   }))
 
 export const WIZARD_STEPS = [

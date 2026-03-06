@@ -427,7 +427,9 @@
       "removeFile": "Bestand verwijderen",
       "documentsUploaded": "documenten geüpload",
       "of": "van",
-      "mandatoryMissing": "Upload alle verplichte documenten om door te gaan"
+      "mandatoryMissing": "Upload alle verplichte documenten om door te gaan",
+      "incomeProofMissing": "Upload minimaal één inkomensbewijs (loonstrook, AOV-verklaring, pensioenverklaring of werkgeversverklaring)",
+      "groupRequired": "Min. 1 vereist"
     },
     "step7": {
       "title": "Controleer uw aanvraag",
@@ -481,7 +483,19 @@
       "BANK_STATEMENT": "Bankafschrift (laatste 3 maanden)",
       "HOUSEHOLD_COMP": "Huishoudsamenstelling",
       "CBB_EXTRACT": "CBB uittreksel / Nationaliteit verklaring",
-      "FAMILY_EXTRACT": "Gezinuittreksel"
+      "FAMILY_EXTRACT": "Gezinuittreksel",
+      "PAYSLIP": "Loonstrook",
+      "AOV_STATEMENT": "AOV-verklaring",
+      "PENSION_STATEMENT": "Pensioenverklaring",
+      "EMPLOYER_DECLARATION": "Werkgeversverklaring",
+      "PROPERTY_DEED": "Grondbewijs / eigendomsbewijs",
+      "GLIS_EXTRACT": "GLIS-uittreksel",
+      "PARCEL_MAP": "Perceelkaart",
+      "NOTARIAL_DEED": "Notariële akte",
+      "PURCHASE_AGREEMENT": "Koopovereenkomst",
+      "ESTATE_PERMISSION": "Boedelgrondverklaring",
+      "MORTGAGE_EXTRACT": "Hypotheekuittreksel",
+      "VILLAGE_AUTHORITY": "Verklaring dorpshoofd"
     }
   },
   "validation": {

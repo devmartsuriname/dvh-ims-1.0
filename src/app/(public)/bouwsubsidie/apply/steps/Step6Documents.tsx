@@ -1,6 +1,6 @@
 /**
  * Step 6: Document Upload
- * V1.7 Phase B — Tabs + Accordion compact layout
+ * V1.8 Phase 2 — Added group-mandatory validation for income_proof
  * 
  * Uses DocumentUploadAccordion for compact mobile-friendly upload.
  * Upload logic unchanged from V1.3.
@@ -14,6 +14,7 @@ import WizardStep from '@/components/public/WizardStep'
 import DocumentUploadAccordion from '@/components/public/DocumentUploadAccordion'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import type { WizardStepProps, DocumentUpload } from '../types'
+import { BOUWSUBSIDIE_INCOME_GROUP } from '@/config/documentRequirements'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 
@@ -23,9 +24,18 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({})
 
+  // Mandatory check (ID_COPY, BANK_STATEMENT)
   const mandatoryDocs = formData.documents.filter(d => d.is_mandatory)
   const uploadedMandatoryCount = mandatoryDocs.filter(d => d.uploaded_file).length
   const allMandatoryUploaded = uploadedMandatoryCount === mandatoryDocs.length
+
+  // Group-mandatory check: at least 1 income_proof document uploaded
+  const incomeGroupDocs = formData.documents.filter(d => d.validation_group === BOUWSUBSIDIE_INCOME_GROUP)
+  const hasIncomeProof = incomeGroupDocs.some(d => d.uploaded_file)
+
+  // Combined gate
+  const canProceed = allMandatoryUploaded && hasIncomeProof
+
   const totalUploaded = formData.documents.filter(d => d.uploaded_file).length
 
   const getSessionId = () => {
@@ -123,7 +133,7 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
       description={t('bouwsubsidie.step6.description')}
       onBack={onBack}
       onNext={onNext}
-      nextDisabled={!allMandatoryUploaded}
+      nextDisabled={!canProceed}
     >
       <Alert variant="info" className="d-flex align-items-start mb-3">
         <IconifyIcon icon="mingcute:information-line" className="text-info fs-4 me-2 mt-1 flex-shrink-0" />
@@ -144,7 +154,7 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
       />
 
       {/* Summary */}
-      <Card className={`mt-3 ${allMandatoryUploaded ? 'border-success' : 'border-warning'}`}>
+      <Card className={`mt-3 ${canProceed ? 'border-success' : 'border-warning'}`}>
         <Card.Body className="py-3">
           <div className="d-flex justify-content-between align-items-center">
             <div>
@@ -169,6 +179,12 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
             <p className="text-warning small mb-0 mt-2">
               <IconifyIcon icon="mingcute:warning-line" className="me-1" />
               {t('bouwsubsidie.step6.mandatoryMissing')}
+            </p>
+          )}
+          {allMandatoryUploaded && !hasIncomeProof && (
+            <p className="text-warning small mb-0 mt-2">
+              <IconifyIcon icon="mingcute:warning-line" className="me-1" />
+              {t('bouwsubsidie.step6.incomeProofMissing')}
             </p>
           )}
         </Card.Body>

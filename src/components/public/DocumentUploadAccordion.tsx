@@ -1,6 +1,6 @@
 /**
  * DocumentUploadAccordion
- * V1.7 Phase B — Compact accordion-based document upload list
+ * V1.8 Phase 2 — Added validation_group badge for group-mandatory docs
  * 
  * Replaces vertical card grid with collapsed rows that expand to show dropzone.
  * Upload state is managed by parent formData — accordion expand/collapse does NOT
@@ -33,6 +33,8 @@ interface DocumentItem {
   document_code: string
   label: string
   is_mandatory: boolean
+  category?: string
+  validation_group?: string
   uploaded_file?: UploadedFile
 }
 
@@ -90,6 +92,42 @@ const AccordionDocItem = ({
     disabled: isUploading || hasUpload,
   })
 
+  /**
+   * Determine the status badge for non-uploaded documents:
+   * - is_mandatory → warning "Mandatory"
+   * - has validation_group → info "1 required" (group-mandatory)
+   * - else → secondary "Optional"
+   */
+  const renderStatusBadge = () => {
+    if (hasUpload) {
+      return (
+        <Badge bg="success" className="d-flex align-items-center gap-1">
+          <IconifyIcon icon="mingcute:check-circle-fill" style={{ fontSize: 12 }} />
+          {t(`${ns}.uploaded`)}
+        </Badge>
+      )
+    }
+    if (doc.is_mandatory) {
+      return (
+        <Badge bg="warning" className="text-dark">
+          {t(`${ns}.mandatory`)}
+        </Badge>
+      )
+    }
+    if (doc.validation_group) {
+      return (
+        <Badge bg="info" className="text-white">
+          {t(`${ns}.groupRequired`)}
+        </Badge>
+      )
+    }
+    return (
+      <Badge bg="secondary" className="text-dark">
+        {t(`${ns}.optional`)}
+      </Badge>
+    )
+  }
+
   return (
     <Accordion.Item eventKey={doc.id} className="border-0 border-bottom">
       <Accordion.Header className="py-0">
@@ -110,16 +148,7 @@ const AccordionDocItem = ({
             <span className="fw-medium small">{t(doc.label)}</span>
           </div>
           <div className="flex-shrink-0 ms-2">
-            {hasUpload ? (
-              <Badge bg="success" className="d-flex align-items-center gap-1">
-                <IconifyIcon icon="mingcute:check-circle-fill" style={{ fontSize: 12 }} />
-                {t(`${ns}.uploaded`)}
-              </Badge>
-            ) : (
-              <Badge bg={doc.is_mandatory ? 'warning' : 'secondary'} className="text-dark">
-                {doc.is_mandatory ? t(`${ns}.mandatory`) : t(`${ns}.optional`)}
-              </Badge>
-            )}
+            {renderStatusBadge()}
           </div>
         </div>
       </Accordion.Header>

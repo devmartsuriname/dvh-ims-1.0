@@ -8,36 +8,70 @@
  * DO NOT duplicate document lists elsewhere.
  * All document requirement definitions MUST reference this module.
  * 
- * V1.7.x — Sync fix: wizard → admin alignment
+ * V1.8 Phase 2 — Expanded Bouwsubsidie config with category + validation_group
  */
 
 export interface DocumentRequirementConfig {
   document_code: string
   document_name: string
   is_mandatory: boolean
+  category?: string
+  validation_group?: string
 }
 
 /**
  * Bouwsubsidie document requirements
- * 5 mandatory + 2 optional
+ * 14 active documents: 2 mandatory + 4 group-mandatory (income_proof) + 8 optional
  * 
- * Canonical set per V1.5 update:
- * - Deprecated types (Construction Plan, Cost Estimate, Building Permit)
- *   are excluded from this config and hidden from UI.
+ * V1.8: Expanded from 7 to 14 active docs.
+ * Deprecated codes (INCOME_PROOF, LAND_TITLE, HOUSEHOLD_COMP, etc.) are
+ * soft-deprecated in DB (is_active = false) and excluded from this config.
  */
 export const BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS: DocumentRequirementConfig[] = [
-  { document_code: 'ID_COPY', document_name: 'Copy of ID', is_mandatory: true },
-  { document_code: 'INCOME_PROOF', document_name: 'Inkomensverklaring (AOV/loonstrook)', is_mandatory: true },
-  { document_code: 'LAND_TITLE', document_name: 'Land Title / Deed', is_mandatory: true },
-  { document_code: 'BANK_STATEMENT', document_name: 'Bank Statement', is_mandatory: true },
-  { document_code: 'HOUSEHOLD_COMP', document_name: 'Household Composition', is_mandatory: true },
-  { document_code: 'CBB_EXTRACT', document_name: 'CBB uittreksel / Nationaliteit verklaring', is_mandatory: false },
-  { document_code: 'FAMILY_EXTRACT', document_name: 'Gezinuittreksel', is_mandatory: false },
+  // identity — mandatory
+  { document_code: 'ID_COPY', document_name: 'Kopie ID-kaart', is_mandatory: true, category: 'identity' },
+
+  // income — group-mandatory (at least 1 required via validation_group)
+  { document_code: 'PAYSLIP', document_name: 'Loonstrook', is_mandatory: false, category: 'income', validation_group: 'income_proof' },
+  { document_code: 'AOV_STATEMENT', document_name: 'AOV-verklaring', is_mandatory: false, category: 'income', validation_group: 'income_proof' },
+  { document_code: 'PENSION_STATEMENT', document_name: 'Pensioenverklaring', is_mandatory: false, category: 'income', validation_group: 'income_proof' },
+  { document_code: 'EMPLOYER_DECLARATION', document_name: 'Werkgeversverklaring', is_mandatory: false, category: 'income', validation_group: 'income_proof' },
+
+  // financial — mandatory
+  { document_code: 'BANK_STATEMENT', document_name: 'Bankafschrift', is_mandatory: true, category: 'financial' },
+
+  // property — optional
+  { document_code: 'PROPERTY_DEED', document_name: 'Grondbewijs / eigendomsbewijs', is_mandatory: false, category: 'property' },
+  { document_code: 'GLIS_EXTRACT', document_name: 'GLIS-uittreksel', is_mandatory: false, category: 'property' },
+  { document_code: 'PARCEL_MAP', document_name: 'Perceelkaart', is_mandatory: false, category: 'property' },
+
+  // legal — optional
+  { document_code: 'NOTARIAL_DEED', document_name: 'Notariële akte', is_mandatory: false, category: 'legal' },
+  { document_code: 'PURCHASE_AGREEMENT', document_name: 'Koopovereenkomst', is_mandatory: false, category: 'legal' },
+
+  // special — optional
+  { document_code: 'ESTATE_PERMISSION', document_name: 'Boedelgrondverklaring', is_mandatory: false, category: 'special' },
+  { document_code: 'MORTGAGE_EXTRACT', document_name: 'Hypotheekuittreksel', is_mandatory: false, category: 'special' },
+  { document_code: 'VILLAGE_AUTHORITY', document_name: 'Verklaring dorpshoofd', is_mandatory: false, category: 'special' },
 ]
+
+/**
+ * Ordered list of Bouwsubsidie document categories for UI grouping
+ */
+export const BOUWSUBSIDIE_DOCUMENT_CATEGORIES = [
+  'identity', 'income', 'financial', 'property', 'legal', 'special',
+] as const
+
+/**
+ * Validation group identifier for income proof documents
+ * Used by Step 6 validation to enforce at-least-one-of-group rule
+ */
+export const BOUWSUBSIDIE_INCOME_GROUP = 'income_proof'
 
 /**
  * Woningregistratie document requirements
  * 3 mandatory + 3 optional
+ * UNCHANGED in V1.8
  */
 export const HOUSING_DOCUMENT_REQUIREMENTS: DocumentRequirementConfig[] = [
   { document_code: 'ID_COPY', document_name: 'Copy of ID', is_mandatory: true },

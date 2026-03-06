@@ -16,6 +16,8 @@ export interface DocumentUpload {
   document_code: string         // code matching subsidy_document_requirement
   label: string                 // display label (translated)
   is_mandatory: boolean         // whether upload is required
+  category?: string             // V1.8: document category for UI grouping
+  validation_group?: string     // V1.8: group-mandatory validation key
   uploaded_file?: {
     file_path: string           // storage path in citizen-uploads bucket
     file_name: string           // original file name

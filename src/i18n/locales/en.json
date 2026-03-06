@@ -427,7 +427,9 @@
       "removeFile": "Remove file",
       "documentsUploaded": "documents uploaded",
       "of": "of",
-      "mandatoryMissing": "Upload all mandatory documents to continue"
+      "mandatoryMissing": "Upload all mandatory documents to continue",
+      "incomeProofMissing": "Upload at least one income proof (pay slip, AOV statement, pension statement, or employer declaration)",
+      "groupRequired": "Min. 1 required"
     },
     "step7": {
       "title": "Review Your Application",
@@ -481,7 +483,19 @@
       "BANK_STATEMENT": "Bank statement (last 3 months)",
       "HOUSEHOLD_COMP": "Household composition",
       "CBB_EXTRACT": "CBB extract / Nationality declaration",
-      "FAMILY_EXTRACT": "Family extract"
+      "FAMILY_EXTRACT": "Family extract",
+      "PAYSLIP": "Pay slip",
+      "AOV_STATEMENT": "AOV statement",
+      "PENSION_STATEMENT": "Pension statement",
+      "EMPLOYER_DECLARATION": "Employer declaration",
+      "PROPERTY_DEED": "Property deed / ownership proof",
+      "GLIS_EXTRACT": "GLIS extract",
+      "PARCEL_MAP": "Parcel map",
+      "NOTARIAL_DEED": "Notarial deed",
+      "PURCHASE_AGREEMENT": "Purchase agreement",
+      "ESTATE_PERMISSION": "Estate land declaration",
+      "MORTGAGE_EXTRACT": "Mortgage extract",
+      "VILLAGE_AUTHORITY": "Village authority declaration"
     }
   },
   "validation": {

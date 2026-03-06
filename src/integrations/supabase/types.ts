@@ -1095,6 +1095,44 @@ export type Database = {
           },
         ]
       }
+      subsidy_household_child: {
+        Row: {
+          age: number
+          created_at: string
+          gender: string
+          has_disability: boolean
+          id: string
+          sort_order: number
+          subsidy_case_id: string
+        }
+        Insert: {
+          age: number
+          created_at?: string
+          gender: string
+          has_disability?: boolean
+          id?: string
+          sort_order?: number
+          subsidy_case_id: string
+        }
+        Update: {
+          age?: number
+          created_at?: string
+          gender?: string
+          has_disability?: boolean
+          id?: string
+          sort_order?: number
+          subsidy_case_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subsidy_household_child_subsidy_case_id_fkey"
+            columns: ["subsidy_case_id"]
+            isOneToOne: false
+            referencedRelation: "subsidy_case"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       technical_report: {
         Row: {
           case_id: string

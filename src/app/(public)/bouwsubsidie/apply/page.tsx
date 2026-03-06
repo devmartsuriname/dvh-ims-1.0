@@ -71,6 +71,14 @@ const BouwsubsidieWizard = () => {
       return t('errors.rateLimited')
     }
     
+    // V1.8 Phase 3: Structured document validation error codes
+    if (errorStr === 'INCOME_PROOF_REQUIRED') {
+      return t('errors.incomeProofRequired')
+    }
+    if (errorStr === 'MANDATORY_DOCUMENTS_MISSING') {
+      return t('errors.mandatoryDocumentsMissing')
+    }
+    
     // Validation errors
     if (status === 400 || errorStr.toLowerCase().includes('validation')) {
       return t('errors.validationError')

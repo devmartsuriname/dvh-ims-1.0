@@ -1013,6 +1013,7 @@ export type Database = {
       }
       subsidy_document_requirement: {
         Row: {
+          category: string | null
           created_at: string
           description: string | null
           document_code: string
@@ -1020,8 +1021,10 @@ export type Database = {
           id: string
           is_active: boolean
           is_mandatory: boolean
+          validation_group: string | null
         }
         Insert: {
+          category?: string | null
           created_at?: string
           description?: string | null
           document_code: string
@@ -1029,8 +1032,10 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_mandatory?: boolean
+          validation_group?: string | null
         }
         Update: {
+          category?: string | null
           created_at?: string
           description?: string | null
           document_code?: string
@@ -1038,6 +1043,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_mandatory?: boolean
+          validation_group?: string | null
         }
         Relationships: []
       }

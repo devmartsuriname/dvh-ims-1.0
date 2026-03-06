@@ -1,87 +1,280 @@
+# Ministerial System Manual — Documentation Execution Plan
+
+## Objective
+
+Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
+
+This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
+
+---
+
+## Deliverable Structure
+
+**Folder:** `/docs/manual/`
 
 
-# DVH-IMS v1.8 — Phase 1B: Document Requirements Data Operations
+| #   | File                                                 | Purpose                                                                                                  |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
+| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
+| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
+| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
+| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
+| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
+| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
+| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
+| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
+| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
+| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
+| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
+| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
+| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
+| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
+| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
 
-## Current DB State
 
-10 rows in `subsidy_document_requirement`. 3 already `is_active = false` (BUILDING_PERMIT, CONSTRUCTION_PLAN, COST_ESTIMATE). 7 active rows.
+**Total: 16 documents**
 
-## Step 1: Schema Change (Migration)
+---
 
-Add 2 nullable columns:
+## URL Documentation
 
-```sql
-ALTER TABLE public.subsidy_document_requirement
-  ADD COLUMN category text,
-  ADD COLUMN validation_group text;
+All documents will include explicit URLs based on:
+
+**Production (Published):**
+
+- Landing: `https://huggable-cloud-whisper.lovable.app/`
+- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
+- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
+- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
+- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
+- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
+
+**Staging (Preview):**
+
+- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
+- Same path structure as production
+
+Admin module URLs will be listed per-module in document 12.
+
+---
+
+## Content Coverage Per Document
+
+### 00 - Executive Summary
+
+- System purpose and legal mandate
+- Two services overview (Housing + Subsidy)
+- Governance and accountability model (1 paragraph)
+- Role structure summary
+- Key operational metrics / KPIs
+- "What happens next?" for both services
+- 5-10 pages, non-technical language
+
+### 01 - System Overview
+
+- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
+- Public vs Admin separation
+- Authentication model (staff-only login, citizen anonymous access)
+- District-based scoping
+
+### 02 + 03 - Public Wizard Workflows
+
+Per service:
+
+- Preconditions
+- Step-by-step wizard walkthrough (each form step)
+- Reference number generation
+- Security token explanation
+- Receipt/confirmation page
+- Status tracking via `/status`
+- "What happens after submission?"
+
+### 04 + 05 - Admin Workflows
+
+Per service:
+
+- Locating records in list view
+- Opening detail view
+- Status change process (with mandatory reason)
+- Document upload and verification
+- Field reports (Social, Technical — Bouwsubsidie only)
+- Decision chain steps
+- Raadvoorstel generation (Bouwsubsidie only)
+- Archive flow
+- Audit trail per action
+
+### 06 - Roles & Permission Matrix
+
+Table columns:
+
+- Role name (all 11 implemented roles)
+- Modules accessible
+- Create/Edit rights
+- Status change authority (which statuses)
+- Document upload/verify rights
+- Allocation/decision authority
+- Audit log access
+- Export/print permissions
+- National vs district-scoped flag
+
+### 07 - Status Lifecycle
+
+- ASCII state diagrams for both services
+- Transition rules with triggering roles
+- Decision authority per transition
+- Mandatory reason requirements
+
+### 08 - Document Management
+
+- Upload workflow
+- Verification tracking
+- Raadvoorstel generation (edge function)
+- Download via signed URLs
+
+### 09 - Audit Logging
+
+- `audit_event` table structure
+- What triggers a log entry
+- Where to view audit logs (Admin > Audit Log)
+- Append-only guarantee
+- Role access to audit log
+
+### 10 - Allocation Engine
+
+- District quotas setup
+- Urgency scoring model
+- Allocation run execution
+- Matching logic
+- Decision recording
+- Assignment registration
+
+### 11 - Governance Controls
+
+- RLS enforcement model
+- Least-privilege access
+- Ministerial Advisor mandatory paraph
+- Minister deviation logging
+- Status history immutability
+
+### 12 - Module Specification
+
+All 20 pages/modules documented:
+
+- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
+- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
+
+Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
+
+### 13 - Operational Scenarios
+
+Minimum 8 numbered end-to-end scenarios:
+
+1. Citizen submits Housing Registration
+2. Citizen submits Subsidy Application
+3. Frontdesk processes new Housing Registration
+4. Frontdesk processes new Subsidy Case through full decision chain
+5. Allocation run execution and assignment
+6. Minister approves/rejects with deviation from advisor
+7. Archive lookup of closed case
+8. Audit trail verification for a specific case
+
+Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
+
+### 14 - Troubleshooting & FAQ
+
+- Common submission errors
+- Duplicate/resubmission behavior
+- Status lookup failures
+- Document upload issues
+- Permission denied scenarios
+- Session timeout handling
+
+### 15 - Glossary
+
+- All status values (both services)
+- Field definitions
+- Role names with descriptions
+- System terminology (Raadvoorstel, paraph, district code, etc.)
+
+---
+
+## Screenshots Strategy
+
+- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
+- Each reference follows format: `Figure X.Y — Description`
+- PII masking note included in each document header
+- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
+
+---
+
+## Execution Sequence
+
+1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
+2. Create `/docs/manual/` folder
+3. Generate documents in order: 00 through 15
+4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
+5. After all 16 documents: produce completion checklist
+
+---
+
+## Quality Gates
+
+- Language: Clear, non-technical, suitable for Minister and senior staff
+- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
+- UI alignment: All labels, navigation paths, and field names match current implementation
+- No invented features or roles
+- No code/schema/RLS changes
+- Restore point created before any file creation
+
+## IMPORTANT — PRODUCTION URL CORRECTION
+
+All documentation must use the official custom production domain:
+
+[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
+
+DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
+
+Update all production URLs to:
+
+Landing:
+
+[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
+
+Housing Registration:
+
+[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
+
+Subsidy Application:
+
+[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
+
+Status Tracker:
+
+[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
+
+Staff Login:
+
+[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
+
+Admin Dashboard:
+
+[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
+
+If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
+
+The Ministerial Manual must only reference the official production domain.  
+  
+**Completion Report Format**
+
+After all documents are generated:
+
 ```
-
-Both nullable — no impact on existing rows.
-
-## Step 2: Soft-Deprecate 5 Active Rows (Insert Tool)
-
-Set `is_active = false` for:
-
-| Code | Current Status |
-|------|---------------|
-| HOUSEHOLD_COMP | active, mandatory |
-| FAMILY_EXTRACT | active, optional |
-| CBB_EXTRACT | active, optional |
-| INCOME_PROOF | active, mandatory |
-| LAND_TITLE | active, mandatory |
-
-No DELETE. Historical uploads remain visible (confirmed in prior analysis).
-
-## Step 3: Insert 13 New Rows (Insert Tool)
-
-Using the approved document list. `ID_COPY` and `BANK_STATEMENT` already exist — these will be UPDATED (set category, keep is_active = true) rather than re-inserted.
-
-**Updates to existing rows (2):**
-
-| Code | Set category | Set validation_group |
-|------|-------------|---------------------|
-| ID_COPY | identity | NULL |
-| BANK_STATEMENT | financial | NULL |
-
-**New inserts (11):**
-
-| Code | Name | Mandatory | Category | validation_group |
-|------|------|-----------|----------|-----------------|
-| PAYSLIP | Loonstrook | false | income | income_proof |
-| AOV_STATEMENT | AOV-verklaring | false | income | income_proof |
-| PENSION_STATEMENT | Pensioenverklaring | false | income | income_proof |
-| EMPLOYER_DECLARATION | Werkgeversverklaring | false | income | income_proof |
-| PROPERTY_DEED | Grondbewijs / eigendomsbewijs | false | property | NULL |
-| GLIS_EXTRACT | GLIS-uittreksel | false | property | NULL |
-| PARCEL_MAP | Perceelkaart | false | property | NULL |
-| NOTARIAL_DEED | Notariële akte | false | legal | NULL |
-| PURCHASE_AGREEMENT | Koopovereenkomst | false | legal | NULL |
-| ESTATE_PERMISSION | Boedelgrondverklaring | false | special | NULL |
-| MORTGAGE_EXTRACT | Hypotheekuittreksel | false | special | NULL |
-| VILLAGE_AUTHORITY | Verklaring dorpshoofd | false | special | NULL |
-
-Wait — that's 12 new rows, not 11. Let me recount: PAYSLIP, AOV_STATEMENT, PENSION_STATEMENT, EMPLOYER_DECLARATION (4 income) + PROPERTY_DEED, GLIS_EXTRACT, PARCEL_MAP (3 property) + NOTARIAL_DEED, PURCHASE_AGREEMENT (2 legal) + ESTATE_PERMISSION, MORTGAGE_EXTRACT, VILLAGE_AUTHORITY (3 special) = 12 new inserts.
-
-## Step 4: Verification Queries
-
-After all operations:
-- Confirm 8 rows `is_active = false` (3 old deprecated + 5 newly deprecated)
-- Confirm 14 rows `is_active = true` (ID_COPY + BANK_STATEMENT existing + 12 new)
-- Confirm total = 22 rows
-- Confirm all new rows have category set
-- Confirm 4 income rows have `validation_group = 'income_proof'`
-
-## What This Does NOT Touch
-
-- `housing_document_requirement` — zero changes
-- Any frontend code — zero changes
-- `household_member` — zero changes
-
-## Deployment Sequence
-
-1. Migration: add `category` + `validation_group` columns
-2. Insert tool: soft-deprecate 5 rows
-3. Insert tool: update 2 existing rows (ID_COPY, BANK_STATEMENT) with category
-4. Insert tool: insert 12 new rows
-5. Verification query
-
+IMPLEMENTED: [list of created files]
+PARTIAL: [any incomplete documents + reason]
+SKIPPED: [none expected]
+VERIFICATION: [checklist per document — PASS/FAIL]
+RESTORE POINT: [ID]
+BLOCKERS: NONE / [description]
+CONFIRMATION: No code changes. No schema changes. No RLS changes.
+```

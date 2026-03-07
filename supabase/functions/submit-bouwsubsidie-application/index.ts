@@ -63,6 +63,7 @@ interface BouwsubsidieInput {
     relationship: string
   }>
   reason?: string
+  estimated_amount?: string
   documents?: DocumentUploadInput[]
   children?: ChildInputServer[]
 }

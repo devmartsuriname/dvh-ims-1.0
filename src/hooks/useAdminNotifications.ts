@@ -261,7 +261,7 @@ export async function createAdminNotification(params: {
     await logAuditEvent({
       action: 'CREATE',
       entity_type: 'admin_notification' as any,
-      entity_id: data.id,
+      entity_id: params.entityId,
       metadata: {
         action_detail: 'NOTIFICATION_CREATED',
         correlation_id: params.correlationId,
@@ -271,7 +271,7 @@ export async function createAdminNotification(params: {
       },
     })
 
-    return data.id
+    return params.correlationId
   } catch (err: any) {
     console.error('Failed to create notification:', err)
     

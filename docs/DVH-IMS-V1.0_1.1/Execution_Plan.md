@@ -3,7 +3,8 @@
 **Status:** Definitive EN Version
 **Execution Agent:** Lovable (execution-only)
 **Authority:** Delroy (final)
-**Deadline:** 30 January 2026 (non-negotiable)
+**Original Deadline:** 30 January 2026
+**Last Updated:** 2026-03-07
 **Governance:** Government Grade, Audit-first, RLS-first
 
 ---

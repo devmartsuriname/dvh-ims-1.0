@@ -2,7 +2,9 @@
 
 **Status:** Definitive EN Version
 **Alignment:** 1:1 derived from approved NL Database & RLS Specification
-**Deadline:** 30 January 2026
+**Original Deadline:** 30 January 2026
+**Last Updated:** 2026-03-07
+**Implementation Status:** All phases 0-7 COMPLETE. Schema implemented with extensions.
 **Security Posture:** Audit-first, least-privilege, RLS mandatory
 
 ---
@@ -374,13 +376,45 @@ Database changes follow the phase structure documented in `/phases/`:
 - Deny-all default: tables without explicit policies deny all access
 - No database changes without corresponding phase authorization
 
-### Phase 1 Allowlist Model
-Phase 1 uses a temporary allowlist security model:
-- Access restricted to `info@devmart.sr` only
-- JWT email claim validation: `current_setting('request.jwt.claims', true)::json->>'email'`
-- No role system (deferred to later phase)
-- No district-based filtering (deferred to later phase)
-- `audit_event` INSERT policy restricted to allowlist user
+### Security Model (Current)
+
+**Status:** RBAC fully implemented (replaced Phase 1 Allowlist model)
+
+- 11-role `app_role` enum with `has_role()` / `has_any_role()` SECURITY DEFINER functions
+- District scoping via `get_user_district()`
+- Zero anonymous policies on application tables (v1.8)
+- `app_user_profile` self-update restricted to prevent privilege escalation (v1.8)
+- Leaked password protection enabled (Supabase Pro tier)
+
+See `RLS_POLICY_MATRIX.md` and `SECURITY_RLS_ROLES_STATUS.md` for complete policy details.
+
+### Additional Tables (Implemented, not in original spec)
+
+| Table | Purpose |
+|-------|---------|
+| `housing_document_requirement` | Housing document type definitions |
+| `housing_document_upload` | Housing document uploads |
+| `case_assignment` | Subsidy case officer assignment |
+| `inspection_visit` | Field inspection scheduling |
+| `subsidy_household_child` | Subsidy case child records |
+| `admin_notification` | Internal admin notifications |
+
+### Storage Buckets
+
+| Bucket | Purpose | Access |
+|--------|---------|--------|
+| `citizen-documents` | Public wizard document uploads | anon upload/read (design-intentional) |
+
+### Edge Functions
+
+| Function | Purpose |
+|----------|---------|
+| `submit-bouwsubsidie-application` | Public bouwsubsidie intake |
+| `submit-housing-registration` | Public housing intake |
+| `lookup-public-status` | Public status tracking |
+| `execute-allocation-run` | Allocation engine |
+| `generate-raadvoorstel` | DOCX generation |
+| `get-document-download-url` | Signed document download |
 
 ---
 

@@ -1,9 +1,14 @@
 # DVH-IMS V1.2 — Tasks and Phases
 
-**Version:** DVH-IMS-V1.2  
-**Status:** DRAFT — Optional Planning Document  
-**Created:** 2026-01-24  
-**Document Type:** Planning / Task Breakdown (Non-Authoritative)  
+> **⚠️ ARCHIVED:** This document is superseded by the current project state (v1.8, Phase 7 complete).
+> The V1.2 planning model was incorporated into the extended phase structure (Phases 8-12) in `Execution_Plan.md`.
+> Retained for historical reference only.
+
+**Version:** DVH-IMS-V1.2
+**Status:** ARCHIVED — Superseded by v1.8
+**Created:** 2026-01-24
+**Archived:** 2026-03-07
+**Document Type:** Planning / Task Breakdown (Non-Authoritative)
 **Change Policy:** This document does not authorize implementation
 
 ---

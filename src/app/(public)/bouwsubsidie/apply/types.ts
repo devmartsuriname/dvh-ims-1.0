@@ -27,6 +27,16 @@ export interface DocumentUpload {
 }
 
 /**
+ * Child demographic input for subsidy household
+ * V1.8 Phase 5: Lightweight child entry (age/gender/disability only)
+ */
+export interface ChildInput {
+  age: number
+  gender: 'M' | 'F'
+  has_disability: boolean
+}
+
+/**
  * Main form data structure for Bouwsubsidie wizard
  */
 export interface BouwsubsidieFormData {
@@ -44,6 +54,7 @@ export interface BouwsubsidieFormData {
   // Step 3 - Household Information
   household_size: number
   dependents: number
+  children: ChildInput[]
   
   // Step 4 - Current Address
   address_line_1: string

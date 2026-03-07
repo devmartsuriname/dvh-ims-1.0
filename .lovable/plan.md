@@ -1,280 +1,120 @@
-# Ministerial System Manual — Documentation Execution Plan
+# V1.9 Phase 3 — Schema Recommendation Report
 
-## Objective
-
-Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
-
-This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
+**Context ID:** 8F42B1C3-5D9E-4A7B-B2E1-9C3F4D5A6E7B
+**Scope:** Analysis only — no implementation
 
 ---
 
-## Deliverable Structure
+## Options Evaluated
 
-**Folder:** `/docs/manual/`
+### Option A — Add columns to `subsidy_case`
 
+**Rejected.** A case can require multiple visits (social visit, technical inspection, follow-up). Adding `scheduled_date` / `inspector_id` to the case row limits to one visit per case and pollutes the case entity with scheduling concerns.
 
-| #   | File                                                 | Purpose                                                                                                  |
-| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
-| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
-| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
-| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
-| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
-| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
-| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
-| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
-| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
-| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
-| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
-| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
-| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
-| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
-| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
-| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
+### Option B — Dedicated `inspection_visit` table
 
+**Recommended.** Clean separation. Supports multiple visits per case, full history, independent lifecycle.
 
-**Total: 16 documents**
+### Option C — Extend `case_assignment`
+
+**Rejected.** `case_assignment` is append-only and immutable by design (no UPDATE, no DELETE). Visit scheduling requires mutable state (reschedule date, update visit status from `scheduled` → `completed`). Adding mutable scheduling columns to an immutable table creates a governance conflict. The `case_assignment` table also serves a different purpose: tracking role-based responsibility, not operational visit logistics.
 
 ---
 
-## URL Documentation
+## Recommendation: New `inspection_visit` table
 
-All documents will include explicit URLs based on:
+### Proposed Schema
 
-**Production (Published):**
+```sql
+create table public.inspection_visit (
+  id              uuid primary key default gen_random_uuid(),
+  case_id         uuid not null references public.subsidy_case(id),
+  visit_type      text not null,           -- 'social' | 'technical' | 'follow_up'
+  assigned_to     uuid not null references auth.users(id),
+  scheduled_date  date not null,
+  scheduled_by    uuid not null references auth.users(id),
+  visit_status    text not null default 'scheduled',  -- 'scheduled' | 'completed' | 'cancelled' | 'rescheduled'
+  visit_notes     text,
+  completed_at    timestamptz,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+```
 
-- Landing: `https://huggable-cloud-whisper.lovable.app/`
-- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
-- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
-- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
-- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
-- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
+### Reasons
 
-**Staging (Preview):**
+1. **Multiple visits per case** — One case may need a social visit AND a technical inspection, or follow-up visits. One-to-many relationship is natural.
+2. **Mutable lifecycle** — Visits can be rescheduled or cancelled. This requires UPDATE capability, which `case_assignment` explicitly denies.
+3. **Clean separation** — `case_assignment` = "who is responsible for this case." `inspection_visit` = "when does the inspector physically go to the address." Different concerns.
+4. **Audit compatibility** — Each visit action (schedule, reschedule, complete, cancel) generates an `audit_event` entry with `entity_type: 'inspection_visit'`.
+5. **Reporting** — Easy to query visit counts, completion rates, inspector workload by date range.
 
-- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
-- Same path structure as production
+### Relations to Existing Tables
 
-Admin module URLs will be listed per-module in document 12.
+```text
+subsidy_case  ──1:N──  inspection_visit
+auth.users    ──1:N──  inspection_visit (assigned_to)
+auth.users    ──1:N──  inspection_visit (scheduled_by)
+```
 
----
+No changes to `case_assignment`, `subsidy_case`, or any other existing table.
 
-## Content Coverage Per Document
+### Required Indexes
 
-### 00 - Executive Summary
+```sql
+create index idx_inspection_visit_case_id on inspection_visit(case_id);
+create index idx_inspection_visit_assigned_to on inspection_visit(assigned_to);
+create index idx_inspection_visit_scheduled_date on inspection_visit(scheduled_date);
+create index idx_inspection_visit_status on inspection_visit(visit_status);
+```
 
-- System purpose and legal mandate
-- Two services overview (Housing + Subsidy)
-- Governance and accountability model (1 paragraph)
-- Role structure summary
-- Key operational metrics / KPIs
-- "What happens next?" for both services
-- 5-10 pages, non-technical language
+### RLS Policies
 
-### 01 - System Overview
 
-- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
-- Public vs Admin separation
-- Authentication model (staff-only login, citizen anonymous access)
-- District-based scoping
+| Action | Allowed Roles                                                                                                                        |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| INSERT | `system_admin`, `project_leader`                                                                                                     |
+| SELECT | `system_admin`, `project_leader`, `admin_staff`, `audit`, `director`, own assignments (`assigned_to = auth.uid()`) for field workers |
+| UPDATE | `system_admin`, `project_leader` (reschedule/cancel), `assigned_to` user (mark completed + add notes)                                |
+| DELETE | Denied                                                                                                                               |
 
-### 02 + 03 - Public Wizard Workflows
 
-Per service:
+### Migration Impact
 
-- Preconditions
-- Step-by-step wizard walkthrough (each form step)
-- Reference number generation
-- Security token explanation
-- Receipt/confirmation page
-- Status tracking via `/status`
-- "What happens after submission?"
+- One new table creation
+- Four RLS policies
+- One `updated_at` trigger (reuse existing `update_updated_at_column` function)
+- Zero changes to existing tables
+- Zero changes to existing RLS policies
 
-### 04 + 05 - Admin Workflows
+### Example Workflow
 
-Per service:
-
-- Locating records in list view
-- Opening detail view
-- Status change process (with mandatory reason)
-- Document upload and verification
-- Field reports (Social, Technical — Bouwsubsidie only)
-- Decision chain steps
-- Raadvoorstel generation (Bouwsubsidie only)
-- Archive flow
-- Audit trail per action
-
-### 06 - Roles & Permission Matrix
-
-Table columns:
-
-- Role name (all 11 implemented roles)
-- Modules accessible
-- Create/Edit rights
-- Status change authority (which statuses)
-- Document upload/verify rights
-- Allocation/decision authority
-- Audit log access
-- Export/print permissions
-- National vs district-scoped flag
-
-### 07 - Status Lifecycle
-
-- ASCII state diagrams for both services
-- Transition rules with triggering roles
-- Decision authority per transition
-- Mandatory reason requirements
-
-### 08 - Document Management
-
-- Upload workflow
-- Verification tracking
-- Raadvoorstel generation (edge function)
-- Download via signed URLs
-
-### 09 - Audit Logging
-
-- `audit_event` table structure
-- What triggers a log entry
-- Where to view audit logs (Admin > Audit Log)
-- Append-only guarantee
-- Role access to audit log
-
-### 10 - Allocation Engine
-
-- District quotas setup
-- Urgency scoring model
-- Allocation run execution
-- Matching logic
-- Decision recording
-- Assignment registration
-
-### 11 - Governance Controls
-
-- RLS enforcement model
-- Least-privilege access
-- Ministerial Advisor mandatory paraph
-- Minister deviation logging
-- Status history immutability
-
-### 12 - Module Specification
-
-All 20 pages/modules documented:
-
-- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
-- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
-
-Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
-
-### 13 - Operational Scenarios
-
-Minimum 8 numbered end-to-end scenarios:
-
-1. Citizen submits Housing Registration
-2. Citizen submits Subsidy Application
-3. Frontdesk processes new Housing Registration
-4. Frontdesk processes new Subsidy Case through full decision chain
-5. Allocation run execution and assignment
-6. Minister approves/rejects with deviation from advisor
-7. Archive lookup of closed case
-8. Audit trail verification for a specific case
-
-Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
-
-### 14 - Troubleshooting & FAQ
-
-- Common submission errors
-- Duplicate/resubmission behavior
-- Status lookup failures
-- Document upload issues
-- Permission denied scenarios
-- Session timeout handling
-
-### 15 - Glossary
-
-- All status values (both services)
-- Field definitions
-- Role names with descriptions
-- System terminology (Raadvoorstel, paraph, district code, etc.)
+```text
+1. Case BS-2026-000008 enters 'fieldwork' status
+2. Project Leader opens Schedule Visits page
+3. Clicks "Schedule Visit" on the case row
+4. Selects inspector, date, visit type → INSERT into inspection_visit
+5. audit_event logged: action='visit_scheduled'
+6. Inspector sees visit in My Visits
+7. Inspector completes visit → UPDATE visit_status='completed', completed_at=now()
+8. audit_event logged: action='visit_completed'
+9. Project Leader advances case to next status
+```
 
 ---
 
-## Screenshots Strategy
+Approved.
 
-- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
-- Each reference follows format: `Figure X.Y — Description`
-- PII masking note included in each document header
-- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
+Proceed with Phase 3 implementation using the dedicated `inspection_visit` table as recommended.
 
----
+During implementation, also ensure:
 
-## Execution Sequence
+1. `visit_type` and `visit_status` are enforced with explicit allowed values at DB level (check constraint or equivalent)
 
-1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
-2. Create `/docs/manual/` folder
-3. Generate documents in order: 00 through 15
-4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
-5. After all 16 documents: produce completion checklist
+2. all visit actions `visit_scheduled`, `visit_rescheduled`, `visit_completed`, `visit_cancelled`) are audit-logged
 
----
+3. no existing `case_assignment` behavior is changed
 
-## Quality Gates
-
-- Language: Clear, non-technical, suitable for Minister and senior staff
-- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
-- UI alignment: All labels, navigation paths, and field names match current implementation
-- No invented features or roles
-- No code/schema/RLS changes
-- Restore point created before any file creation
-
-## IMPORTANT — PRODUCTION URL CORRECTION
-
-All documentation must use the official custom production domain:
-
-[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
-
-DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
-
-Update all production URLs to:
-
-Landing:
-
-[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
-
-Housing Registration:
-
-[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
-
-Subsidy Application:
-
-[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
-
-Status Tracker:
-
-[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
-
-Staff Login:
-
-[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
-
-Admin Dashboard:
-
-[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
-
-If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
-
-The Ministerial Manual must only reference the official production domain.  
+4. Schedule Visits remains compatible with My Visits filtering for assigned inspectors  
   
-**Completion Report Format**
-
-After all documents are generated:
-
-```
-IMPLEMENTED: [list of created files]
-PARTIAL: [any incomplete documents + reason]
-SKIPPED: [none expected]
-VERIFICATION: [checklist per document — PASS/FAIL]
-RESTORE POINT: [ID]
-BLOCKERS: NONE / [description]
-CONFIRMATION: No code changes. No schema changes. No RLS changes.
-```
+Awaiting approval to implement Phase 3 using this schema.

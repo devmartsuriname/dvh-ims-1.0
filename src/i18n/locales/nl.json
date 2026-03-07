@@ -101,6 +101,11 @@
       "requirement2": "Contactgegevens (telefoonnummer verplicht)",
       "requirement3": "Informatie over uw huidige woonsituatie",
       "requirement4": "Inkomensgegevens (indien van toepassing)",
+      "docsTitle": "Benodigde documenten",
+      "doc1": "Kopie ID-kaart (verplicht)",
+      "doc2": "Inkomensbewijs (verplicht)",
+      "doc3": "Bewijs van woonadres (verplicht)",
+      "docsNote": "Optioneel: gezinssamenstelling, medische verklaring, noodbewijs",
       "acknowledgementLabel": "Ik begrijp dat dit een registratie voor de wachtlijst voor huisvesting is en dat plaatsing geen directe huisvesting garandeert. Ik bevestig dat ik nauwkeurige informatie zal verstrekken."
     },
     "step1": {
@@ -354,6 +359,11 @@
       "requirement2": "Contactgegevens (telefoonnummer verplicht)",
       "requirement3": "Huidige adresgegevens",
       "requirement4": "Vereiste documenten (moeten worden geüpload)",
+      "docsTitle": "Benodigde documenten",
+      "doc1": "Kopie ID-kaart (verplicht)",
+      "doc2": "Bankafschrift laatste 3 maanden (verplicht)",
+      "doc3": "Minimaal 1 inkomensbewijs: loonstrook, AOV-verklaring, pensioenverklaring of werkgeversverklaring",
+      "docsNote": "Overige documenten (eigendom, juridisch) kunnen optioneel worden toegevoegd",
       "acknowledgementLabel": "Ik begrijp dat dit alleen een registratieportaal is en dat er geen evaluatie of beslissing wordt genomen aan het loket. Ik bevestig dat ik nauwkeurige informatie zal verstrekken."
     },
     "step1": {
@@ -423,7 +433,11 @@
       "infoTitle": "Documentvereisten",
       "infoText": "Alle verplichte documenten moeten worden geüpload voordat u uw aanvraag kunt indienen. Ondersteunde bestandstypen: PDF, JPG, PNG. Maximale bestandsgrootte: 10MB per document.",
       "mandatory": "Verplicht",
+      "mandatoryTab": "Verplicht",
       "optional": "Optioneel",
+      "incomeProofTab": "Inkomensbewijs",
+      "incomeProofTabNote": "min. 1 verplicht",
+      "incomeProofHint": "Upload minimaal één van de onderstaande documenten als bewijs van uw inkomen.",
       "dropzone": "Sleep bestand hierheen of klik om te uploaden",
       "dropzoneActive": "Laat bestand hier los...",
       "maxSize": "Max. 10MB - PDF, JPG, PNG",

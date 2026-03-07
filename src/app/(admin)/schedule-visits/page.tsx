@@ -103,8 +103,9 @@ const ScheduleVisitsPage = () => {
     }
   }
 
-  // Expose cancel handler globally for gridjs html buttons
+  // Expose handlers globally for gridjs html buttons
   ;(window as any).__cancelVisit = handleCancel
+  ;(window as any).__openScheduleModal = openScheduleModal
 
   const selectedCase = pendingCases.find((c) => c.id === selectedCaseId)
 

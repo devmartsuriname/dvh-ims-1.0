@@ -432,6 +432,23 @@ Deno.serve(async (req) => {
       console.error('[submit-bouwsubsidie] Failed to create email contact:', emailError.message)
     }
     
+    // Validate estimated amount
+    const parsedAmount = input.estimated_amount ? parseFloat(input.estimated_amount) : null
+
+    if (parsedAmount !== null && isNaN(parsedAmount)) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid subsidy amount value' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (parsedAmount !== null && parsedAmount > 150000) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Requested subsidy amount cannot exceed SRD 150,000' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     // Create subsidy_case record
     const { data: caseData, error: caseError } = await supabase
       .from('subsidy_case')
@@ -441,7 +458,7 @@ Deno.serve(async (req) => {
         household_id: householdId,
         district_code: input.district,
         status: 'received',
-        requested_amount: input.estimated_amount ? parseFloat(input.estimated_amount) : null,
+        requested_amount: parsedAmount,
         created_by: null // Public submission
       })
       .select('id')

@@ -47,6 +47,19 @@ Administrative Edge Functions enforce JWT validation and role-based allowlist ch
 
 ---
 
+## Input Validation Rules
+
+### submit-bouwsubsidie-application
+
+| Field | Rule | Error |
+|-------|------|-------|
+| `estimated_amount` | Must be numeric if provided | `400: Invalid subsidy amount value` |
+| `estimated_amount` | Must not exceed 150,000 SRD | `400: Requested subsidy amount cannot exceed SRD 150,000` |
+
+**Policy basis:** Maximum allowed subsidy request = SRD 150,000.
+
+
+
 ## Audit Event Table
 
 - **Immutable:** No UPDATE or DELETE allowed.

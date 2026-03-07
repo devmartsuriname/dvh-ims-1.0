@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { PublicHeader, PublicFooter } from '@/components/public'
-import heroImage from '@/assets/images/hero-community.png'
+import sideImage from '@/assets/images/side-img.jpg'
 
 /**
  * Public Landing Page - VolksHuisvesting Suriname

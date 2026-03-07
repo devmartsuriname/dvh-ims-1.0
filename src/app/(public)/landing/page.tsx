@@ -52,8 +52,8 @@ const LandingPage = () => {
           </Col>
 
           {/* Right Column — Content Panel (70%) */}
-          <Col lg={8} className="landing-content-panel">
-            <div className="px-4 px-lg-5 py-4" style={{ maxWidth: '900px' }}>
+          <Col lg={8} className="landing-content-panel d-flex align-items-center">
+            <div className="px-4 px-lg-5 py-4 w-100" style={{ maxWidth: '900px' }}>
               
               {/* Welcome Section */}
               <h1 className="display-5 fw-bold mb-2">

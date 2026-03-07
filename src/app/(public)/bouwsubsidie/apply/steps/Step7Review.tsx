@@ -103,6 +103,24 @@ const Step7Review = ({ formData, updateFormData, onNext, onBack, isSubmitting }:
         <DataRow label={t('bouwsubsidie.step3.dependents')} value={formData.dependents} />
       </SectionCard>
 
+      {/* Household Children */}
+      <SectionCard title={t('bouwsubsidie.step7.sectionChildren')}>
+        {formData.children && formData.children.length > 0 ? (
+          <div className="small">
+            {formData.children.map((child, index) => (
+              <div key={index} className="mb-1">
+                {t('bouwsubsidie.step7.childLabel', { number: index + 1 })} — {child.age} {t('bouwsubsidie.step7.childYears')}, {child.gender === 'M' ? t('bouwsubsidie.gender.male') : t('bouwsubsidie.gender.female')}
+                {child.has_disability && (
+                  <Badge bg="warning" className="ms-2 text-dark">{t('bouwsubsidie.step7.childDisabilityYes')}</Badge>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted small mb-0">{t('bouwsubsidie.step7.noChildren')}</p>
+        )}
+      </SectionCard>
+
       {/* Address */}
       <SectionCard title={t('bouwsubsidie.step7.sectionAddress')}>
         <DataRow label={t('bouwsubsidie.step4.addressLine1')} value={formData.address_line_1} />

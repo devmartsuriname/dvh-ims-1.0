@@ -38,6 +38,12 @@ interface DocumentUploadInput {
   uploaded_at: string
 }
 
+interface ChildInputServer {
+  age: number
+  gender: string
+  has_disability: boolean
+}
+
 interface BouwsubsidieInput {
   national_id: string
   first_name: string
@@ -58,6 +64,7 @@ interface BouwsubsidieInput {
   }>
   reason?: string
   documents?: DocumentUploadInput[]
+  children?: ChildInputServer[]
 }
 
 interface ValidationError {
@@ -144,6 +151,7 @@ function validateInput(data: unknown): { valid: true; data: BouwsubsidieInput } 
       household_members: input.household_members as BouwsubsidieInput['household_members'],
       reason: input.reason as string | undefined,
       documents: Array.isArray(input.documents) ? input.documents : undefined,
+      children: Array.isArray(input.children) ? input.children : undefined,
     }
   }
 }

@@ -1,149 +1,280 @@
-# DVH-IMS V1.9 — Gap Remediation Plan (Corrected)
+# Ministerial System Manual — Documentation Execution Plan
 
-**Context ID:** 8F42B1C3-5D9E-4A7B-B2E1-9C3F4D5A6E7B
-**Baseline:** V1.8 (FROZEN)
-**Scope:** Hardening and gap remediation only
+## Objective
 
----
+Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
 
-## 1. Existing Modules Already Aligned with Documentation
-
-
-| Module                         | Location                                  | Status                                                                                                     |
-| ------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Control Queue                  | `control-queue/page.tsx`                  | ALIGNED — role-filtered, read + link to detail                                                             |
-| My Visits                      | `my-visits/page.tsx`                      | ALIGNED — shows assigned cases per field role                                                              |
-| Case Detail + All Tabs         | `subsidy-cases/[id]/page.tsx` (788 lines) | ALIGNED — overview, documents, children, status history, social/technical/director/advisor/minister panels |
-| Social Review Form             | embedded in case detail                   | ALIGNED — structured JSON report                                                                           |
-| Technical Review Form          | embedded in case detail                   | ALIGNED — structured JSON report                                                                           |
-| Director Review Panel          | embedded in case detail                   | ALIGNED — decision with mandatory reason                                                                   |
-| Advisor Review Panel           | embedded in case detail                   | ALIGNED — advisory recommendation                                                                          |
-| Minister Decision Panel        | embedded in case detail                   | ALIGNED — final decision with mandatory deviation justification                                            |
-| Case Assignments               | `case-assignments/`                       | ALIGNED — append-only, system_admin/project_leader write                                                   |
-| Archive (Subsidy + Housing)    | `archive/`                                | ALIGNED — list + detail views, role-guarded                                                                |
-| Audit Log                      | `audit-log/`                              | ALIGNED — immutable, oversight roles only                                                                  |
-| Status Lifecycle (20 states)   | `STATUS_TRANSITIONS` map                  | ALIGNED — full chain with return paths                                                                     |
-| Status History + Audit Logging | `handleStatusChange`                      | ALIGNED — both `status_history` and `audit_event` recorded per transition                                  |
-| Admin Notifications            | `admin_notification` table + hook         | ALIGNED — real-time, role-targeted                                                                         |
-| Schedule Visits (read-only)    | `schedule-visits/page.tsx`                | ALIGNED — as designed in V1.4 (read-only planning view)                                                    |
-
-
-**No changes required for these modules.**
+This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
 
 ---
 
-## 2. Existing Modules Partially Aligned
+## Deliverable Structure
+
+**Folder:** `/docs/manual/`
 
 
-| Module                               | Gap                                                                                                                                                              | Evidence                                                                                                     |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| **Status Transitions (case detail)** | `allowedTransitions` is not filtered by current user role. Any authenticated user with page access can trigger any transition from the `STATUS_TRANSITIONS` map. | Line 343: `const allowedTransitions = STATUS_TRANSITIONS[subsidyCase.status] || []` — no role check applied. |
-| **Notification Routing**             | All status change notifications route to `frontdesk_bouwsubsidie` regardless of the new status. The next responsible role is not determined.                     | Line 292: `recipientRole: 'frontdesk_bouwsubsidie'` — hardcoded for all transitions.                         |
-| **Archive**                          | List and detail pages exist and are functional. No CSV or PDF export capability.                                                                                 | Search for "CSV" and "pdf" in archive directory returns zero matches.                                        |
+| #   | File                                                 | Purpose                                                                                                  |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
+| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
+| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
+| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
+| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
+| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
+| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
+| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
+| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
+| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
+| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
+| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
+| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
+| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
+| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
+| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
 
 
----
-
-## 3. Missing Capabilities / Gaps
-
-
-| Gap ID    | Description                                                                                                                                                 | Severity |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| **GAP-1** | **RBAC on status transitions**: No `ROLE_ALLOWED_TRANSITIONS` map exists. UI shows all possible transitions to all roles.                                   | CRITICAL |
-| **GAP-2** | **Notification routing**: Hardcoded to `frontdesk_bouwsubsidie`. Should route to the next responsible role per transition.                                  | HIGH     |
-| **GAP-3** | **Schedule Visits write capability**: Cannot assign inspector, set visit date, or mark visit completed. Read-only by V1.4 design, but operationally needed. | HIGH     |
-| **GAP-4** | **Case Timeline component**: No visual timeline view. Status history tab shows a table, not a chronological timeline with actors and events.                | MEDIUM   |
-| **GAP-5** | **Archive export**: No CSV/PDF export buttons on archive pages.                                                                                             | LOW      |
-
-
----
-
-## 4. Risk of Changing Existing Behavior
-
-
-| Change                                            | Risk                                                                                                                | Mitigation                                                                                          |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| GAP-1: Adding role filter to transitions          | Roles without mapped transitions will see zero buttons — could lock out legitimate users if map is incomplete       | Exhaustive mapping against doc-07 matrix; `system_admin` always retains all transitions as fallback |
-| GAP-2: Changing notification recipient            | Existing notifications already in DB with `frontdesk_bouwsubsidie` as recipient — no migration needed (append-only) | New notifications use correct routing; old records unaffected                                       |
-| GAP-3: Adding write operations to Schedule Visits | New DB columns or table required; new RLS policies                                                                  | Minimal schema change; restrict write to `system_admin` + `project_leader` only                     |
-| GAP-4: Adding timeline tab                        | Additive UI change — no existing behavior modified                                                                  | New tab on case detail; does not replace status history table                                       |
-| GAP-5: Adding export buttons                      | Additive UI change — no existing behavior modified                                                                  | Client-side generation only; no server changes                                                      |
-
+**Total: 16 documents**
 
 ---
 
-## 5. Minimal Corrective Implementation Phases
+## URL Documentation
 
-### Phase 1 — RBAC-Enforced Status Transitions (GAP-1)
+All documents will include explicit URLs based on:
 
-**Severity: CRITICAL**
+**Production (Published):**
 
-- Add `ROLE_ALLOWED_TRANSITIONS` constant mapping each status transition to its permitted roles
-- Filter `allowedTransitions` on line 343 by intersecting with user's current roles
-- `system_admin` retains all transitions as governance fallback
-- No database changes. No new tables. UI-only enforcement.
+- Landing: `https://huggable-cloud-whisper.lovable.app/`
+- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
+- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
+- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
+- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
+- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
 
-**Files changed:** `src/app/(admin)/subsidy-cases/[id]/page.tsx`
+**Staging (Preview):**
 
-### Phase 2 — Notification Routing Fix (GAP-2)
+- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
+- Same path structure as production
 
-**Severity: HIGH**
-
-- Replace hardcoded `recipientRole: 'frontdesk_bouwsubsidie'` with a `NEXT_RESPONSIBLE_ROLE` lookup map
-- Map each target status to its responsible role (e.g., `in_social_review` → `social_field_worker`, `awaiting_director_approval` → `director`)
-- No database changes. No new tables.
-
-**Files changed:** `src/app/(admin)/subsidy-cases/[id]/page.tsx`
-
-### Phase 3 — Schedule Visits Write Operations (GAP-3)
-
-**Severity: HIGH**
-
-- Add `scheduled_date` and `visit_status` columns to `case_assignment` table (or create `visit_schedule` table — requires decision)
-- Add assignment modal on Schedule Visits page
-- Add RLS policies for new columns/table
-- Audit log all scheduling actions
-
-**Files changed:** `schedule-visits/page.tsx`, migration SQL, RLS policies
-**Decision required:** extend `case_assignment` or new `visit_schedule` table
-
-### Phase 4 — Case Timeline Component (GAP-4)
-
-**Severity: MEDIUM**
-
-- Create `CaseTimeline.tsx` component
-- Source data from `subsidy_case_status_history` + `audit_event`
-- Add as new tab on case detail page
-- Read-only, no database changes
-
-**Files changed:** new `CaseTimeline.tsx`, `subsidy-cases/[id]/page.tsx`
-
-### Phase 5 — Archive Export (GAP-5)
-
-**Severity: LOW**
-
-- Add CSV export button (client-side generation)
-- Add PDF export button (browser print or jsPDF)
-- Filtered by current view
-
-**Files changed:** `archive/page.tsx`
+Admin module URLs will be listed per-module in document 12.
 
 ---
 
-Each phase ends with a restore point and STOP for authorization. No phase skipping.
+## Content Coverage Per Document
 
-Approved with one clarification required before Phase 3.
+### 00 - Executive Summary
 
-For GAP-3 (Schedule Visits write capability):
+- System purpose and legal mandate
+- Two services overview (Housing + Subsidy)
+- Governance and accountability model (1 paragraph)
+- Role structure summary
+- Key operational metrics / KPIs
+- "What happens next?" for both services
+- 5-10 pages, non-technical language
 
-Do NOT create a new table automatically.
+### 01 - System Overview
 
-First confirm whether visit scheduling should extend the existing
+- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
+- Public vs Admin separation
+- Authentication model (staff-only login, citizen anonymous access)
+- District-based scoping
 
-`case_assignment` structure or use a separate `visit_schedule` table.
+### 02 + 03 - Public Wizard Workflows
 
-Provide a short schema recommendation before implementing the migration.
+Per service:
 
-All other phases are approved as described.  
+- Preconditions
+- Step-by-step wizard walkthrough (each form step)
+- Reference number generation
+- Security token explanation
+- Receipt/confirmation page
+- Status tracking via `/status`
+- "What happens after submission?"
+
+### 04 + 05 - Admin Workflows
+
+Per service:
+
+- Locating records in list view
+- Opening detail view
+- Status change process (with mandatory reason)
+- Document upload and verification
+- Field reports (Social, Technical — Bouwsubsidie only)
+- Decision chain steps
+- Raadvoorstel generation (Bouwsubsidie only)
+- Archive flow
+- Audit trail per action
+
+### 06 - Roles & Permission Matrix
+
+Table columns:
+
+- Role name (all 11 implemented roles)
+- Modules accessible
+- Create/Edit rights
+- Status change authority (which statuses)
+- Document upload/verify rights
+- Allocation/decision authority
+- Audit log access
+- Export/print permissions
+- National vs district-scoped flag
+
+### 07 - Status Lifecycle
+
+- ASCII state diagrams for both services
+- Transition rules with triggering roles
+- Decision authority per transition
+- Mandatory reason requirements
+
+### 08 - Document Management
+
+- Upload workflow
+- Verification tracking
+- Raadvoorstel generation (edge function)
+- Download via signed URLs
+
+### 09 - Audit Logging
+
+- `audit_event` table structure
+- What triggers a log entry
+- Where to view audit logs (Admin > Audit Log)
+- Append-only guarantee
+- Role access to audit log
+
+### 10 - Allocation Engine
+
+- District quotas setup
+- Urgency scoring model
+- Allocation run execution
+- Matching logic
+- Decision recording
+- Assignment registration
+
+### 11 - Governance Controls
+
+- RLS enforcement model
+- Least-privilege access
+- Ministerial Advisor mandatory paraph
+- Minister deviation logging
+- Status history immutability
+
+### 12 - Module Specification
+
+All 20 pages/modules documented:
+
+- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
+- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
+
+Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
+
+### 13 - Operational Scenarios
+
+Minimum 8 numbered end-to-end scenarios:
+
+1. Citizen submits Housing Registration
+2. Citizen submits Subsidy Application
+3. Frontdesk processes new Housing Registration
+4. Frontdesk processes new Subsidy Case through full decision chain
+5. Allocation run execution and assignment
+6. Minister approves/rejects with deviation from advisor
+7. Archive lookup of closed case
+8. Audit trail verification for a specific case
+
+Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
+
+### 14 - Troubleshooting & FAQ
+
+- Common submission errors
+- Duplicate/resubmission behavior
+- Status lookup failures
+- Document upload issues
+- Permission denied scenarios
+- Session timeout handling
+
+### 15 - Glossary
+
+- All status values (both services)
+- Field definitions
+- Role names with descriptions
+- System terminology (Raadvoorstel, paraph, district code, etc.)
+
+---
+
+## Screenshots Strategy
+
+- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
+- Each reference follows format: `Figure X.Y — Description`
+- PII masking note included in each document header
+- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
+
+---
+
+## Execution Sequence
+
+1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
+2. Create `/docs/manual/` folder
+3. Generate documents in order: 00 through 15
+4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
+5. After all 16 documents: produce completion checklist
+
+---
+
+## Quality Gates
+
+- Language: Clear, non-technical, suitable for Minister and senior staff
+- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
+- UI alignment: All labels, navigation paths, and field names match current implementation
+- No invented features or roles
+- No code/schema/RLS changes
+- Restore point created before any file creation
+
+## IMPORTANT — PRODUCTION URL CORRECTION
+
+All documentation must use the official custom production domain:
+
+[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
+
+DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
+
+Update all production URLs to:
+
+Landing:
+
+[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
+
+Housing Registration:
+
+[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
+
+Subsidy Application:
+
+[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
+
+Status Tracker:
+
+[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
+
+Staff Login:
+
+[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
+
+Admin Dashboard:
+
+[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
+
+If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
+
+The Ministerial Manual must only reference the official production domain.  
   
-Awaiting authorization to begin Phase 1.
+**Completion Report Format**
+
+After all documents are generated:
+
+```
+IMPLEMENTED: [list of created files]
+PARTIAL: [any incomplete documents + reason]
+SKIPPED: [none expected]
+VERIFICATION: [checklist per document — PASS/FAIL]
+RESTORE POINT: [ID]
+BLOCKERS: NONE / [description]
+CONFIRMATION: No code changes. No schema changes. No RLS changes.
+```

@@ -8,6 +8,8 @@ import { BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS } from '@/config/documentRequirement
 import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
 import { createAdminNotification } from '@/hooks/useAdminNotifications'
+import { useUserRole } from '@/hooks/useUserRole'
+import type { AppRole } from '@/hooks/useUserRole'
 import SocialReviewForm from './components/SocialReviewForm'
 import TechnicalReviewForm from './components/TechnicalReviewForm'
 import DirectorReviewPanel from './components/DirectorReviewPanel'
@@ -157,6 +159,118 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
   council_doc_generated: ['finalized', 'rejected'],
 }
 
+/**
+ * ROLE_ALLOWED_TRANSITIONS — GAP-1 RBAC enforcement
+ * Maps each "from_status → to_status" transition to the roles permitted to execute it.
+ * system_admin is always allowed (governance fallback) and handled separately.
+ */
+const ROLE_ALLOWED_TRANSITIONS: Record<string, Record<string, AppRole[]>> = {
+  received: {
+    in_social_review: ['frontdesk_bouwsubsidie'],
+    screening: ['frontdesk_bouwsubsidie'],
+    rejected: ['frontdesk_bouwsubsidie', 'project_leader'],
+  },
+  in_social_review: {
+    social_completed: ['social_field_worker'],
+    returned_to_intake: ['social_field_worker'],
+    rejected: ['social_field_worker', 'project_leader'],
+  },
+  returned_to_intake: {
+    in_social_review: ['frontdesk_bouwsubsidie'],
+    rejected: ['frontdesk_bouwsubsidie', 'project_leader'],
+  },
+  social_completed: {
+    in_technical_review: ['project_leader'],
+    rejected: ['project_leader'],
+  },
+  in_technical_review: {
+    technical_approved: ['technical_inspector'],
+    returned_to_social: ['technical_inspector'],
+    rejected: ['technical_inspector', 'project_leader'],
+  },
+  returned_to_social: {
+    in_social_review: ['social_field_worker'],
+    rejected: ['project_leader'],
+  },
+  technical_approved: {
+    in_admin_review: ['project_leader'],
+    rejected: ['project_leader'],
+  },
+  in_admin_review: {
+    admin_complete: ['admin_staff'],
+    returned_to_technical: ['admin_staff'],
+    rejected: ['admin_staff', 'project_leader'],
+  },
+  returned_to_technical: {
+    in_technical_review: ['admin_staff', 'project_leader'],
+    rejected: ['project_leader'],
+  },
+  admin_complete: {
+    screening: ['project_leader'],
+    rejected: ['project_leader'],
+  },
+  screening: {
+    needs_more_docs: ['frontdesk_bouwsubsidie', 'project_leader'],
+    fieldwork: ['project_leader'],
+    rejected: ['project_leader'],
+  },
+  needs_more_docs: {
+    screening: ['frontdesk_bouwsubsidie', 'project_leader'],
+    rejected: ['project_leader'],
+  },
+  fieldwork: {
+    awaiting_director_approval: ['project_leader'],
+    rejected: ['project_leader'],
+  },
+  awaiting_director_approval: {
+    director_approved: ['director'],
+    returned_to_screening: ['director'],
+    rejected: ['director'],
+  },
+  returned_to_screening: {
+    screening: ['project_leader'],
+    rejected: ['project_leader'],
+  },
+  director_approved: {
+    in_ministerial_advice: ['project_leader'],
+    rejected: ['project_leader'],
+  },
+  in_ministerial_advice: {
+    ministerial_advice_complete: ['ministerial_advisor'],
+    returned_to_director: ['ministerial_advisor'],
+    rejected: ['ministerial_advisor'],
+  },
+  returned_to_director: {
+    awaiting_director_approval: ['project_leader'],
+    rejected: ['project_leader'],
+  },
+  ministerial_advice_complete: {
+    awaiting_minister_decision: ['project_leader'],
+    rejected: ['project_leader'],
+  },
+  awaiting_minister_decision: {
+    minister_approved: ['minister'],
+    returned_to_advisor: ['minister'],
+    rejected: ['minister'],
+  },
+  returned_to_advisor: {
+    in_ministerial_advice: ['project_leader'],
+    rejected: ['project_leader'],
+  },
+  minister_approved: {
+    approved_for_council: ['project_leader'],
+    rejected: ['project_leader'],
+  },
+  approved_for_council: {
+    council_doc_generated: ['project_leader', 'admin_staff'],
+    rejected: ['project_leader'],
+  },
+  council_doc_generated: {
+    finalized: ['project_leader'],
+    rejected: ['project_leader'],
+  },
+}
+
 const SubsidyCaseDetail = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -173,6 +287,7 @@ const SubsidyCaseDetail = () => {
   const [generating, setGenerating] = useState(false)
   const [statusReason, setStatusReason] = useState('')
   const { logEvent } = useAuditLog()
+  const { roles: userRoles, hasRole } = useUserRole()
 
   const fetchCase = async () => {
     if (!id) return
@@ -340,7 +455,18 @@ const SubsidyCaseDetail = () => {
     )
   }
 
-  const allowedTransitions = STATUS_TRANSITIONS[subsidyCase.status] || []
+  // GAP-1: RBAC-enforced transitions — filter by user role
+  const allTransitions = STATUS_TRANSITIONS[subsidyCase.status] || []
+  const isSystemAdmin = hasRole('system_admin')
+  const allowedTransitions = isSystemAdmin
+    ? allTransitions
+    : allTransitions.filter((targetStatus) => {
+        const roleMap = ROLE_ALLOWED_TRANSITIONS[subsidyCase.status]
+        if (!roleMap) return false
+        const permittedRoles = roleMap[targetStatus]
+        if (!permittedRoles) return false
+        return permittedRoles.some((role) => userRoles.includes(role))
+      })
   const badge = STATUS_BADGES[subsidyCase.status] || { bg: 'secondary', label: subsidyCase.status }
 
   return (

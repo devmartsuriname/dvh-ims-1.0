@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { Card, CardBody, CardHeader, CardTitle, Spinner, Badge, Tab, Tabs, Table } from 'react-bootstrap'
 import PageTitle from '@/components/PageTitle'
+import ArchiveExportButtons from './components/ArchiveExportButtons'
 import { supabase } from '@/integrations/supabase/client'
 import { useUserRole } from '@/hooks/useUserRole'
 import type { AppRole } from '@/hooks/useUserRole'
@@ -86,8 +87,28 @@ const ArchiveListPage = () => {
       <Tabs defaultActiveKey="bouwsubsidie" className="mb-3">
         <Tab eventKey="bouwsubsidie" title={`Bouwsubsidie (${subsidyCases.length})`}>
           <Card>
-            <CardHeader>
-              <CardTitle as="h5">Archived Subsidy Cases</CardTitle>
+            <CardHeader className="d-flex justify-content-between align-items-center">
+              <CardTitle as="h5" className="mb-0">Archived Subsidy Cases</CardTitle>
+              <ArchiveExportButtons
+                data={subsidyCases.map((c) => ({
+                  case_number: c.case_number,
+                  applicant: c.person ? `${c.person.first_name} ${c.person.last_name}` : '-',
+                  district_code: c.district_code,
+                  status: c.status,
+                  created_at: new Date(c.created_at).toLocaleDateString(),
+                  updated_at: new Date(c.updated_at).toLocaleDateString(),
+                }))}
+                headers={[
+                  { key: 'case_number', label: 'Case Number' },
+                  { key: 'applicant', label: 'Applicant' },
+                  { key: 'district_code', label: 'District' },
+                  { key: 'status', label: 'Status' },
+                  { key: 'created_at', label: 'Created' },
+                  { key: 'updated_at', label: 'Last Updated' },
+                ]}
+                filenamePrefix="subsidy_archive"
+                disabled={loading}
+              />
             </CardHeader>
             <CardBody>
               {loading ? (
@@ -127,8 +148,28 @@ const ArchiveListPage = () => {
 
         <Tab eventKey="woningregistratie" title={`Woningregistratie (${housingRegistrations.length})`}>
           <Card>
-            <CardHeader>
-              <CardTitle as="h5">Archived Housing Registrations</CardTitle>
+            <CardHeader className="d-flex justify-content-between align-items-center">
+              <CardTitle as="h5" className="mb-0">Archived Housing Registrations</CardTitle>
+              <ArchiveExportButtons
+                data={housingRegistrations.map((r) => ({
+                  reference_number: r.reference_number,
+                  applicant: r.person ? `${r.person.first_name} ${r.person.last_name}` : '-',
+                  district_code: r.district_code,
+                  current_status: r.current_status,
+                  registration_date: new Date(r.registration_date).toLocaleDateString(),
+                  updated_at: new Date(r.updated_at).toLocaleDateString(),
+                }))}
+                headers={[
+                  { key: 'reference_number', label: 'Reference Number' },
+                  { key: 'applicant', label: 'Applicant' },
+                  { key: 'district_code', label: 'District' },
+                  { key: 'current_status', label: 'Status' },
+                  { key: 'registration_date', label: 'Registration Date' },
+                  { key: 'updated_at', label: 'Last Updated' },
+                ]}
+                filenamePrefix="housing_archive"
+                disabled={loading}
+              />
             </CardHeader>
             <CardBody>
               {loading ? (

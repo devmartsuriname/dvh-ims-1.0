@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { PublicHeader, PublicFooter } from '@/components/public'
-import heroImage from '@/assets/images/hero-community.png'
+import sideImage from '@/assets/images/side-img.jpg'
 
 /**
  * Public Landing Page - VolksHuisvesting Suriname
@@ -27,20 +27,13 @@ const LandingPage = () => {
           
           {/* Left Column — Image Panel (30%) */}
           <Col lg={4} className="position-relative d-none d-lg-block">
-            {/* B&W background image */}
             <div 
               className="position-absolute top-0 start-0 w-100 h-100"
               style={{
-                backgroundImage: `url(${heroImage})`,
+                backgroundImage: `url(${sideImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                filter: 'grayscale(100%)',
               }}
-            />
-            {/* Dark overlay */}
-            <div 
-              className="position-absolute top-0 start-0 w-100 h-100" 
-              style={{ backgroundColor: 'rgba(0, 0, 0, 0.82)' }}
             />
           </Col>
 
@@ -49,15 +42,10 @@ const LandingPage = () => {
             <div 
               className="position-absolute top-0 start-0 w-100 h-100"
               style={{
-                backgroundImage: `url(${heroImage})`,
+                backgroundImage: `url(${sideImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                filter: 'grayscale(100%)',
               }}
-            />
-            <div 
-              className="position-absolute top-0 start-0 w-100 h-100" 
-              style={{ backgroundColor: 'rgba(0, 0, 0, 0.82)' }}
             />
           </Col>
 

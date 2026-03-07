@@ -93,6 +93,14 @@ interface GeneratedDocument {
   generated_by: string | null
 }
 
+interface HouseholdChild {
+  id: string
+  age: number
+  gender: string
+  has_disability: boolean
+  sort_order: number
+}
+
 const STATUS_BADGES: Record<string, { bg: string; label: string }> = {
   received: { bg: 'secondary', label: 'Received' },
   in_social_review: { bg: 'info', label: 'In Social Review' },
@@ -159,6 +167,7 @@ const SubsidyCaseDetail = () => {
   const [socialReport, setSocialReport] = useState<Report | null>(null)
   const [technicalReport, setTechnicalReport] = useState<Report | null>(null)
   const [generatedDocuments, setGeneratedDocuments] = useState<GeneratedDocument[]>([])
+  const [householdChildren, setHouseholdChildren] = useState<HouseholdChild[]>([])
   const [loading, setLoading] = useState(true)
   const [statusLoading, setStatusLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
@@ -170,7 +179,7 @@ const SubsidyCaseDetail = () => {
 
     setLoading(true)
     
-    const [caseRes, historyRes, docsRes, socialRes, technicalRes, genDocsRes] = await Promise.all([
+    const [caseRes, historyRes, docsRes, socialRes, technicalRes, genDocsRes, childrenRes] = await Promise.all([
       supabase
         .from('subsidy_case')
         .select(`
@@ -208,7 +217,12 @@ const SubsidyCaseDetail = () => {
         .from('generated_document')
         .select('*')
         .eq('case_id', id)
-        .order('generated_at', { ascending: false })
+        .order('generated_at', { ascending: false }),
+      supabase
+        .from('subsidy_household_child')
+        .select('*')
+        .eq('subsidy_case_id', id)
+        .order('sort_order', { ascending: true })
     ])
 
     if (caseRes.error) {
@@ -224,6 +238,7 @@ const SubsidyCaseDetail = () => {
     setSocialReport(socialRes.data)
     setTechnicalReport(technicalRes.data)
     setGeneratedDocuments(genDocsRes.data || [])
+    setHouseholdChildren(childrenRes.data || [])
     setLoading(false)
   }
 
@@ -397,6 +412,43 @@ const SubsidyCaseDetail = () => {
                       <p className="mb-0 fw-medium">{new Date(subsidyCase.updated_at).toLocaleString()}</p>
                     </Col>
                   </Row>
+                </CardBody>
+              </Card>
+
+              {/* Household Children */}
+              <Card className="mt-3">
+                <CardHeader>
+                  <CardTitle as="h5">Household Children</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  {householdChildren.length === 0 ? (
+                    <p className="text-muted text-center py-2">No children registered.</p>
+                  ) : (
+                    <Table bordered size="sm" responsive>
+                      <thead className="bg-light">
+                        <tr>
+                          <th>#</th>
+                          <th>Age</th>
+                          <th>Gender</th>
+                          <th>Disability</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {householdChildren.map((child, index) => (
+                          <tr key={child.id}>
+                            <td>{index + 1}</td>
+                            <td>{child.age}</td>
+                            <td>{child.gender === 'M' ? 'Male' : 'Female'}</td>
+                            <td>
+                              <Badge bg={child.has_disability ? 'warning' : 'secondary'}>
+                                {child.has_disability ? 'Yes' : 'No'}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  )}
                 </CardBody>
               </Card>
             </Col>

@@ -83,6 +83,7 @@ export const INITIAL_FORM_DATA = {
   // Step 3 - Household
   household_size: 1,
   dependents: 0,
+  children: [],
   
   // Step 4 - Address (aligned with Edge Function contract)
   address_line_1: '',

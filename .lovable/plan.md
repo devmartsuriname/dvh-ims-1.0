@@ -1,143 +1,280 @@
-# Phase 5 — Household Children Capture & Case Integration
+# Ministerial System Manual — Documentation Execution Plan
 
-## Restore Point
+## Objective
 
-Create `restore-points/v1.0/RESTORE_POINT_PHASE_5_V1_8_START.md` before any changes.
+Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
 
-## Critical Schema Mismatch
+This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
 
-The `subsidy_household_child` table has columns: `age`, `gender`, `has_disability`, `sort_order`, `subsidy_case_id`. It does **NOT** have `first_name`, `last_name`, or `birth_date`.
+---
 
-The task spec requests capturing `first_name`, `last_name`, `birth_date` per child. This conflicts with the existing DB schema and the V1.8 architecture decision (memory: `v1-8-child-storage-architecture`) which states children are "lightweight demographic entries rather than full person records."
+## Deliverable Structure
 
-**Resolution:** Align implementation with the existing DB schema. The wizard will collect `age`, `gender`, `has_disability` per child — not names or birth dates. This preserves the approved architecture.
+**Folder:** `/docs/manual/`
 
-If the spec must be followed literally (names + birth_date), a migration adding those columns is required. **Awaiting confirmation on which approach to use.**
 
-Proceeding with existing schema assumption (age/gender/disability only).
+| #   | File                                                 | Purpose                                                                                                  |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
+| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
+| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
+| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
+| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
+| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
+| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
+| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
+| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
+| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
+| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
+| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
+| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
+| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
+| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
+| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
 
-## Scope — 5 Files + Restore Point
 
-### 1. `types.ts` — Add ChildInput type
+**Total: 16 documents**
 
-```typescript
-export interface ChildInput {
-  age: number
-  gender: 'M' | 'F'
-  has_disability: boolean
-}
+---
+
+## URL Documentation
+
+All documents will include explicit URLs based on:
+
+**Production (Published):**
+
+- Landing: `https://huggable-cloud-whisper.lovable.app/`
+- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
+- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
+- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
+- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
+- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
+
+**Staging (Preview):**
+
+- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
+- Same path structure as production
+
+Admin module URLs will be listed per-module in document 12.
+
+---
+
+## Content Coverage Per Document
+
+### 00 - Executive Summary
+
+- System purpose and legal mandate
+- Two services overview (Housing + Subsidy)
+- Governance and accountability model (1 paragraph)
+- Role structure summary
+- Key operational metrics / KPIs
+- "What happens next?" for both services
+- 5-10 pages, non-technical language
+
+### 01 - System Overview
+
+- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
+- Public vs Admin separation
+- Authentication model (staff-only login, citizen anonymous access)
+- District-based scoping
+
+### 02 + 03 - Public Wizard Workflows
+
+Per service:
+
+- Preconditions
+- Step-by-step wizard walkthrough (each form step)
+- Reference number generation
+- Security token explanation
+- Receipt/confirmation page
+- Status tracking via `/status`
+- "What happens after submission?"
+
+### 04 + 05 - Admin Workflows
+
+Per service:
+
+- Locating records in list view
+- Opening detail view
+- Status change process (with mandatory reason)
+- Document upload and verification
+- Field reports (Social, Technical — Bouwsubsidie only)
+- Decision chain steps
+- Raadvoorstel generation (Bouwsubsidie only)
+- Archive flow
+- Audit trail per action
+
+### 06 - Roles & Permission Matrix
+
+Table columns:
+
+- Role name (all 11 implemented roles)
+- Modules accessible
+- Create/Edit rights
+- Status change authority (which statuses)
+- Document upload/verify rights
+- Allocation/decision authority
+- Audit log access
+- Export/print permissions
+- National vs district-scoped flag
+
+### 07 - Status Lifecycle
+
+- ASCII state diagrams for both services
+- Transition rules with triggering roles
+- Decision authority per transition
+- Mandatory reason requirements
+
+### 08 - Document Management
+
+- Upload workflow
+- Verification tracking
+- Raadvoorstel generation (edge function)
+- Download via signed URLs
+
+### 09 - Audit Logging
+
+- `audit_event` table structure
+- What triggers a log entry
+- Where to view audit logs (Admin > Audit Log)
+- Append-only guarantee
+- Role access to audit log
+
+### 10 - Allocation Engine
+
+- District quotas setup
+- Urgency scoring model
+- Allocation run execution
+- Matching logic
+- Decision recording
+- Assignment registration
+
+### 11 - Governance Controls
+
+- RLS enforcement model
+- Least-privilege access
+- Ministerial Advisor mandatory paraph
+- Minister deviation logging
+- Status history immutability
+
+### 12 - Module Specification
+
+All 20 pages/modules documented:
+
+- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
+- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
+
+Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
+
+### 13 - Operational Scenarios
+
+Minimum 8 numbered end-to-end scenarios:
+
+1. Citizen submits Housing Registration
+2. Citizen submits Subsidy Application
+3. Frontdesk processes new Housing Registration
+4. Frontdesk processes new Subsidy Case through full decision chain
+5. Allocation run execution and assignment
+6. Minister approves/rejects with deviation from advisor
+7. Archive lookup of closed case
+8. Audit trail verification for a specific case
+
+Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
+
+### 14 - Troubleshooting & FAQ
+
+- Common submission errors
+- Duplicate/resubmission behavior
+- Status lookup failures
+- Document upload issues
+- Permission denied scenarios
+- Session timeout handling
+
+### 15 - Glossary
+
+- All status values (both services)
+- Field definitions
+- Role names with descriptions
+- System terminology (Raadvoorstel, paraph, district code, etc.)
+
+---
+
+## Screenshots Strategy
+
+- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
+- Each reference follows format: `Figure X.Y — Description`
+- PII masking note included in each document header
+- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
+
+---
+
+## Execution Sequence
+
+1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
+2. Create `/docs/manual/` folder
+3. Generate documents in order: 00 through 15
+4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
+5. After all 16 documents: produce completion checklist
+
+---
+
+## Quality Gates
+
+- Language: Clear, non-technical, suitable for Minister and senior staff
+- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
+- UI alignment: All labels, navigation paths, and field names match current implementation
+- No invented features or roles
+- No code/schema/RLS changes
+- Restore point created before any file creation
+
+## IMPORTANT — PRODUCTION URL CORRECTION
+
+All documentation must use the official custom production domain:
+
+[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
+
+DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
+
+Update all production URLs to:
+
+Landing:
+
+[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
+
+Housing Registration:
+
+[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
+
+Subsidy Application:
+
+[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
+
+Status Tracker:
+
+[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
+
+Staff Login:
+
+[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
+
+Admin Dashboard:
+
+[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
+
+If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
+
+The Ministerial Manual must only reference the official production domain.  
+  
+**Completion Report Format**
+
+After all documents are generated:
+
 ```
-
-Add `children: ChildInput[]` to `BouwsubsidieFormData` (Step 3 section).
-
-### 2. `constants.ts` — Add children to INITIAL_FORM_DATA
-
-Add `children: []` to `INITIAL_FORM_DATA`.
-
-### 3. `Step3Household.tsx` — Dynamic children table
-
-Add below existing household_size/dependents fields:
-
-- "Household Children" section header
-- Dynamic rows: age (number input), gender (select M/F), has_disability (checkbox)
-- Add/Remove buttons
-- Children array managed via local state, synced to formData on submit
-- No minimum rows required (0 children is valid)
-
-### 4. `Step7Review.tsx` — Children summary section
-
-After the existing Household section, add:
-
-- "Household Children" SectionCard
-- If children exist: list each with "Child 1 — age X, M/F, (disability)" format
-- If no children: "No children registered in this household."
-
-### 5. Edge Function — Persist children
-
-In `submit-bouwsubsidie-application/index.ts`, after case creation (after line ~518):
-
-- Loop through `input.children` array
-- Insert each into `subsidy_household_child` with `subsidy_case_id`, `age`, `gender`, `has_disability`, `sort_order`
-- Add `children_count` to existing audit metadata (line ~535)
-
-Add `children` to `BouwsubsidieInput` interface.
-
-### 6. Admin Case Detail — Children display
-
-In `src/app/(admin)/subsidy-cases/[id]/page.tsx`:
-
-- Fetch `subsidy_household_child` where `subsidy_case_id = id` in `fetchCase`
-- Add state for children array
-- Add a "Household Children" section in the Overview tab (after household info)
-- Display table: # | Age | Gender | Disability
-- If no children: "No children registered."
-
-### 7. i18n Keys
-
-Add to both `nl.json` and `en.json`:
-
-- `bouwsubsidie.step3.childrenTitle`
-- `bouwsubsidie.step3.addChild` / `removeChild`
-- `bouwsubsidie.step3.childAge` / `childGender` / `childDisability`
-- `bouwsubsidie.step3.noChildren`
-- `bouwsubsidie.step7.sectionChildren`
-- `bouwsubsidie.step7.noChildren`
-- `bouwsubsidie.step7.childDisabilityYes`
-
-## Files Affected
-
-
-| File                                                           | Change                            |
-| -------------------------------------------------------------- | --------------------------------- |
-| `src/app/(public)/bouwsubsidie/apply/types.ts`                 | Add ChildInput + children field   |
-| `src/app/(public)/bouwsubsidie/apply/constants.ts`             | Add children to INITIAL_FORM_DATA |
-| `src/app/(public)/bouwsubsidie/apply/steps/Step3Household.tsx` | Dynamic children UI               |
-| `src/app/(public)/bouwsubsidie/apply/steps/Step7Review.tsx`    | Children summary                  |
-| `supabase/functions/submit-bouwsubsidie-application/index.ts`  | Persist children + audit metadata |
-| `src/app/(admin)/subsidy-cases/[id]/page.tsx`                  | Children display in admin         |
-| `src/i18n/locales/nl.json`                                     | i18n keys                         |
-| `src/i18n/locales/en.json`                                     | i18n keys                         |
-| `restore-points/v1.0/RESTORE_POINT_PHASE_5_V1_8_START.md`      | Restore point                     |
-
-
-## NOTE — Scope confirmation before implementation
-
-Proceed with Option A only.
-
-Confirmed child data scope for Phase 5:
-
-- age
-
-- gender
-
-- has_disability
-
-Do NOT add:
-
-- first_name
-
-- last_name
-
-- birth_date
-
-Reason:
-
-This phase must align with the existing approved `subsidy_household_child` schema and the lightweight child-storage architecture already established in v1.8.
-
-So implementation may proceed only with:
-
-- Step 3 dynamic children rows using age / gender / disability
-
-- Step 7 summary using age / gender / disability
-
-- edge function inserts into `subsidy_household_child`
-
-- admin case detail display from `subsidy_household_child`
-
-No new migration is authorized in this phase.  
-What This Does NOT Touch
-
-- Housing Registration — zero files
-- `household_member` table — zero changes
-- Document requirements config — zero changes
-- Submission persistence logic (case/docs) — unchanged, children added after
+IMPLEMENTED: [list of created files]
+PARTIAL: [any incomplete documents + reason]
+SKIPPED: [none expected]
+VERIFICATION: [checklist per document — PASS/FAIL]
+RESTORE POINT: [ID]
+BLOCKERS: NONE / [description]
+CONFIRMATION: No code changes. No schema changes. No RLS changes.
+```

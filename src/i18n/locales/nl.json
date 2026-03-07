@@ -451,7 +451,13 @@
       "of": "van",
       "mandatoryMissing": "Upload alle verplichte documenten om door te gaan",
       "incomeProofMissing": "Upload minimaal één inkomensbewijs (loonstrook, AOV-verklaring, pensioenverklaring of werkgeversverklaring)",
-      "groupRequired": "Min. 1 vereist"
+      "groupRequired": "Min. 1 vereist",
+      "checklistTitle": "Vereisten om door te gaan",
+      "checkIdCopy": "Kopie ID-kaart geüpload",
+      "checkBankStatement": "Bankafschrift geüpload",
+      "checkIncomeProof": "Minimaal één inkomensbewijs geüpload",
+      "allRequiredUploaded": "Alle vereiste documenten zijn geüpload. U kunt doorgaan.",
+      "uploadIncomeToProced": "Upload minimaal één inkomensbewijs om door te gaan."
     },
     "step7": {
       "title": "Controleer uw aanvraag",

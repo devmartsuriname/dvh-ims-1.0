@@ -273,6 +273,7 @@
       "infoTitle": "Documentvereisten",
       "infoText": "Alle verplichte documenten moeten worden geüpload voordat u uw registratie kunt indienen. Ondersteunde bestandstypen: PDF, JPG, PNG. Maximale bestandsgrootte: 10MB per document.",
       "mandatory": "Verplicht",
+      "mandatoryTab": "Verplicht",
       "optional": "Optioneel",
       "dropzone": "Sleep bestand hierheen of klik om te uploaden",
       "dropzoneActive": "Laat bestand hier los...",

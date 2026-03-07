@@ -273,6 +273,7 @@
       "infoTitle": "Document Requirements",
       "infoText": "All mandatory documents must be uploaded before you can submit your registration. Supported file types: PDF, JPG, PNG. Maximum file size: 10MB per document.",
       "mandatory": "Mandatory",
+      "mandatoryTab": "Mandatory",
       "optional": "Optional",
       "dropzone": "Drop file here or click to upload",
       "dropzoneActive": "Drop file here...",

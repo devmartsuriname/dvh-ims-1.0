@@ -63,7 +63,7 @@ const LandingPage = () => {
                 {t('landing.heroDescription')}
               </p>
 
-              <hr className="mt-3 mb-4 opacity-50" />
+              <hr className="mt-3 mb-4 opacity-75" />
 
               {/* Services Section */}
               <h5 className="fw-bold mb-1">{t('landing.servicesTitle')}</h5>

@@ -1,5 +1,5 @@
-// Temporary type stubs for external packages not yet installed
-// These will be replaced when proper dependencies are added in Phase 5 - Final Configuration
+// Type stubs for external packages
+// Stubs for removed packages have been cleaned out in Phase 4
 
 declare module '@iconify/react' {
   export interface IconProps {
@@ -13,45 +13,6 @@ declare module '@iconify/react' {
     [key: string]: any
   }
   export const Icon: React.FC<IconProps>
-}
-
-declare module '@fullcalendar/core/index.js' {
-  export interface EventInput {
-    id?: string
-    title?: string
-    start?: Date | string
-    end?: Date | string
-    allDay?: boolean
-    className?: string
-    editable?: boolean
-    [key: string]: any
-  }
-  export interface EventClickArg {
-    event: any
-    el: HTMLElement
-    jsEvent: MouseEvent
-  }
-  export interface EventDropArg {
-    event: any
-    oldEvent: any
-    delta: any
-  }
-}
-
-declare module '@fullcalendar/interaction/index.js' {
-  export interface DateClickArg {
-    date: Date
-    dateStr: string
-    allDay: boolean
-    jsEvent: MouseEvent
-  }
-  export interface DropArg {
-    date: Date
-    dateStr: string
-    allDay: boolean
-    draggedEl: HTMLElement
-    jsEvent: MouseEvent
-  }
 }
 
 // React Bootstrap - with FormControlProps export
@@ -384,24 +345,6 @@ declare module 'simplebar-react' {
   export default SimpleBar
 }
 
-// Cookies Next
-declare module 'cookies-next' {
-  export interface CookieOptions {
-    maxAge?: number
-    expires?: Date
-    path?: string
-    domain?: string
-    secure?: boolean
-    httpOnly?: boolean
-    sameSite?: boolean | 'lax' | 'strict' | 'none'
-  }
-  export function setCookie(key: string, value: any, options?: CookieOptions): void
-  export function getCookie(key: string, options?: any): string | undefined
-  export function deleteCookie(key: string, options?: CookieOptions): void
-  export function hasCookie(key: string, options?: any): boolean
-  export function getCookies(options?: any): Record<string, string>
-}
-
 // Yup - with validate method, InferType, and permissive schemas
 declare module 'yup' {
   export type AnySchema = any
@@ -483,47 +426,6 @@ declare module 'axios' {
   export default axios
 }
 
-// Axios Mock Adapter - with permissive constructor and reply method
-declare module 'axios-mock-adapter' {
-  import { AxiosInstance, AxiosRequestConfig } from 'axios'
-
-  export interface AxiosMockAdapterOptions {
-    delayResponse?: number
-    onNoMatch?: 'passthrough' | 'throwException' | null
-    [key: string]: any
-  }
-
-  export default class MockAdapter {
-    constructor(axiosInstance: AxiosInstance, options?: AxiosMockAdapterOptions)
-
-    onGet(url?: string | RegExp, body?: any): MockAdapter
-    onPost(url?: string | RegExp, body?: any): MockAdapter
-    onPut(url?: string | RegExp, body?: any): MockAdapter
-    onPatch(url?: string | RegExp, body?: any): MockAdapter
-    onDelete(url?: string | RegExp, body?: any): MockAdapter
-    onHead(url?: string | RegExp, body?: any): MockAdapter
-    onOptions(url?: string | RegExp, body?: any): MockAdapter
-    onAny(url?: string | RegExp, body?: any): MockAdapter
-    
-    reply(callback: (config: any) => any): MockAdapter
-    reply(status: number, data?: any, headers?: Record<string, string>): MockAdapter
-    replyOnce(callback: (config: any) => any): MockAdapter
-    replyOnce(status: number, data?: any, headers?: Record<string, string>): MockAdapter
-    
-    passThrough(): MockAdapter
-    networkError(): MockAdapter
-    networkErrorOnce(): MockAdapter
-    timeout(): MockAdapter
-    timeoutOnce(): MockAdapter
-    reset(): void
-    restore(): void
-    resetHistory(): void
-    history: Record<string, AxiosRequestConfig[]>
-
-    [key: string]: any
-  }
-}
-
 // JVectorMap
 declare module 'jsvectormap' {
   export interface JsvectormapOptions {
@@ -585,10 +487,6 @@ declare module 'jsvectormap' {
 }
 
 declare module 'jsvectormap/dist/maps/world' {}
-declare module 'jsvectormap/dist/maps/canada' {}
-declare module 'jsvectormap/dist/maps/spain' {}
-declare module 'jsvectormap/dist/maps/iraq' {}
-declare module 'jsvectormap/dist/maps/russia' {}
 
 // Preline
 declare module 'preline/preline' {
@@ -675,38 +573,6 @@ declare module 'react-select' {
   }
   const Select: ComponentType<SelectProps>
   export default Select
-}
-
-// React Quill
-declare module 'react-quill' {
-  import { ComponentType } from 'react'
-  export interface ReactQuillProps {
-    value?: string
-    onChange?: (value: string) => void
-    theme?: string
-    modules?: any
-    formats?: string[]
-    placeholder?: string
-    readOnly?: boolean
-    className?: string
-    [key: string]: any
-  }
-  const ReactQuill: ComponentType<ReactQuillProps>
-  export default ReactQuill
-}
-
-// Google Maps React
-declare module 'google-maps-react' {
-  import { ComponentType } from 'react'
-  export const GoogleApiWrapper: (config: any) => (component: any) => any
-  export const Map: ComponentType<any>
-  export const Marker: ComponentType<any>
-  export const InfoWindow: ComponentType<any>
-  export const Polyline: ComponentType<any>
-  export const Polygon: ComponentType<any>
-  export const Circle: ComponentType<any>
-  export const Rectangle: ComponentType<any>
-  export const HeatMap: ComponentType<any>
 }
 
 // GridJS React

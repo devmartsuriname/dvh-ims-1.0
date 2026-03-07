@@ -1,238 +1,280 @@
-# Phase 7 — Security Hardening Plan
+# Ministerial System Manual — Documentation Execution Plan
 
-**Context ID:** 8F42B1C3-5D9E-4A7B-B2E1-9C3F4D5A6E7B
+## Objective
 
----
+Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
 
-## Finding 1 — HIGH: `public_status_access` anonymous SELECT with `USING (true)`
-
-**Current state:** The `anon_can_select_public_status_access` policy grants full anonymous read access to the entire `public_status_access` table — exposing all reference numbers (BS-2026-000001, WR-2026-002967), entity IDs, and hashed access tokens.
-
-**Why it exists:** Originally created to support the public status lookup flow.
-
-**Why it is redundant:** The `lookup-public-status` Edge Function uses `SUPABASE_SERVICE_ROLE_KEY` (line 181-182), which bypasses RLS entirely. No client-side code queries this table directly. The policy is pure attack surface.
-
-**Risk:** An attacker can enumerate all valid reference numbers and hashed tokens, enabling brute-force correlation attacks.
-
-**Fix — Migration Script 1:**
-
-```sql
-BEGIN;
-
--- Drop the overly permissive anonymous policy
-DROP POLICY IF EXISTS "anon_can_select_public_status_access" ON public_status_access;
-
-COMMIT;
-```
-
-No replacement policy needed. The Edge Function uses service role key and is unaffected.
-
-**Impact:** Zero. The Edge Function continues to work. No frontend code queries this table as anon.
+This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
 
 ---
 
-## Finding 2 — MEDIUM: `app_user_profile` allows `district_code` self-modification
+## Deliverable Structure
 
-**Current state:** The policy `Users can update own profile` allows any authenticated user to update their own profile row with no column restrictions. A user could change their own `district_code`, which would escalate their district-level access across all RLS policies that use `get_user_district()`.
+**Folder:** `/docs/manual/`
 
-**Risk:** Privilege escalation — a frontdesk user in Paramaribo could change their district_code to Nickerie and access cases in that district.
 
-**Fix — Migration Script 2:**
+| #   | File                                                 | Purpose                                                                                                  |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
+| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
+| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
+| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
+| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
+| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
+| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
+| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
+| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
+| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
+| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
+| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
+| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
+| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
+| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
+| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
 
-```sql
-BEGIN;
 
--- Drop the permissive self-update policy
-DROP POLICY IF EXISTS "Users can update own profile" ON app_user_profile;
-
--- Recreate with restriction: users can update own profile
--- but cannot change district_code or is_active
-CREATE POLICY "Users can update own profile"
-ON app_user_profile
-FOR UPDATE
-TO authenticated
-USING (user_id = auth.uid())
-WITH CHECK (
-  user_id = auth.uid()
-  AND district_code IS NOT DISTINCT FROM (
-    SELECT district_code FROM app_user_profile WHERE user_id = auth.uid()
-  )
-  AND is_active IS NOT DISTINCT FROM (
-    SELECT is_active FROM app_user_profile WHERE user_id = auth.uid()
-  )
-);
-
-COMMIT;
-```
-
-This ensures users can update `full_name` but cannot modify `district_code` or `is_active`. Only `system_admin` (via `role_update_all_app_user_profile`) can change those fields.
-
-**Impact:** Users can still update their display name. Admin management is unaffected (separate policy).
+**Total: 16 documents**
 
 ---
 
-## Finding 3 — MEDIUM: Leaked password protection disabled
+## URL Documentation
 
-**Current state:** Supabase Auth leaked password protection is disabled.
+All documents will include explicit URLs based on:
 
-**Action:** This is a Supabase Dashboard setting, not a migration. Per existing governance note, this is deferred due to Free Tier limitations.
+**Production (Published):**
 
-**Recommendation:** Enable immediately upon upgrading to Supabase Pro tier via: **Supabase Dashboard → Auth → Security → Enable Leaked Password Protection**.
+- Landing: `https://huggable-cloud-whisper.lovable.app/`
+- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
+- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
+- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
+- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
+- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
 
-No migration script needed. Status: documented and deferred.
+**Staging (Preview):**
 
----
+- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
+- Same path structure as production
 
-## Finding 4 — MEDIUM: `housing_document_upload` missing INSERT policy
-
-**Current state:** No INSERT policy exists on `housing_document_upload`. The table has SELECT and UPDATE policies only. This means no authenticated role can insert document upload records via RLS.
-
-**Current workaround:** Document uploads during public registration are handled by the `submit-housing-registration` Edge Function using the service role key, bypassing RLS. Admin-side document uploads would fail.
-
-**Fix — Migration Script 3:**
-
-```sql
-BEGIN;
-
-CREATE POLICY "role_insert_housing_document_upload"
-ON housing_document_upload
-FOR INSERT
-TO authenticated
-WITH CHECK (
-  has_role(auth.uid(), 'system_admin'::app_role)
-  OR has_role(auth.uid(), 'project_leader'::app_role)
-  OR (EXISTS (
-    SELECT 1 FROM housing_registration hr
-    WHERE hr.id = housing_document_upload.registration_id
-      AND (has_role(auth.uid(), 'frontdesk_housing'::app_role)
-           OR has_role(auth.uid(), 'admin_staff'::app_role))
-      AND hr.district_code = get_user_district(auth.uid())
-  ))
-);
-
-COMMIT;
-```
-
-**Impact:** Enables admin-side document uploads for housing registrations. Follows existing RLS pattern from `housing_urgency` and `housing_registration_status_history`.
+Admin module URLs will be listed per-module in document 12.
 
 ---
 
-## RLS Audit Summary
+## Content Coverage Per Document
 
+### 00 - Executive Summary
 
-| Table                                 | anon SELECT    | Status                             |
-| ------------------------------------- | -------------- | ---------------------------------- |
-| `public_status_access`                | `USING (true)` | **REMOVE** (Finding 1)             |
-| `person`                              | None           | Clean                              |
-| `subsidy_case`                        | None           | Clean                              |
-| `housing_registration`                | None           | Clean                              |
-| `subsidy_case_status_history`         | None           | Clean (removed in V1.7)            |
-| `housing_registration_status_history` | None           | Clean (removed in V1.7)            |
-| `audit_event`                         | None           | Clean (removed in V1.7)            |
-| `housing_document_upload`             | None           | Clean — missing INSERT (Finding 4) |
+- System purpose and legal mandate
+- Two services overview (Housing + Subsidy)
+- Governance and accountability model (1 paragraph)
+- Role structure summary
+- Key operational metrics / KPIs
+- "What happens next?" for both services
+- 5-10 pages, non-technical language
 
+### 01 - System Overview
 
-All other tables have properly scoped authenticated-only policies.
+- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
+- Public vs Admin separation
+- Authentication model (staff-only login, citizen anonymous access)
+- District-based scoping
+
+### 02 + 03 - Public Wizard Workflows
+
+Per service:
+
+- Preconditions
+- Step-by-step wizard walkthrough (each form step)
+- Reference number generation
+- Security token explanation
+- Receipt/confirmation page
+- Status tracking via `/status`
+- "What happens after submission?"
+
+### 04 + 05 - Admin Workflows
+
+Per service:
+
+- Locating records in list view
+- Opening detail view
+- Status change process (with mandatory reason)
+- Document upload and verification
+- Field reports (Social, Technical — Bouwsubsidie only)
+- Decision chain steps
+- Raadvoorstel generation (Bouwsubsidie only)
+- Archive flow
+- Audit trail per action
+
+### 06 - Roles & Permission Matrix
+
+Table columns:
+
+- Role name (all 11 implemented roles)
+- Modules accessible
+- Create/Edit rights
+- Status change authority (which statuses)
+- Document upload/verify rights
+- Allocation/decision authority
+- Audit log access
+- Export/print permissions
+- National vs district-scoped flag
+
+### 07 - Status Lifecycle
+
+- ASCII state diagrams for both services
+- Transition rules with triggering roles
+- Decision authority per transition
+- Mandatory reason requirements
+
+### 08 - Document Management
+
+- Upload workflow
+- Verification tracking
+- Raadvoorstel generation (edge function)
+- Download via signed URLs
+
+### 09 - Audit Logging
+
+- `audit_event` table structure
+- What triggers a log entry
+- Where to view audit logs (Admin > Audit Log)
+- Append-only guarantee
+- Role access to audit log
+
+### 10 - Allocation Engine
+
+- District quotas setup
+- Urgency scoring model
+- Allocation run execution
+- Matching logic
+- Decision recording
+- Assignment registration
+
+### 11 - Governance Controls
+
+- RLS enforcement model
+- Least-privilege access
+- Ministerial Advisor mandatory paraph
+- Minister deviation logging
+- Status history immutability
+
+### 12 - Module Specification
+
+All 20 pages/modules documented:
+
+- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
+- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
+
+Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
+
+### 13 - Operational Scenarios
+
+Minimum 8 numbered end-to-end scenarios:
+
+1. Citizen submits Housing Registration
+2. Citizen submits Subsidy Application
+3. Frontdesk processes new Housing Registration
+4. Frontdesk processes new Subsidy Case through full decision chain
+5. Allocation run execution and assignment
+6. Minister approves/rejects with deviation from advisor
+7. Archive lookup of closed case
+8. Audit trail verification for a specific case
+
+Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
+
+### 14 - Troubleshooting & FAQ
+
+- Common submission errors
+- Duplicate/resubmission behavior
+- Status lookup failures
+- Document upload issues
+- Permission denied scenarios
+- Session timeout handling
+
+### 15 - Glossary
+
+- All status values (both services)
+- Field definitions
+- Role names with descriptions
+- System terminology (Raadvoorstel, paraph, district code, etc.)
 
 ---
 
-## Migration Execution Order
+## Screenshots Strategy
 
-1. **Migration A** — Drop `anon_can_select_public_status_access` (HIGH)
-2. **Migration B** — Replace `Users can update own profile` with column-restricted version (MEDIUM)
-3. **Migration C** — Add `role_insert_housing_document_upload` (MEDIUM)
-
-**Rollback:** Each migration is independently reversible by recreating the dropped/replaced policy.
-
----
-
-## NOTE — Security Plan Correction
-
-The item “Leaked password protection disabled” is outdated.
-
-We have already upgraded the Supabase project to the Pro tier and
-
-Leaked Password Protection has been enabled in:
-
-Supabase Dashboard → Auth → Security
-
-Therefore this finding should be marked as:
-
-RESOLVED (Platform configuration)
-
-Please update the Phase 7 plan accordingly.
+- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
+- Each reference follows format: `Figure X.Y — Description`
+- PII masking note included in each document header
+- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
 
 ---
 
-Additional note for the report:
+## Execution Sequence
 
-Admin dashboards and document flows have been manually verified and are working correctly.
-
-PageSpeed verification has also been completed:
-
-Homepage
-
-Desktop: 99 performance
-
-Mobile: 83 performance
-
-Wizard (/bouwsubsidie/apply)
-
-Desktop: 91 performance
-
-Mobile: 85 performance
-
-Accessibility / SEO / Best Practices are all within acceptable production ranges.
+1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
+2. Create `/docs/manual/` folder
+3. Generate documents in order: 00 through 15
+4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
+5. After all 16 documents: produce completion checklist
 
 ---
 
-Next step:
+## Quality Gates
 
-Proceed with the Phase 7 database migrations only:
+- Language: Clear, non-technical, suitable for Minister and senior staff
+- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
+- UI alignment: All labels, navigation paths, and field names match current implementation
+- No invented features or roles
+- No code/schema/RLS changes
+- Restore point created before any file creation
 
-Migration A
+## IMPORTANT — PRODUCTION URL CORRECTION
 
-Drop policy:
+All documentation must use the official custom production domain:
 
-anon_can_select_public_status_access
+[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
 
-Migration B
+DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
 
-Replace policy:
+Update all production URLs to:
 
-Users can update own profile
+Landing:
 
-(add restriction preventing district_code and is_active modification)
+[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
 
-Migration C
+Housing Registration:
 
-Add INSERT policy:
+[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
 
-housing_document_upload
+Subsidy Application:
 
-No other schema or application changes required.
+[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
 
-After migrations complete:
+Status Tracker:
 
-1. Re-run RLS verification
+[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
 
-2. Run a quick admin document upload test
+Staff Login:
 
-3. Confirm status lookup still works via Edge Function
+[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
 
-Await confirmation report after migrations.  
+Admin Dashboard:
+
+[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
+
+If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
+
+The Ministerial Manual must only reference the official production domain.  
   
-**Confirm that lookup-public-status Edge Function**
+**Completion Report Format**
 
-still returns correct results when querying
+After all documents are generated:
 
-public_status_access using service_role.  
-  
-**What is NOT included**
-
-- Leaked password protection (Dashboard setting, Free Tier limitation)
-- No schema changes
-- No frontend code changes
-- No Edge Function changes
-
-Awaiting approval before applying migrations.
+```
+IMPLEMENTED: [list of created files]
+PARTIAL: [any incomplete documents + reason]
+SKIPPED: [none expected]
+VERIFICATION: [checklist per document — PASS/FAIL]
+RESTORE POINT: [ID]
+BLOCKERS: NONE / [description]
+CONFIRMATION: No code changes. No schema changes. No RLS changes.
+```

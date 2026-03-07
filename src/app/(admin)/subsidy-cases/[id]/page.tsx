@@ -160,6 +160,39 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
 }
 
 /**
+ * NEXT_RESPONSIBLE_ROLE — GAP-2 Notification Routing Fix
+ * Maps each target status to the role responsible for acting on it.
+ * Fallback: 'frontdesk_bouwsubsidie' for any unmapped status.
+ */
+const NEXT_RESPONSIBLE_ROLE: Record<string, string> = {
+  in_social_review: 'social_field_worker',
+  social_completed: 'project_leader',
+  returned_to_intake: 'frontdesk_bouwsubsidie',
+  in_technical_review: 'technical_inspector',
+  technical_approved: 'project_leader',
+  returned_to_social: 'social_field_worker',
+  in_admin_review: 'admin_staff',
+  admin_complete: 'project_leader',
+  returned_to_technical: 'technical_inspector',
+  screening: 'project_leader',
+  needs_more_docs: 'frontdesk_bouwsubsidie',
+  fieldwork: 'project_leader',
+  awaiting_director_approval: 'director',
+  director_approved: 'project_leader',
+  returned_to_screening: 'project_leader',
+  in_ministerial_advice: 'ministerial_advisor',
+  ministerial_advice_complete: 'project_leader',
+  returned_to_director: 'director',
+  awaiting_minister_decision: 'minister',
+  minister_approved: 'project_leader',
+  returned_to_advisor: 'ministerial_advisor',
+  approved_for_council: 'project_leader',
+  council_doc_generated: 'project_leader',
+  finalized: 'project_leader',
+  rejected: 'project_leader',
+}
+
+/**
  * ROLE_ALLOWED_TRANSITIONS — GAP-1 RBAC enforcement
  * Maps each "from_status → to_status" transition to the roles permitted to execute it.
  * system_admin is always allowed (governance fallback) and handled separately.

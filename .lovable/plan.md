@@ -1,332 +1,280 @@
-# Frontend Audit & Planning Pass — VolksHuisvesting IMS
+# Ministerial System Manual — Documentation Execution Plan
+
+## Objective
+
+Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
+
+This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
 
 ---
 
-## A. Executive Summary
+## Deliverable Structure
 
-The codebase carries significant legacy weight from the Darkone template it was forked from. Key findings:
-
-- **~15 unused dependencies** in package.json (FullCalendar, google-maps-react, embla-carousel, recharts, axios-mock-adapter, cookies-next, next-themes, gumshoejs, react-quill, etc.)
-- **~25 dead/demo files** including brand images, small gallery images, unused avatar images, demo data types, deprecated helpers, and unused components
-- **732-line externals.d.ts** with type stubs for packages that are either unused or already installed
-- **Email/Chat context system** fully wired but never used
-- **VectorMap components** for 5 countries — only WorldMap used (dashboard)
-- **SCSS plugins** for features never used in this project (editors, google-map)
-- **ThemeCustomizer** and **AnimationStar** are template artifacts still rendered in AdminLayout
-
-Overall health: Functional but bloated. Estimated ~30% of files are dead weight from the template.
-
----
-
-## B. Section 1 — Dead Code Removal / Demo Item Cleanup / Type Cleanup
-
-### 1. Suspected Dead Code Areas
+**Folder:** `/docs/manual/`
 
 
-| Category                      | Files                                                                                             | Risk                                                                                                 |
-| ----------------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| **Deprecated helpers**        | `src/helpers/fake-backend.ts`                                                                     | Safe — marked deprecated, zero imports                                                               |
-| **Unused components**         | `ComponentContainerCard.tsx`, `Preloader.tsx`, `CustomFlatpickr.tsx`                              | Safe — zero imports outside own file                                                                 |
-| **Unused form components**    | `ChoicesFormInput.tsx`, `DropzoneFormInput.tsx`, `PasswordFormInput.tsx`, `TextAreaFormInput.tsx` | Safe — zero external imports                                                                         |
-| **Unused hooks**              | `useModal.ts`, `useFileUploader.ts`                                                               | Safe — useModal has zero external imports; useFileUploader only imported by unused DropzoneFormInput |
-| **Unused VectorMap variants** | `CanadaMap.tsx`, `SpainMap.tsx`, `IraqVectorMap.tsx`, `RussiaMap.tsx`, `VectorMap/index.tsx`      | Safe — only WorldMap is imported                                                                     |
-| **Email context system**      | `useEmailContext.tsx` + Email types in `context.ts` and `data.ts`                                 | Medium — types referenced by context.ts                                                              |
-| **ThemeCustomizer**           | `ThemeCustomizer.tsx` + layout context wiring                                                     | Medium — imported in AdminLayout via layout context                                                  |
+| #   | File                                                 | Purpose                                                                                                  |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
+| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
+| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
+| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
+| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
+| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
+| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
+| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
+| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
+| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
+| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
+| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
+| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
+| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
+| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
+| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
 
 
-### 2. Suspected Demo-Only Code
-
-
-| Item                   | Location                                                                                                                                      | Evidence                                   |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| Brand logos            | `src/assets/images/brands/` (5 SVGs)                                                                                                          | Zero imports                               |
-| Gallery images         | `src/assets/images/small/` (10 JPGs)                                                                                                          | Zero imports                               |
-| Unused avatars         | `src/assets/images/users/avatar-2..10.jpg`                                                                                                    | Only avatar-1 imported                     |
-| Demo background images | `bg-pattern-1.png`, `bg-pattern.svg`                                                                                                          | Zero imports                               |
-| `maintenance.svg`      | `src/assets/images/`                                                                                                                          | Zero imports                               |
-| Demo notification data | `src/assets/data/topbar.ts`                                                                                                                   | Already emptied but file remains           |
-| Demo data types        | `src/types/data.ts` — EmailType, PropertyType, CustomerType, PricingType, ProjectType, TodoType, SellerType, SocialEventType, GroupType, etc. | Template artifacts, not used by IMS domain |
-
-
-### 3. Suspected Type Cleanup Areas
-
-
-| File                                   | Issue                                                                                                            |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `src/types/externals.d.ts` (732 lines) | Massive stub file. Many stubs are for installed packages (redundant) or unused packages. Needs audit per-module. |
-| `src/types/data.ts` (236 lines)        | ~80% demo types. Only `NotificationType`, `FileType`, and `IdType` may be active.                                |
-| `src/types/context.ts`                 | Contains `EmailContextType`, `EmailOffcanvasStatesType`, `ChatOffcanvasStatesType` — all unused.                 |
-| `src/types/component-props.ts`         | Imports FullCalendar types — never used in IMS.                                                                  |
-| `src/types/gumshoejs.d.ts`             | Stub for unused dependency.                                                                                      |
-| `src/types/react-bootstrap-types.d.ts` | Needs verification of actual usage.                                                                              |
-
-
-### 4. Recommended Execution Order
-
-**Batch 1 — Safe Deletions (Risk: LOW, ~12 files)**
-
-- `fake-backend.ts`
-- `ComponentContainerCard.tsx`
-- `Preloader.tsx`
-- `CustomFlatpickr.tsx`
-- `ChoicesFormInput.tsx`, `DropzoneFormInput.tsx`, `PasswordFormInput.tsx`, `TextAreaFormInput.tsx`
-- `useModal.ts`
-- `gumshoejs.d.ts`
-- `VectorMap/CanadaMap.tsx`, `SpainMap.tsx`, `IraqVectorMap.tsx`, `RussiaMap.tsx`
-
-**Batch 2 — Image Cleanup (Risk: LOW, ~20 files)**
-
-- `src/assets/images/brands/*` (5 files)
-- `src/assets/images/small/*` (10 files)
-- `src/assets/images/users/avatar-2..10.jpg` (9 files)
-- `bg-pattern-1.png`, `bg-pattern.svg`, `maintenance.svg`
-
-**Batch 3 — Type/Context Cleanup (Risk: MEDIUM, ~5 files)**
-
-- Trim `data.ts` to active types only
-- Trim `context.ts` to remove Email/Chat types
-- Remove `useEmailContext.tsx`
-- Trim `externals.d.ts` (remove stubs for installed/unused packages)
-- Clean `component-props.ts` FullCalendar imports
-
-**Batch 4 — Layout Artifact Removal (Risk: MEDIUM, ~3 files)**
-
-- Remove `AnimationStar.tsx` + its import from AdminLayout
-- Remove `ThemeCustomizer.tsx` + its wiring from layout context
-- Requires manual review: confirm no admin functionality depends on ThemeCustomizer
-
-### 5. Risky Files — DO NOT TOUCH Casually
-
-- `src/types/v12-roles.ts` — Governance documentation, must remain
-- `src/context/useLayoutContext.tsx` — Core layout system, changes cascade
-- `src/routes/index.tsx` — All routes, needs careful handling
-- `src/assets/scss/style.scss` — Master import, removal of SCSS partials must be coordinated
+**Total: 16 documents**
 
 ---
 
-## C. Section 2 — Performance Plan
+## URL Documentation
 
-### 1. Likely Performance Bottlenecks
+All documents will include explicit URLs based on:
 
+**Production (Published):**
 
-| Area                    | Impact      | Detail                                                                                                                                                                                                                                                 |
-| ----------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Unused npm packages** | Bundle size | ~15 packages installed but never imported (FullCalendar suite, google-maps-react, embla-carousel, recharts, axios-mock-adapter, cookies-next, next-themes, gumshoejs, react-quill, cmdk, vaul, input-otp, sonner). Tree-shaking may not eliminate all. |
-| **jsvectormap**         | Bundle size | Loads 5 country map data files; only world map used                                                                                                                                                                                                    |
-| **externals.d.ts**      | Build time  | 732-line type file parsed every build                                                                                                                                                                                                                  |
-| **gridjs**              | Render cost | Used in 4+ admin tables; acceptable but monitor                                                                                                                                                                                                        |
+- Landing: `https://huggable-cloud-whisper.lovable.app/`
+- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
+- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
+- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
+- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
+- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
 
+**Staging (Preview):**
 
-### 2. Low-Risk Quick Wins
+- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
+- Same path structure as production
 
-1. Remove unused npm dependencies from `package.json` (~15 packages)
-2. Remove unused VectorMap country imports (keep only WorldMap)
-3. Lazy-load heavy admin components already done via `lazy()` — verified OK
-
-### 3. Medium-Risk Optimizations
-
-1. Audit `externals.d.ts` — remove stubs for installed packages (type resolution already handled by node_modules)
-2. Consider whether dashboard ApexCharts data is efficiently loaded
-3. Review image sizes for `hero-community.png` and `side-img.jpg`
-
-### 4. Estimated Impact
-
-
-| Action                    | Estimated Bundle Reduction            |
-| ------------------------- | ------------------------------------- |
-| Remove unused deps        | 5-15% (depends on tree-shaking)       |
-| Remove VectorMap variants | Minor (~50KB)                         |
-| Image optimization        | Load time improvement on public pages |
-
-
-### 5. Recommended Execution Order
-
-1. Dependency audit + removal (after dead code cleanup)
-2. Image size audit
-3. Build size measurement (before/after)
+Admin module URLs will be listed per-module in document 12.
 
 ---
 
-## D. Section 3 — Unused SCSS Files Audit
+## Content Coverage Per Document
 
-### 1. Likely Unused SCSS Files
+### 00 - Executive Summary
 
+- System purpose and legal mandate
+- Two services overview (Housing + Subsidy)
+- Governance and accountability model (1 paragraph)
+- Role structure summary
+- Key operational metrics / KPIs
+- "What happens next?" for both services
+- 5-10 pages, non-technical language
 
-| File                                 | Reason                      |
-| ------------------------------------ | --------------------------- |
-| `plugins/_editors.scss`              | react-quill not used in IMS |
-| `plugins/_google-map.scss`           | google-maps-react not used  |
-| `plugins/_dropzone.scss`             | DropzoneFormInput unused    |
-| `plugins/_flatpicker.scss`           | CustomFlatpickr unused      |
-| `pages/_icon-demo.scss`              | No icon demo page in routes |
-| `icons/icons.scss` + `icons/` folder | Needs verification          |
+### 01 - System Overview
 
+- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
+- Public vs Admin separation
+- Authentication model (staff-only login, citizen anonymous access)
+- District-based scoping
 
-### 2. Uncertain — Requires Validation
+### 02 + 03 - Public Wizard Workflows
 
+Per service:
 
-| File                              | Status                                   |
-| --------------------------------- | ---------------------------------------- |
-| `plugins/_vector-map.scss`        | Used by dashboard WorldMap — KEEP        |
-| `plugins/_apexcharts.scss`        | Used by dashboard — KEEP                 |
-| `plugins/_gridjs.scss`            | Used by admin tables — KEEP              |
-| `plugins/_simplebar.scss`         | Used by layout — KEEP                    |
-| `components/_search-results.scss` | Verify if GlobalSearch uses these styles |
-| `components/_widgets.scss`        | Verify dashboard widget usage            |
+- Preconditions
+- Step-by-step wizard walkthrough (each form step)
+- Reference number generation
+- Security token explanation
+- Receipt/confirmation page
+- Status tracking via `/status`
+- "What happens after submission?"
 
+### 04 + 05 - Admin Workflows
 
-### 3. Definitely Active — DO NOT TOUCH
+Per service:
 
-All `structure/` files, `config/` files, `components/_card.scss`, `_buttons.scss`, `_forms.scss`, `_tables.scss`, `_nav.scss`, `_public-landing.scss`, `_avatar.scss`, `_badge.scss`, `_breadcrumb.scss`, `_dropdown.scss`, `_modal.scss`, `_type.scss`, `_reboot.scss`, `_helper.scss`, `_backgrounds.scss`.
+- Locating records in list view
+- Opening detail view
+- Status change process (with mandatory reason)
+- Document upload and verification
+- Field reports (Social, Technical — Bouwsubsidie only)
+- Decision chain steps
+- Raadvoorstel generation (Bouwsubsidie only)
+- Archive flow
+- Audit trail per action
 
-### 4. Safe Verification Strategy
+### 06 - Roles & Permission Matrix
 
-1. Comment out `@import` line in `style.scss`
-2. Build project
-3. Visually verify affected pages
-4. If no regression → safe to remove file and import
+Table columns:
 
-### 5. Phased Removal Plan
+- Role name (all 11 implemented roles)
+- Modules accessible
+- Create/Edit rights
+- Status change authority (which statuses)
+- Document upload/verify rights
+- Allocation/decision authority
+- Audit log access
+- Export/print permissions
+- National vs district-scoped flag
 
-- Phase A: Remove clearly unused plugin SCSS (editors, google-map, dropzone, flatpicker) — 4 files
-- Phase B: Remove icon-demo page SCSS — 1 file
-- Phase C: Validate uncertain files one at a time
+### 07 - Status Lifecycle
 
----
+- ASCII state diagrams for both services
+- Transition rules with triggering roles
+- Decision authority per transition
+- Mandatory reason requirements
 
-## E. Section 4 — Mobile UX / Accessibility / Performance Check
+### 08 - Document Management
 
-### 1. Audit Checklist
+- Upload workflow
+- Verification tracking
+- Raadvoorstel generation (edge function)
+- Download via signed URLs
 
-**Mobile UX:**
+### 09 - Audit Logging
 
-- Touch targets ≥ 44px on all interactive elements
-- Card grid stacking (1-col on mobile verified)
-- Wizard step navigation usable on 320px width
-- Form inputs not overflowing on small screens
-- Sidebar collapse behavior on mobile
-- Landing page image panel hidden on mobile (verified — d-none d-lg-flex)
-- Status tracker form usable on mobile
+- `audit_event` table structure
+- What triggers a log entry
+- Where to view audit logs (Admin > Audit Log)
+- Append-only guarantee
+- Role access to audit log
 
-**Accessibility:**
+### 10 - Allocation Engine
 
-- Heading hierarchy (h1 → h2 → h3 correct order)
-- Color contrast ratios meet WCAG AA
-- All form inputs have labels
-- Focus states visible on all interactive elements
-- Keyboard navigation through wizard steps
-- ARIA labels on icon-only buttons
-- Skip-to-content link presence
-- Alert/error messages announced to screen readers
+- District quotas setup
+- Urgency scoring model
+- Allocation run execution
+- Matching logic
+- Decision recording
+- Assignment registration
 
-**Performance:**
+### 11 - Governance Controls
 
-- Landing page loads without unnecessary JS
-- Admin dashboard initial load time
-- Wizard step transitions smooth
-- No layout shifts on page load
+- RLS enforcement model
+- Least-privilege access
+- Ministerial Advisor mandatory paraph
+- Minister deviation logging
+- Status history immutability
 
-### 2. High-Priority Screens to Review First
+### 12 - Module Specification
 
-1. Landing page (public entry point)
-2. Housing wizard (citizen-facing, multi-step)
-3. Bouwsubsidie wizard (citizen-facing, multi-step)
-4. Status tracker (public)
-5. Dashboard (admin entry point)
+All 20 pages/modules documented:
 
-### 3. Expected Likely Issues
+- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
+- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
 
-- Icon-only buttons in admin TopBar missing ARIA labels
-- Wizard forms may have tight touch targets on mobile
-- Admin sidebar may not be fully keyboard-navigable
-- Color contrast on muted text elements
-- No skip-to-content link
+Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
 
-### 4. Recommended Execution Order
+### 13 - Operational Scenarios
 
-1. Automated Lighthouse audit on landing + wizard pages
-2. Manual mobile viewport testing (320px, 375px, 768px)
-3. Keyboard navigation walkthrough on wizard
-4. Contrast checker on public pages
-5. Admin accessibility pass (lower priority)
+Minimum 8 numbered end-to-end scenarios:
 
-### 5. Automated vs Manual
+1. Citizen submits Housing Registration
+2. Citizen submits Subsidy Application
+3. Frontdesk processes new Housing Registration
+4. Frontdesk processes new Subsidy Case through full decision chain
+5. Allocation run execution and assignment
+6. Minister approves/rejects with deviation from advisor
+7. Archive lookup of closed case
+8. Audit trail verification for a specific case
 
+Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
 
-| Check               | Method                           |
-| ------------------- | -------------------------------- |
-| Contrast ratios     | Lighthouse / automated           |
-| Heading hierarchy   | Automated HTML audit             |
-| Touch target size   | Manual inspection                |
-| Keyboard navigation | Manual                           |
-| Screen reader       | Manual                           |
-| Layout overflow     | Browser DevTools responsive mode |
-| Performance scores  | Lighthouse                       |
+### 14 - Troubleshooting & FAQ
 
+- Common submission errors
+- Duplicate/resubmission behavior
+- Status lookup failures
+- Document upload issues
+- Permission denied scenarios
+- Session timeout handling
 
----
+### 15 - Glossary
 
-## F. Master Execution Plan
-
-### Phase 1 — Safe Dead Code Cleanup
-
-- **Scope**: Batch 1 (unused components, helpers, hooks) + Batch 2 (demo images)
-- **Estimated files**: ~32
-- **Risk**: LOW
-- **Blockers**: None
-- **Success criteria**: Build passes, no broken imports, no visual regression
-
-### Phase 2 — Performance Quick Wins
-
-- **Scope**: Remove unused npm dependencies, trim VectorMap variants
-- **Estimated files**: package.json + ~5 component files
-- **Risk**: LOW-MEDIUM
-- **Blockers**: Verify tree-shaking behavior
-- **Success criteria**: Smaller bundle, build passes
-
-### Phase 3 — SCSS Validation & Removal
-
-- **Scope**: Remove 4-5 unused SCSS plugin files, validate uncertain ones
-- **Estimated files**: ~6 SCSS files + style.scss import updates
-- **Risk**: LOW
-- **Blockers**: Each removal requires visual verification
-- **Success criteria**: No styling regressions on any page
-
-### Phase 4 — Type Cleanup + Context Cleanup
-
-- **Scope**: Trim data.ts, context.ts, externals.d.ts, remove EmailContext
-- **Estimated files**: ~5
-- **Risk**: MEDIUM
-- **Blockers**: Must verify no cascading type errors
-- **Success criteria**: Build passes, TypeScript clean
-
-### Phase 5 — Mobile/Accessibility Remediation + Final Verification
-
-- **Scope**: Fix issues found in Section E audit
-- **Estimated files**: TBD based on audit findings
-- **Risk**: LOW-MEDIUM
-- **Blockers**: Audit must complete first
-- **Success criteria**: Lighthouse scores improved, no accessibility violations on public pages, mobile UX validated
+- All status values (both services)
+- Field definitions
+- Role names with descriptions
+- System terminology (Raadvoorstel, paraph, district code, etc.)
 
 ---
 
-**Background color `#f8fafc` remains unchanged throughout all phases.**
+## Screenshots Strategy
 
-**Plan looks good.**
+- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
+- Each reference follows format: `Figure X.Y — Description`
+- PII masking note included in each document header
+- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
 
-One adjustment required before execution:
+---
 
-Phase 1 exceeds the under-25 file change limit.
+## Execution Sequence
 
-Split Phase 1 into two batches so that each execution stays below the 25-file change constraint.
+1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
+2. Create `/docs/manual/` folder
+3. Generate documents in order: 00 through 15
+4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
+5. After all 16 documents: produce completion checklist
 
-Example:
+---
 
-Phase 1A — Safe code cleanup
+## Quality Gates
 
-Phase 1B — Demo image cleanup
+- Language: Clear, non-technical, suitable for Minister and senior staff
+- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
+- UI alignment: All labels, navigation paths, and field names match current implementation
+- No invented features or roles
+- No code/schema/RLS changes
+- Restore point created before any file creation
 
-All other sections are approved.
+## IMPORTANT — PRODUCTION URL CORRECTION
 
-Proceed only after adjusting the batch sizing.  
-Awaiting authorization to proceed.
+All documentation must use the official custom production domain:
+
+[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
+
+DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
+
+Update all production URLs to:
+
+Landing:
+
+[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
+
+Housing Registration:
+
+[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
+
+Subsidy Application:
+
+[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
+
+Status Tracker:
+
+[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
+
+Staff Login:
+
+[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
+
+Admin Dashboard:
+
+[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
+
+If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
+
+The Ministerial Manual must only reference the official production domain.  
+  
+**Completion Report Format**
+
+After all documents are generated:
+
+```
+IMPLEMENTED: [list of created files]
+PARTIAL: [any incomplete documents + reason]
+SKIPPED: [none expected]
+VERIFICATION: [checklist per document — PASS/FAIL]
+RESTORE POINT: [ID]
+BLOCKERS: NONE / [description]
+CONFIRMATION: No code changes. No schema changes. No RLS changes.
+```

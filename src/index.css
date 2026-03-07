@@ -4,27 +4,3 @@
   margin: 0;
   padding: 0;
 }
-
-/* Service Card — Premium hover effects */
-.service-card {
-  border-color: rgba(0, 0, 0, 0.08) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.service-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
-}
-
-.service-card .service-icon {
-  transition: transform 0.25s ease;
-}
-
-.service-card:hover .service-icon {
-  transform: scale(1.08);
-}
-
-.service-card .btn {
-  transition: all 0.2s ease;
-}

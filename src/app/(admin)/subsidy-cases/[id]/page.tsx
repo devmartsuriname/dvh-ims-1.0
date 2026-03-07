@@ -287,6 +287,7 @@ const SubsidyCaseDetail = () => {
   const [generating, setGenerating] = useState(false)
   const [statusReason, setStatusReason] = useState('')
   const { logEvent } = useAuditLog()
+  const { roles: userRoles, hasRole } = useUserRole()
 
   const fetchCase = async () => {
     if (!id) return
@@ -454,7 +455,18 @@ const SubsidyCaseDetail = () => {
     )
   }
 
-  const allowedTransitions = STATUS_TRANSITIONS[subsidyCase.status] || []
+  // GAP-1: RBAC-enforced transitions — filter by user role
+  const allTransitions = STATUS_TRANSITIONS[subsidyCase.status] || []
+  const isSystemAdmin = hasRole('system_admin')
+  const allowedTransitions = isSystemAdmin
+    ? allTransitions
+    : allTransitions.filter((targetStatus) => {
+        const roleMap = ROLE_ALLOWED_TRANSITIONS[subsidyCase.status]
+        if (!roleMap) return false
+        const permittedRoles = roleMap[targetStatus]
+        if (!permittedRoles) return false
+        return permittedRoles.some((role) => userRoles.includes(role))
+      })
   const badge = STATUS_BADGES[subsidyCase.status] || { bg: 'secondary', label: subsidyCase.status }
 
   return (

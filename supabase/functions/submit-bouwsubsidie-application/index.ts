@@ -525,6 +525,30 @@ Deno.serve(async (req) => {
       console.log(`[submit-bouwsubsidie] Linked ${documentsLinked} documents to case ${referenceNumber}`)
     }
     
+    // V1.8 Phase 5: Persist children to subsidy_household_child
+    let childrenCount = 0
+    if (input.children && input.children.length > 0) {
+      for (let i = 0; i < input.children.length; i++) {
+        const child = input.children[i]
+        const { error: childError } = await supabase
+          .from('subsidy_household_child')
+          .insert({
+            subsidy_case_id: caseId,
+            age: child.age,
+            gender: child.gender,
+            has_disability: child.has_disability,
+            sort_order: i + 1
+          })
+        
+        if (childError) {
+          console.error(`[submit-bouwsubsidie] Failed to insert child ${i + 1}:`, childError.message)
+        } else {
+          childrenCount++
+        }
+      }
+      console.log(`[submit-bouwsubsidie] Inserted ${childrenCount} children for case ${referenceNumber}`)
+    }
+    
     // Log audit event
     const ipHash = await hashIP(clientIP)
     const { error: auditError } = await supabase
@@ -540,7 +564,8 @@ Deno.serve(async (req) => {
           district_code: input.district,
           submission_ip_hash: ipHash,
           submission_timestamp: new Date().toISOString(),
-          documents_count: documentsLinked
+          documents_count: documentsLinked,
+          children_count: childrenCount
         }
       })
     

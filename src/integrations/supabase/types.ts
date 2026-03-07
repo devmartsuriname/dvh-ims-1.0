@@ -800,6 +800,56 @@ export type Database = {
           },
         ]
       }
+      inspection_visit: {
+        Row: {
+          assigned_to: string
+          case_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          scheduled_by: string
+          scheduled_date: string
+          updated_at: string
+          visit_notes: string | null
+          visit_status: string
+          visit_type: string
+        }
+        Insert: {
+          assigned_to: string
+          case_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          scheduled_by: string
+          scheduled_date: string
+          updated_at?: string
+          visit_notes?: string | null
+          visit_status?: string
+          visit_type: string
+        }
+        Update: {
+          assigned_to?: string
+          case_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          scheduled_by?: string
+          scheduled_date?: string
+          updated_at?: string
+          visit_notes?: string | null
+          visit_status?: string
+          visit_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_visit_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "subsidy_case"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       person: {
         Row: {
           created_at: string

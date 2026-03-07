@@ -66,7 +66,7 @@ const LandingPage = () => {
               <hr className="mt-3 mb-4 opacity-75" />
 
               {/* Services Section */}
-              <h5 className="fw-bold mb-1">{t('landing.servicesTitle')}</h5>
+              <h2 className="h5 fw-bold mb-1">{t('landing.servicesTitle')}</h2>
               <p className="text-muted mb-3">{t('landing.servicesSubtitle')}</p>
 
               <Row className="g-3">
@@ -84,7 +84,7 @@ const LandingPage = () => {
                           />
                         </span>
                       </div>
-                      <h6 className="fw-bold mb-1">{t('landing.bouwsubsidie.title')}</h6>
+                      <h3 className="h6 fw-bold mb-1">{t('landing.bouwsubsidie.title')}</h3>
                       <p className="text-muted small mb-2 service-description">
                         {t('landing.bouwsubsidie.description')}
                       </p>
@@ -109,7 +109,7 @@ const LandingPage = () => {
                           />
                         </span>
                       </div>
-                      <h6 className="fw-bold mb-1">{t('landing.housing.title')}</h6>
+                      <h3 className="h6 fw-bold mb-1">{t('landing.housing.title')}</h3>
                       <p className="text-muted small mb-2 service-description">
                         {t('landing.housing.description')}
                       </p>
@@ -134,7 +134,7 @@ const LandingPage = () => {
                           />
                         </span>
                       </div>
-                      <h6 className="fw-bold mb-1">{t('landing.status.title')}</h6>
+                      <h3 className="h6 fw-bold mb-1">{t('landing.status.title')}</h3>
                       <p className="text-muted small mb-2 service-description">
                         {t('landing.status.description')}
                       </p>

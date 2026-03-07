@@ -20,7 +20,7 @@ const ProfileDropdown = () => {
             className="rounded-circle"
             width={32}
             src={avatar1}
-            alt="avatar-3"
+            alt="User profile"
           />
         </span>
       </DropdownToggle>

@@ -1,5 +1,6 @@
 import { Container, Row, Col } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import WizardProgress, { type WizardStep } from './WizardProgress'
 
@@ -24,6 +25,8 @@ const WizardContainer = ({
   currentStep,
   children,
 }: WizardContainerProps) => {
+  const { t } = useTranslation()
+
   return (
     <section className="py-4 flex-grow-1">
       <Container>
@@ -33,9 +36,10 @@ const WizardContainer = ({
             <Link 
               to="/" 
               className="text-decoration-none text-muted d-inline-flex align-items-center"
+              style={{ minHeight: 44 }}
             >
               <IconifyIcon icon="mingcute:arrow-left-line" className="me-1" />
-              Back to Home
+              {t('common.backToHome', { defaultValue: 'Terug naar Home' })}
             </Link>
           </Col>
         </Row>

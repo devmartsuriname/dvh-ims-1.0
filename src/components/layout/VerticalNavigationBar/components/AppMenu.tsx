@@ -32,7 +32,7 @@ const MenuItemWithChildren = ({ item, className, linkClassName, subMenuClassName
 
   return (
     <li className={className}>
-      <div onClick={toggleMenuItem} aria-expanded={open} role="button" className={clsx(linkClassName)}>
+      <div onClick={toggleMenuItem} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMenuItem(e as any); } }} tabIndex={0} aria-expanded={open} role="button" className={clsx(linkClassName)}>
         {item.icon && (
           <span className="nav-icon">
             <IconifyIcon icon={item.icon} />

@@ -85,18 +85,22 @@ const page = () => {
                     type="search"
                     className="form-control"
                     placeholder="Search persons, cases, registrations..."
+                    aria-label="Search persons, cases, registrations"
                     autoComplete="off"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                   />
                   <IconifyIcon icon="solar:magnifer-outline" className="search-widget-icon" />
                   {inputValue && (
-                    <IconifyIcon
-                      icon="solar:close-circle-outline"
-                      className="search-widget-icon search-widget-icon-close"
+                    <button
+                      type="button"
+                      className="search-widget-icon search-widget-icon-close btn btn-link p-0 border-0"
                       onClick={handleClear}
-                      style={{ cursor: 'pointer' }}
-                    />
+                      aria-label="Clear search"
+                      style={{ cursor: 'pointer', background: 'none' }}
+                    >
+                      <IconifyIcon icon="solar:close-circle-outline" />
+                    </button>
                   )}
                   {isOpen && (
                     <SearchResults

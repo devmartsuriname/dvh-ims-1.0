@@ -34,7 +34,7 @@ const LeftSideBarToggle = () => {
 
   return (
     <div className="topbar-item">
-      <button type="button" onClick={handleMenuSize} className="button-toggle-menu topbar-button">
+      <button type="button" onClick={handleMenuSize} className="button-toggle-menu topbar-button" aria-label="Toggle sidebar menu">
         <IconifyIcon icon="solar:hamburger-menu-outline" width={24} height={24} className="fs-24  align-middle" />
       </button>
     </div>

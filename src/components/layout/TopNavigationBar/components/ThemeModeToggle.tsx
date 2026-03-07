@@ -6,7 +6,7 @@ const ThemeModeToggle = () => {
   const isDark = theme === 'dark'
   return (
     <div className="topbar-item">
-      <button type="button" onClick={() => changeTheme(isDark ? 'light' : 'dark')} className="topbar-button" id="light-dark-mode">
+      <button type="button" onClick={() => changeTheme(isDark ? 'light' : 'dark')} className="topbar-button" id="light-dark-mode" aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
         {theme == 'dark' ? (
           <IconifyIcon icon="ri:sun-line" className="fs-22 dark-mode" />
         ) : (

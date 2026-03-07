@@ -72,10 +72,10 @@ const WizardProgress = ({ steps, currentStep, phaseGroups, onBack }: WizardProgr
           {currentStep > 0 && onBack && (
             <button
               type="button"
-              className="btn btn-sm btn-link text-muted p-0 me-3"
+              className="btn btn-sm btn-link text-muted p-0 me-3 d-inline-flex align-items-center justify-content-center"
               onClick={onBack}
               aria-label={t('common.back')}
-              style={{ lineHeight: 1 }}
+              style={{ lineHeight: 1, minWidth: 44, minHeight: 44 }}
             >
               <IconifyIcon icon="mingcute:arrow-left-line" className="fs-5" />
             </button>

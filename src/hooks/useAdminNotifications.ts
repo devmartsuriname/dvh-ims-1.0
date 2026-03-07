@@ -224,7 +224,7 @@ export async function createAdminNotification(params: {
   try {
     const { data: { user } } = await supabase.auth.getUser()
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('admin_notification')
       .insert({
         recipient_user_id: params.recipientUserId || null,
@@ -238,8 +238,6 @@ export async function createAdminNotification(params: {
         correlation_id: params.correlationId,
         created_by: user?.id || null,
       })
-      .select('id')
-      .single()
 
     if (error) {
       // Log notification failure to audit
@@ -263,7 +261,7 @@ export async function createAdminNotification(params: {
     await logAuditEvent({
       action: 'CREATE',
       entity_type: 'admin_notification' as any,
-      entity_id: data.id,
+      entity_id: params.entityId,
       metadata: {
         action_detail: 'NOTIFICATION_CREATED',
         correlation_id: params.correlationId,
@@ -273,7 +271,7 @@ export async function createAdminNotification(params: {
       },
     })
 
-    return data.id
+    return params.correlationId
   } catch (err: any) {
     console.error('Failed to create notification:', err)
     

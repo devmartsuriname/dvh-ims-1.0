@@ -8,10 +8,11 @@ import heroImage from '@/assets/images/hero-community.png'
 /**
  * Public Landing Page - VolksHuisvesting Suriname
  * 
- * Darkone 1:1 implementation with react-bootstrap
- * Light theme scoped via PublicLayout wrapper
+ * V1.7 — Split layout refactor (30/70)
+ * Left: B&W hero image panel
+ * Right: Welcome + Services content
+ * Darkone 1:1 with react-bootstrap, light theme
  * i18n enabled - NL default
- * Premium government-grade visual tone
  */
 const LandingPage = () => {
   const { t } = useTranslation()
@@ -20,148 +21,167 @@ const LandingPage = () => {
     <div className="d-flex flex-column min-vh-100">
       <PublicHeader />
 
-      {/* Hero Section with Background Image + Dark Overlay */}
-      <section 
-        className="py-5 position-relative"
-      >
-        {/* B&W background image layer */}
-        <div 
-          className="position-absolute top-0 start-0 w-100 h-100"
-          style={{
-            backgroundImage: `url(${heroImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'grayscale(100%)',
-          }}
-        />
-        {/* Dark overlay for readability */}
-        <div 
-          className="position-absolute top-0 start-0 w-100 h-100" 
-          style={{ backgroundColor: 'rgba(0, 0, 0, 0.82)' }}
-        />
-        
-        <Container className="position-relative">
-          <Row className="align-items-center justify-content-center text-center py-4">
-            <Col lg={8}>
-              <h1 className="display-5 fw-bold mb-3 text-white">
+      {/* Split Layout — Image Panel (left) + Content Panel (right) */}
+      <main className="flex-grow-1">
+        <Row className="g-0 flex-grow-1" style={{ minHeight: 'calc(100vh - 130px)' }}>
+          
+          {/* Left Column — Image Panel (30%) */}
+          <Col lg={4} className="position-relative d-none d-lg-block">
+            {/* B&W background image */}
+            <div 
+              className="position-absolute top-0 start-0 w-100 h-100"
+              style={{
+                backgroundImage: `url(${heroImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'grayscale(100%)',
+              }}
+            />
+            {/* Dark overlay */}
+            <div 
+              className="position-absolute top-0 start-0 w-100 h-100" 
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.82)' }}
+            />
+          </Col>
+
+          {/* Mobile Image Banner (visible < lg only) */}
+          <Col xs={12} className="d-lg-none position-relative" style={{ height: '240px' }}>
+            <div 
+              className="position-absolute top-0 start-0 w-100 h-100"
+              style={{
+                backgroundImage: `url(${heroImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'grayscale(100%)',
+              }}
+            />
+            <div 
+              className="position-absolute top-0 start-0 w-100 h-100" 
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.82)' }}
+            />
+          </Col>
+
+          {/* Right Column — Content Panel (70%) */}
+          <Col lg={8} className="bg-light">
+            <div className="px-4 px-lg-5 py-5" style={{ maxWidth: '900px' }}>
+              
+              {/* Welcome Section */}
+              <h1 className="display-5 fw-bold mb-3">
                 {t('landing.heroTitle')}
               </h1>
-              <p className="lead text-white-50 mb-0">
+              <p className="lead text-muted mb-4">
                 {t('landing.heroDescription')}
               </p>
-            </Col>
-          </Row>
-        </Container>
-      </section>
 
-      {/* Services Section */}
-      <main className="flex-grow-1 py-5 bg-light">
-        <Container>
-          <Row className="mb-4">
-            <Col className="text-center">
-              <h2 className="fw-bold mb-2">{t('landing.servicesTitle')}</h2>
-              <p className="text-muted">{t('landing.servicesSubtitle')}</p>
-            </Col>
-          </Row>
+              <hr className="my-4" />
 
-          <Row className="g-4 justify-content-center">
-            {/* Construction Subsidy Card */}
-            <Col md={6} lg={4}>
-              <Card className="h-100 border-0 shadow">
-                <CardBody className="text-center p-4">
-                  <div className="mb-3">
-                    <span 
-                      className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10" 
-                      style={{ width: 64, height: 64 }}
-                    >
-                      <IconifyIcon 
-                        icon="mingcute:file-check-line" 
-                        className="text-primary fs-2"
-                      />
-                    </span>
-                  </div>
-                  <h5 className="fw-bold mb-2">{t('landing.bouwsubsidie.title')}</h5>
-                  <p className="text-muted small mb-3">
-                    {t('landing.bouwsubsidie.description')}
-                  </p>
-                  <Link to="/bouwsubsidie/apply">
-                    <Button 
-                      variant="primary" 
-                      className="w-100 d-flex align-items-center justify-content-center gap-2"
-                    >
-                      <span>{t('landing.bouwsubsidie.button')}</span>
-                      <IconifyIcon icon="mingcute:arrow-right-line" />
-                    </Button>
-                  </Link>
-                </CardBody>
-              </Card>
-            </Col>
+              {/* Services Section */}
+              <h4 className="fw-bold mb-2">{t('landing.servicesTitle')}</h4>
+              <p className="text-muted mb-4">{t('landing.servicesSubtitle')}</p>
 
-            {/* Housing Registration Card */}
-            <Col md={6} lg={4}>
-              <Card className="h-100 border-0 shadow">
-                <CardBody className="text-center p-4">
-                  <div className="mb-3">
-                    <span 
-                      className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10" 
-                      style={{ width: 64, height: 64 }}
-                    >
-                      <IconifyIcon 
-                        icon="mingcute:home-4-line" 
-                        className="text-success fs-2"
-                      />
-                    </span>
-                  </div>
-                  <h5 className="fw-bold mb-2">{t('landing.housing.title')}</h5>
-                  <p className="text-muted small mb-3">
-                    {t('landing.housing.description')}
-                  </p>
-                  <Link to="/housing/register">
-                    <Button 
-                      variant="success" 
-                      className="w-100 d-flex align-items-center justify-content-center gap-2"
-                    >
-                      <span>{t('landing.housing.button')}</span>
-                      <IconifyIcon icon="mingcute:arrow-right-line" />
-                    </Button>
-                  </Link>
-                </CardBody>
-              </Card>
-            </Col>
+              <Row className="g-3">
+                {/* Construction Subsidy Card */}
+                <Col md={4}>
+                  <Card className="h-100 border rounded-3 shadow-sm">
+                    <CardBody className="text-center p-4">
+                      <div className="mb-3">
+                        <span 
+                          className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10" 
+                          style={{ width: 56, height: 56 }}
+                        >
+                          <IconifyIcon 
+                            icon="mingcute:file-check-line" 
+                            className="text-primary fs-3"
+                          />
+                        </span>
+                      </div>
+                      <h6 className="fw-bold mb-2">{t('landing.bouwsubsidie.title')}</h6>
+                      <p className="text-muted small mb-3">
+                        {t('landing.bouwsubsidie.description')}
+                      </p>
+                      <Link to="/bouwsubsidie/apply">
+                        <Button 
+                          variant="outline-primary" 
+                          size="sm"
+                          className="d-inline-flex align-items-center gap-1"
+                        >
+                          <span>{t('landing.bouwsubsidie.button')}</span>
+                          <IconifyIcon icon="mingcute:arrow-right-line" />
+                        </Button>
+                      </Link>
+                    </CardBody>
+                  </Card>
+                </Col>
 
-            {/* Status Tracking Card */}
-            <Col md={6} lg={4}>
-              <Card className="h-100 border-0 shadow">
-                <CardBody className="text-center p-4">
-                  <div className="mb-3">
-                    <span 
-                      className="d-inline-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10" 
-                      style={{ width: 64, height: 64 }}
-                    >
-                      <IconifyIcon 
-                        icon="mingcute:search-line" 
-                        className="text-info fs-2"
-                      />
-                    </span>
-                  </div>
-                  <h5 className="fw-bold mb-2">{t('landing.status.title')}</h5>
-                  <p className="text-muted small mb-3">
-                    {t('landing.status.description')}
-                  </p>
-                  <Link to="/status">
-                    <Button 
-                      variant="info" 
-                      className="w-100 d-flex align-items-center justify-content-center gap-2"
-                    >
-                      <span>{t('landing.status.button')}</span>
-                      <IconifyIcon icon="mingcute:arrow-right-line" />
-                    </Button>
-                  </Link>
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
-        </Container>
+                {/* Housing Registration Card */}
+                <Col md={4}>
+                  <Card className="h-100 border rounded-3 shadow-sm">
+                    <CardBody className="text-center p-4">
+                      <div className="mb-3">
+                        <span 
+                          className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10" 
+                          style={{ width: 56, height: 56 }}
+                        >
+                          <IconifyIcon 
+                            icon="mingcute:home-4-line" 
+                            className="text-success fs-3"
+                          />
+                        </span>
+                      </div>
+                      <h6 className="fw-bold mb-2">{t('landing.housing.title')}</h6>
+                      <p className="text-muted small mb-3">
+                        {t('landing.housing.description')}
+                      </p>
+                      <Link to="/housing/register">
+                        <Button 
+                          variant="outline-success" 
+                          size="sm"
+                          className="d-inline-flex align-items-center gap-1"
+                        >
+                          <span>{t('landing.housing.button')}</span>
+                          <IconifyIcon icon="mingcute:arrow-right-line" />
+                        </Button>
+                      </Link>
+                    </CardBody>
+                  </Card>
+                </Col>
+
+                {/* Status Tracking Card */}
+                <Col md={4}>
+                  <Card className="h-100 border rounded-3 shadow-sm">
+                    <CardBody className="text-center p-4">
+                      <div className="mb-3">
+                        <span 
+                          className="d-inline-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10" 
+                          style={{ width: 56, height: 56 }}
+                        >
+                          <IconifyIcon 
+                            icon="mingcute:search-line" 
+                            className="text-info fs-3"
+                          />
+                        </span>
+                      </div>
+                      <h6 className="fw-bold mb-2">{t('landing.status.title')}</h6>
+                      <p className="text-muted small mb-3">
+                        {t('landing.status.description')}
+                      </p>
+                      <Link to="/status">
+                        <Button 
+                          variant="outline-info" 
+                          size="sm"
+                          className="d-inline-flex align-items-center gap-1"
+                        >
+                          <span>{t('landing.status.button')}</span>
+                          <IconifyIcon icon="mingcute:arrow-right-line" />
+                        </Button>
+                      </Link>
+                    </CardBody>
+                  </Card>
+                </Col>
+              </Row>
+            </div>
+          </Col>
+        </Row>
       </main>
 
       <PublicFooter />

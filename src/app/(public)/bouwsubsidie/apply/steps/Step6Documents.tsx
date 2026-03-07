@@ -34,6 +34,10 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
   const uploadedIncomeCount = incomeGroupDocs.filter(d => d.uploaded_file).length
   const hasIncomeProof = uploadedIncomeCount > 0
 
+  // Individual mandatory doc checks
+  const idCopyUploaded = !!formData.documents.find(d => d.document_code === 'ID_COPY')?.uploaded_file
+  const bankStatementUploaded = !!formData.documents.find(d => d.document_code === 'BANK_STATEMENT')?.uploaded_file
+
   // Combined gate
   const canProceed = allMandatoryUploaded && hasIncomeProof
 
@@ -154,44 +158,53 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
         ns="bouwsubsidie.step6"
       />
 
-      {/* Summary — 3 status lines */}
+      {/* Ready-to-proceed checklist */}
       <Card className={`mt-3 ${canProceed ? 'border-success' : 'border-warning'}`}>
         <Card.Body className="py-3">
-          <div className="d-flex flex-column gap-2">
-            {/* Line 1: Mandatory */}
-            <div className="d-flex justify-content-between align-items-center">
-              <span className="small">{t('bouwsubsidie.step6.mandatoryTab')}</span>
-              <Badge bg={allMandatoryUploaded ? 'success' : 'warning'} className={`d-flex align-items-center gap-1 ${allMandatoryUploaded ? '' : 'text-dark'}`}>
-                <IconifyIcon icon={allMandatoryUploaded ? 'mingcute:check-circle-fill' : 'mingcute:warning-line'} style={{ fontSize: 12 }} />
-                {uploadedMandatoryCount}/{mandatoryDocs.length}
-              </Badge>
-            </div>
-            {/* Line 2: Income proof */}
-            <div className="d-flex justify-content-between align-items-center">
-              <span className="small">{t('bouwsubsidie.step6.incomeProofTab')}</span>
-              <Badge bg={hasIncomeProof ? 'success' : 'warning'} className={`d-flex align-items-center gap-1 ${hasIncomeProof ? '' : 'text-dark'}`}>
-                <IconifyIcon icon={hasIncomeProof ? 'mingcute:check-circle-fill' : 'mingcute:warning-line'} style={{ fontSize: 12 }} />
-                {uploadedIncomeCount}/{incomeGroupDocs.length}
-              </Badge>
-            </div>
-            {/* Line 3: Total */}
-            <div className="d-flex justify-content-between align-items-center border-top pt-2">
-              <span className="small text-muted">{t('bouwsubsidie.step6.documentsUploaded')}</span>
-              <span className="small fw-medium">{totalUploaded} {t('bouwsubsidie.step6.of')} {formData.documents.length}</span>
-            </div>
+          <h6 className="fw-semibold mb-2 small">{t('bouwsubsidie.step6.checklistTitle')}</h6>
+          <ul className="list-unstyled mb-2">
+            <li className="d-flex align-items-center mb-2">
+              <IconifyIcon
+                icon={idCopyUploaded ? 'mingcute:check-circle-fill' : 'mingcute:close-circle-line'}
+                className={`me-2 ${idCopyUploaded ? 'text-success' : 'text-warning'}`}
+              />
+              <span className="small">{t('bouwsubsidie.step6.checkIdCopy')}</span>
+            </li>
+            <li className="d-flex align-items-center mb-2">
+              <IconifyIcon
+                icon={bankStatementUploaded ? 'mingcute:check-circle-fill' : 'mingcute:close-circle-line'}
+                className={`me-2 ${bankStatementUploaded ? 'text-success' : 'text-warning'}`}
+              />
+              <span className="small">{t('bouwsubsidie.step6.checkBankStatement')}</span>
+            </li>
+            <li className="d-flex align-items-center mb-2">
+              <IconifyIcon
+                icon={hasIncomeProof ? 'mingcute:check-circle-fill' : 'mingcute:close-circle-line'}
+                className={`me-2 ${hasIncomeProof ? 'text-success' : 'text-warning'}`}
+              />
+              <span className="small">{t('bouwsubsidie.step6.checkIncomeProof')}</span>
+            </li>
+          </ul>
+
+          {canProceed ? (
+            <p className="text-success small mb-0">
+              <IconifyIcon icon="mingcute:check-circle-fill" className="me-1" />
+              {t('bouwsubsidie.step6.allRequiredUploaded')}
+            </p>
+          ) : (
+            <p className="text-warning small mb-0">
+              <IconifyIcon icon="mingcute:warning-line" className="me-1" />
+              {!allMandatoryUploaded
+                ? t('bouwsubsidie.step6.mandatoryMissing')
+                : t('bouwsubsidie.step6.uploadIncomeToProced')}
+            </p>
+          )}
+
+          {/* Total counter */}
+          <div className="d-flex justify-content-between align-items-center border-top pt-2 mt-2">
+            <span className="small text-muted">{t('bouwsubsidie.step6.documentsUploaded')}</span>
+            <span className="small fw-medium">{totalUploaded} {t('bouwsubsidie.step6.of')} {formData.documents.length}</span>
           </div>
-          {!allMandatoryUploaded && (
-            <p className="text-warning small mb-0 mt-2">
-              <IconifyIcon icon="mingcute:warning-line" className="me-1" />
-              {t('bouwsubsidie.step6.mandatoryMissing')}
-            </p>
-          )}
-          {allMandatoryUploaded && !hasIncomeProof && (
-            <p className="text-warning small mb-0 mt-2">
-              <IconifyIcon icon="mingcute:warning-line" className="me-1" />
-              {t('bouwsubsidie.step6.incomeProofMissing')}
-            </p>
-          )}
         </Card.Body>
       </Card>
     </WizardStep>

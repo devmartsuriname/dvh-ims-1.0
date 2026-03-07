@@ -103,16 +103,16 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
                 {t('bouwsubsidie.step0.docsTitle')}
               </h6>
               <ul className="list-unstyled mb-2">
-                <li className="d-flex align-items-start mb-2">
-                  <IconifyIcon icon="mingcute:document-line" className="text-primary me-2 mt-1 flex-shrink-0" />
+                <li className="d-flex align-items-center mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
                   <span className="small">{t('bouwsubsidie.step0.doc1')}</span>
                 </li>
-                <li className="d-flex align-items-start mb-2">
-                  <IconifyIcon icon="mingcute:document-line" className="text-primary me-2 mt-1 flex-shrink-0" />
+                <li className="d-flex align-items-center mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
                   <span className="small">{t('bouwsubsidie.step0.doc2')}</span>
                 </li>
-                <li className="d-flex align-items-start mb-2">
-                  <IconifyIcon icon="mingcute:document-line" className="text-primary me-2 mt-1 flex-shrink-0" />
+                <li className="d-flex align-items-center mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
                   <span className="small">{t('bouwsubsidie.step0.doc3')}</span>
                 </li>
               </ul>

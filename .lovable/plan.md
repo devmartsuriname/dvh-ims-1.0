@@ -1,280 +1,88 @@
-# Ministerial System Manual — Documentation Execution Plan
+# Service Card Refinement — Premium Polish Pass
 
-## Objective
+**Context ID:** 8F42B1C3-5D9E-4A7B-B2E1-9C3F4D5A6E7B
 
-Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
-
-This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
+**File:** `src/app/(public)/landing/page.tsx` (only file changed)
 
 ---
 
-## Deliverable Structure
+## Changes
 
-**Folder:** `/docs/manual/`
+### 1. Card Width and Grid
 
+- Change card row from `g-3` to `g-4` for more breathing room
+- Keep `Col md={4}` for 3-across on desktop
+- Add `Col sm={6}` for 2-column tablet layout (third card full-width below)
+- Mobile: full-width stack (default `Col` behavior)
 
-| #   | File                                                 | Purpose                                                                                                  |
-| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
-| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
-| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
-| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
-| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
-| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
-| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
-| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
-| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
-| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
-| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
-| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
-| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
-| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
-| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
-| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
+### 2. Card Structure — Equal Height + CTA Anchoring
 
+- Replace `CardBody` with a flex column layout (`d-flex flex-column h-100`)
+- Move CTA to bottom with `mt-auto` so buttons align across all 3 cards regardless of description length
+- Increase padding from `p-4` to `p-4 pt-4 pb-4` (keep consistent)
 
-**Total: 16 documents**
+### 3. Premium Card Polish
 
----
+- Border: change from `border` to a softer custom border (`border` with `border-color` style set to `rgba(0,0,0,0.08)`)
+- Radius: increase from `rounded-3` to `rounded-4` for a more modern feel
+- Shadow: upgrade from `shadow-sm` to a custom subtle shadow via inline style (`0 2px 12px rgba(0,0,0,0.06)`)
+- Icon container: increase from 56px to 64px, with slightly larger icon (`fs-2` instead of `fs-3`)
+- Title: upgrade from `h6` to `h5` with `fw-semibold` for stronger presence
+- Description: keep `text-muted small` but add `px-2` for better line length control
 
-## URL Documentation
+### 4. Hover / Animation
 
-All documents will include explicit URLs based on:
+Add inline CSS transition on Card via style prop:
 
-**Production (Published):**
+- `transition: 'transform 0.25s ease, box-shadow 0.25s ease'`
+- On hover (via CSS class or onMouseEnter/Leave state): `transform: translateY(-4px)` + stronger shadow `0 8px 24px rgba(0,0,0,0.10)`
+- Icon container: `transition: 'transform 0.25s ease'`, on card hover scale to 1.08
 
-- Landing: `https://huggable-cloud-whisper.lovable.app/`
-- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
-- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
-- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
-- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
-- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
+Implementation: Use a small `ServiceCard` sub-component with `useState` for hover state to keep it clean without adding external CSS files.
 
-**Staging (Preview):**
+### 5. CTA Button Refinement
 
-- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
-- Same path structure as production
+- Remove `size="sm"` — use default size for stronger presence
+- Add `rounded-pill` for premium pill-shaped buttons
+- Add `px-4` for wider padding
+- Keep `outline-primary` / `outline-success` / `outline-info` variants
+- On hover: the outline buttons naturally fill — Bootstrap handles this
+- Keep arrow icon
 
-Admin module URLs will be listed per-module in document 12.
+### 6. Content Spacing Above Cards
 
----
+- Hero title: keep `display-5 fw-bold mb-3`
+- Subtitle: change `mb-4` to `mb-5` for more breathing room before divider
+- Divider: change `my-4` to `my-5`
+- Services title: keep `fw-bold mb-2`
+- Services subtitle: change `mb-4` to `mb-5` before card row
 
-## Content Coverage Per Document
+### 7. Responsive
 
-### 00 - Executive Summary
-
-- System purpose and legal mandate
-- Two services overview (Housing + Subsidy)
-- Governance and accountability model (1 paragraph)
-- Role structure summary
-- Key operational metrics / KPIs
-- "What happens next?" for both services
-- 5-10 pages, non-technical language
-
-### 01 - System Overview
-
-- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
-- Public vs Admin separation
-- Authentication model (staff-only login, citizen anonymous access)
-- District-based scoping
-
-### 02 + 03 - Public Wizard Workflows
-
-Per service:
-
-- Preconditions
-- Step-by-step wizard walkthrough (each form step)
-- Reference number generation
-- Security token explanation
-- Receipt/confirmation page
-- Status tracking via `/status`
-- "What happens after submission?"
-
-### 04 + 05 - Admin Workflows
-
-Per service:
-
-- Locating records in list view
-- Opening detail view
-- Status change process (with mandatory reason)
-- Document upload and verification
-- Field reports (Social, Technical — Bouwsubsidie only)
-- Decision chain steps
-- Raadvoorstel generation (Bouwsubsidie only)
-- Archive flow
-- Audit trail per action
-
-### 06 - Roles & Permission Matrix
-
-Table columns:
-
-- Role name (all 11 implemented roles)
-- Modules accessible
-- Create/Edit rights
-- Status change authority (which statuses)
-- Document upload/verify rights
-- Allocation/decision authority
-- Audit log access
-- Export/print permissions
-- National vs district-scoped flag
-
-### 07 - Status Lifecycle
-
-- ASCII state diagrams for both services
-- Transition rules with triggering roles
-- Decision authority per transition
-- Mandatory reason requirements
-
-### 08 - Document Management
-
-- Upload workflow
-- Verification tracking
-- Raadvoorstel generation (edge function)
-- Download via signed URLs
-
-### 09 - Audit Logging
-
-- `audit_event` table structure
-- What triggers a log entry
-- Where to view audit logs (Admin > Audit Log)
-- Append-only guarantee
-- Role access to audit log
-
-### 10 - Allocation Engine
-
-- District quotas setup
-- Urgency scoring model
-- Allocation run execution
-- Matching logic
-- Decision recording
-- Assignment registration
-
-### 11 - Governance Controls
-
-- RLS enforcement model
-- Least-privilege access
-- Ministerial Advisor mandatory paraph
-- Minister deviation logging
-- Status history immutability
-
-### 12 - Module Specification
-
-All 20 pages/modules documented:
-
-- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
-- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
-
-Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
-
-### 13 - Operational Scenarios
-
-Minimum 8 numbered end-to-end scenarios:
-
-1. Citizen submits Housing Registration
-2. Citizen submits Subsidy Application
-3. Frontdesk processes new Housing Registration
-4. Frontdesk processes new Subsidy Case through full decision chain
-5. Allocation run execution and assignment
-6. Minister approves/rejects with deviation from advisor
-7. Archive lookup of closed case
-8. Audit trail verification for a specific case
-
-Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
-
-### 14 - Troubleshooting & FAQ
-
-- Common submission errors
-- Duplicate/resubmission behavior
-- Status lookup failures
-- Document upload issues
-- Permission denied scenarios
-- Session timeout handling
-
-### 15 - Glossary
-
-- All status values (both services)
-- Field definitions
-- Role names with descriptions
-- System terminology (Raadvoorstel, paraph, district code, etc.)
+- Desktop (lg+): 3 columns with `g-4` gutters inside the 70% panel
+- Tablet (sm-md): `Col sm={6}` gives 2-column layout; third card wraps below
+- Mobile (<sm): single column stack, cards get full width, pill buttons remain touch-friendly
 
 ---
 
-## Screenshots Strategy
+## NOTE
 
-- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
-- Each reference follows format: `Figure X.Y — Description`
-- PII masking note included in each document header
-- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
+Do not implement hover animations using React state (useState).
 
----
+Use pure CSS transitions for hover effects instead.
 
-## Execution Sequence
+Prefer Bootstrap utility classes or scoped CSS instead of inline style shadows when possible.
 
-1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
-2. Create `/docs/manual/` folder
-3. Generate documents in order: 00 through 15
-4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
-5. After all 16 documents: produce completion checklist
+Goal:
 
----
-
-## Quality Gates
-
-- Language: Clear, non-technical, suitable for Minister and senior staff
-- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
-- UI alignment: All labels, navigation paths, and field names match current implementation
-- No invented features or roles
-- No code/schema/RLS changes
-- Restore point created before any file creation
-
-## IMPORTANT — PRODUCTION URL CORRECTION
-
-All documentation must use the official custom production domain:
-
-[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
-
-DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
-
-Update all production URLs to:
-
-Landing:
-
-[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
-
-Housing Registration:
-
-[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
-
-Subsidy Application:
-
-[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
-
-Status Tracker:
-
-[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
-
-Staff Login:
-
-[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
-
-Admin Dashboard:
-
-[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
-
-If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
-
-The Ministerial Manual must only reference the official production domain.  
+keep the component lightweight and maintainable.  
   
-**Completion Report Format**
+**What does NOT change**
 
-After all documents are generated:
-
-```
-IMPLEMENTED: [list of created files]
-PARTIAL: [any incomplete documents + reason]
-SKIPPED: [none expected]
-VERIFICATION: [checklist per document — PASS/FAIL]
-RESTORE POINT: [ID]
-BLOCKERS: NONE / [description]
-CONFIRMATION: No code changes. No schema changes. No RLS changes.
-```
+- Header / Footer
+- Left image panel structure
+- Service order, meaning, or count
+- Purple / green / blue identity
+- i18n keys
+- No new sections added
+- No backend/schema changes

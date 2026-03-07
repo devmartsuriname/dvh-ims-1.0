@@ -57,112 +57,115 @@ const LandingPage = () => {
               <h1 className="display-5 fw-bold mb-3">
                 {t('landing.heroTitle')}
               </h1>
-              <p className="lead text-muted mb-4">
+              <p className="lead text-muted mb-5">
                 {t('landing.heroDescription')}
               </p>
 
-              <hr className="my-4" />
+              <hr className="my-5" />
 
               {/* Services Section */}
               <h4 className="fw-bold mb-2">{t('landing.servicesTitle')}</h4>
-              <p className="text-muted mb-4">{t('landing.servicesSubtitle')}</p>
+              <p className="text-muted mb-5">{t('landing.servicesSubtitle')}</p>
 
-              <Row className="g-3">
+              <Row className="g-4">
                 {/* Construction Subsidy Card */}
-                <Col md={4}>
-                  <Card className="h-100 border rounded-3 shadow-sm">
-                    <CardBody className="text-center p-4">
+                <Col sm={6} md={4}>
+                  <Card className="h-100 border rounded-4 service-card">
+                    <CardBody className="text-center p-4 d-flex flex-column">
                       <div className="mb-3">
                         <span 
-                          className="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10" 
-                          style={{ width: 56, height: 56 }}
+                          className="service-icon d-inline-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10" 
+                          style={{ width: 64, height: 64 }}
                         >
                           <IconifyIcon 
                             icon="mingcute:file-check-line" 
-                            className="text-primary fs-3"
+                            className="text-primary fs-2"
                           />
                         </span>
                       </div>
-                      <h6 className="fw-bold mb-2">{t('landing.bouwsubsidie.title')}</h6>
-                      <p className="text-muted small mb-3">
+                      <h5 className="fw-semibold mb-2">{t('landing.bouwsubsidie.title')}</h5>
+                      <p className="text-muted small mb-3 px-2">
                         {t('landing.bouwsubsidie.description')}
                       </p>
-                      <Link to="/bouwsubsidie/apply">
-                        <Button 
-                          variant="outline-primary" 
-                          size="sm"
-                          className="d-inline-flex align-items-center gap-1"
-                        >
-                          <span>{t('landing.bouwsubsidie.button')}</span>
-                          <IconifyIcon icon="mingcute:arrow-right-line" />
-                        </Button>
-                      </Link>
+                      <div className="mt-auto">
+                        <Link to="/bouwsubsidie/apply">
+                          <Button 
+                            variant="outline-primary" 
+                            className="rounded-pill px-4 d-inline-flex align-items-center gap-1"
+                          >
+                            <span>{t('landing.bouwsubsidie.button')}</span>
+                            <IconifyIcon icon="mingcute:arrow-right-line" />
+                          </Button>
+                        </Link>
+                      </div>
                     </CardBody>
                   </Card>
                 </Col>
 
                 {/* Housing Registration Card */}
-                <Col md={4}>
-                  <Card className="h-100 border rounded-3 shadow-sm">
-                    <CardBody className="text-center p-4">
+                <Col sm={6} md={4}>
+                  <Card className="h-100 border rounded-4 service-card">
+                    <CardBody className="text-center p-4 d-flex flex-column">
                       <div className="mb-3">
                         <span 
-                          className="d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10" 
-                          style={{ width: 56, height: 56 }}
+                          className="service-icon d-inline-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10" 
+                          style={{ width: 64, height: 64 }}
                         >
                           <IconifyIcon 
                             icon="mingcute:home-4-line" 
-                            className="text-success fs-3"
+                            className="text-success fs-2"
                           />
                         </span>
                       </div>
-                      <h6 className="fw-bold mb-2">{t('landing.housing.title')}</h6>
-                      <p className="text-muted small mb-3">
+                      <h5 className="fw-semibold mb-2">{t('landing.housing.title')}</h5>
+                      <p className="text-muted small mb-3 px-2">
                         {t('landing.housing.description')}
                       </p>
-                      <Link to="/housing/register">
-                        <Button 
-                          variant="outline-success" 
-                          size="sm"
-                          className="d-inline-flex align-items-center gap-1"
-                        >
-                          <span>{t('landing.housing.button')}</span>
-                          <IconifyIcon icon="mingcute:arrow-right-line" />
-                        </Button>
-                      </Link>
+                      <div className="mt-auto">
+                        <Link to="/housing/register">
+                          <Button 
+                            variant="outline-success" 
+                            className="rounded-pill px-4 d-inline-flex align-items-center gap-1"
+                          >
+                            <span>{t('landing.housing.button')}</span>
+                            <IconifyIcon icon="mingcute:arrow-right-line" />
+                          </Button>
+                        </Link>
+                      </div>
                     </CardBody>
                   </Card>
                 </Col>
 
                 {/* Status Tracking Card */}
-                <Col md={4}>
-                  <Card className="h-100 border rounded-3 shadow-sm">
-                    <CardBody className="text-center p-4">
+                <Col sm={6} md={4}>
+                  <Card className="h-100 border rounded-4 service-card">
+                    <CardBody className="text-center p-4 d-flex flex-column">
                       <div className="mb-3">
                         <span 
-                          className="d-inline-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10" 
-                          style={{ width: 56, height: 56 }}
+                          className="service-icon d-inline-flex align-items-center justify-content-center rounded-circle bg-info bg-opacity-10" 
+                          style={{ width: 64, height: 64 }}
                         >
                           <IconifyIcon 
                             icon="mingcute:search-line" 
-                            className="text-info fs-3"
+                            className="text-info fs-2"
                           />
                         </span>
                       </div>
-                      <h6 className="fw-bold mb-2">{t('landing.status.title')}</h6>
-                      <p className="text-muted small mb-3">
+                      <h5 className="fw-semibold mb-2">{t('landing.status.title')}</h5>
+                      <p className="text-muted small mb-3 px-2">
                         {t('landing.status.description')}
                       </p>
-                      <Link to="/status">
-                        <Button 
-                          variant="outline-info" 
-                          size="sm"
-                          className="d-inline-flex align-items-center gap-1"
-                        >
-                          <span>{t('landing.status.button')}</span>
-                          <IconifyIcon icon="mingcute:arrow-right-line" />
-                        </Button>
-                      </Link>
+                      <div className="mt-auto">
+                        <Link to="/status">
+                          <Button 
+                            variant="outline-info" 
+                            className="rounded-pill px-4 d-inline-flex align-items-center gap-1"
+                          >
+                            <span>{t('landing.status.button')}</span>
+                            <IconifyIcon icon="mingcute:arrow-right-line" />
+                          </Button>
+                        </Link>
+                      </div>
                     </CardBody>
                   </Card>
                 </Col>

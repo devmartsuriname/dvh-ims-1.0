@@ -87,9 +87,28 @@ const ArchiveListPage = () => {
       <Tabs defaultActiveKey="bouwsubsidie" className="mb-3">
         <Tab eventKey="bouwsubsidie" title={`Bouwsubsidie (${subsidyCases.length})`}>
           <Card>
-            <CardHeader>
-              <CardTitle as="h5">Archived Subsidy Cases</CardTitle>
-            </CardHeader>
+            <CardHeader className="d-flex justify-content-between align-items-center">
+              <CardTitle as="h5" className="mb-0">Archived Subsidy Cases</CardTitle>
+              <ArchiveExportButtons
+                data={subsidyCases.map((c) => ({
+                  case_number: c.case_number,
+                  applicant: c.person ? `${c.person.first_name} ${c.person.last_name}` : '-',
+                  district_code: c.district_code,
+                  status: c.status,
+                  created_at: new Date(c.created_at).toLocaleDateString(),
+                  updated_at: new Date(c.updated_at).toLocaleDateString(),
+                }))}
+                headers={[
+                  { key: 'case_number', label: 'Case Number' },
+                  { key: 'applicant', label: 'Applicant' },
+                  { key: 'district_code', label: 'District' },
+                  { key: 'status', label: 'Status' },
+                  { key: 'created_at', label: 'Created' },
+                  { key: 'updated_at', label: 'Last Updated' },
+                ]}
+                filenamePrefix="subsidy_archive"
+                disabled={loading}
+              />
             <CardBody>
               {loading ? (
                 <div className="text-center py-4"><Spinner animation="border" size="sm" /></div>

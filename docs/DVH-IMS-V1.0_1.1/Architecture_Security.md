@@ -2,8 +2,10 @@
 
 **Status:** Definitive EN Version
 **Alignment:** 1:1 derived from approved NL Architecture & Security document
-**Deadline:** 30 January 2026
+**Original Deadline:** 30 January 2026
+**Last Updated:** 2026-03-07
 **Governance:** Devmart Government Grade + Guardian Rules
+**Implementation Status:** All phases 0-7 COMPLETE. Security hardened (v1.8).
 
 ---
 
@@ -36,9 +38,9 @@ This document is **binding** for:
 3. **Backend Platform**
    - Supabase Auth
    - PostgreSQL Database
-   - Row Level Security (RLS)
-   - Storage (documents)
-   - Edge Functions (workflow & document generation)
+   - Row Level Security (RLS) — RBAC model with 11 roles
+   - Storage (`citizen-documents` bucket)
+   - Edge Functions (6 deployed: intake, status lookup, allocation, document generation)
 
 ---
 
@@ -103,17 +105,23 @@ The **Shared Core** is the only allowed intersection between modules and consist
 
 ### 5.2 Authorization
 Authorization is enforced exclusively through:
-- Row Level Security (RLS)
-- Role assignments
-- District scoping where applicable
+- Row Level Security (RLS) with RBAC model
+- `has_role()` / `has_any_role()` SECURITY DEFINER functions
+- District scoping via `get_user_district()`
+- Edge Functions with internal role checks for authenticated operations
 
 No UI-based permission logic is allowed without RLS enforcement.
+
+### 5.3 Security Hardening (v1.8)
+- Zero anonymous policies on application tables
+- `app_user_profile` self-update restricted (cannot modify `district_code` or `is_active`)
+- Leaked password protection enabled (Supabase Pro tier)
 
 ---
 
 ## 6. Roles & Responsibilities
 
-The system supports the following fixed roles:
+The system supports the following fixed roles (11 in `app_role` enum):
 
 - Minister
 - Project Leader
@@ -122,8 +130,10 @@ The system supports the following fixed roles:
 - Social Field Worker
 - Technical Inspector
 - Audit / Read-only
+- Director
+- Ministerial Advisor
 
-Roles are immutable in v1.0.
+Roles are stored in `user_roles` table (separate from `app_user_profile`). Immutable in v1.0.
 
 ---
 

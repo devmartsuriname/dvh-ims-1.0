@@ -1,110 +1,280 @@
+# Ministerial System Manual — Documentation Execution Plan
 
+## Objective
 
-# Documentation Update Report — VolksHuisvesting IMS
+Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
 
-**Context ID:** 8F42B1C3-5D9E-4A7B-B2E1-9C3F4D5A6E7B
-
----
-
-## Summary
-
-After scanning all `/docs/` subdirectories, the following documents require updates to reflect the current project state (post Phase 7 Security Hardening, v1.8).
+This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
 
 ---
 
-## CRITICAL — Severely Outdated
+## Deliverable Structure
 
-### 1. `docs/DVH-IMS-V1.0_1.1/Tasks.md`
-- **Problem:** Shows "Current Phase: Pre-Phase 0 (Documentation)". All phases 0-7 are marked as unchecked `[ ]`. No phase completion is recorded.
-- **Reality:** All phases through Phase 7 (Security Hardening) are COMPLETE.
-- **Action:** Full rewrite. Update current status, mark all completed phases, record all restore points, remove "Pending" items that are done.
+**Folder:** `/docs/manual/`
 
-### 2. `docs/DVH-IMS-V1.0_1.1/RLS_POLICY_MATRIX.md`
-- **Problem:** Last updated 2026-01-07. Still references "Phase 1 (Allowlist)" security model with hardcoded `info@devmart.sr` email patterns. Lists RBAC as "Deferred to Phase 10+". Shows `public_status_access` as "Admin Only" SELECT.
-- **Reality:** Full RBAC is implemented. Allowlist pattern replaced. `public_status_access` anon policy was just removed in Phase 7. `housing_document_upload` INSERT policy was added.
-- **Action:** Full rewrite to reflect current RBAC-based RLS model with `has_role()`, `get_user_district()`, and all Phase 7 changes.
 
-### 3. `docs/DVH-IMS-V1.0_1.1/SECURITY_RLS_ROLES_STATUS.md`
-- **Problem:** Version v1.1, last updated 2026-01-24. Does not reflect Phase 7 migrations (dropped `anon_can_select_public_status_access`, restricted `app_user_profile` update, added `housing_document_upload` INSERT policy).
-- **Action:** Update to include Phase 7 hardening changes, new policy list, and updated verification checklist.
+| #   | File                                                 | Purpose                                                                                                  |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
+| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
+| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
+| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
+| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
+| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
+| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
+| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
+| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
+| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
+| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
+| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
+| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
+| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
+| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
+| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
 
----
 
-## HIGH — Needs Update
-
-### 4. `docs/DVH-IMS-V1.0_1.1/Execution_Plan.md`
-- **Problem:** Deadline listed as "30 January 2026" (past). No record of phase completions.
-- **Action:** Update phase completion status. Mark deadline as met or revised.
-
-### 5. `docs/DVH-IMS-V1.0_1.1/Database_RLS.md`
-- **Problem:** Original specification from pre-implementation. Does not reflect actual implemented schema additions (e.g., `housing_document_upload`, `housing_document_requirement`, storage buckets) or current RLS policies.
-- **Action:** Update table inventory and RLS policy descriptions to match production.
-
-### 6. `docs/DVH-IMS-V1.0_1.1/Architecture_Security.md`
-- **Problem:** Deadline "30 January 2026" (past). Does not mention Edge Functions, storage buckets, or Phase 7 hardening.
-- **Action:** Update with implemented architecture components and security posture.
-
-### 7. `docs/DVH-IMS/V1.7/changelog.md`
-- **Problem:** Only covers V1.7.0 (WizardProgress fix) and a won't-fix item. Missing all V1.7.x cleanup phases (3-5) and V1.8.x security hardening.
-- **Action:** Add entries for Phase 3 (dead code removal), Phase 4 (structure cleanup), Phase 5 (accessibility), Phase 6 (verification), Phase 7 (security hardening).
+**Total: 16 documents**
 
 ---
 
-## MEDIUM — Should Be Updated
+## URL Documentation
 
-### 8. `docs/DVH-IMS-V1.0_1.1/Program_Planning_Phase_Gates.md`
-- **Problem:** All gate criteria still appear as planning-only. No gate pass/fail records.
-- **Action:** Add gate completion records for all passed phases.
+All documents will include explicit URLs based on:
 
-### 9. `docs/DVH-IMS-V1.0_1.1/Master_PRD.md`
-- **Problem:** Original planning document. Generally stable but deadline reference is outdated.
-- **Action:** Minor update — mark as "Implemented" rather than "Planned".
+**Production (Published):**
 
-### 10. `docs/DVH-IMS-V1.2/DVH-IMS-V1.2_Tasks_and_Phases.md`
-- **Problem:** V1.2 era task tracking. Likely fully superseded but never marked as archived.
-- **Action:** Add archive header noting superseded by V1.8 state.
+- Landing: `https://huggable-cloud-whisper.lovable.app/`
+- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
+- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
+- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
+- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
+- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
 
----
+**Staging (Preview):**
 
-## LOW — Optional Cleanup
+- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
+- Same path structure as production
 
-### 11. Duplicate `restore_points/` vs `restore-points/`
-- Two directories exist: `docs/restore_points/` (contains V1.8 restore point) and `docs/restore-points/` (contains V1.5/V1.7 restore points).
-- **Action:** Consolidate into single `docs/restore-points/` per repository structure standard.
-
-### 12. `docs/backend.md` (root-level duplicate)
-- A `backend.md` exists at `docs/backend.md` AND at `docs/DVH-IMS-V1.0_1.1/Backend.md`.
-- **Action:** Remove duplicate or add redirect note.
+Admin module URLs will be listed per-module in document 12.
 
 ---
 
-## Documents That Are Current (No Update Needed)
+## Content Coverage Per Document
 
-| Document | Status |
-|----------|--------|
-| `docs/restore_points/RESTORE_POINT_V1.8_PHASE_7_SECURITY_HARDENING.md` | Current |
-| `docs/migrations/v1.8/PHASE_7_SECURITY_HARDENING_MIGRATIONS.sql` | Current |
-| `docs/migrations/v1.8/ROLLBACK_PHASE_7_SECURITY_HARDENING.sql` | Current |
-| `docs/manual/*` (16 Ministerial Manual files) | Current |
-| `docs/DVH-IMS-V1.3/V1.3_CLOSURE_STATEMENT.md` | Archived/Final |
-| `docs/proposals/DVH-IMS_PREMIUM_LANDING_LAYOUT_PROPOSAL.md` | Reference |
+### 00 - Executive Summary
+
+- System purpose and legal mandate
+- Two services overview (Housing + Subsidy)
+- Governance and accountability model (1 paragraph)
+- Role structure summary
+- Key operational metrics / KPIs
+- "What happens next?" for both services
+- 5-10 pages, non-technical language
+
+### 01 - System Overview
+
+- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
+- Public vs Admin separation
+- Authentication model (staff-only login, citizen anonymous access)
+- District-based scoping
+
+### 02 + 03 - Public Wizard Workflows
+
+Per service:
+
+- Preconditions
+- Step-by-step wizard walkthrough (each form step)
+- Reference number generation
+- Security token explanation
+- Receipt/confirmation page
+- Status tracking via `/status`
+- "What happens after submission?"
+
+### 04 + 05 - Admin Workflows
+
+Per service:
+
+- Locating records in list view
+- Opening detail view
+- Status change process (with mandatory reason)
+- Document upload and verification
+- Field reports (Social, Technical — Bouwsubsidie only)
+- Decision chain steps
+- Raadvoorstel generation (Bouwsubsidie only)
+- Archive flow
+- Audit trail per action
+
+### 06 - Roles & Permission Matrix
+
+Table columns:
+
+- Role name (all 11 implemented roles)
+- Modules accessible
+- Create/Edit rights
+- Status change authority (which statuses)
+- Document upload/verify rights
+- Allocation/decision authority
+- Audit log access
+- Export/print permissions
+- National vs district-scoped flag
+
+### 07 - Status Lifecycle
+
+- ASCII state diagrams for both services
+- Transition rules with triggering roles
+- Decision authority per transition
+- Mandatory reason requirements
+
+### 08 - Document Management
+
+- Upload workflow
+- Verification tracking
+- Raadvoorstel generation (edge function)
+- Download via signed URLs
+
+### 09 - Audit Logging
+
+- `audit_event` table structure
+- What triggers a log entry
+- Where to view audit logs (Admin > Audit Log)
+- Append-only guarantee
+- Role access to audit log
+
+### 10 - Allocation Engine
+
+- District quotas setup
+- Urgency scoring model
+- Allocation run execution
+- Matching logic
+- Decision recording
+- Assignment registration
+
+### 11 - Governance Controls
+
+- RLS enforcement model
+- Least-privilege access
+- Ministerial Advisor mandatory paraph
+- Minister deviation logging
+- Status history immutability
+
+### 12 - Module Specification
+
+All 20 pages/modules documented:
+
+- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
+- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
+
+Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
+
+### 13 - Operational Scenarios
+
+Minimum 8 numbered end-to-end scenarios:
+
+1. Citizen submits Housing Registration
+2. Citizen submits Subsidy Application
+3. Frontdesk processes new Housing Registration
+4. Frontdesk processes new Subsidy Case through full decision chain
+5. Allocation run execution and assignment
+6. Minister approves/rejects with deviation from advisor
+7. Archive lookup of closed case
+8. Audit trail verification for a specific case
+
+Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
+
+### 14 - Troubleshooting & FAQ
+
+- Common submission errors
+- Duplicate/resubmission behavior
+- Status lookup failures
+- Document upload issues
+- Permission denied scenarios
+- Session timeout handling
+
+### 15 - Glossary
+
+- All status values (both services)
+- Field definitions
+- Role names with descriptions
+- System terminology (Raadvoorstel, paraph, district code, etc.)
 
 ---
 
-## Recommended Priority Order
+## Screenshots Strategy
 
-1. **Tasks.md** — most visible tracking doc, completely wrong
-2. **RLS_POLICY_MATRIX.md** — security-critical, references removed policies
-3. **SECURITY_RLS_ROLES_STATUS.md** — security-critical, missing Phase 7
-4. **Changelog** — missing 5+ phases of changes
-5. **Execution_Plan.md** — outdated completion status
-6. **Database_RLS.md** — outdated schema inventory
-7. **Architecture_Security.md** — outdated architecture description
-8. **Program_Planning_Phase_Gates.md** — missing gate records
-9. **Consolidate restore point directories**
-10. **Remove duplicate backend.md**
+- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
+- Each reference follows format: `Figure X.Y — Description`
+- PII masking note included in each document header
+- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
 
 ---
 
-Awaiting instruction on which documents to update, and in what order.
+## Execution Sequence
 
+1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
+2. Create `/docs/manual/` folder
+3. Generate documents in order: 00 through 15
+4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
+5. After all 16 documents: produce completion checklist
+
+---
+
+## Quality Gates
+
+- Language: Clear, non-technical, suitable for Minister and senior staff
+- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
+- UI alignment: All labels, navigation paths, and field names match current implementation
+- No invented features or roles
+- No code/schema/RLS changes
+- Restore point created before any file creation
+
+## IMPORTANT — PRODUCTION URL CORRECTION
+
+All documentation must use the official custom production domain:
+
+[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
+
+DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
+
+Update all production URLs to:
+
+Landing:
+
+[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
+
+Housing Registration:
+
+[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
+
+Subsidy Application:
+
+[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
+
+Status Tracker:
+
+[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
+
+Staff Login:
+
+[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
+
+Admin Dashboard:
+
+[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
+
+If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
+
+The Ministerial Manual must only reference the official production domain.  
+  
+**Completion Report Format**
+
+After all documents are generated:
+
+```
+IMPLEMENTED: [list of created files]
+PARTIAL: [any incomplete documents + reason]
+SKIPPED: [none expected]
+VERIFICATION: [checklist per document — PASS/FAIL]
+RESTORE POINT: [ID]
+BLOCKERS: NONE / [description]
+CONFIRMATION: No code changes. No schema changes. No RLS changes.
+```

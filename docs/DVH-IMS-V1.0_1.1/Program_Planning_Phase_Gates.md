@@ -2,8 +2,8 @@
 
 **Status:** Definitive EN Version
 **Alignment:** 1:1 derived from approved NL Program Planning
-**Deadline:** 30 January 2026 (non-negotiable)
 **Governance:** Government Grade, Audit-first, RLS-first
+**Last Updated:** 2026-03-07
 
 ---
 
@@ -55,117 +55,71 @@ It establishes:
 
 ## 5. Phase Overview
 
-| Phase | Name | Outcome |
-|------|------|---------|
-| 0 | Foundation & Governance | Environment, standards, RLS baseline |
-| 1 | Shared Core | Person / Household operational |
-| 2 | Bouwsubsidie Module | End-to-end Bouwsubsidie flow |
-| 3 | Housing Registration | Registration & urgency |
-| 4 | Allocation Engine | Quota-based allocation |
-| 5 | Public Wizards | Citizen intake & tracking |
-| 6 | Reporting & Audit | KPI & audit validation |
-| 7 | Hardening & Go-Live | Production readiness |
+| Phase | Name | Outcome | Gate Status |
+|------|------|---------|-------------|
+| 0 | Foundation & Governance | Environment, standards, RLS baseline | ✅ PASSED |
+| 1 | Shared Core | Person / Household operational | ✅ PASSED |
+| 2 | Bouwsubsidie Module | End-to-end Bouwsubsidie flow | ✅ PASSED |
+| 3 | Housing Registration | Registration & urgency | ✅ PASSED |
+| 4 | Allocation Engine | Quota-based allocation | ✅ PASSED |
+| 5 | Public Wizards | Citizen intake & tracking | ✅ PASSED |
+| 6 | Reporting & Audit | KPI & audit validation | ✅ PASSED |
+| 7 | Hardening & Go-Live | Security hardening (v1.8) | ✅ PASSED |
 
 ---
 
 ## 6. Phase Definitions & Gates
 
-### Phase 0 – Foundation & Governance
-**Scope:**
-- Repo structure
-- Darkone Admin baseline
-- Supabase project setup
-- Auth + RLS skeleton
-
-**Gate:**
-- Architecture & Security approved
-- No build errors
+### Phase 0 – Foundation & Governance ✅ PASSED
+**Scope:** Repo structure, Darkone Admin baseline, Supabase project setup, Auth + RLS skeleton
+**Gate Result:** Architecture & Security approved. No build errors. Auth functional.
 
 ---
 
-### Phase 1 – Shared Core
-**Scope:**
-- Person
-- Household
-- Address
-- Contact points
-
-**Gate:**
-- RLS validated
-- Cross-module reuse confirmed
+### Phase 1 – Shared Core ✅ PASSED
+**Scope:** Person, Household, Address, Contact points
+**Gate Result:** RLS validated. Cross-module reuse confirmed.
 
 ---
 
-### Phase 2 – Bouwsubsidie Module
-**Scope:**
-- Intake processing
-- Case lifecycle
-- Document tracking
-- Social & technical reports
-- Raadvoorstel generation (DOCX)
-
-**Gate:**
-- End-to-end case flow works
-- Audit coverage verified
+### Phase 2 – Bouwsubsidie Module ✅ PASSED
+**Scope:** Intake processing, Case lifecycle, Document tracking, Social & technical reports, Raadvoorstel generation
+**Gate Result:** End-to-end case flow works. Audit coverage verified.
 
 ---
 
-### Phase 3 – Housing Registration
-**Scope:**
-- Public registration
-- Waiting list
-- Urgency assessment
-
-**Gate:**
-- Registration integrity verified
-- Urgency data auditable
+### Phase 3 – Housing Registration ✅ PASSED
+**Scope:** Public registration, Waiting list, Urgency assessment
+**Gate Result:** Registration integrity verified. Urgency data auditable.
 
 ---
 
-### Phase 4 – Allocation Engine
-**Scope:**
-- District quotas
-- Allocation runs
-- Assignment registration
-
-**Gate:**
-- Allocation rules enforced
-- Decisions traceable
+### Phase 4 – Allocation Engine ✅ PASSED
+**Scope:** District quotas, Allocation runs, Assignment registration
+**Gate Result:** Allocation rules enforced. Decisions traceable.
 
 ---
 
-### Phase 5 – Public Wizards
-**Scope:**
-- Landing page
-- Bouwsubsidie wizard
-- Housing registration wizard
-- Status tracking
-
-**Gate:**
-- Usability verified
-- No internal data exposure
+### Phase 5 – Public Wizards ✅ PASSED
+**Scope:** Landing page, Bouwsubsidie wizard, Housing registration wizard, Status tracking
+**Gate Result:** Usability verified. No internal data exposure.
 
 ---
 
-### Phase 6 – Reporting & Audit
-**Scope:**
-- KPI dashboards
-- Audit exports
-- Minister dashboards
-
-**Gate:**
-- Full audit trail validated
+### Phase 6 – Reporting & Audit ✅ PASSED
+**Scope:** KPI dashboards, Audit exports, Minister dashboards
+**Gate Result:** Full audit trail validated. PageSpeed within production ranges.
 
 ---
 
-### Phase 7 – Hardening & Go-Live
-**Scope:**
-- Performance testing
-- Security review
-- Final RLS checks
-
-**Gate:**
-- Minister-ready production system
+### Phase 7 – Security Hardening ✅ PASSED
+**Scope:** RLS security hardening, anonymous policy removal, privilege escalation fix
+**Gate Result:**
+- Zero `anon_` policies on application tables
+- `app_user_profile` self-update restricted
+- `housing_document_upload` INSERT policy added
+- Leaked password protection enabled
+- Edge Functions verified functional
 
 ---
 

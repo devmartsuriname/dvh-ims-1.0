@@ -451,7 +451,13 @@
       "of": "of",
       "mandatoryMissing": "Upload all mandatory documents to continue",
       "incomeProofMissing": "Upload at least one income proof (pay slip, AOV statement, pension statement, or employer declaration)",
-      "groupRequired": "Min. 1 required"
+      "groupRequired": "Min. 1 required",
+      "checklistTitle": "Requirements to proceed",
+      "checkIdCopy": "ID card copy uploaded",
+      "checkBankStatement": "Bank statement uploaded",
+      "checkIncomeProof": "At least one income proof uploaded",
+      "allRequiredUploaded": "All required documents are uploaded. You can proceed.",
+      "uploadIncomeToProced": "Upload at least one income proof to proceed."
     },
     "step7": {
       "title": "Review Your Application",

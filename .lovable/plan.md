@@ -1,280 +1,159 @@
-# Ministerial System Manual — Documentation Execution Plan
+# DVH-IMS V1.8 — Full Smoke Test Report
 
-## Objective
+## Anti-Drift Check
 
-Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
-
-This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
-
----
-
-## Deliverable Structure
-
-**Folder:** `/docs/manual/`
-
-
-| #   | File                                                 | Purpose                                                                                                  |
-| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
-| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
-| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
-| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
-| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
-| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
-| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
-| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
-| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
-| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
-| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
-| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
-| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
-| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
-| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
-| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
-
-
-**Total: 16 documents**
+- **Context ID:** 8F42B1C3-5D9E-4A7B-B2E1-9C3F4D5A6E7B
+- **Phase:** 6 — Verification, Closure, and Freeze
+- **Last Restore Point:** `RESTORE_POINT_PHASE_6_VERIFICATION.md`
 
 ---
 
-## URL Documentation
+## Test Matrix Results
 
-All documents will include explicit URLs based on:
+### A. Edge Function Validation (submit-bouwsubsidie-application)
 
-**Production (Published):**
 
-- Landing: `https://huggable-cloud-whisper.lovable.app/`
-- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
-- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
-- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
-- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
-- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
+| Test                           | Input                                                  | Expected                    | Actual                      | Status   |
+| ------------------------------ | ------------------------------------------------------ | --------------------------- | --------------------------- | -------- |
+| NEG-1: Missing ID_COPY         | BANK_STATEMENT + PAYSLIP only                          | MANDATORY_DOCUMENTS_MISSING | MANDATORY_DOCUMENTS_MISSING | **PASS** |
+| NEG-2: Missing income proof    | ID_COPY + BANK_STATEMENT only                          | INCOME_PROOF_REQUIRED       | INCOME_PROOF_REQUIRED       | **PASS** |
+| POS-1: Full valid + 3 children | ID_COPY + BANK_STATEMENT + PAYSLIP, 3 children (M/F/F) | Case created                | BS-2026-000010 created      | **PASS** |
 
-**Staging (Preview):**
 
-- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
-- Same path structure as production
+### B. Database Persistence
 
-Admin module URLs will be listed per-module in document 12.
 
----
+| Table                     | Verification                                                                     | Status   |
+| ------------------------- | -------------------------------------------------------------------------------- | -------- |
+| `subsidy_case`            | BS-2026-000010 exists, status=received, district=PAR                             | **PASS** |
+| `subsidy_document_upload` | 3 documents persisted (ID_COPY, BANK_STATEMENT, PAYSLIP)                         | **PASS** |
+| `subsidy_household_child` | 3 children: (10,M,no), (6,F,no), (2,F,yes) with sort_order 1,2,3                 | **PASS** |
+| `audit_event`             | `public_submission` with `children_count:3` + 2x `SUBMISSION_VALIDATION_BLOCKED` | **PASS** |
+| Gender distinct values    | M, F — both present and valid                                                    | **PASS** |
 
-## Content Coverage Per Document
 
-### 00 - Executive Summary
+### C. Admin Panel (Browser Verified — Screenshots Captured)
 
-- System purpose and legal mandate
-- Two services overview (Housing + Subsidy)
-- Governance and accountability model (1 paragraph)
-- Role structure summary
-- Key operational metrics / KPIs
-- "What happens next?" for both services
-- 5-10 pages, non-technical language
 
-### 01 - System Overview
+| Test                            | Result                                                                                                                                       | Status   |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Login with provided credentials | Dashboard loaded successfully                                                                                                                | **PASS** |
+| Dashboard                       | Shows 10 subsidy applications, charts render                                                                                                 | **PASS** |
+| Subsidy Cases list              | All 10 cases displayed with correct data                                                                                                     | **PASS** |
+| Case detail BS-2026-000010      | Case info, applicant "Smoke FullValid", household size 4                                                                                     | **PASS** |
+| **Household Children section**  | 3 rows: #1 Age 10 Male No, #2 Age 6 Female No, #3 Age 2 Female Yes                                                                           | **PASS** |
+| Documents tab                   | 3 uploaded docs (Loonstrook, Bank Statement, Copy of ID), all Pending. Required Documents checklist with green indicators for uploaded items | **PASS** |
 
-- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
-- Public vs Admin separation
-- Authentication model (staff-only login, citizen anonymous access)
-- District-based scoping
 
-### 02 + 03 - Public Wizard Workflows
+### D. Document Validation
 
-Per service:
 
-- Preconditions
-- Step-by-step wizard walkthrough (each form step)
-- Reference number generation
-- Security token explanation
-- Receipt/confirmation page
-- Status tracking via `/status`
-- "What happens after submission?"
+| Test                              | Result                                                             | Status   |
+| --------------------------------- | ------------------------------------------------------------------ | -------- |
+| Missing mandatory doc → rejection | `MANDATORY_DOCUMENTS_MISSING` returned                             | **PASS** |
+| Missing income proof → rejection  | `INCOME_PROOF_REQUIRED` returned                                   | **PASS** |
+| Valid document set → accepted     | Case BS-2026-000010 created                                        | **PASS** |
+| Audit log for blocked submissions | 2 `SUBMISSION_VALIDATION_BLOCKED` entries with correct error codes | **PASS** |
 
-### 04 + 05 - Admin Workflows
 
-Per service:
+### E. Children Module
 
-- Locating records in list view
-- Opening detail view
-- Status change process (with mandatory reason)
-- Document upload and verification
-- Field reports (Social, Technical — Bouwsubsidie only)
-- Decision chain steps
-- Raadvoorstel generation (Bouwsubsidie only)
-- Archive flow
-- Audit trail per action
 
-### 06 - Roles & Permission Matrix
+| Test                                      | Status   |
+| ----------------------------------------- | -------- |
+| Multiple children submission (3 children) | **PASS** |
+| Gender M persists                         | **PASS** |
+| Gender F persists (DEFECT-001 fixed)      | **PASS** |
+| has_disability=true persists              | **PASS** |
+| has_disability=false persists             | **PASS** |
+| sort_order preserved (1, 2, 3)            | **PASS** |
+| Admin UI displays all children correctly  | **PASS** |
+| Pre-Phase 5 cases show 0 children         | **PASS** |
 
-Table columns:
 
-- Role name (all 11 implemented roles)
-- Modules accessible
-- Create/Edit rights
-- Status change authority (which statuses)
-- Document upload/verify rights
-- Allocation/decision authority
-- Audit log access
-- Export/print permissions
-- National vs district-scoped flag
+### F. Boundary Verification
 
-### 07 - Status Lifecycle
 
-- ASCII state diagrams for both services
-- Transition rules with triggering roles
-- Decision authority per transition
-- Mandatory reason requirements
+| Boundary                                  | Evidence                                                                   | Status   |
+| ----------------------------------------- | -------------------------------------------------------------------------- | -------- |
+| Housing Registration unchanged            | 5 recent registrations intact (WR-2026-002967 to WR-2026-002971)           | **PASS** |
+| Historical subsidy cases readable         | BS-2026-000001 through BS-2026-000007 intact, 000007 in `in_social_review` | **PASS** |
+| `household_member` table unchanged        | Zero V1.8 modifications                                                    | **PASS** |
+| Document requirement configuration stable | No changes since Phase 2                                                   | **PASS** |
+| Deprecated document codes                 | No regression                                                              | **PASS** |
 
-### 08 - Document Management
-
-- Upload workflow
-- Verification tracking
-- Raadvoorstel generation (edge function)
-- Download via signed URLs
-
-### 09 - Audit Logging
-
-- `audit_event` table structure
-- What triggers a log entry
-- Where to view audit logs (Admin > Audit Log)
-- Append-only guarantee
-- Role access to audit log
-
-### 10 - Allocation Engine
-
-- District quotas setup
-- Urgency scoring model
-- Allocation run execution
-- Matching logic
-- Decision recording
-- Assignment registration
-
-### 11 - Governance Controls
-
-- RLS enforcement model
-- Least-privilege access
-- Ministerial Advisor mandatory paraph
-- Minister deviation logging
-- Status history immutability
-
-### 12 - Module Specification
-
-All 20 pages/modules documented:
-
-- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
-- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
-
-Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
-
-### 13 - Operational Scenarios
-
-Minimum 8 numbered end-to-end scenarios:
-
-1. Citizen submits Housing Registration
-2. Citizen submits Subsidy Application
-3. Frontdesk processes new Housing Registration
-4. Frontdesk processes new Subsidy Case through full decision chain
-5. Allocation run execution and assignment
-6. Minister approves/rejects with deviation from advisor
-7. Archive lookup of closed case
-8. Audit trail verification for a specific case
-
-Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
-
-### 14 - Troubleshooting & FAQ
-
-- Common submission errors
-- Duplicate/resubmission behavior
-- Status lookup failures
-- Document upload issues
-- Permission denied scenarios
-- Session timeout handling
-
-### 15 - Glossary
-
-- All status values (both services)
-- Field definitions
-- Role names with descriptions
-- System terminology (Raadvoorstel, paraph, district code, etc.)
 
 ---
 
-## Screenshots Strategy
+## Cases Created During Testing
 
-- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
-- Each reference follows format: `Figure X.Y — Description`
-- PII masking note included in each document header
-- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
 
----
+| Case Number    | Purpose                 | Children      |
+| -------------- | ----------------------- | ------------- |
+| BS-2026-000008 | Phase 3 positive test   | 1 (M)         |
+| BS-2026-000009 | DEFECT-001 verification | 2 (M + F)     |
+| BS-2026-000010 | Phase 6 full smoke test | 3 (M + F + F) |
 
-## Execution Sequence
-
-1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
-2. Create `/docs/manual/` folder
-3. Generate documents in order: 00 through 15
-4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
-5. After all 16 documents: produce completion checklist
 
 ---
 
-## Quality Gates
+## Files Modified Across V1.8 (Complete)
 
-- Language: Clear, non-technical, suitable for Minister and senior staff
-- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
-- UI alignment: All labels, navigation paths, and field names match current implementation
-- No invented features or roles
-- No code/schema/RLS changes
-- Restore point created before any file creation
 
-## IMPORTANT — PRODUCTION URL CORRECTION
+| File                                                           | Phases  |
+| -------------------------------------------------------------- | ------- |
+| `src/config/documentRequirements.ts`                           | 2       |
+| `src/app/(public)/bouwsubsidie/apply/types.ts`                 | 2, 5    |
+| `src/app/(public)/bouwsubsidie/apply/constants.ts`             | 2, 5    |
+| `src/app/(public)/bouwsubsidie/apply/steps/Step6Documents.tsx` | 2       |
+| `src/app/(public)/bouwsubsidie/apply/steps/Step3Household.tsx` | 5       |
+| `src/app/(public)/bouwsubsidie/apply/steps/Step7Review.tsx`    | 5       |
+| `src/app/(public)/bouwsubsidie/apply/page.tsx`                 | 3       |
+| `supabase/functions/submit-bouwsubsidie-application/index.ts`  | 3, 5    |
+| `src/app/(admin)/subsidy-cases/[id]/page.tsx`                  | 5       |
+| `src/i18n/locales/en.json`                                     | 2, 3, 5 |
+| `src/i18n/locales/nl.json`                                     | 2, 3, 5 |
 
-All documentation must use the official custom production domain:
 
-[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
+## Database Changes
 
-DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
+- `subsidy_household_child` constraint: `('M','V')` → `('M','F')` (DEFECT-001 fix)
+- No new tables, no new columns, no schema changes
 
-Update all production URLs to:
+## Pre-existing Issue (Non-V1.8)
 
-Landing:
+- `apexcharts` TypeScript declaration warning (TS1540) — third-party library, not introduced by V1.8, no runtime impact.
 
-[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
+---
 
-Housing Registration:
+## Implementation Plan
 
-[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
+Upon approval, I will:
 
-Subsidy Application:
+1. Update `restore-points/v1.0/RESTORE_POINT_PHASE_6_VERIFICATION.md` with the complete smoke test results above
 
-[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
+No code changes. No new features. Report-only update.
 
-Status Tracker:
+---
 
-[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
+## Final System Status
 
-Staff Login:
+# **READY TO FREEZE**
 
-[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
+All test scenarios PASS. Zero defects. Zero regressions. Boundary verification confirms all pre-existing functionality intact.
 
-Admin Dashboard:
-
-[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
-
-If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
-
-The Ministerial Manual must only reference the official production domain.  
+Awaiting further instructions.  
   
-**Completion Report Format**
+Approved.
 
-After all documents are generated:
+Proceed only with the report-only closure step:
 
-```
-IMPLEMENTED: [list of created files]
-PARTIAL: [any incomplete documents + reason]
-SKIPPED: [none expected]
-VERIFICATION: [checklist per document — PASS/FAIL]
-RESTORE POINT: [ID]
-BLOCKERS: NONE / [description]
-CONFIRMATION: No code changes. No schema changes. No RLS changes.
-```
+- update `restore-points/v1.0/RESTORE_POINT_PHASE_6_VERIFICATION.md` with the final smoke test results
+
+- do not change code
+
+- do not add features
+
+- do not modify schema
+
+After that, mark DVH-IMS v1.8 formally frozen and closed.

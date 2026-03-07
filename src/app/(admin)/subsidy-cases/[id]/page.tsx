@@ -15,6 +15,7 @@ import TechnicalReviewForm from './components/TechnicalReviewForm'
 import DirectorReviewPanel from './components/DirectorReviewPanel'
 import AdvisorReviewPanel from './components/AdvisorReviewPanel'
 import MinisterDecisionPanel from './components/MinisterDecisionPanel'
+import CaseTimeline from './components/CaseTimeline'
 
 // Tab visibility sets (governance-binding)
 const DIRECTOR_TAB_STATUSES = new Set([
@@ -834,6 +835,18 @@ const SubsidyCaseDetail = () => {
                   ))}
                 </div>
               )}
+            </CardBody>
+          </Card>
+        </Tab>
+
+        {/* Timeline Tab */}
+        <Tab eventKey="timeline" title="Timeline">
+          <Card>
+            <CardHeader>
+              <CardTitle as="h5">Case Timeline</CardTitle>
+            </CardHeader>
+            <CardBody>
+              <CaseTimeline caseId={subsidyCase.id} />
             </CardBody>
           </Card>
         </Tab>

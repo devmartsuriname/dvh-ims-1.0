@@ -404,7 +404,7 @@ const SubsidyCaseDetail = () => {
 
       // Create admin notification for status change (S-03)
       await createAdminNotification({
-        recipientRole: 'frontdesk_bouwsubsidie',
+        recipientRole: NEXT_RESPONSIBLE_ROLE[newStatus] || 'frontdesk_bouwsubsidie',
         districtCode: subsidyCase.district_code,
         notificationType: 'status_change',
         title: `Case ${subsidyCase.case_number} Updated`,

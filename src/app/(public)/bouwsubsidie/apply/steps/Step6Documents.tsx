@@ -1,6 +1,6 @@
 /**
  * Step 6: Document Upload
- * V1.8 Phase 2 — Added group-mandatory validation for income_proof
+ * V1.8 Phase 2.1 — Updated summary panel with 3 status indicators
  * 
  * Uses DocumentUploadAccordion for compact mobile-friendly upload.
  * Upload logic unchanged from V1.3.
@@ -31,7 +31,8 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
 
   // Group-mandatory check: at least 1 income_proof document uploaded
   const incomeGroupDocs = formData.documents.filter(d => d.validation_group === BOUWSUBSIDIE_INCOME_GROUP)
-  const hasIncomeProof = incomeGroupDocs.some(d => d.uploaded_file)
+  const uploadedIncomeCount = incomeGroupDocs.filter(d => d.uploaded_file).length
+  const hasIncomeProof = uploadedIncomeCount > 0
 
   // Combined gate
   const canProceed = allMandatoryUploaded && hasIncomeProof
@@ -153,26 +154,30 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
         ns="bouwsubsidie.step6"
       />
 
-      {/* Summary */}
+      {/* Summary — 3 status lines */}
       <Card className={`mt-3 ${canProceed ? 'border-success' : 'border-warning'}`}>
         <Card.Body className="py-3">
-          <div className="d-flex justify-content-between align-items-center">
-            <div>
-              <span className="text-muted">{t('bouwsubsidie.step6.documentsUploaded')}:</span>
-              <strong className="ms-2">{totalUploaded} {t('bouwsubsidie.step6.of')} {formData.documents.length}</strong>
+          <div className="d-flex flex-column gap-2">
+            {/* Line 1: Mandatory */}
+            <div className="d-flex justify-content-between align-items-center">
+              <span className="small">{t('bouwsubsidie.step6.mandatoryTab')}</span>
+              <Badge bg={allMandatoryUploaded ? 'success' : 'warning'} className={`d-flex align-items-center gap-1 ${allMandatoryUploaded ? '' : 'text-dark'}`}>
+                <IconifyIcon icon={allMandatoryUploaded ? 'mingcute:check-circle-fill' : 'mingcute:warning-line'} style={{ fontSize: 12 }} />
+                {uploadedMandatoryCount}/{mandatoryDocs.length}
+              </Badge>
             </div>
-            <div>
-              {allMandatoryUploaded ? (
-                <Badge bg="success" className="d-flex align-items-center gap-1">
-                  <IconifyIcon icon="mingcute:check-circle-fill" />
-                  {t('bouwsubsidie.step6.mandatory')}: {uploadedMandatoryCount}/{mandatoryDocs.length}
-                </Badge>
-              ) : (
-                <Badge bg="warning" className="text-dark d-flex align-items-center gap-1">
-                  <IconifyIcon icon="mingcute:warning-line" />
-                  {t('bouwsubsidie.step6.mandatory')}: {uploadedMandatoryCount}/{mandatoryDocs.length}
-                </Badge>
-              )}
+            {/* Line 2: Income proof */}
+            <div className="d-flex justify-content-between align-items-center">
+              <span className="small">{t('bouwsubsidie.step6.incomeProofTab')}</span>
+              <Badge bg={hasIncomeProof ? 'success' : 'warning'} className={`d-flex align-items-center gap-1 ${hasIncomeProof ? '' : 'text-dark'}`}>
+                <IconifyIcon icon={hasIncomeProof ? 'mingcute:check-circle-fill' : 'mingcute:warning-line'} style={{ fontSize: 12 }} />
+                {uploadedIncomeCount}/{incomeGroupDocs.length}
+              </Badge>
+            </div>
+            {/* Line 3: Total */}
+            <div className="d-flex justify-content-between align-items-center border-top pt-2">
+              <span className="small text-muted">{t('bouwsubsidie.step6.documentsUploaded')}</span>
+              <span className="small fw-medium">{totalUploaded} {t('bouwsubsidie.step6.of')} {formData.documents.length}</span>
             </div>
           </div>
           {!allMandatoryUploaded && (

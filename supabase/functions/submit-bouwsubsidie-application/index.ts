@@ -151,6 +151,7 @@ function validateInput(data: unknown): { valid: true; data: BouwsubsidieInput } 
       household_size: input.household_size as number,
       household_members: input.household_members as BouwsubsidieInput['household_members'],
       reason: input.reason as string | undefined,
+      estimated_amount: input.estimated_amount ? String(input.estimated_amount).trim() : undefined,
       documents: Array.isArray(input.documents) ? input.documents : undefined,
       children: Array.isArray(input.children) ? input.children : undefined,
     }
@@ -440,6 +441,7 @@ Deno.serve(async (req) => {
         household_id: householdId,
         district_code: input.district,
         status: 'received',
+        requested_amount: input.estimated_amount ? parseFloat(input.estimated_amount) : null,
         created_by: null // Public submission
       })
       .select('id')

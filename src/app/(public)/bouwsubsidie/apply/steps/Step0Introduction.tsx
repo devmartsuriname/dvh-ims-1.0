@@ -10,10 +10,7 @@ interface Step0IntroductionProps {
 
 /**
  * Step 0: Introduction
- * V1.3 Phase 5A — Localized with i18n
- * 
- * Explains the application process and requirements.
- * User must acknowledge understanding before proceeding.
+ * V1.8 Phase 2.1 — Added 2-column "Benodigde documenten" block
  */
 const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
   const { t } = useTranslation()
@@ -77,26 +74,54 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
             </Col>
           </Row>
 
-          {/* Requirements */}
-          <h6 className="fw-semibold mb-3">{t('bouwsubsidie.step0.requirementsTitle')}</h6>
-          <ul className="list-unstyled mb-4">
-            <li className="d-flex align-items-center mb-2">
-              <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
-              <span className="small">{t('bouwsubsidie.step0.requirement1')}</span>
-            </li>
-            <li className="d-flex align-items-center mb-2">
-              <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
-              <span className="small">{t('bouwsubsidie.step0.requirement2')}</span>
-            </li>
-            <li className="d-flex align-items-center mb-2">
-              <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
-              <span className="small">{t('bouwsubsidie.step0.requirement3')}</span>
-            </li>
-            <li className="d-flex align-items-center mb-2">
-              <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
-              <span className="small">{t('bouwsubsidie.step0.requirement4')}</span>
-            </li>
-          </ul>
+          {/* Requirements — 2-column layout */}
+          <Row className="g-4 mb-4">
+            <Col md={6}>
+              <h6 className="fw-semibold mb-3">{t('bouwsubsidie.step0.requirementsTitle')}</h6>
+              <ul className="list-unstyled mb-0">
+                <li className="d-flex align-items-center mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
+                  <span className="small">{t('bouwsubsidie.step0.requirement1')}</span>
+                </li>
+                <li className="d-flex align-items-center mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
+                  <span className="small">{t('bouwsubsidie.step0.requirement2')}</span>
+                </li>
+                <li className="d-flex align-items-center mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
+                  <span className="small">{t('bouwsubsidie.step0.requirement3')}</span>
+                </li>
+                <li className="d-flex align-items-center mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
+                  <span className="small">{t('bouwsubsidie.step0.requirement4')}</span>
+                </li>
+              </ul>
+            </Col>
+            <Col md={6}>
+              <h6 className="fw-semibold mb-3">
+                <IconifyIcon icon="mingcute:folder-line" className="me-1" />
+                {t('bouwsubsidie.step0.docsTitle')}
+              </h6>
+              <ul className="list-unstyled mb-2">
+                <li className="d-flex align-items-start mb-2">
+                  <IconifyIcon icon="mingcute:document-line" className="text-primary me-2 mt-1 flex-shrink-0" />
+                  <span className="small">{t('bouwsubsidie.step0.doc1')}</span>
+                </li>
+                <li className="d-flex align-items-start mb-2">
+                  <IconifyIcon icon="mingcute:document-line" className="text-primary me-2 mt-1 flex-shrink-0" />
+                  <span className="small">{t('bouwsubsidie.step0.doc2')}</span>
+                </li>
+                <li className="d-flex align-items-start mb-2">
+                  <IconifyIcon icon="mingcute:document-line" className="text-primary me-2 mt-1 flex-shrink-0" />
+                  <span className="small">{t('bouwsubsidie.step0.doc3')}</span>
+                </li>
+              </ul>
+              <p className="text-muted small mb-0">
+                <IconifyIcon icon="mingcute:information-line" className="me-1" />
+                {t('bouwsubsidie.step0.docsNote')}
+              </p>
+            </Col>
+          </Row>
 
           {/* Acknowledgement */}
           <div className="border rounded p-3">

@@ -1,10 +1,9 @@
 /**
  * DocumentUploadAccordion
- * V1.8 Phase 2 — Added validation_group badge for group-mandatory docs
+ * V1.8 Phase 2.1 — 3-tab layout: Verplicht / Inkomensbewijs / Optioneel
  * 
- * Replaces vertical card grid with collapsed rows that expand to show dropzone.
- * Upload state is managed by parent formData — accordion expand/collapse does NOT
- * unmount the upload item (React-Bootstrap Accordion keeps children mounted).
+ * Fixes UI/validation mismatch: income proof docs with validation_group
+ * are now shown in a separate tab with "min. 1 verplicht" indicator.
  */
 
 import { useState, useCallback, useMemo } from 'react'
@@ -92,12 +91,6 @@ const AccordionDocItem = ({
     disabled: isUploading || hasUpload,
   })
 
-  /**
-   * Determine the status badge for non-uploaded documents:
-   * - is_mandatory → warning "Mandatory"
-   * - has validation_group → info "1 required" (group-mandatory)
-   * - else → secondary "Optional"
-   */
   const renderStatusBadge = () => {
     if (hasUpload) {
       return (
@@ -210,7 +203,10 @@ const AccordionDocItem = ({
 }
 
 /**
- * Main component: Tabbed (Required/Optional) accordion document upload list
+ * Main component: 3-tab accordion document upload list
+ * Tab 1: Verplicht (is_mandatory === true)
+ * Tab 2: Inkomensbewijs (has validation_group, group-mandatory)
+ * Tab 3: Optioneel (remaining)
  */
 const DocumentUploadAccordion = ({
   documents,
@@ -224,15 +220,29 @@ const DocumentUploadAccordion = ({
   const { t } = useTranslation()
 
   const mandatoryDocs = useMemo(() => documents.filter(d => d.is_mandatory), [documents])
-  const optionalDocs = useMemo(() => documents.filter(d => !d.is_mandatory), [documents])
+  const incomeGroupDocs = useMemo(() => documents.filter(d => !d.is_mandatory && d.validation_group), [documents])
+  const optionalDocs = useMemo(() => documents.filter(d => !d.is_mandatory && !d.validation_group), [documents])
+
+  const hasIncomeTab = incomeGroupDocs.length > 0
 
   // Auto-expand first un-uploaded mandatory doc
-  const firstUnuploaded = useMemo(
+  const firstUnuploadedMandatory = useMemo(
     () => mandatoryDocs.find(d => !d.uploaded_file)?.id || undefined,
     [mandatoryDocs]
   )
 
-  const [activeTab, setActiveTab] = useState('mandatory')
+  // Auto-expand first un-uploaded income doc
+  const firstUnuploadedIncome = useMemo(
+    () => incomeGroupDocs.find(d => !d.uploaded_file)?.id || undefined,
+    [incomeGroupDocs]
+  )
+
+  const allMandatoryUploaded = mandatoryDocs.every(d => d.uploaded_file)
+  const hasAnyIncomeUploaded = incomeGroupDocs.some(d => d.uploaded_file)
+
+  // Default to income tab if all mandatory done but no income proof yet
+  const defaultTab = allMandatoryUploaded && hasIncomeTab && !hasAnyIncomeUploaded ? 'income' : 'mandatory'
+  const [activeTab, setActiveTab] = useState(defaultTab)
 
   const renderAccordionList = (docs: DocumentItem[], defaultActiveKey?: string) => (
     <Accordion defaultActiveKey={defaultActiveKey} className="border rounded">
@@ -251,9 +261,9 @@ const DocumentUploadAccordion = ({
     </Accordion>
   )
 
-  if (optionalDocs.length === 0) {
-    // No tabs needed — just show mandatory accordion
-    return renderAccordionList(mandatoryDocs, firstUnuploaded)
+  // No tabs needed if only mandatory docs exist
+  if (!hasIncomeTab && optionalDocs.length === 0) {
+    return renderAccordionList(mandatoryDocs, firstUnuploadedMandatory)
   }
 
   return (
@@ -261,22 +271,49 @@ const DocumentUploadAccordion = ({
       <Nav variant="tabs" className="mb-3" role="tablist">
         <Nav.Item>
           <Nav.Link eventKey="mandatory">
-            {t(`${ns}.mandatory`)} ({mandatoryDocs.length})
+            {t(`${ns}.mandatoryTab`)} ({mandatoryDocs.length})
           </Nav.Link>
         </Nav.Item>
-        <Nav.Item>
-          <Nav.Link eventKey="optional">
-            {t(`${ns}.optional`)} ({optionalDocs.length})
-          </Nav.Link>
-        </Nav.Item>
+        {hasIncomeTab && (
+          <Nav.Item>
+            <Nav.Link eventKey="income" className="d-flex align-items-center gap-1">
+              {t(`${ns}.incomeProofTab`)} ({incomeGroupDocs.length})
+              <Badge 
+                bg={hasAnyIncomeUploaded ? 'success' : 'warning'} 
+                className={`ms-1 ${hasAnyIncomeUploaded ? '' : 'text-dark'}`}
+                style={{ fontSize: '0.65rem' }}
+              >
+                {t(`${ns}.incomeProofTabNote`)}
+              </Badge>
+            </Nav.Link>
+          </Nav.Item>
+        )}
+        {optionalDocs.length > 0 && (
+          <Nav.Item>
+            <Nav.Link eventKey="optional">
+              {t(`${ns}.optional`)} ({optionalDocs.length})
+            </Nav.Link>
+          </Nav.Item>
+        )}
       </Nav>
       <Tab.Content>
         <Tab.Pane eventKey="mandatory">
-          {renderAccordionList(mandatoryDocs, firstUnuploaded)}
+          {renderAccordionList(mandatoryDocs, firstUnuploadedMandatory)}
         </Tab.Pane>
-        <Tab.Pane eventKey="optional">
-          {renderAccordionList(optionalDocs)}
-        </Tab.Pane>
+        {hasIncomeTab && (
+          <Tab.Pane eventKey="income">
+            <Alert variant="info" className="py-2 mb-3 small d-flex align-items-start">
+              <IconifyIcon icon="mingcute:information-line" className="text-info me-2 mt-1 flex-shrink-0" />
+              <span>{t(`${ns}.incomeProofHint`)}</span>
+            </Alert>
+            {renderAccordionList(incomeGroupDocs, firstUnuploadedIncome)}
+          </Tab.Pane>
+        )}
+        {optionalDocs.length > 0 && (
+          <Tab.Pane eventKey="optional">
+            {renderAccordionList(optionalDocs)}
+          </Tab.Pane>
+        )}
       </Tab.Content>
     </Tab.Container>
   )

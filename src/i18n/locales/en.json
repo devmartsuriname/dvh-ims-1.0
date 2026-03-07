@@ -101,6 +101,11 @@
       "requirement2": "Contact information (phone number required)",
       "requirement3": "Information about your current living situation",
       "requirement4": "Income details (if applicable)",
+      "docsTitle": "Required Documents",
+      "doc1": "Copy of ID (required)",
+      "doc2": "Income proof (required)",
+      "doc3": "Proof of current residence (required)",
+      "docsNote": "Optional: family composition, medical certificate, emergency proof",
       "acknowledgementLabel": "I understand that this is a registration for the housing waiting list and that placement does not guarantee immediate housing. I confirm that I will provide accurate information."
     },
     "step1": {
@@ -268,6 +273,7 @@
       "infoTitle": "Document Requirements",
       "infoText": "All mandatory documents must be uploaded before you can submit your registration. Supported file types: PDF, JPG, PNG. Maximum file size: 10MB per document.",
       "mandatory": "Mandatory",
+      "mandatoryTab": "Mandatory",
       "optional": "Optional",
       "dropzone": "Drop file here or click to upload",
       "dropzoneActive": "Drop file here...",
@@ -354,6 +360,11 @@
       "requirement2": "Contact information (phone number required)",
       "requirement3": "Current address details",
       "requirement4": "Required documents (must be uploaded)",
+      "docsTitle": "Required Documents",
+      "doc1": "Copy of ID (required)",
+      "doc2": "Bank statement last 3 months (required)",
+      "doc3": "At least 1 income proof: pay slip, AOV statement, pension statement, or employer declaration",
+      "docsNote": "Additional documents (property, legal) can be optionally added",
       "acknowledgementLabel": "I understand that this is a registration portal only and that no evaluation or decision will be made at the counter. I confirm that I will provide accurate information."
     },
     "step1": {
@@ -423,7 +434,11 @@
       "infoTitle": "Document Requirements",
       "infoText": "All mandatory documents must be uploaded before you can submit your application. Supported file types: PDF, JPG, PNG. Maximum file size: 10MB per document.",
       "mandatory": "Mandatory",
+      "mandatoryTab": "Mandatory",
       "optional": "Optional",
+      "incomeProofTab": "Income Proof",
+      "incomeProofTabNote": "min. 1 required",
+      "incomeProofHint": "Upload at least one of the documents below as proof of your income.",
       "dropzone": "Drop file here or click to upload",
       "dropzoneActive": "Drop file here...",
       "maxSize": "Max 10MB - PDF, JPG, PNG",

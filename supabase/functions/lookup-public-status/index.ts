@@ -15,17 +15,11 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { createLogger } from '../_shared/logger.ts'
+import { corsHeaders } from '../_shared/cors.ts'
+import { createRateLimiter } from '../_shared/rate-limit.ts'
 
-// CORS headers for browser requests
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-// Rate limiting: in-memory store
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
-const RATE_LIMIT = 20
-const RATE_WINDOW_MS = 60 * 60 * 1000 // 1 hour
+// Rate limiting: 20 lookups/hour per IP (per-function isolated instance)
+const rateLimiter = createRateLimiter(20, 60 * 60 * 1000)
 
 // Status label mappings
 const BOUWSUBSIDIE_STATUS_LABELS: Record<string, string> = {

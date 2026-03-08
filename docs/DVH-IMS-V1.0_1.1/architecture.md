@@ -712,3 +712,50 @@ Replaced hero background from `bg-pattern-1.png` (abstract pattern) to AI-genera
 Replaced static/missing applicant avatars in admin list views (Dashboard widgets, Subsidy Cases list, Housing Registrations list) with deterministic initials-based avatars. New component `src/components/applicants/ApplicantInitialsAvatar.tsx` — scoped to list rows only, no global avatar changes. Uses existing Darkone `.avatar-xs` / `.avatar-title` classes. Defensive initials logic handles missing name data. No DB/RLS/edge function changes.
 
 **Restore Point:** `RESTORE_POINT_V1_7_APPLICANT_LIST_AVATAR_INITIALS`
+
+---
+
+## Phase 9D — Edge Function Shared Module Architecture (2026-03-08)
+
+### Shared Module Structure
+
+```
+supabase/functions/
+├── _shared/
+│   ├── cors.ts          # Shared CORS headers
+│   ├── rate-limit.ts    # Rate limiter factory
+│   ├── constants.ts     # Domain constants (VALID_DISTRICTS)
+│   ├── validators.ts    # Input validators (isValidUUID)
+│   └── logger.ts        # Structured logging (existing)
+├── health-check/
+├── lookup-public-status/
+├── submit-bouwsubsidie-application/
+├── submit-housing-registration/
+├── execute-allocation-run/
+├── generate-raadvoorstel/
+└── get-document-download-url/
+```
+
+### Shared Module Import Pattern
+
+```typescript
+import { corsHeaders } from '../_shared/cors.ts'
+import { createRateLimiter } from '../_shared/rate-limit.ts'
+import { VALID_DISTRICTS } from '../_shared/constants.ts'
+import { isValidUUID } from '../_shared/validators.ts'
+import { createLogger } from '../_shared/logger.ts'
+```
+
+### Function Dependency Matrix
+
+| Function | cors | rate-limit | constants | validators | logger |
+|----------|------|------------|-----------|------------|--------|
+| health-check | ✓ | - | - | - | - |
+| lookup-public-status | ✓ | ✓ (20/hr) | - | - | ✓ |
+| submit-bouwsubsidie-application | ✓ | ✓ (5/hr) | ✓ | - | ✓ |
+| submit-housing-registration | ✓ | ✓ (5/hr) | ✓ | - | ✓ |
+| execute-allocation-run | ✓ | - | - | ✓ | ✓ |
+| generate-raadvoorstel | ✓ | - | - | - | ✓ |
+| get-document-download-url | ✓ | - | - | - | ✓ |
+
+**Design Principle:** Each rate-limited function instantiates its own `createRateLimiter()` call, ensuring isolated in-memory Maps per function and preserving existing rate limit values.

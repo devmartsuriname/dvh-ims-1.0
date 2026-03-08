@@ -1,5 +1,5 @@
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
-import { findAllParent, findMenuItem, getMenuItemFromURL } from '@/helpers/Manu'
+import { findAllParent, findMenuItem, getMenuItemFromURL } from '@/helpers/Menu'
 import { MenuItemType, SubMenus } from '@/types/menu'
 import { MenuItemWithRoles } from '@/assets/data/menu-items'
 import { useUserRole, AppRole } from '@/hooks/useUserRole'

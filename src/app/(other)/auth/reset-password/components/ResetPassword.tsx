@@ -1,6 +1,6 @@
 import logoSozavo from '@/assets/images/logo-sozavo.png'
 import * as yup from 'yup'
-import TextFormInput from '@/components/from/TextFormInput'
+import TextFormInput from '@/components/form/TextFormInput'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm } from 'react-hook-form'
 import { Card, CardBody, Col, Row } from 'react-bootstrap'

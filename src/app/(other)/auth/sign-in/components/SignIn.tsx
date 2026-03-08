@@ -1,5 +1,5 @@
 import logoSozavo from '@/assets/images/logo-sozavo.png'
-import TextFormInput from '@/components/from/TextFormInput'
+import TextFormInput from '@/components/form/TextFormInput'
 import { useEffect } from 'react'
 import { Card, CardBody, Col, Row } from 'react-bootstrap'
 import { Link } from 'react-router-dom'

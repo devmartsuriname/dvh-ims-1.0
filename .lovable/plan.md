@@ -1,280 +1,225 @@
-# Ministerial System Manual — Documentation Execution Plan
-
-## Objective
-
-Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
-
-This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
-
----
-
-## Deliverable Structure
-
-**Folder:** `/docs/manual/`
 
 
-| #   | File                                                 | Purpose                                                                                                  |
-| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
-| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
-| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
-| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
-| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
-| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
-| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
-| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
-| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
-| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
-| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
-| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
-| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
-| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
-| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
-| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
+# SYSTEM STATUS AUDIT — PROJECT COMPLETION ASSESSMENT
 
-
-**Total: 16 documents**
+**Context ID:** 8F42B1C3-5D9E-4A7B-B2E1-9C3F4D5A6E7B
+**Audit Date:** 2026-03-07
+**Auditor:** Lovable (Execution Agent)
+**Authority:** Delroy
 
 ---
 
-## URL Documentation
+## 1. Project Completion Assessment
 
-All documents will include explicit URLs based on:
+### Domain Breakdown
 
-**Production (Published):**
+| # | Domain | Status | % |
+|---|--------|--------|---|
+| 1 | Core Platform Architecture | COMPLETE | 95% |
+| 2 | Frontend Application | COMPLETE | 92% |
+| 3 | Admin Dashboard | COMPLETE | 90% |
+| 4 | Public Application Flows | COMPLETE | 95% |
+| 5 | Database Schema | COMPLETE | 95% |
+| 6 | RLS Security | COMPLETE | 95% |
+| 7 | Authentication & Authorization | COMPLETE | 90% |
+| 8 | Document Storage / Upload Flows | COMPLETE | 85% |
+| 9 | Performance Optimization | PARTIAL | 80% |
+| 10 | Accessibility Compliance | PARTIAL | 85% |
+| 11 | Monitoring / Observability | NOT IMPLEMENTED | 5% |
+| 12 | DevOps / Deployment Readiness | PARTIAL | 70% |
 
-- Landing: `https://huggable-cloud-whisper.lovable.app/`
-- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
-- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
-- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
-- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
-- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
+**Overall System Completion: ~82%**
 
-**Staging (Preview):**
+### Notes per Domain
 
-- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
-- Same path structure as production
+1. **Core Platform Architecture (95%):** Vite + React SPA, React Router v6, Supabase integration, i18n, ErrorBoundary, lazy loading — all implemented. Remaining: React Router v6 deprecation warnings (v7 migration deferred).
 
-Admin module URLs will be listed per-module in document 12.
+2. **Frontend Application (92%):** 40+ lazy-loaded routes, Darkone Admin 1:1 compliance, public light theme, SCSS pipeline. All planned pages implemented across 4 public and 16 admin route groups.
 
----
+3. **Admin Dashboard (90%):** KPI dashboards, sparkline charts, monthly trends, district map, status breakdown, recent cases/registrations — all functional. Missing: real-time data refresh, advanced filtering/export on some tables.
 
-## Content Coverage Per Document
+4. **Public Application Flows (95%):** Landing page, Bouwsubsidie wizard (8 steps), Housing wizard (9 steps), Status tracker — all integrated with Edge Functions. Lighthouse verified.
 
-### 00 - Executive Summary
+5. **Database Schema (95%):** 22+ tables, 2 validation triggers (subsidy_case, housing_registration state machines), 7 security-definer functions. Complete schema for both modules.
 
-- System purpose and legal mandate
-- Two services overview (Housing + Subsidy)
-- Governance and accountability model (1 paragraph)
-- Role structure summary
-- Key operational metrics / KPIs
-- "What happens next?" for both services
-- 5-10 pages, non-technical language
+6. **RLS Security (95%):** 80+ RLS policies across all tables. RBAC via `has_role()`, district scoping via `get_user_district()`, national role bypass via `is_national_role()`. Phase 7 hardening applied. No anonymous SELECT on application tables.
 
-### 01 - System Overview
+7. **Authentication & Authorization (90%):** Supabase Auth, 11-role RBAC model, `user_roles` table, `app_user_profile` with restricted self-update. Missing: password reset flow testing, session timeout configuration.
 
-- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
-- Public vs Admin separation
-- Authentication model (staff-only login, citizen anonymous access)
-- District-based scoping
+8. **Document Storage (85%):** `citizen-uploads` (public) and `generated-documents` (private) buckets configured. Upload flows work in wizards and Edge Functions. Missing: admin-side document management UI for manual uploads, document preview in admin.
 
-### 02 + 03 - Public Wizard Workflows
+9. **Performance (80%):** All routes lazy-loaded, code splitting active. Lighthouse Desktop 91-99, Mobile 83-85. Bundle includes large dependencies (apexcharts, react-bootstrap, fullcalendar, gridjs) that could be optimized.
 
-Per service:
+10. **Accessibility (85%):** Lighthouse Accessibility 91-95. Semantic HTML, form labels, ARIA in wizards. Not audited: keyboard navigation completeness, screen reader testing.
 
-- Preconditions
-- Step-by-step wizard walkthrough (each form step)
-- Reference number generation
-- Security token explanation
-- Receipt/confirmation page
-- Status tracking via `/status`
-- "What happens after submission?"
+11. **Monitoring / Observability (5%):** No external monitoring (no Sentry, DataDog, LogRocket). Only `console.error` in 26 files. ErrorBoundary catches crashes but does not report externally. Audit trail exists in database but no operational alerting.
 
-### 04 + 05 - Admin Workflows
-
-Per service:
-
-- Locating records in list view
-- Opening detail view
-- Status change process (with mandatory reason)
-- Document upload and verification
-- Field reports (Social, Technical — Bouwsubsidie only)
-- Decision chain steps
-- Raadvoorstel generation (Bouwsubsidie only)
-- Archive flow
-- Audit trail per action
-
-### 06 - Roles & Permission Matrix
-
-Table columns:
-
-- Role name (all 11 implemented roles)
-- Modules accessible
-- Create/Edit rights
-- Status change authority (which statuses)
-- Document upload/verify rights
-- Allocation/decision authority
-- Audit log access
-- Export/print permissions
-- National vs district-scoped flag
-
-### 07 - Status Lifecycle
-
-- ASCII state diagrams for both services
-- Transition rules with triggering roles
-- Decision authority per transition
-- Mandatory reason requirements
-
-### 08 - Document Management
-
-- Upload workflow
-- Verification tracking
-- Raadvoorstel generation (edge function)
-- Download via signed URLs
-
-### 09 - Audit Logging
-
-- `audit_event` table structure
-- What triggers a log entry
-- Where to view audit logs (Admin > Audit Log)
-- Append-only guarantee
-- Role access to audit log
-
-### 10 - Allocation Engine
-
-- District quotas setup
-- Urgency scoring model
-- Allocation run execution
-- Matching logic
-- Decision recording
-- Assignment registration
-
-### 11 - Governance Controls
-
-- RLS enforcement model
-- Least-privilege access
-- Ministerial Advisor mandatory paraph
-- Minister deviation logging
-- Status history immutability
-
-### 12 - Module Specification
-
-All 20 pages/modules documented:
-
-- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
-- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
-
-Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
-
-### 13 - Operational Scenarios
-
-Minimum 8 numbered end-to-end scenarios:
-
-1. Citizen submits Housing Registration
-2. Citizen submits Subsidy Application
-3. Frontdesk processes new Housing Registration
-4. Frontdesk processes new Subsidy Case through full decision chain
-5. Allocation run execution and assignment
-6. Minister approves/rejects with deviation from advisor
-7. Archive lookup of closed case
-8. Audit trail verification for a specific case
-
-Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
-
-### 14 - Troubleshooting & FAQ
-
-- Common submission errors
-- Duplicate/resubmission behavior
-- Status lookup failures
-- Document upload issues
-- Permission denied scenarios
-- Session timeout handling
-
-### 15 - Glossary
-
-- All status values (both services)
-- Field definitions
-- Role names with descriptions
-- System terminology (Raadvoorstel, paraph, district code, etc.)
+12. **DevOps / Deployment (70%):** Supabase Pro tier active, Edge Functions deployed, preview URL active, published URL active. Missing: CI/CD pipeline, staging environment, automated test suite, backup verification, custom domain SSL.
 
 ---
 
-## Screenshots Strategy
+## 2. Deferred Items Inventory
 
-- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
-- Each reference follows format: `Figure X.Y — Description`
-- PII masking note included in each document header
-- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
+| Item | Category | Risk | Reason Deferred | Recommended Action |
+|------|----------|------|-----------------|-------------------|
+| React Router v7 migration | Frontend | LOW | v6 deprecation warnings only; no functional impact | Migrate when v7 stable adoption increases |
+| ApexCharts type warning | Build | LOW | `node_modules` type conflict; does not affect build output | Suppress via tsconfig or upgrade when patch available |
+| Admin document management UI | Feature | MEDIUM | Not in Phase 1-7 scope | Add admin upload/preview in future phase |
+| Real-time dashboard refresh | Feature | LOW | Not in original scope | Add Supabase Realtime subscriptions |
+| Monitoring / error reporting | Operations | HIGH | No external service configured | Integrate Sentry or equivalent |
+| CI/CD pipeline | DevOps | HIGH | Not in Lovable scope | Configure GitHub Actions or equivalent |
+| Automated test suite | Quality | HIGH | Not in Phase 1-7 scope | Add unit + integration tests |
+| Staging environment | DevOps | MEDIUM | Single environment only | Create separate Supabase project for staging |
+| Custom domain SSL | Infrastructure | MEDIUM | Using Lovable default domain | Configure volkshuisvesting.sr with SSL |
+| Session timeout config | Security | LOW | Using Supabase Auth defaults | Configure appropriate timeout for gov use |
+| Backup verification | Operations | MEDIUM | Supabase handles backups on Pro | Verify backup schedule and test restore |
+| `citizen-uploads` bucket is public | Security | MEDIUM | Required for wizard upload flow | Evaluate signed URL approach for uploads |
+| In-memory rate limiting | Security | LOW | Resets on Edge Function cold start | Acceptable for current scale; Redis if needed |
+
+**No TODO/FIXME/HACK comments found in codebase.** Clean.
 
 ---
 
-## Execution Sequence
+## 3. Production Readiness Check
 
-1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
-2. Create `/docs/manual/` folder
-3. Generate documents in order: 00 through 15
-4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
-5. After all 16 documents: produce completion checklist
+### Infrastructure
+| Area | Status | Notes |
+|------|--------|-------|
+| Environment config | PASS | `.env` auto-populated, secrets configured |
+| Supabase configuration | PASS | Pro tier, 6 Edge Functions deployed |
+| Storage policies | PARTIAL | `generated-documents` private + RLS; `citizen-uploads` public (risk noted) |
+
+### Security
+| Area | Status | Notes |
+|------|--------|-------|
+| RLS coverage | PASS | 80+ policies, deny-all default, no anonymous application access |
+| Anon exposure | PASS | All anon policies removed in Phase 7 |
+| Token flows | PASS | SHA-256 hashed tokens, service-role-only lookup |
+| Role separation | PASS | 11 roles, district scoping, national role bypass |
+| Leaked password protection | PASS | Enabled (Pro tier) |
+
+### Reliability
+| Area | Status | Notes |
+|------|--------|-------|
+| Error handling | PARTIAL | ErrorBoundary + console.error; no external reporting |
+| API failure handling | PARTIAL | Toast notifications on failure; no retry logic |
+| Form recovery | PARTIAL | Wizard state in component state; lost on page refresh |
+
+### Data Integrity
+| Area | Status | Notes |
+|------|--------|-------|
+| Constraints | PASS | FK constraints, validation triggers, state machine enforcement |
+| Transactional flows | PASS | Edge Functions use service role with sequential inserts |
+
+### Operations
+| Area | Status | Notes |
+|------|--------|-------|
+| Logging | PARTIAL | Console logging only; Edge Function logs in Supabase |
+| Audit trails | PASS | `audit_event` table with correlation IDs, immutable |
+| Monitoring | FAIL | No external monitoring service |
+| Alerting | FAIL | No alerting configured |
+
+### Backups
+| Area | Status | Notes |
+|------|--------|-------|
+| Supabase backup strategy | PARTIAL | Pro tier includes daily backups; restore not tested |
 
 ---
 
-## Quality Gates
+## 4. Performance Health Snapshot
 
-- Language: Clear, non-technical, suitable for Minister and senior staff
-- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
-- UI alignment: All labels, navigation paths, and field names match current implementation
-- No invented features or roles
-- No code/schema/RLS changes
-- Restore point created before any file creation
+### Lighthouse Results (Verified)
+| Page | Desktop Perf | Mobile Perf | Accessibility | SEO | Best Practices |
+|------|-------------|-------------|---------------|-----|----------------|
+| Homepage (`/`) | 99 | 83 | 95 | 100 | 100 |
+| Wizard (`/bouwsubsidie/apply`) | 91 | 85 | 91-94 | 100 | 100 |
 
-## IMPORTANT — PRODUCTION URL CORRECTION
+### Large Dependencies (estimated bundle impact)
+| Dependency | Estimated Size | Used By |
+|------------|---------------|---------|
+| `react-bootstrap` | ~120KB | Admin layout, all UI components |
+| `apexcharts` + `react-apexcharts` | ~150KB | Dashboard charts |
+| `@fullcalendar/*` (5 packages) | ~100KB | Schedule visits |
+| `gridjs` + `gridjs-react` | ~50KB | Data tables |
+| `react-quill` | ~40KB | Rich text (if used) |
+| `jsvectormap` | ~30KB | District map |
 
-All documentation must use the official custom production domain:
+### Optimization Opportunities (not implemented)
+- Tree-shake unused FullCalendar/GridJS if not actively used on all routes
+- Consider lighter chart library if ApexCharts is only used for sparklines
+- Image optimization (WebP, lazy loading for landing page assets)
+- Service worker for offline support (deferred — not in scope)
 
-[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
+### Current Positives
+- All 40+ routes are lazy-loaded via `React.lazy()`
+- Code splitting active per route
+- No render-blocking patterns detected
+- Suspense boundaries at router and layout level
 
-DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
+---
 
-Update all production URLs to:
+## 5. Risk Register
 
-Landing:
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| No monitoring — production errors go undetected | HIGH | HIGH | Integrate Sentry before go-live |
+| No CI/CD — manual deployment risk | MEDIUM | HIGH | Set up GitHub Actions pipeline |
+| No automated tests — regressions undetected | MEDIUM | HIGH | Add critical path E2E tests |
+| `citizen-uploads` public bucket — file enumeration | LOW | MEDIUM | Evaluate signed URL upload pattern |
+| In-memory rate limiting resets on cold start | LOW | LOW | Acceptable at current scale |
+| Single admin account — bus factor | MEDIUM | HIGH | Create additional admin accounts |
+| No staging environment — changes go direct to prod | MEDIUM | HIGH | Create staging Supabase project |
+| Supabase Free→Pro migration data loss | LOW | HIGH | Already on Pro; verify backup schedule |
+| React Router v6 deprecation | LOW | LOW | Plan v7 migration when convenient |
+| Wizard state lost on refresh | MEDIUM | MEDIUM | Add localStorage persistence for wizard progress |
 
-[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
+---
 
-Housing Registration:
+## 6. Strategic Roadmap
 
-[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
+### Phase 8 — Observability & Monitoring
+- **Purpose:** Production-grade error tracking, performance monitoring, and operational alerting
+- **Scope:** Sentry integration, structured error reporting from ErrorBoundary, Edge Function error forwarding, uptime monitoring
+- **Complexity:** Medium
+- **Priority:** CRITICAL — must complete before production go-live
 
-Subsidy Application:
+### Phase 9 — Testing & CI/CD
+- **Purpose:** Automated quality assurance and deployment pipeline
+- **Scope:** E2E tests for critical flows (wizard submission, status lookup, admin login), GitHub Actions CI, staging environment
+- **Complexity:** High
+- **Priority:** HIGH — required for safe ongoing maintenance
 
-[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
+### Phase 10 — Admin Workflow Enhancements
+- **Purpose:** Complete admin-side document management and operational tooling
+- **Scope:** Admin document upload UI, document preview, bulk operations, advanced table filtering/export, real-time dashboard refresh
+- **Complexity:** Medium
+- **Priority:** MEDIUM — enhances operational efficiency
 
-Status Tracker:
+### Phase 11 — Production Deployment Hardening
+- **Purpose:** Final production readiness with custom domain, SSL, and operational procedures
+- **Scope:** Custom domain (volkshuisvesting.sr) configuration, SSL certificate, Supabase backup verification, runbook documentation, additional admin accounts, wizard state persistence
+- **Complexity:** Medium
+- **Priority:** HIGH — required for official go-live
 
-[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
+### Phase 12 — Public Service Extensions
+- **Purpose:** Extended citizen services and accessibility improvements
+- **Scope:** Full keyboard navigation audit, screen reader testing, multi-language expansion, citizen notification system (email/SMS), mobile-specific optimizations
+- **Complexity:** High
+- **Priority:** MEDIUM — post-launch enhancement
 
-Staff Login:
+---
 
-[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
+## Summary
 
-Admin Dashboard:
+| Metric | Value |
+|--------|-------|
+| Overall System Completion | **~82%** |
+| Deferred Items | 13 |
+| Production Readiness | **PARTIAL** — Security PASS, Operations FAIL (no monitoring) |
+| Critical Blockers for Go-Live | Monitoring integration, CI/CD pipeline |
+| Next Required Phase | Phase 8 — Observability & Monitoring |
 
-[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
+No code changes made. No migrations executed. This is an audit report only.
 
-If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
+Awaiting instruction.
 
-The Ministerial Manual must only reference the official production domain.  
-  
-**Completion Report Format**
-
-After all documents are generated:
-
-```
-IMPLEMENTED: [list of created files]
-PARTIAL: [any incomplete documents + reason]
-SKIPPED: [none expected]
-VERIFICATION: [checklist per document — PASS/FAIL]
-RESTORE POINT: [ID]
-BLOCKERS: NONE / [description]
-CONFIRMATION: No code changes. No schema changes. No RLS changes.
-```

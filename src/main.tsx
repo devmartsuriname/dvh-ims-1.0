@@ -8,6 +8,10 @@ import { basePath } from './context/constants.ts'
 import { initSentry } from './lib/sentry'
 initSentry()
 
+// Health signal (fires once when Sentry is active)
+import { emitSystemReady } from './lib/health'
+emitSystemReady()
+
 // i18n configuration (must be imported before App)
 import './i18n/config'
 

@@ -91,20 +91,7 @@ function validateInput(data: unknown): { valid: true; reference_number: string; 
 }
 
 function checkRateLimit(ip: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(ip)
-  
-  if (!entry || now > entry.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_WINDOW_MS })
-    return true
-  }
-  
-  if (entry.count >= RATE_LIMIT) {
-    return false
-  }
-  
-  entry.count++
-  return true
+  return rateLimiter.check(ip)
 }
 
 async function hashToken(token: string): Promise<string> {

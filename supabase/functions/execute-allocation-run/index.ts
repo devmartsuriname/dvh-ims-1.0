@@ -27,12 +27,6 @@ interface AllocationCandidate {
   composite_rank: number
 }
 
-// UUID validation helper for input sanitization
-function isValidUUID(str: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  return uuidRegex.test(str)
-}
-
 // District code validation (alphanumeric, max 20 chars)
 function isValidDistrictCode(str: string): boolean {
   return /^[A-Za-z0-9_-]{1,20}$/.test(str)

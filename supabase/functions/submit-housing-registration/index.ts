@@ -1,6 +1,7 @@
 /**
  * Edge Function: submit-housing-registration
  * Phase 5C - Document Upload Implementation
+ * Phase 8C - Structured Logging
  * v1.7.x - Bugfix: Person upsert + reference number retry + correlation logging
  * 
  * Handles anonymous Housing Registration (Woningregistratie) submissions
@@ -22,6 +23,7 @@
  */
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createLogger } from '../_shared/logger.ts'
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -218,7 +220,6 @@ async function generateReferenceNumber(supabase: any): Promise<string> {
   const prefix = 'WR'
   
   // Query ALL reference numbers this year and find the numeric maximum
-  // This avoids string-sorting issues with mixed padding (e.g., '2966' vs '002967')
   const { data } = await supabase
     .from('housing_registration')
     .select('reference_number')
@@ -256,8 +257,11 @@ Deno.serve(async (req) => {
   
   // Generate correlation ID for this request
   const correlationId = crypto.randomUUID()
+  const log = createLogger('submit-housing-registration', correlationId)
   
   try {
+    log.info('request_started', { http_method: 'POST' })
+    
     // Get client IP for rate limiting
     const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
                      req.headers.get('x-real-ip') || 
@@ -265,7 +269,7 @@ Deno.serve(async (req) => {
     
     // Check rate limit
     if (!checkRateLimit(clientIP)) {
-      console.log(`[submit-housing] correlation=${correlationId} Rate limit exceeded for IP hash: ${await hashIP(clientIP)}`)
+      log.warn('rate_limit_exceeded')
       return new Response(
         JSON.stringify({ success: false, error: 'Too many requests. Please try again later.' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -285,7 +289,7 @@ Deno.serve(async (req) => {
     
     const validation = validateInput(body)
     if (!validation.valid) {
-      console.log(`[submit-housing] correlation=${correlationId} Validation failed: ${JSON.stringify(validation.errors)}`)
+      log.warn('validation_failed', { field_count: validation.errors.length })
       return new Response(
         JSON.stringify({ success: false, error: 'Validation failed', details: validation.errors }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -302,11 +306,9 @@ Deno.serve(async (req) => {
     const accessToken = generateAccessToken()
     const accessTokenHash = await hashToken(accessToken)
     
-    console.log(`[submit-housing] correlation=${correlationId} Processing submission`)
-    
     // ── Step 1: Person — lookup-first-then-insert ──
-    // Prevents duplicate person_national_id_key constraint violation
     let personId: string
+    let personReused = false
 
     const { data: existingPerson, error: personLookupError } = await supabase
       .from('person')
@@ -315,7 +317,7 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     if (personLookupError) {
-      console.error(`[submit-housing] correlation=${correlationId} Person lookup failed:`, personLookupError.message)
+      log.error('db_insert_failed', { step: 'person_lookup', district_code: input.district }, 'DB_QUERY_FAILED')
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to process registration. Please try again.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -324,7 +326,8 @@ Deno.serve(async (req) => {
 
     if (existingPerson) {
       personId = existingPerson.id
-      console.log(`[submit-housing] correlation=${correlationId} Found existing person for national_id`)
+      personReused = true
+      log.info('person_reused', { district_code: input.district })
     } else {
       const { data: personData, error: personError } = await supabase
         .from('person')
@@ -341,7 +344,7 @@ Deno.serve(async (req) => {
         .single()
       
       if (personError) {
-        console.error(`[submit-housing] correlation=${correlationId} Failed to create person:`, personError.message)
+        log.error('db_insert_failed', { step: 'person_insert', district_code: input.district }, 'DB_CONSTRAINT')
         return new Response(
           JSON.stringify({ success: false, error: 'Failed to process registration. Please try again.' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -349,7 +352,7 @@ Deno.serve(async (req) => {
       }
       
       personId = personData.id
-      console.log(`[submit-housing] correlation=${correlationId} Created new person`)
+      log.info('person_created', { district_code: input.district })
     }
     
     // ── Step 2: Household ──
@@ -364,7 +367,7 @@ Deno.serve(async (req) => {
       .single()
     
     if (householdError) {
-      console.error(`[submit-housing] correlation=${correlationId} Failed to create household:`, householdError.message)
+      log.error('db_insert_failed', { step: 'household_insert', district_code: input.district }, 'DB_CONSTRAINT')
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to process registration. Please try again.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -383,7 +386,7 @@ Deno.serve(async (req) => {
       })
     
     if (memberError) {
-      console.error(`[submit-housing] correlation=${correlationId} Failed to create household member:`, memberError.message)
+      log.error('db_insert_failed', { step: 'household_member_insert' }, 'DB_CONSTRAINT')
     }
     
     // ── Step 4: Address ──
@@ -398,7 +401,7 @@ Deno.serve(async (req) => {
       })
     
     if (addressError) {
-      console.error(`[submit-housing] correlation=${correlationId} Failed to create address:`, addressError.message)
+      log.error('db_insert_failed', { step: 'address_insert' }, 'DB_CONSTRAINT')
     }
     
     // ── Step 5: Contact points ──
@@ -412,7 +415,7 @@ Deno.serve(async (req) => {
       })
     
     if (phoneError) {
-      console.error(`[submit-housing] correlation=${correlationId} Failed to create phone contact:`, phoneError.message)
+      log.error('db_insert_failed', { step: 'phone_contact_insert' }, 'DB_CONSTRAINT')
     }
     
     const { error: emailError } = await supabase
@@ -425,7 +428,7 @@ Deno.serve(async (req) => {
       })
     
     if (emailError) {
-      console.error(`[submit-housing] correlation=${correlationId} Failed to create email contact:`, emailError.message)
+      log.error('db_insert_failed', { step: 'email_contact_insert' }, 'DB_CONSTRAINT')
     }
     
     // ── Step 6: Housing registration — retry loop for reference number conflicts ──
@@ -459,12 +462,12 @@ Deno.serve(async (req) => {
       // Check if it's a duplicate reference_number error — retry
       if (registrationError.message && registrationError.message.includes('duplicate key') && registrationError.message.includes('reference_number')) {
         refAttempt++
-        console.warn(`[submit-housing] correlation=${correlationId} Duplicate reference_number ${referenceNumber}, retry ${refAttempt}/${MAX_REF_ATTEMPTS}`)
+        log.warn('ref_number_retry', { attempt: refAttempt, max_attempts: MAX_REF_ATTEMPTS })
         continue
       }
       
       // Non-duplicate error — fail immediately
-      console.error(`[submit-housing] correlation=${correlationId} Failed to create housing registration:`, registrationError.message)
+      log.error('db_insert_failed', { step: 'housing_registration_insert', district_code: input.district }, 'DB_CONSTRAINT')
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to process registration. Please try again.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -472,7 +475,7 @@ Deno.serve(async (req) => {
     }
 
     if (!registrationId) {
-      console.error(`[submit-housing] correlation=${correlationId} Failed to create housing registration after ${MAX_REF_ATTEMPTS} attempts (duplicate reference_number)`)
+      log.error('db_insert_failed', { step: 'housing_registration_insert', attempts: MAX_REF_ATTEMPTS }, 'REF_NUMBER_EXHAUSTED')
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to process registration. Please try again.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -511,17 +514,13 @@ Deno.serve(async (req) => {
               })
             
             if (docError) {
-              console.error(`[submit-housing] correlation=${correlationId} Failed to create document upload for ${doc.document_code}:`, docError.message)
+              log.error('db_insert_failed', { step: 'document_link', document_code: doc.document_code }, 'DB_CONSTRAINT')
             } else {
               documentCount++
             }
-          } else {
-            console.warn(`[submit-housing] correlation=${correlationId} Unknown document code: ${doc.document_code}`)
           }
         }
       }
-      
-      console.log(`[submit-housing] correlation=${correlationId} Linked ${documentCount} documents to registration ${referenceNumber}`)
     }
     
     // ── Step 8: Status history ──
@@ -536,7 +535,7 @@ Deno.serve(async (req) => {
       })
     
     if (statusHistoryError) {
-      console.error(`[submit-housing] correlation=${correlationId} Failed to create status history:`, statusHistoryError.message)
+      log.error('db_insert_failed', { step: 'status_history_insert' }, 'DB_CONSTRAINT')
     }
     
     // ── Step 9: Public status access ──
@@ -550,7 +549,7 @@ Deno.serve(async (req) => {
       })
     
     if (accessError) {
-      console.error(`[submit-housing] correlation=${correlationId} Failed to create public status access:`, accessError.message)
+      log.error('db_insert_failed', { step: 'public_status_access_insert' }, 'DB_CONSTRAINT')
     }
     
     // ── Step 10: Audit event ──
@@ -570,15 +569,15 @@ Deno.serve(async (req) => {
           submission_ip_hash: ipHash,
           submission_timestamp: new Date().toISOString(),
           document_count: documentCount,
-          person_reused: !!existingPerson
+          person_reused: personReused
         }
       })
     
     if (auditError) {
-      console.error(`[submit-housing] correlation=${correlationId} Failed to create audit event:`, auditError.message)
+      log.error('db_insert_failed', { step: 'audit_event_insert' }, 'DB_CONSTRAINT')
     }
     
-    console.log(`[submit-housing] correlation=${correlationId} Registration successful: ${referenceNumber} with ${documentCount} documents (person_reused=${!!existingPerson})`)
+    log.info('submission_completed', { reference_number: referenceNumber, district_code: input.district, document_count: documentCount, person_reused: personReused })
     
     // Return success with reference number and access token
     return new Response(
@@ -592,7 +591,7 @@ Deno.serve(async (req) => {
     )
     
   } catch (error) {
-    console.error(`[submit-housing] correlation=${correlationId} Unexpected error:`, error)
+    log.error('unexpected_error', { message: error instanceof Error ? error.message : 'Unknown error' }, 'UNHANDLED')
     return new Response(
       JSON.stringify({ success: false, error: 'An unexpected error occurred. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -1,6 +1,7 @@
 /**
  * Edge Function: lookup-public-status
  * Phase 9 - Public Wizard Database Integration
+ * Phase 8C - Structured Logging
  * 
  * Handles public status lookup using reference number and access token.
  * Returns application status and timeline for citizens.
@@ -13,6 +14,7 @@
  */
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createLogger } from '../_shared/logger.ts'
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -137,7 +139,11 @@ Deno.serve(async (req) => {
     )
   }
   
+  const log = createLogger('lookup-public-status')
+  
   try {
+    log.info('request_started', { http_method: 'POST' })
+    
     // Get client IP for rate limiting
     const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
                      req.headers.get('x-real-ip') || 
@@ -145,7 +151,7 @@ Deno.serve(async (req) => {
     
     // Check rate limit
     if (!checkRateLimit(clientIP)) {
-      console.log(`[lookup-status] Rate limit exceeded for IP hash: ${await hashIP(clientIP)}`)
+      log.warn('rate_limit_exceeded')
       return new Response(
         JSON.stringify({ success: false, error: 'Too many requests. Please try again later.' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -165,6 +171,7 @@ Deno.serve(async (req) => {
     
     const validation = validateInput(body)
     if (!validation.valid) {
+      log.warn('validation_failed', { field_count: validation.errors.length })
       return new Response(
         JSON.stringify({ success: false, error: 'Validation failed', details: validation.errors }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -181,8 +188,6 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     
-    console.log(`[lookup-status] Looking up: ${reference_number}`)
-    
     // Find the public_status_access record
     const { data: accessRecord, error: accessError } = await supabase
       .from('public_status_access')
@@ -192,7 +197,7 @@ Deno.serve(async (req) => {
       .single()
     
     if (accessError || !accessRecord) {
-      console.log(`[lookup-status] Invalid credentials for: ${reference_number}`)
+      log.warn('status_lookup_failed', { reference_number })
       
       // Log failed lookup attempt
       const ipHash = await hashIP(clientIP)
@@ -243,7 +248,7 @@ Deno.serve(async (req) => {
         .single()
       
       if (caseError || !caseData) {
-        console.error('[lookup-status] Failed to fetch subsidy case:', caseError?.message)
+        log.error('status_lookup_failed', { entity_type: 'subsidy_case', reference_number }, 'DB_QUERY_FAILED')
         return new Response(
           JSON.stringify({ success: false, error: 'Failed to retrieve application status' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -299,7 +304,7 @@ Deno.serve(async (req) => {
         .single()
       
       if (regError || !regData) {
-        console.error('[lookup-status] Failed to fetch housing registration:', regError?.message)
+        log.error('status_lookup_failed', { entity_type: 'housing_registration', reference_number }, 'DB_QUERY_FAILED')
         return new Response(
           JSON.stringify({ success: false, error: 'Failed to retrieve registration status' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -359,7 +364,7 @@ Deno.serve(async (req) => {
       }
     })
     
-    console.log(`[lookup-status] Lookup successful: ${reference_number}`)
+    log.info('status_lookup_success', { reference_number, entity_type: accessRecord.entity_type })
     
     return new Response(
       JSON.stringify(responseData),
@@ -367,7 +372,7 @@ Deno.serve(async (req) => {
     )
     
   } catch (error) {
-    console.error('[lookup-status] Unexpected error:', error)
+    log.error('unexpected_error', { message: error instanceof Error ? error.message : 'Unknown error' }, 'UNHANDLED')
     return new Response(
       JSON.stringify({ success: false, error: 'An unexpected error occurred. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

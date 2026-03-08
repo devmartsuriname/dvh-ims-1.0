@@ -1,4 +1,4 @@
-import AnimationStar from '@/components/AnimationStar'
+
 import ErrorBoundary from '@/components/ErrorBoundary'
 import Footer from '@/components/layout/Footer'
 import { ChildrenType } from '@/types/component-props'
@@ -20,7 +20,7 @@ const AdminLayout = ({ children }: ChildrenType) => {
       {/* Nav components render without individual Suspense - router handles fallback */}
       <TopNavigationBar />
       <VerticalNavigationBar />
-      <AnimationStar />
+      
       <div className="page-content">
         <Container fluid>
           <ErrorBoundary>

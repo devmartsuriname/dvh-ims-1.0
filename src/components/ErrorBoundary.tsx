@@ -1,5 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from 'react'
 import { Button, Card, CardBody } from 'react-bootstrap'
+import { captureException } from '@/lib/sentry'
 
 interface Props {
   children: ReactNode
@@ -22,6 +23,9 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo)
+    captureException(error, {
+      componentStack: errorInfo.componentStack ?? undefined,
+    })
   }
 
   handleRetry = () => {

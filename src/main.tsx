@@ -4,6 +4,10 @@ import App from './App.tsx'
 import { BrowserRouter } from 'react-router-dom'
 import { basePath } from './context/constants.ts'
 
+// Sentry initialization (must be first — captures all subsequent errors)
+import { initSentry } from './lib/sentry'
+initSentry()
+
 // i18n configuration (must be imported before App)
 import './i18n/config'
 

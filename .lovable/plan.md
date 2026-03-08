@@ -1,274 +1,280 @@
-# Phase 8 — Observability & Monitoring: Implementation Plan
+# Ministerial System Manual — Documentation Execution Plan
 
-**Context ID:** 8F42B1C3-5D9E-4A7B-B2E1-9C3F4D5A6E7B
+## Objective
 
----
+Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
 
-## 1. Observability Architecture
-
-```text
-┌─────────────────────────────────────────────────────────┐
-│                    FRONTEND (React SPA)                  │
-│                                                         │
-│  ErrorBoundary ──┐                                      │
-│  Unhandled Promise Rejections ──┐                       │
-│  Route Errors ──────────────────┼──→ Sentry Browser SDK │
-│  Performance (Web Vitals) ──────┘         │              │
-└───────────────────────────────────────────┼──────────────┘
-                                            │
-                                            ▼
-                                    ┌──────────────┐
-                                    │  Sentry Cloud │
-                                    │  (sentry.io)  │
-                                    │               │
-                                    │  • Errors     │
-                                    │  • Performance│
-                                    │  • Alerts     │
-                                    └──────┬───────┘
-                                           │
-                                     Slack / Email
-                                      Alerts
-                                           
-┌─────────────────────────────────────────────────────────┐
-│              EDGE FUNCTIONS (Deno / Supabase)           │
-│                                                         │
-│  Structured JSON logging ──→ Supabase Function Logs     │
-│  Critical errors ──────────→ Sentry (via HTTP API)      │
-│                                                         │
-│  6 Functions:                                           │
-│  • submit-bouwsubsidie-application                      │
-│  • submit-housing-registration                          │
-│  • lookup-public-status                                 │
-│  • execute-allocation-run                               │
-│  • generate-raadvoorstel                                │
-│  • get-document-download-url                            │
-└─────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────┐
-│              UPTIME MONITORING (BetterStack)             │
-│                                                         │
-│  • Published URL health check (every 60s)               │
-│  • Edge Function endpoints (every 5 min)                │
-│  • Status page (optional)                               │
-└─────────────────────────────────────────────────────────┘
-```
-
-### Tool Selection
-
-
-| Tool                             | Purpose                                | Why                                                                                                                                   |
-| -------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| **Sentry**                       | Error tracking, performance monitoring | Industry standard; React SDK with ErrorBoundary integration; free tier sufficient (5K errors/month); HTTP API for Deno Edge Functions |
-| **Supabase Logs**                | Edge Function log aggregation          | Already available on Pro tier; no extra setup; query via dashboard                                                                    |
-| **BetterStack (or UptimeRobot)** | Uptime monitoring + alerting           | External heartbeat; independent of application stack; free tier covers needs                                                          |
-
+This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
 
 ---
 
-## 2. Error Tracking Integration
+## Deliverable Structure
 
-### Frontend — What Gets Captured
-
-
-| Source                       | Method                                      | Data Captured                         |
-| ---------------------------- | ------------------------------------------- | ------------------------------------- |
-| React component crashes      | ErrorBoundary → `Sentry.captureException()` | Error message, component stack, route |
-| Unhandled promise rejections | `Sentry.init()` auto-capture                | Error message, stack trace            |
-| Route navigation errors      | React Router error boundaries               | Route path, error                     |
-| Performance                  | Sentry `BrowserTracing`                     | Page load, LCP, FID, CLS              |
+**Folder:** `/docs/manual/`
 
 
-### Edge Functions — What Gets Captured
+| #   | File                                                 | Purpose                                                                                                  |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
+| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
+| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
+| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
+| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
+| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
+| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
+| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
+| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
+| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
+| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
+| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
+| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
+| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
+| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
+| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
 
 
-| Source              | Method                            | Data Captured                                          |
-| ------------------- | --------------------------------- | ------------------------------------------------------ |
-| Function errors     | Structured JSON log + Sentry HTTP | Error type, correlation ID, function name, HTTP status |
-| Validation failures | Structured JSON log only          | Validation field (no values), correlation ID           |
-| Rate limit hits     | Structured JSON log only          | IP hash (not raw IP), correlation ID                   |
-
-
-### Implementation Details
-
-**Frontend (`src/lib/sentry.ts`):**
-
-- Initialize Sentry with DSN from env var (`VITE_SENTRY_DSN`)
-- Configure `tracesSampleRate: 0.1` (10% of transactions)
-- Configure `replaysSessionSampleRate: 0` (no session replay — PII risk)
-- Set environment tag (`production` / `preview`)
-
-**ErrorBoundary update:**
-
-- Add `Sentry.captureException(error, { extra: { componentStack } })` in `componentDidCatch`
-- No other changes to ErrorBoundary UI
-
-**Edge Functions (`_shared/logger.ts`):**
-
-- Create shared structured logger utility
-- On ERROR level: POST to Sentry HTTP API (`https://sentry.io/api/{project}/envelope/`)
-- Sentry DSN stored as Supabase secret (`SENTRY_DSN`)
+**Total: 16 documents**
 
 ---
 
-## 3. Logging Strategy
+## URL Documentation
 
-### Log Levels
+All documents will include explicit URLs based on:
 
+**Production (Published):**
 
-| Level     | When Used                    | Example                                                                            |
-| --------- | ---------------------------- | ---------------------------------------------------------------------------------- |
-| **INFO**  | Normal operations            | `[submit-bouwsubsidie] correlation=abc123 Application submitted successfully`      |
-| **WARN**  | Recoverable issues           | `[lookup-public-status] correlation=abc123 Rate limit approaching threshold`       |
-| **ERROR** | Failures requiring attention | `[submit-housing] correlation=abc123 Database insert failed: constraint violation` |
+- Landing: `https://huggable-cloud-whisper.lovable.app/`
+- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
+- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
+- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
+- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
+- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
 
+**Staging (Preview):**
 
-### Log Sources
+- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
+- Same path structure as production
 
-
-| Source                        | Destination         | Retention                  |
-| ----------------------------- | ------------------- | -------------------------- |
-| Frontend errors               | Sentry              | 90 days (Sentry free tier) |
-| Edge Function logs            | Supabase Logs       | 7 days (Pro tier default)  |
-| Edge Function critical errors | Sentry              | 90 days                    |
-| Audit events                  | `audit_event` table | Indefinite (database)      |
-| Uptime checks                 | BetterStack         | 45 days (free tier)        |
-
-
-### Structured Log Format (Edge Functions)
-
-```json
-{
-  "level": "ERROR",
-  "function": "submit-bouwsubsidie-application",
-  "correlation_id": "uuid",
-  "action": "person_insert",
-  "error_code": "DB_CONSTRAINT",
-  "message": "Failed to create person record",
-  "timestamp": "ISO-8601"
-}
-```
-
-No PII in logs. No citizen names, addresses, ID numbers, tokens, or file contents.
+Admin module URLs will be listed per-module in document 12.
 
 ---
 
-## 4. Alerting Strategy
+## Content Coverage Per Document
 
+### 00 - Executive Summary
 
-| Alert                    | Trigger                                     | Channel                   | Priority |
-| ------------------------ | ------------------------------------------- | ------------------------- | -------- |
-| Application crash spike  | >10 unhandled errors in 5 minutes           | Sentry → Email            | P1       |
-| Edge Function failure    | >5 function errors in 10 minutes            | Sentry → Email            | P1       |
-| Site down                | 2 consecutive uptime check failures (2 min) | BetterStack → Email/Slack | P0       |
-| High error rate          | Error rate >5% of requests over 15 min      | Sentry → Email            | P2       |
-| New unhandled error type | First occurrence of new error signature     | Sentry → Email            | P2       |
+- System purpose and legal mandate
+- Two services overview (Housing + Subsidy)
+- Governance and accountability model (1 paragraph)
+- Role structure summary
+- Key operational metrics / KPIs
+- "What happens next?" for both services
+- 5-10 pages, non-technical language
 
+### 01 - System Overview
+
+- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
+- Public vs Admin separation
+- Authentication model (staff-only login, citizen anonymous access)
+- District-based scoping
+
+### 02 + 03 - Public Wizard Workflows
+
+Per service:
+
+- Preconditions
+- Step-by-step wizard walkthrough (each form step)
+- Reference number generation
+- Security token explanation
+- Receipt/confirmation page
+- Status tracking via `/status`
+- "What happens after submission?"
+
+### 04 + 05 - Admin Workflows
+
+Per service:
+
+- Locating records in list view
+- Opening detail view
+- Status change process (with mandatory reason)
+- Document upload and verification
+- Field reports (Social, Technical — Bouwsubsidie only)
+- Decision chain steps
+- Raadvoorstel generation (Bouwsubsidie only)
+- Archive flow
+- Audit trail per action
+
+### 06 - Roles & Permission Matrix
+
+Table columns:
+
+- Role name (all 11 implemented roles)
+- Modules accessible
+- Create/Edit rights
+- Status change authority (which statuses)
+- Document upload/verify rights
+- Allocation/decision authority
+- Audit log access
+- Export/print permissions
+- National vs district-scoped flag
+
+### 07 - Status Lifecycle
+
+- ASCII state diagrams for both services
+- Transition rules with triggering roles
+- Decision authority per transition
+- Mandatory reason requirements
+
+### 08 - Document Management
+
+- Upload workflow
+- Verification tracking
+- Raadvoorstel generation (edge function)
+- Download via signed URLs
+
+### 09 - Audit Logging
+
+- `audit_event` table structure
+- What triggers a log entry
+- Where to view audit logs (Admin > Audit Log)
+- Append-only guarantee
+- Role access to audit log
+
+### 10 - Allocation Engine
+
+- District quotas setup
+- Urgency scoring model
+- Allocation run execution
+- Matching logic
+- Decision recording
+- Assignment registration
+
+### 11 - Governance Controls
+
+- RLS enforcement model
+- Least-privilege access
+- Ministerial Advisor mandatory paraph
+- Minister deviation logging
+- Status history immutability
+
+### 12 - Module Specification
+
+All 20 pages/modules documented:
+
+- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
+- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
+
+Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
+
+### 13 - Operational Scenarios
+
+Minimum 8 numbered end-to-end scenarios:
+
+1. Citizen submits Housing Registration
+2. Citizen submits Subsidy Application
+3. Frontdesk processes new Housing Registration
+4. Frontdesk processes new Subsidy Case through full decision chain
+5. Allocation run execution and assignment
+6. Minister approves/rejects with deviation from advisor
+7. Archive lookup of closed case
+8. Audit trail verification for a specific case
+
+Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
+
+### 14 - Troubleshooting & FAQ
+
+- Common submission errors
+- Duplicate/resubmission behavior
+- Status lookup failures
+- Document upload issues
+- Permission denied scenarios
+- Session timeout handling
+
+### 15 - Glossary
+
+- All status values (both services)
+- Field definitions
+- Role names with descriptions
+- System terminology (Raadvoorstel, paraph, district code, etc.)
 
 ---
 
-## 5. Privacy & Security
+## Screenshots Strategy
 
-### Explicitly Excluded from All Monitoring
-
-
-| Data Type                            | Protection Method                                                  |
-| ------------------------------------ | ------------------------------------------------------------------ |
-| Citizen names, addresses, ID numbers | Sentry `beforeSend` scrubber strips form data and request bodies   |
-| Uploaded documents                   | Never attached to error reports                                    |
-| Auth tokens / JWT                    | Sentry default header scrubbing + custom deny list                 |
-| Status lookup tokens                 | Edge Function logger strips token values; logs correlation ID only |
-| IP addresses                         | Edge Functions log hashed IP only; Sentry IP scrubbing enabled     |
-
-
-### Enforcement
-
-- **Frontend:** `Sentry.init({ beforeSend })` callback strips `request.data`, form values, and URL query params containing `token`
-- **Edge Functions:** Shared logger utility never accepts raw PII fields; only accepts predefined safe fields
-- **Sentry project settings:** Enable "Prevent Storing of IP Addresses" in Sentry dashboard
+- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
+- Each reference follows format: `Figure X.Y — Description`
+- PII masking note included in each document header
+- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
 
 ---
 
-## 6. Implementation Phases
+## Execution Sequence
 
-### Phase 8A — Sentry Account & Secret Setup
-
-- Create Sentry project (React platform)
-- Store `SENTRY_DSN` as Supabase secret
-- Store `VITE_SENTRY_DSN` in Lovable env
-- **Complexity:** Low
-- **Estimate:** 1 task
-
-### Phase 8B — Frontend Error Tracking
-
-- Create `src/lib/sentry.ts` (init + config + beforeSend scrubber)
-- Import in `main.tsx` before app render
-- Update `ErrorBoundary.componentDidCatch` to call `Sentry.captureException()`
-- Add global unhandled rejection handler
-- **Complexity:** Low
-- **Files changed:** 3 (`sentry.ts` new, `main.tsx`, `ErrorBoundary.tsx`)
-
-### Phase 8C — Edge Function Structured Logging
-
-- Create `supabase/functions/_shared/logger.ts` (structured JSON logger)
-- Add Sentry HTTP forwarding for ERROR level
-- Update all 6 Edge Functions to use shared logger instead of raw `console.error`
-- **Complexity:** Medium (6 functions to update)
-- **Files changed:** 7 (`logger.ts` new + 6 function index files)
-
-### Phase 8D — Uptime Monitoring & Alerts
-
-- Configure BetterStack (or UptimeRobot) monitors
-- Set up Sentry alert rules (thresholds from Section 4)
-- Configure notification channels (email)
-- **Complexity:** Low (external configuration only)
-- **Files changed:** 0
+1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
+2. Create `/docs/manual/` folder
+3. Generate documents in order: 00 through 15
+4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
+5. After all 16 documents: produce completion checklist
 
 ---
 
-## 7. Success Criteria
+## Quality Gates
 
+- Language: Clear, non-technical, suitable for Minister and senior staff
+- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
+- UI alignment: All labels, navigation paths, and field names match current implementation
+- No invented features or roles
+- No code/schema/RLS changes
+- Restore point created before any file creation
 
-| Test                   | Method                                          | Expected Result                                                   |
-| ---------------------- | ----------------------------------------------- | ----------------------------------------------------------------- |
-| Frontend error capture | Trigger intentional `throw` in a test component | Error appears in Sentry dashboard with stack trace, route, no PII |
-| Unhandled rejection    | Call rejected promise without catch             | Captured automatically by Sentry                                  |
-| Edge Function error    | Invoke Edge Function with invalid payload       | Structured log in Supabase Logs + error in Sentry                 |
-| PII scrubbing          | Submit wizard with citizen data, trigger error  | Sentry event contains NO citizen names, addresses, or tokens      |
-| Uptime alert           | Temporarily return 500 from health endpoint     | BetterStack triggers email alert within 2 minutes                 |
-| Alert threshold        | Generate >10 errors in 5 minutes                | Sentry alert fires                                                |
+## IMPORTANT — PRODUCTION URL CORRECTION
 
+All documentation must use the official custom production domain:
 
----
+[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
 
-## NOTE — Environment discipline
+DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
 
-Approved.
+Update all production URLs to:
 
-When implementing Phase 8, make sure Sentry and uptime monitoring are configured with clear environment separation:
+Landing:
 
-- production events must be tagged as production
+[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
 
-- preview / test environments must not pollute production alerts
+Housing Registration:
 
-- alert rules should apply to production only unless explicitly needed otherwise
+[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
 
-Also keep PII scrubbing mandatory in both frontend and Edge Function logging.  
+Subsidy Application:
+
+[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
+
+Status Tracker:
+
+[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
+
+Staff Login:
+
+[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
+
+Admin Dashboard:
+
+[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
+
+If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
+
+The Ministerial Manual must only reference the official production domain.  
   
-Dependencies
+**Completion Report Format**
 
-- Sentry account (free tier sufficient)
-- `SENTRY_DSN` secret must be added before Phase 8B
-- `@sentry/react` npm package (~30KB gzipped)
-- No database changes required
-- No RLS changes required
+After all documents are generated:
 
----
-
-## What Is NOT Included
-
-- Session replay (excluded — PII risk)
-- APM / distributed tracing (not needed at current scale)
-- Custom Sentry on-premise (cloud SaaS sufficient)
-- Log aggregation beyond Supabase Logs (not needed yet)
-
-Awaiting approval before implementation.
+```
+IMPLEMENTED: [list of created files]
+PARTIAL: [any incomplete documents + reason]
+SKIPPED: [none expected]
+VERIFICATION: [checklist per document — PASS/FAIL]
+RESTORE POINT: [ID]
+BLOCKERS: NONE / [description]
+CONFIRMATION: No code changes. No schema changes. No RLS changes.
+```

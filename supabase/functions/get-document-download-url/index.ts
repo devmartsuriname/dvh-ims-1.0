@@ -1,4 +1,16 @@
+/**
+ * Edge Function: get-document-download-url
+ * Phase 8C - Structured Logging
+ * 
+ * Generates a signed download URL for a generated document.
+ * 
+ * Security:
+ * - JWT required
+ * - RBAC: system_admin, minister, project_leader, frontdesk_bouwsubsidie, admin_staff, audit
+ */
+
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { createLogger } from '../_shared/logger.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +27,11 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const log = createLogger('get-document-download-url')
+
   try {
+    log.info('request_started', { http_method: req.method })
+
     // Only allow POST
     if (req.method !== "POST") {
       return new Response(
@@ -27,6 +43,7 @@ Deno.serve(async (req) => {
     // Get authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      log.warn('auth_failed', { reason: 'missing_header' })
       return new Response(
         JSON.stringify({ success: false, error: "AUTH_MISSING", message: "Authorization required" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -46,7 +63,7 @@ Deno.serve(async (req) => {
     // Get user
     const { data: { user }, error: userError } = await userClient.auth.getUser();
     if (userError || !user) {
-      console.error("Auth error:", userError?.message);
+      log.warn('auth_failed', { reason: 'invalid_token' })
       return new Response(
         JSON.stringify({ success: false, error: "AUTH_INVALID", message: "Invalid authorization" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -63,7 +80,7 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id);
 
     if (rolesError) {
-      console.error('Failed to fetch user roles');
+      log.error('unexpected_error', { step: 'role_fetch' }, 'AUTH_ERROR')
       return new Response(
         JSON.stringify({ success: false, error: "AUTH_ERROR", message: "Failed to verify authorization" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -74,7 +91,7 @@ Deno.serve(async (req) => {
     const hasAccess = roles.some(role => ALLOWED_ROLES.includes(role));
 
     if (!hasAccess) {
-      console.error("RBAC check failed - insufficient permissions");
+      log.warn('rbac_denied')
       return new Response(
         JSON.stringify({ success: false, error: "AUTH_FORBIDDEN", message: "Access denied" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -88,6 +105,7 @@ Deno.serve(async (req) => {
     // Validate document_id UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!document_id || !uuidRegex.test(document_id)) {
+      log.warn('validation_failed', { reason: 'invalid_uuid' })
       return new Response(
         JSON.stringify({ success: false, error: "VALIDATION_UUID", message: "Invalid document_id format" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -102,7 +120,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (docError || !docRecord) {
-      console.error("Document not found:", docError?.message);
+      log.error('unexpected_error', { step: 'document_fetch' }, 'DOCUMENT_NOT_FOUND')
       return new Response(
         JSON.stringify({ success: false, error: "DOCUMENT_NOT_FOUND", message: "Document not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -115,7 +133,7 @@ Deno.serve(async (req) => {
       .createSignedUrl(docRecord.file_path, 3600);
 
     if (signedUrlError || !signedUrlData) {
-      console.error("Signed URL error:", signedUrlError?.message);
+      log.error('unexpected_error', { step: 'signed_url_generation' }, 'URL_ERROR')
       return new Response(
         JSON.stringify({ success: false, error: "URL_ERROR", message: "Failed to generate download URL" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -136,7 +154,7 @@ Deno.serve(async (req) => {
       },
     });
 
-    console.log(`Download URL generated for document: ${docRecord.file_name}`);
+    log.info('download_url_generated', { document_type: docRecord.document_type })
 
     return new Response(
       JSON.stringify({
@@ -148,7 +166,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Unexpected error:", error);
+    log.error('unexpected_error', { message: error instanceof Error ? error.message : 'Unknown error' }, 'UNHANDLED')
     return new Response(
       JSON.stringify({ success: false, error: "DOWNLOAD_ERROR", message: "Failed to generate download URL" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

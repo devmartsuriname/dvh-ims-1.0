@@ -1,4 +1,17 @@
+/**
+ * Edge Function: execute-allocation-run
+ * Phase 8C - Structured Logging
+ * 
+ * Executes housing allocation runs for a district.
+ * 
+ * Security:
+ * - JWT required
+ * - RBAC: system_admin, project_leader only
+ * - Input validation (UUID, district code)
+ */
+
 import { createClient } from '@supabase/supabase-js'
+import { createLogger } from '../_shared/logger.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,12 +50,17 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  const log = createLogger('execute-allocation-run')
+
   try {
+    log.info('request_started', { http_method: req.method })
+
     // Initialize Supabase client with service role for admin operations
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
     if (!supabaseUrl || !supabaseServiceKey) {
+      log.error('unexpected_error', {}, 'CONFIG_ERROR')
       return new Response(
         JSON.stringify({ success: false, error: 'Server configuration error', code: 'CONFIG_ERROR' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -54,6 +72,7 @@ Deno.serve(async (req) => {
     // Get the authorization header to validate user
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      log.warn('auth_failed', { reason: 'missing_header' })
       return new Response(
         JSON.stringify({ success: false, error: 'Missing authorization header', code: 'AUTH_MISSING' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -65,7 +84,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser(token)
     
     if (userError || !user) {
-      console.error('Auth validation failed')
+      log.warn('auth_failed', { reason: 'invalid_token' })
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid authorization token', code: 'AUTH_INVALID' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -79,7 +98,7 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id)
 
     if (rolesError) {
-      console.error('Failed to fetch user roles')
+      log.error('unexpected_error', { step: 'role_fetch' }, 'AUTH_ERROR')
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to verify authorization', code: 'AUTH_ERROR' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -90,7 +109,7 @@ Deno.serve(async (req) => {
     const hasAccess = roles.some(role => ALLOWED_ROLES.includes(role))
 
     if (!hasAccess) {
-      console.error('RBAC check failed - insufficient permissions')
+      log.warn('rbac_denied')
       return new Response(
         JSON.stringify({ success: false, error: 'Insufficient permissions', code: 'AUTH_FORBIDDEN' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -103,6 +122,7 @@ Deno.serve(async (req) => {
 
     // Validate required fields presence
     if (!run_id || !district_code) {
+      log.warn('validation_failed', { reason: 'missing_fields' })
       return new Response(
         JSON.stringify({ success: false, error: 'Missing required fields: run_id, district_code', code: 'VALIDATION_MISSING' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -111,6 +131,7 @@ Deno.serve(async (req) => {
 
     // Validate UUID format for run_id
     if (!isValidUUID(run_id)) {
+      log.warn('validation_failed', { reason: 'invalid_uuid' })
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid run_id format', code: 'VALIDATION_UUID' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -119,14 +140,14 @@ Deno.serve(async (req) => {
 
     // Validate district_code format
     if (!isValidDistrictCode(district_code)) {
+      log.warn('validation_failed', { reason: 'invalid_district' })
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid district_code format', code: 'VALIDATION_DISTRICT' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Sanitized operational log - no PII
-    console.log(`Allocation run started: run=${run_id.substring(0, 8)}...`)
+    log.info('allocation_started', { district_code })
 
     // 1. Update run status to 'running'
     const { error: updateStartError } = await supabase
@@ -135,7 +156,7 @@ Deno.serve(async (req) => {
       .eq('id', run_id)
 
     if (updateStartError) {
-      console.error('Failed to update run status to running:', updateStartError)
+      log.error('db_insert_failed', { step: 'run_status_update', district_code }, 'DB_UPDATE_FAILED')
       throw new Error('Failed to start allocation run')
     }
 
@@ -149,15 +170,13 @@ Deno.serve(async (req) => {
       .single()
 
     if (quotaError && quotaError.code !== 'PGRST116') {
-      console.error('Quota check failed:', quotaError)
+      log.error('db_insert_failed', { step: 'quota_check', district_code }, 'DB_QUERY_FAILED')
       throw new Error('Failed to check district quota')
     }
 
     const availableQuota = quotaData 
       ? quotaData.total_quota - quotaData.allocated_count 
       : 0
-
-    console.log(`Quota check complete: available=${availableQuota}`)
 
     // 3. Fetch eligible candidates from waiting list
     const { data: registrations, error: registrationError } = await supabase
@@ -168,11 +187,9 @@ Deno.serve(async (req) => {
       .order('waiting_list_position', { ascending: true })
 
     if (registrationError) {
-      console.error('Failed to fetch registrations:', registrationError)
+      log.error('db_insert_failed', { step: 'fetch_registrations', district_code }, 'DB_QUERY_FAILED')
       throw new Error('Failed to fetch eligible registrations')
     }
-
-    console.log(`Eligible registrations found: count=${registrations?.length || 0}`)
 
     // 4. Calculate composite rank for each candidate
     const candidates: AllocationCandidate[] = (registrations || []).map((reg, index) => {
@@ -220,7 +237,7 @@ Deno.serve(async (req) => {
         .insert(candidateRecords)
 
       if (insertError) {
-        console.error('Failed to insert candidates:', insertError)
+        log.error('db_insert_failed', { step: 'candidate_insert', district_code, count: candidates.length }, 'DB_CONSTRAINT')
         throw new Error('Failed to record allocation candidates')
       }
     }
@@ -237,7 +254,7 @@ Deno.serve(async (req) => {
       .eq('id', run_id)
 
     if (updateCompleteError) {
-      console.error('Failed to complete run:', updateCompleteError)
+      log.error('db_insert_failed', { step: 'run_complete_update', district_code }, 'DB_UPDATE_FAILED')
       throw new Error('Failed to complete allocation run')
     }
 
@@ -255,7 +272,7 @@ Deno.serve(async (req) => {
       }
     })
 
-    console.log(`Allocation run completed: candidates=${candidates.length}, selected=${selectedCount}`)
+    log.info('allocation_completed', { district_code, candidates_count: candidates.length, allocations_count: selectedCount })
 
     return new Response(
       JSON.stringify({
@@ -269,7 +286,7 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Processing error'
-    console.error('Allocation run failed')
+    log.error('unexpected_error', { message: errorMessage }, 'UNHANDLED')
 
     // Try to update run status to failed
     try {
@@ -289,7 +306,7 @@ Deno.serve(async (req) => {
           .eq('id', body.run_id)
       }
     } catch (updateError) {
-      console.error('Failed to update run status to failed:', updateError)
+      // Best-effort status update
     }
 
     return new Response(

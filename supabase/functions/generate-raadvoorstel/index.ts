@@ -1,3 +1,14 @@
+/**
+ * Edge Function: generate-raadvoorstel
+ * Phase 8C - Structured Logging
+ * 
+ * Generates a Raadvoorstel (Council Proposal) DOCX document for a subsidy case.
+ * 
+ * Security:
+ * - JWT required
+ * - RBAC: system_admin, project_leader, frontdesk_bouwsubsidie, admin_staff
+ */
+
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   Document,
@@ -12,6 +23,7 @@ import {
   TableCell,
   WidthType,
 } from "npm:docx@8";
+import { createLogger } from '../_shared/logger.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,7 +72,11 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const log = createLogger('generate-raadvoorstel')
+
   try {
+    log.info('request_started', { http_method: req.method })
+
     // Only allow POST
     if (req.method !== "POST") {
       return new Response(
@@ -72,6 +88,7 @@ Deno.serve(async (req) => {
     // Get authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      log.warn('auth_failed', { reason: 'missing_header' })
       return new Response(
         JSON.stringify({ success: false, error: "AUTH_MISSING", message: "Authorization required" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -88,10 +105,10 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
 
-// Get user
+    // Get user
     const { data: { user }, error: userError } = await userClient.auth.getUser();
     if (userError || !user) {
-      console.error("Auth error:", userError?.message);
+      log.warn('auth_failed', { reason: 'invalid_token' })
       return new Response(
         JSON.stringify({ success: false, error: "AUTH_INVALID", message: "Invalid authorization" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -109,7 +126,7 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id);
 
     if (rolesError) {
-      console.error('Failed to fetch user roles');
+      log.error('unexpected_error', { step: 'role_fetch' }, 'AUTH_ERROR')
       return new Response(
         JSON.stringify({ success: false, error: "AUTH_ERROR", message: "Failed to verify authorization" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -120,7 +137,7 @@ Deno.serve(async (req) => {
     const hasAccess = roles.some(role => ALLOWED_ROLES.includes(role));
 
     if (!hasAccess) {
-      console.error("RBAC check failed - insufficient permissions");
+      log.warn('rbac_denied')
       return new Response(
         JSON.stringify({ success: false, error: "AUTH_FORBIDDEN", message: "Access denied" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -134,13 +151,12 @@ Deno.serve(async (req) => {
     // Validate case_id UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!case_id || !uuidRegex.test(case_id)) {
+      log.warn('validation_failed', { reason: 'invalid_uuid' })
       return new Response(
         JSON.stringify({ success: false, error: "VALIDATION_UUID", message: "Invalid case_id format" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    // adminClient already created above for role check
 
     // Fetch case with related data
     const { data: caseData, error: caseError } = await adminClient
@@ -160,14 +176,14 @@ Deno.serve(async (req) => {
       .single();
 
     if (caseError || !caseData) {
-      console.error("Case not found:", caseError?.message);
+      log.error('unexpected_error', { step: 'case_fetch' }, 'CASE_NOT_FOUND')
       return new Response(
         JSON.stringify({ success: false, error: "CASE_NOT_FOUND", message: "Case not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Extract person and household from joined data (Supabase returns objects for single relations)
+    // Extract person and household from joined data
     const personData = caseData.person as unknown as PersonData;
     const householdData = caseData.household as unknown as HouseholdData;
 
@@ -178,7 +194,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate case status (must be approved_for_council, council_doc_generated, or finalized)
+    // Validate case status
     const eligibleStatuses = ["approved_for_council", "council_doc_generated", "finalized"];
     if (!eligibleStatuses.includes(caseData.status)) {
       return new Response(
@@ -581,7 +597,7 @@ Deno.serve(async (req) => {
       });
 
     if (uploadError) {
-      console.error("Upload error:", uploadError.message);
+      log.error('db_insert_failed', { step: 'storage_upload' }, 'STORAGE_ERROR')
       return new Response(
         JSON.stringify({ success: false, error: "STORAGE_ERROR", message: "Failed to store document" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -602,7 +618,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (docError) {
-      console.error("Document record error:", docError.message);
+      log.error('db_insert_failed', { step: 'document_record_insert' }, 'DATABASE_ERROR')
       return new Response(
         JSON.stringify({ success: false, error: "DATABASE_ERROR", message: "Failed to create document record" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -615,7 +631,7 @@ Deno.serve(async (req) => {
       .createSignedUrl(filePath, 3600);
 
     if (signedUrlError) {
-      console.error("Signed URL error:", signedUrlError.message);
+      log.warn('validation_failed', { step: 'signed_url_generation' })
     }
 
     // Log audit event
@@ -633,7 +649,7 @@ Deno.serve(async (req) => {
       },
     });
 
-    console.log(`Raadvoorstel generated: ${fileName} for case ${caseData.case_number}`);
+    log.info('document_generated', { case_number: caseData.case_number, district_code: caseData.district_code })
 
     return new Response(
       JSON.stringify({
@@ -646,7 +662,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Unexpected error:", error);
+    log.error('unexpected_error', { message: error instanceof Error ? error.message : 'Unknown error' }, 'UNHANDLED')
     return new Response(
       JSON.stringify({ success: false, error: "GENERATION_ERROR", message: "Document generation failed" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

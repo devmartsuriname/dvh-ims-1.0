@@ -1,6 +1,7 @@
 /**
  * Edge Function: submit-bouwsubsidie-application
  * Phase 9 - Public Wizard Database Integration
+ * Phase 8C - Structured Logging
  * 
  * Handles anonymous Bouwsubsidie (Construction Subsidy) submissions
  * from the public wizard.
@@ -14,6 +15,7 @@
  */
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { createLogger } from '../_shared/logger.ts'
 
 // CORS headers for browser requests
 const corsHeaders = {
@@ -29,7 +31,6 @@ const RATE_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 // Valid district codes
 const VALID_DISTRICTS = ['PAR', 'WAA', 'NIC', 'COR', 'SAR', 'COM', 'MAR', 'SIP', 'BRO', 'PRA']
 
-// Input validation schema (manual validation - no external Zod in Edge Functions)
 // Document upload structure from wizard (V1.3 Phase 5A)
 interface DocumentUploadInput {
   document_code: string
@@ -238,7 +239,11 @@ Deno.serve(async (req) => {
     )
   }
   
+  const log = createLogger('submit-bouwsubsidie-application')
+  
   try {
+    log.info('request_started', { http_method: 'POST' })
+    
     // Get client IP for rate limiting
     const clientIP = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
                      req.headers.get('x-real-ip') || 
@@ -246,7 +251,7 @@ Deno.serve(async (req) => {
     
     // Check rate limit
     if (!checkRateLimit(clientIP)) {
-      console.log(`[submit-bouwsubsidie] Rate limit exceeded for IP hash: ${await hashIP(clientIP)}`)
+      log.warn('rate_limit_exceeded')
       return new Response(
         JSON.stringify({ success: false, error: 'Too many requests. Please try again later.' }),
         { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -266,6 +271,7 @@ Deno.serve(async (req) => {
     
     const validation = validateInput(body)
     if (!validation.valid) {
+      log.warn('validation_failed', { field_count: validation.errors.length })
       return new Response(
         JSON.stringify({ success: false, error: 'Validation failed', details: validation.errors }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -286,7 +292,6 @@ Deno.serve(async (req) => {
     const hasIncomeProof = INCOME_PROOF_CODES.some(code => uploadedDocCodes.includes(code))
     
     if (missingMandatory.length > 0 || !hasIncomeProof) {
-      const validationType = missingMandatory.length > 0 ? 'mandatory_documents' : 'income_proof'
       const errorCode = missingMandatory.length > 0 ? 'MANDATORY_DOCUMENTS_MISSING' : 'INCOME_PROOF_REQUIRED'
       
       // Audit log for blocked submission
@@ -302,7 +307,7 @@ Deno.serve(async (req) => {
         entity_id: null,
         action: 'SUBMISSION_VALIDATION_BLOCKED',
         metadata_json: {
-          validation_type: validationType,
+          validation_type: missingMandatory.length > 0 ? 'mandatory_documents' : 'income_proof',
           error_code: errorCode,
           district_code: input.district,
           submission_ip_hash: ipHash,
@@ -310,7 +315,7 @@ Deno.serve(async (req) => {
         }
       })
       
-      console.log(`[submit-bouwsubsidie] Submission blocked: ${errorCode}, district: ${input.district}`)
+      log.warn('submission_blocked', { error_code: errorCode, district_code: input.district })
       
       return new Response(
         JSON.stringify({ success: false, error: errorCode }),
@@ -329,7 +334,7 @@ Deno.serve(async (req) => {
     const accessToken = generateAccessToken()
     const accessTokenHash = await hashToken(accessToken)
     
-    console.log(`[submit-bouwsubsidie] Processing submission: ${referenceNumber}`)
+    log.info('submission_started', { reference_number: referenceNumber, district_code: input.district })
     
     // Create person record
     const { data: personData, error: personError } = await supabase
@@ -340,14 +345,14 @@ Deno.serve(async (req) => {
         last_name: input.last_name,
         date_of_birth: input.date_of_birth,
         gender: input.gender,
-        nationality: 'SR', // Default to Suriname
-        created_by: null // Public submission
+        nationality: 'SR',
+        created_by: null
       })
       .select('id')
       .single()
     
     if (personError) {
-      console.error('[submit-bouwsubsidie] Failed to create person:', personError.message)
+      log.error('db_insert_failed', { step: 'person_insert', district_code: input.district }, 'DB_CONSTRAINT')
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to process application. Please try again.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -368,7 +373,7 @@ Deno.serve(async (req) => {
       .single()
     
     if (householdError) {
-      console.error('[submit-bouwsubsidie] Failed to create household:', householdError.message)
+      log.error('db_insert_failed', { step: 'household_insert', district_code: input.district }, 'DB_CONSTRAINT')
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to process application. Please try again.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -387,7 +392,7 @@ Deno.serve(async (req) => {
       })
     
     if (memberError) {
-      console.error('[submit-bouwsubsidie] Failed to create household member:', memberError.message)
+      log.error('db_insert_failed', { step: 'household_member_insert' }, 'DB_CONSTRAINT')
     }
     
     // Create address record
@@ -402,7 +407,7 @@ Deno.serve(async (req) => {
       })
     
     if (addressError) {
-      console.error('[submit-bouwsubsidie] Failed to create address:', addressError.message)
+      log.error('db_insert_failed', { step: 'address_insert' }, 'DB_CONSTRAINT')
     }
     
     // Create contact points (phone and email)
@@ -416,7 +421,7 @@ Deno.serve(async (req) => {
       })
     
     if (phoneError) {
-      console.error('[submit-bouwsubsidie] Failed to create phone contact:', phoneError.message)
+      log.error('db_insert_failed', { step: 'phone_contact_insert' }, 'DB_CONSTRAINT')
     }
     
     const { error: emailError } = await supabase
@@ -429,7 +434,7 @@ Deno.serve(async (req) => {
       })
     
     if (emailError) {
-      console.error('[submit-bouwsubsidie] Failed to create email contact:', emailError.message)
+      log.error('db_insert_failed', { step: 'email_contact_insert' }, 'DB_CONSTRAINT')
     }
     
     // Validate estimated amount
@@ -459,13 +464,13 @@ Deno.serve(async (req) => {
         district_code: input.district,
         status: 'received',
         requested_amount: parsedAmount,
-        created_by: null // Public submission
+        created_by: null
       })
       .select('id')
       .single()
     
     if (caseError) {
-      console.error('[submit-bouwsubsidie] Failed to create subsidy case:', caseError.message)
+      log.error('db_insert_failed', { step: 'subsidy_case_insert', district_code: input.district }, 'DB_CONSTRAINT')
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to process application. Please try again.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -486,7 +491,7 @@ Deno.serve(async (req) => {
       })
     
     if (statusHistoryError) {
-      console.error('[submit-bouwsubsidie] Failed to create status history:', statusHistoryError.message)
+      log.error('db_insert_failed', { step: 'status_history_insert' }, 'DB_CONSTRAINT')
     }
     
     // Create public_status_access record for tracking
@@ -502,7 +507,7 @@ Deno.serve(async (req) => {
       .single()
     
     if (accessError) {
-      console.error('[submit-bouwsubsidie] Failed to create public status access:', accessError.message)
+      log.error('db_insert_failed', { step: 'public_status_access_insert' }, 'DB_CONSTRAINT')
     }
     
     // V1.3 Phase 5A: Link uploaded documents to the case
@@ -531,18 +536,17 @@ Deno.serve(async (req) => {
               requirement_id: requirementId,
               file_path: uploadedFile.file_path,
               file_name: uploadedFile.file_name,
-              uploaded_by: null, // Public submission
+              uploaded_by: null,
               is_verified: false
             })
           
           if (docError) {
-            console.error(`[submit-bouwsubsidie] Failed to link document ${(doc as any).document_code}:`, docError.message)
+            log.error('db_insert_failed', { step: 'document_link', document_code: (doc as any).document_code }, 'DB_CONSTRAINT')
           } else {
             documentsLinked++
           }
         }
       }
-      console.log(`[submit-bouwsubsidie] Linked ${documentsLinked} documents to case ${referenceNumber}`)
     }
     
     // V1.8 Phase 5: Persist children to subsidy_household_child
@@ -561,12 +565,11 @@ Deno.serve(async (req) => {
           })
         
         if (childError) {
-          console.error(`[submit-bouwsubsidie] Failed to insert child ${i + 1}:`, childError.message)
+          log.error('db_insert_failed', { step: 'child_insert', sort_order: i + 1 }, 'DB_CONSTRAINT')
         } else {
           childrenCount++
         }
       }
-      console.log(`[submit-bouwsubsidie] Inserted ${childrenCount} children for case ${referenceNumber}`)
     }
     
     // Log audit event
@@ -590,10 +593,10 @@ Deno.serve(async (req) => {
       })
     
     if (auditError) {
-      console.error('[submit-bouwsubsidie] Failed to create audit event:', auditError.message)
+      log.error('db_insert_failed', { step: 'audit_event_insert' }, 'DB_CONSTRAINT')
     }
     
-    console.log(`[submit-bouwsubsidie] Submission successful: ${referenceNumber}`)
+    log.info('submission_completed', { reference_number: referenceNumber, district_code: input.district, documents_count: documentsLinked, children_count: childrenCount })
     
     // Return success with reference number and access token
     return new Response(
@@ -607,7 +610,7 @@ Deno.serve(async (req) => {
     )
     
   } catch (error) {
-    console.error('[submit-bouwsubsidie] Unexpected error:', error)
+    log.error('unexpected_error', { message: error instanceof Error ? error.message : 'Unknown error' }, 'UNHANDLED')
     return new Response(
       JSON.stringify({ success: false, error: 'An unexpected error occurred. Please try again.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

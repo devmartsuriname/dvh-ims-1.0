@@ -7,7 +7,7 @@
  *
  * Usage:
  *   const limiter = createRateLimiter(5, 60 * 60 * 1000)
- *   if (!limiter.check(clientIP)) { /* 429 */ }
+ *   if (!limiter.check(clientIP)) { return error }
  */
 
 interface RateLimitEntry {

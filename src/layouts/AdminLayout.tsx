@@ -1,4 +1,4 @@
-import AnimationStar from '@/components/AnimationStar'
+
 import ErrorBoundary from '@/components/ErrorBoundary'
 import Footer from '@/components/layout/Footer'
 import { ChildrenType } from '@/types/component-props'

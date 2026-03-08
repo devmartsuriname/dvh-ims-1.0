@@ -99,7 +99,6 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
             </Col>
             <Col md={6}>
               <h6 className="fw-semibold mb-3">
-                <IconifyIcon icon="mingcute:folder-line" className="me-1" />
                 {t('bouwsubsidie.step0.docsTitle')}
               </h6>
               <ul className="list-unstyled mb-2">

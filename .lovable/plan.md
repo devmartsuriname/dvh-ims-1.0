@@ -1,280 +1,157 @@
-# Ministerial System Manual — Documentation Execution Plan
+# Phase 8C — Edge Function Structured Logging: Implementation Plan
 
-## Objective
-
-Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
-
-This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
+**Context ID:** 8F42B1C3-5D9E-4A7B-B2E1-9C3F4D5A6E7B
 
 ---
 
-## Deliverable Structure
+## Current State
 
-**Folder:** `/docs/manual/`
-
-
-| #   | File                                                 | Purpose                                                                                                  |
-| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
-| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
-| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
-| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
-| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
-| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
-| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
-| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
-| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
-| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
-| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
-| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
-| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
-| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
-| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
-| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
-
-
-**Total: 16 documents**
+All 6 Edge Functions use inconsistent `console.log`/`console.error` with ad-hoc formatting. Only `submit-housing-registration` has correlation IDs. No structured log format exists. Some functions log raw error objects which may leak internal details.
 
 ---
 
-## URL Documentation
+## Implementation
 
-All documents will include explicit URLs based on:
+### 1. Create Shared Logger (`supabase/functions/_shared/logger.ts`)
 
-**Production (Published):**
+A single utility providing:
 
-- Landing: `https://huggable-cloud-whisper.lovable.app/`
-- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
-- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
-- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
-- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
-- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
+```typescript
+type LogLevel = 'info' | 'warn' | 'error'
 
-**Staging (Preview):**
+interface LogEntry {
+  level: LogLevel
+  function_name: string
+  event: string
+  correlation_id?: string
+  metadata?: Record<string, string | number | boolean | null>
+  error_code?: string
+  timestamp: string
+}
+```
 
-- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
-- Same path structure as production
+**Three methods:** `logger.info()`, `logger.warn()`, `logger.error()`
 
-Admin module URLs will be listed per-module in document 12.
+Each outputs a single-line JSON string to `console.log`/`console.warn`/`console.error` (Supabase captures these).
 
----
+**Sentry forwarding stub:** When `SENTRY_DSN` is present, `logger.error()` POSTs to Sentry HTTP API. When absent, no-op. This is conditional — same pattern as frontend.
 
-## Content Coverage Per Document
+**PII protection:** The logger accepts only a typed `metadata` object with primitive values. No `Error.stack` forwarding (stack traces may contain variable values). Error messages are truncated to 200 chars and scrubbed for email/phone patterns.
 
-### 00 - Executive Summary
+### 2. Factory Pattern
 
-- System purpose and legal mandate
-- Two services overview (Housing + Subsidy)
-- Governance and accountability model (1 paragraph)
-- Role structure summary
-- Key operational metrics / KPIs
-- "What happens next?" for both services
-- 5-10 pages, non-technical language
+```typescript
+function createLogger(functionName: string, correlationId?: string): Logger
+```
 
-### 01 - System Overview
+Each function creates a logger at request start. The correlation ID auto-attaches to all log entries for that request.
 
-- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
-- Public vs Admin separation
-- Authentication model (staff-only login, citizen anonymous access)
-- District-based scoping
+### 3. Functions to Update (all 6)
 
-### 02 + 03 - Public Wizard Workflows
 
-Per service:
+| Function                          | Priority | Changes                                               |
+| --------------------------------- | -------- | ----------------------------------------------------- |
+| `lookup-public-status`            | 1        | Add correlation ID, replace 5 console calls           |
+| `submit-bouwsubsidie-application` | 2        | Add correlation ID, replace ~15 console calls         |
+| `submit-housing-registration`     | 3        | Already has correlation ID, replace ~12 console calls |
+| `execute-allocation-run`          | 4        | Add correlation ID, replace ~8 console calls          |
+| `generate-raadvoorstel`           | 5        | Add correlation ID, replace ~6 console calls          |
+| `get-document-download-url`       | 6        | Add correlation ID, replace ~4 console calls          |
 
-- Preconditions
-- Step-by-step wizard walkthrough (each form step)
-- Reference number generation
-- Security token explanation
-- Receipt/confirmation page
-- Status tracking via `/status`
-- "What happens after submission?"
 
-### 04 + 05 - Admin Workflows
+### 4. Event Names (standardized)
 
-Per service:
 
-- Locating records in list view
-- Opening detail view
-- Status change process (with mandatory reason)
-- Document upload and verification
-- Field reports (Social, Technical — Bouwsubsidie only)
-- Decision chain steps
-- Raadvoorstel generation (Bouwsubsidie only)
-- Archive flow
-- Audit trail per action
+| Event                    | Used In                                        |
+| ------------------------ | ---------------------------------------------- |
+| `request_started`        | All                                            |
+| `request_completed`      | All                                            |
+| `validation_failed`      | All                                            |
+| `unexpected_error`       | All                                            |
+| `rate_limit_exceeded`    | lookup, submit-bs, submit-housing              |
+| `status_lookup_failed`   | lookup                                         |
+| `status_lookup_success`  | lookup                                         |
+| `submission_started`     | submit-bs, submit-housing                      |
+| `submission_completed`   | submit-bs, submit-housing                      |
+| `submission_blocked`     | submit-bs                                      |
+| `person_created`         | submit-bs, submit-housing                      |
+| `person_reused`          | submit-housing                                 |
+| `db_insert_failed`       | submit-bs, submit-housing                      |
+| `ref_number_retry`       | submit-housing                                 |
+| `auth_failed`            | execute-alloc, generate-raad, get-doc-download |
+| `rbac_denied`            | execute-alloc, generate-raad, get-doc-download |
+| `allocation_started`     | execute-alloc                                  |
+| `allocation_completed`   | execute-alloc                                  |
+| `document_generated`     | generate-raad                                  |
+| `download_url_generated` | get-doc-download                               |
 
-### 06 - Roles & Permission Matrix
 
-Table columns:
+### 5. PII Scrubbing Rules
 
-- Role name (all 11 implemented roles)
-- Modules accessible
-- Create/Edit rights
-- Status change authority (which statuses)
-- Document upload/verify rights
-- Allocation/decision authority
-- Audit log access
-- Export/print permissions
-- National vs district-scoped flag
+The logger's metadata object will NEVER contain:
 
-### 07 - Status Lifecycle
+- Person names, national IDs, addresses, phone numbers, emails
+- File contents or document data
+- Auth tokens, access tokens, JWT values
+- Raw IP addresses (only hashed IPs as already done)
 
-- ASCII state diagrams for both services
-- Transition rules with triggering roles
-- Decision authority per transition
-- Mandatory reason requirements
+Safe metadata fields: `reference_number`, `district_code`, `correlation_id`, `error_code`, `count` values, `entity_type`, `http_status`, `person_reused` (boolean).
 
-### 08 - Document Management
+### 6. No-Noise Principle
 
-- Upload workflow
-- Verification tracking
-- Raadvoorstel generation (edge function)
-- Download via signed URLs
+Each function gets exactly:
 
-### 09 - Audit Logging
+- 1 `info` at request start (with HTTP method)
+- 1 `info` at successful completion (with safe summary)
+- `warn` only for rate limits, retries, non-critical failures
+- `error` only for DB failures, unexpected exceptions
 
-- `audit_event` table structure
-- What triggers a log entry
-- Where to view audit logs (Admin > Audit Log)
-- Append-only guarantee
-- Role access to audit log
+Internal steps (household insert, contact insert, address insert) only log on failure (`error`), not on success.
 
-### 10 - Allocation Engine
+### 7. Example Structured Log Output
 
-- District quotas setup
-- Urgency scoring model
-- Allocation run execution
-- Matching logic
-- Decision recording
-- Assignment registration
-
-### 11 - Governance Controls
-
-- RLS enforcement model
-- Least-privilege access
-- Ministerial Advisor mandatory paraph
-- Minister deviation logging
-- Status history immutability
-
-### 12 - Module Specification
-
-All 20 pages/modules documented:
-
-- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
-- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
-
-Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
-
-### 13 - Operational Scenarios
-
-Minimum 8 numbered end-to-end scenarios:
-
-1. Citizen submits Housing Registration
-2. Citizen submits Subsidy Application
-3. Frontdesk processes new Housing Registration
-4. Frontdesk processes new Subsidy Case through full decision chain
-5. Allocation run execution and assignment
-6. Minister approves/rejects with deviation from advisor
-7. Archive lookup of closed case
-8. Audit trail verification for a specific case
-
-Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
-
-### 14 - Troubleshooting & FAQ
-
-- Common submission errors
-- Duplicate/resubmission behavior
-- Status lookup failures
-- Document upload issues
-- Permission denied scenarios
-- Session timeout handling
-
-### 15 - Glossary
-
-- All status values (both services)
-- Field definitions
-- Role names with descriptions
-- System terminology (Raadvoorstel, paraph, district code, etc.)
+```json
+{"level":"info","function_name":"lookup-public-status","event":"request_started","correlation_id":"abc-123","timestamp":"2026-03-08T10:00:00.000Z"}
+{"level":"error","function_name":"submit-bouwsubsidie-application","event":"db_insert_failed","correlation_id":"def-456","error_code":"DB_CONSTRAINT","metadata":{"step":"person_insert","district_code":"PAR"},"timestamp":"2026-03-08T10:00:01.000Z"}
+```
 
 ---
 
-## Screenshots Strategy
+## Files
 
-- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
-- Each reference follows format: `Figure X.Y — Description`
-- PII masking note included in each document header
-- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
+
+| Action | File                                                          |
+| ------ | ------------------------------------------------------------- |
+| CREATE | `supabase/functions/_shared/logger.ts`                        |
+| MODIFY | `supabase/functions/lookup-public-status/index.ts`            |
+| MODIFY | `supabase/functions/submit-bouwsubsidie-application/index.ts` |
+| MODIFY | `supabase/functions/submit-housing-registration/index.ts`     |
+| MODIFY | `supabase/functions/execute-allocation-run/index.ts`          |
+| MODIFY | `supabase/functions/generate-raadvoorstel/index.ts`           |
+| MODIFY | `supabase/functions/get-document-download-url/index.ts`       |
+
+
+**Total: 1 new file, 6 modified files.**
 
 ---
 
-## Execution Sequence
+## NOTE — Logging discipline
 
-1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
-2. Create `/docs/manual/` folder
-3. Generate documents in order: 00 through 15
-4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
-5. After all 16 documents: produce completion checklist
+Correlation IDs must be generated at the start of every request if none is provided.
 
----
+All structured logs must remain single-line JSON entries so they remain searchable
 
-## Quality Gates
+inside Supabase logs and future observability systems.
 
-- Language: Clear, non-technical, suitable for Minister and senior staff
-- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
-- UI alignment: All labels, navigation paths, and field names match current implementation
-- No invented features or roles
-- No code/schema/RLS changes
-- Restore point created before any file creation
+Do not log request bodies or raw database error objects.
 
-## IMPORTANT — PRODUCTION URL CORRECTION
-
-All documentation must use the official custom production domain:
-
-[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
-
-DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
-
-Update all production URLs to:
-
-Landing:
-
-[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
-
-Housing Registration:
-
-[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
-
-Subsidy Application:
-
-[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
-
-Status Tracker:
-
-[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
-
-Staff Login:
-
-[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
-
-Admin Dashboard:
-
-[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
-
-If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
-
-The Ministerial Manual must only reference the official production domain.  
+Only safe metadata fields are allowed.  
   
-**Completion Report Format**
+**Constraints Confirmed**
 
-After all documents are generated:
-
-```
-IMPLEMENTED: [list of created files]
-PARTIAL: [any incomplete documents + reason]
-SKIPPED: [none expected]
-VERIFICATION: [checklist per document — PASS/FAIL]
-RESTORE POINT: [ID]
-BLOCKERS: NONE / [description]
-CONFIRMATION: No code changes. No schema changes. No RLS changes.
-```
+- No SENTRY_DSN required (conditional stub)
+- No PII in logs
+- No database schema changes
+- No new features introduced
+- No functional behavior changes — only logging internals replaced
+- Build/deploy verification after implementation

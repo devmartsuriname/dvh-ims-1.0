@@ -760,3 +760,62 @@ Added `d-none d-md-inline-block` to Staff Portal link in `PublicHeader.tsx`. CSS
 ## V1.7.x — TRUE Global Logo Description Update (2026-02-27)
 
 Updated `header.ministry` i18n key in `nl.json`. Frontend-only i18n string change. No backend, DB, RLS, or Edge Function impact.
+
+---
+
+## Phase 9D — Edge Function Shared Module Extraction (2026-03-08)
+
+Extracted duplicated Edge Function code into shared modules under `supabase/functions/_shared/`:
+
+### New Shared Modules
+
+| Module | Export | Usage |
+|--------|--------|-------|
+| `cors.ts` | `corsHeaders` | All 7 Edge Functions |
+| `rate-limit.ts` | `createRateLimiter(limit, windowMs)` | lookup-public-status, submit-bouwsubsidie-application, submit-housing-registration |
+| `constants.ts` | `VALID_DISTRICTS` | submit-bouwsubsidie-application, submit-housing-registration |
+| `validators.ts` | `isValidUUID(str)` | execute-allocation-run |
+
+### Rate Limiter Factory Pattern
+
+Each function instantiates its own rate limiter with isolated Map storage:
+
+```typescript
+import { createRateLimiter } from '../_shared/rate-limit.ts'
+
+// Per-function isolated instance
+const rateLimiter = createRateLimiter(5, 60 * 60 * 1000) // 5/hour
+
+function checkRateLimit(ip: string): boolean {
+  return rateLimiter.check(ip)
+}
+```
+
+**Rate Limit Values (unchanged):**
+- `lookup-public-status`: 20 requests/hour
+- `submit-bouwsubsidie-application`: 5 requests/hour
+- `submit-housing-registration`: 5 requests/hour
+
+### Files Modified
+
+| File | Change |
+|------|--------|
+| `_shared/cors.ts` | NEW — shared corsHeaders export |
+| `_shared/rate-limit.ts` | NEW — createRateLimiter factory |
+| `_shared/constants.ts` | NEW — VALID_DISTRICTS array |
+| `_shared/validators.ts` | NEW — isValidUUID helper |
+| `health-check/index.ts` | Import corsHeaders from shared |
+| `lookup-public-status/index.ts` | Import corsHeaders, use createRateLimiter |
+| `submit-bouwsubsidie-application/index.ts` | Import corsHeaders, createRateLimiter, VALID_DISTRICTS |
+| `submit-housing-registration/index.ts` | Import corsHeaders, createRateLimiter, VALID_DISTRICTS |
+| `execute-allocation-run/index.ts` | Import corsHeaders, isValidUUID |
+| `generate-raadvoorstel/index.ts` | Import corsHeaders |
+| `get-document-download-url/index.ts` | Import corsHeaders |
+
+**Constraints Preserved:**
+- Zero business logic changes
+- Zero response format changes
+- Per-function rate limit isolation maintained
+- All logging, correlation IDs, error handling unchanged
+- CORS headers byte-identical
+- No schema/RLS/auth changes

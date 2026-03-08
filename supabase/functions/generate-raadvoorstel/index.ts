@@ -24,12 +24,7 @@ import {
   WidthType,
 } from "npm:docx@8";
 import { createLogger } from '../_shared/logger.ts'
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from '../_shared/cors.ts'
 
 // District code to name mapping
 const DISTRICT_NAMES: Record<string, string> = {

@@ -12,11 +12,8 @@
 
 import { createClient } from '@supabase/supabase-js'
 import { createLogger } from '../_shared/logger.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeaders } from '../_shared/cors.ts'
+import { isValidUUID } from '../_shared/validators.ts'
 
 interface AllocationRunRequest {
   run_id: string
@@ -28,12 +25,6 @@ interface AllocationCandidate {
   urgency_score: number
   waiting_list_position: number
   composite_rank: number
-}
-
-// UUID validation helper for input sanitization
-function isValidUUID(str: string): boolean {
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-  return uuidRegex.test(str)
 }
 
 // District code validation (alphanumeric, max 20 chars)

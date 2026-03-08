@@ -1,280 +1,248 @@
-# Ministerial System Manual — Documentation Execution Plan
+# System Readiness Review + Code Quality Improvement Plan
 
-## Objective
-
-Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
-
-This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
+**Context:** Phase 8 Observability complete. Analysis and documentation only.
 
 ---
 
-## Deliverable Structure
+## PART A — Observability Verification Correction
 
-**Folder:** `/docs/manual/`
-
-
-| #   | File                                                 | Purpose                                                                                                  |
-| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
-| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
-| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
-| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
-| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
-| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
-| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
-| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
-| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
-| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
-| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
-| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
-| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
-| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
-| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
-| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
+The previous report stated observability was "verified end-to-end." This is partially accurate.
 
 
-**Total: 16 documents**
+| Edge Function                     | Logger Integrated         | Invocation Tested | Log Output Verified   | Status                          |
+| --------------------------------- | ------------------------- | ----------------- | --------------------- | ------------------------------- |
+| `health-check`                    | No (stateless, no logger) | Yes               | N/A                   | **VERIFIED**                    |
+| `lookup-public-status`            | Yes                       | Yes               | Yes                   | **VERIFIED**                    |
+| `submit-bouwsubsidie-application` | Yes                       | Yes               | Yes (validation path) | **VERIFIED**                    |
+| `submit-housing-registration`     | Yes                       | Yes               | Yes (validation path) | **VERIFIED**                    |
+| `execute-allocation-run`          | Yes                       | No                | No                    | **PENDING MANUAL VERIFICATION** |
+| `generate-raadvoorstel`           | Yes                       | No                | No                    | **PENDING MANUAL VERIFICATION** |
+| `get-document-download-url`       | Yes                       | No                | No                    | **PENDING MANUAL VERIFICATION** |
+
+
+**Correction:** 4 of 7 functions were tested. 3 authenticated functions (`execute-allocation-run`, `generate-raadvoorstel`, `get-document-download-url`) require JWT + RBAC roles and cannot be tested without an admin session. The phrase "verified end-to-end" should be narrowed to "verified for public-facing functions."
 
 ---
 
-## URL Documentation
+## PART B — System Readiness Review
 
-All documents will include explicit URLs based on:
 
-**Production (Published):**
+| #   | Category                           | Status          | %   |
+| --- | ---------------------------------- | --------------- | --- |
+| 1   | Public frontend readiness          | COMPLETE        | 95% |
+| 2   | Admin dashboard readiness          | PARTIAL         | 80% |
+| 3   | Core workflow readiness            | PARTIAL         | 85% |
+| 4   | Database/schema readiness          | COMPLETE        | 95% |
+| 5   | Security/RLS readiness             | COMPLETE        | 90% |
+| 6   | Observability/monitoring readiness | PARTIAL         | 70% |
+| 7   | Performance readiness              | PARTIAL         | 80% |
+| 8   | Accessibility readiness            | PARTIAL         | 70% |
+| 9   | Deployment/operations readiness    | PARTIAL         | 65% |
+| 10  | Backup/recovery readiness          | PARTIAL         | 50% |
+| 11  | Documentation readiness            | PARTIAL         | 75% |
+| 12  | Testing readiness                  | NOT IMPLEMENTED | 5%  |
 
-- Landing: `https://huggable-cloud-whisper.lovable.app/`
-- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
-- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
-- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
-- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
-- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
 
-**Staging (Preview):**
+**Overall system completion: ~78%**
+**Overall production readiness: ~65%**
 
-- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
-- Same path structure as production
+### Safe for production now
 
-Admin module URLs will be listed per-module in document 12.
+- Public Bouwsubsidie wizard (submission + status lookup)
+- Public Housing Registration wizard (submission + status lookup)
+- Landing page
+- Authentication flow
+- Database schema + RLS policies
+- Edge Functions (public-facing)
 
----
+### Not yet safe for production
 
-## Content Coverage Per Document
+- Admin workflows without manual end-to-end verification by authorized users
+- Authenticated Edge Functions (untested with real RBAC sessions)
+- Any flow depending on external Sentry/BetterStack (not yet configured)
 
-### 00 - Executive Summary
+### Operationally missing
 
-- System purpose and legal mandate
-- Two services overview (Housing + Subsidy)
-- Governance and accountability model (1 paragraph)
-- Role structure summary
-- Key operational metrics / KPIs
-- "What happens next?" for both services
-- 5-10 pages, non-technical language
-
-### 01 - System Overview
-
-- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
-- Public vs Admin separation
-- Authentication model (staff-only login, citizen anonymous access)
-- District-based scoping
-
-### 02 + 03 - Public Wizard Workflows
-
-Per service:
-
-- Preconditions
-- Step-by-step wizard walkthrough (each form step)
-- Reference number generation
-- Security token explanation
-- Receipt/confirmation page
-- Status tracking via `/status`
-- "What happens after submission?"
-
-### 04 + 05 - Admin Workflows
-
-Per service:
-
-- Locating records in list view
-- Opening detail view
-- Status change process (with mandatory reason)
-- Document upload and verification
-- Field reports (Social, Technical — Bouwsubsidie only)
-- Decision chain steps
-- Raadvoorstel generation (Bouwsubsidie only)
-- Archive flow
-- Audit trail per action
-
-### 06 - Roles & Permission Matrix
-
-Table columns:
-
-- Role name (all 11 implemented roles)
-- Modules accessible
-- Create/Edit rights
-- Status change authority (which statuses)
-- Document upload/verify rights
-- Allocation/decision authority
-- Audit log access
-- Export/print permissions
-- National vs district-scoped flag
-
-### 07 - Status Lifecycle
-
-- ASCII state diagrams for both services
-- Transition rules with triggering roles
-- Decision authority per transition
-- Mandatory reason requirements
-
-### 08 - Document Management
-
-- Upload workflow
-- Verification tracking
-- Raadvoorstel generation (edge function)
-- Download via signed URLs
-
-### 09 - Audit Logging
-
-- `audit_event` table structure
-- What triggers a log entry
-- Where to view audit logs (Admin > Audit Log)
-- Append-only guarantee
-- Role access to audit log
-
-### 10 - Allocation Engine
-
-- District quotas setup
-- Urgency scoring model
-- Allocation run execution
-- Matching logic
-- Decision recording
-- Assignment registration
-
-### 11 - Governance Controls
-
-- RLS enforcement model
-- Least-privilege access
-- Ministerial Advisor mandatory paraph
-- Minister deviation logging
-- Status history immutability
-
-### 12 - Module Specification
-
-All 20 pages/modules documented:
-
-- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
-- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
-
-Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
-
-### 13 - Operational Scenarios
-
-Minimum 8 numbered end-to-end scenarios:
-
-1. Citizen submits Housing Registration
-2. Citizen submits Subsidy Application
-3. Frontdesk processes new Housing Registration
-4. Frontdesk processes new Subsidy Case through full decision chain
-5. Allocation run execution and assignment
-6. Minister approves/rejects with deviation from advisor
-7. Archive lookup of closed case
-8. Audit trail verification for a specific case
-
-Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
-
-### 14 - Troubleshooting & FAQ
-
-- Common submission errors
-- Duplicate/resubmission behavior
-- Status lookup failures
-- Document upload issues
-- Permission denied scenarios
-- Session timeout handling
-
-### 15 - Glossary
-
-- All status values (both services)
-- Field definitions
-- Role names with descriptions
-- System terminology (Raadvoorstel, paraph, district code, etc.)
+- Zero automated tests (no unit, integration, or E2E)
+- No CI/CD pipeline
+- No backup/restore procedures documented
+- No runbook for incident response
+- External monitoring services not configured (only documented)
+- No load/stress testing performed
 
 ---
 
-## Screenshots Strategy
+## PART C — Deferred Items Register
 
-- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
-- Each reference follows format: `Figure X.Y — Description`
-- PII masking note included in each document header
-- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
+
+| Item                                                        | Category         | Current Status                      | Risk if Deferred                               | Why Deferred                       | Recommended Next Action                          | Priority |
+| ----------------------------------------------------------- | ---------------- | ----------------------------------- | ---------------------------------------------- | ---------------------------------- | ------------------------------------------------ | -------- |
+| apexcharts `node_modules` type errors                       | Frontend / Types | Known, suppressed                   | Low — cosmetic TS warnings only                | Third-party type incompatibility   | Add `skipLibCheck: true` or `@ts-ignore` wrapper | Low      |
+| 3 authenticated Edge Functions not log-verified             | Observability    | Logger code present, untested       | Medium — silent failures in production logging | Requires admin JWT + RBAC session  | Manual admin session test                        | Medium   |
+| External monitoring setup (BetterStack/Sentry alerts)       | Operations       | Documented, not configured          | High — no alerting in production               | Requires external service accounts | Configure before go-live                         | High     |
+| Automated testing suite                                     | Quality          | Not implemented                     | High — regressions undetectable                | Phase 9 scope                      | Implement Phase 9                                | High     |
+| CI/CD pipeline                                              | Deployment       | Not implemented                     | Medium — manual deploy errors                  | Phase 9 scope                      | Implement Phase 9                                | Medium   |
+| Admin workflow E2E verification                             | QA               | Partially verified                  | Medium — edge cases unconfirmed                | Requires real admin users          | Manual admin walkthrough                         | Medium   |
+| Backup/restore procedures                                   | Operations       | Restore points only (code-level)    | High — no database backup plan                 | Out of current phase scope         | Document + configure Supabase backups            | High     |
+| `ThemeCustomizer` component (dark theme excluded from v1.0) | Frontend         | Active but functionally unnecessary | Low — UI confusion if discovered               | Darkone template artifact          | Mark as deferred cleanup                         | Low      |
+| `VectorMap` / `CountryMap` dashboard component              | Frontend         | Active on dashboard                 | Low — not business-relevant                    | Darkone template artifact          | Review for removal                               | Low      |
+
 
 ---
 
-## Execution Sequence
+## PART D — Code Quality Improvement Plan
 
-1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
-2. Create `/docs/manual/` folder
-3. Generate documents in order: 00 through 15
-4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
-5. After all 16 documents: produce completion checklist
+### 1. Dead Code Candidates
+
+
+| Finding                                                                     | Classification        | Impact                     | Domain          |
+| --------------------------------------------------------------------------- | --------------------- | -------------------------- | --------------- |
+| `FallbackLoading.tsx` — duplicate of `LoadingFallback.tsx`                  | SAFE CLEANUP          | 1 file                     | Frontend/Shared |
+| `AnimationStar.tsx` — decorative template artifact                          | NEEDS REVIEW          | 1 file + 1 import          | Frontend/Admin  |
+| `VectorMap/` directory + `CountryMap.tsx` — world map not business-relevant | NEEDS REVIEW          | 4 files                    | Frontend/Admin  |
+| `ThemeCustomizer.tsx` — dark theme excluded from v1.0                       | NEEDS REVIEW          | 1 file + context refs      | Frontend/Shared |
+| `src/components/from/` — typo directory name ("from" vs "form")             | SAFE CLEANUP (rename) | 1 file + 13 import updates | Frontend/Shared |
+
+
+### 2. Duplicate Code
+
+
+| Finding                                                                        | Classification | Impact                                 | Domain  |
+| ------------------------------------------------------------------------------ | -------------- | -------------------------------------- | ------- |
+| `corsHeaders` definition — identical in all 7 Edge Functions                   | SAFE CLEANUP   | Extract to `_shared/cors.ts`           | Backend |
+| `rateLimitMap` + `checkRateLimit()` — identical in 3 functions                 | SAFE CLEANUP   | Extract to `_shared/rate-limit.ts`     | Backend |
+| `VALID_DISTRICTS` — identical in 2 Edge Functions                              | SAFE CLEANUP   | Extract to `_shared/constants.ts`      | Backend |
+| UUID validation regex — duplicated in 3 functions (inline + `isValidUUID`)     | SAFE CLEANUP   | Extract to `_shared/validators.ts`     | Backend |
+| RBAC check pattern (fetch roles, check access) — repeated in 3 auth functions  | NEEDS REVIEW   | Extract to `_shared/rbac.ts`           | Backend |
+| `DISTRICT_NAMES` mapping in `generate-raadvoorstel` vs `DISTRICTS` in frontend | NEEDS REVIEW   | Consolidate or document as intentional | Shared  |
+
+
+### 3. Repeated UI Patterns
+
+
+| Finding                                                                                                      | Classification | Domain          |
+| ------------------------------------------------------------------------------------------------------------ | -------------- | --------------- |
+| Wizard step structure (Bouwsubsidie 9 steps, Housing 11 steps) share identical intro/review/receipt patterns | NEEDS REVIEW   | Frontend/Public |
+| Step0Introduction nearly identical across both wizards                                                       | NEEDS REVIEW   | Frontend/Public |
+| Admin form modals (PersonFormModal, HouseholdFormModal) share identical Supabase CRUD + audit pattern        | NEEDS REVIEW   | Frontend/Admin  |
+
+
+### 4. Type Hygiene
+
+
+| Finding                                                       | Classification               | Domain         |
+| ------------------------------------------------------------- | ---------------------------- | -------------- |
+| `src/types/externals.d.ts` — large catch-all declaration file | NEEDS REVIEW                 | Frontend/Types |
+| `src/types/v12-roles.ts` — unclear naming (v12?)              | NEEDS REVIEW                 | Frontend/Types |
+| apexcharts type conflicts                                     | HIGH RISK / DO NOT TOUCH YET | Frontend/Types |
+
+
+### 5. Naming Inconsistencies
+
+
+| Finding                                                                                | Classification |
+| -------------------------------------------------------------------------------------- | -------------- |
+| `src/helpers/Manu.ts` — should be `Menu.ts`                                            | SAFE CLEANUP   |
+| `src/components/from/` — should be `form/`                                             | SAFE CLEANUP   |
+| Edge Function error codes inconsistent: some use `db_insert_failed` for query failures | NEEDS REVIEW   |
+
+
+### 6. Large Files
+
+
+| File                                       | Lines | Recommendation                           |
+| ------------------------------------------ | ----- | ---------------------------------------- |
+| `generate-raadvoorstel/index.ts`           | 671   | Split DOCX template into separate module |
+| `submit-bouwsubsidie-application/index.ts` | 619   | Extract validation + DB logic            |
+| `submit-housing-registration/index.ts`     | 600   | Extract validation + DB logic            |
+| `lookup-public-status/index.ts`            | 411   | Acceptable but validation extractable    |
+
+
+### Suggested Execution Batching
+
+
+| Batch                              | Scope                                                                                       | File Count         | Risk   |
+| ---------------------------------- | ------------------------------------------------------------------------------------------- | ------------------ | ------ |
+| Batch 1: Backend shared extraction | `_shared/cors.ts`, `_shared/rate-limit.ts`, `_shared/constants.ts`, `_shared/validators.ts` | ~4 new, 7 modified | Low    |
+| Batch 2: Frontend naming fixes     | Rename `from/` to `form/`, `Manu.ts` to `Menu.ts`                                           | ~15 files          | Low    |
+| Batch 3: Dead code removal         | `FallbackLoading.tsx` consolidation                                                         | 2 files            | Low    |
+| Batch 4: Template artifact review  | `AnimationStar`, `VectorMap`, `ThemeCustomizer`                                             | 6 files            | Medium |
+
 
 ---
 
-## Quality Gates
+## PART E — Remaining Cleanup Candidates
 
-- Language: Clear, non-technical, suitable for Minister and senior staff
-- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
-- UI alignment: All labels, navigation paths, and field names match current implementation
-- No invented features or roles
-- No code/schema/RLS changes
-- Restore point created before any file creation
+1. `src/components/FallbackLoading.tsx` — exact duplicate of `LoadingFallback.tsx`
+2. `src/components/from/` — typo directory, should be `form/`
+3. `src/helpers/Manu.ts` — typo filename, should be `Menu.ts`
+4. `corsHeaders` duplicated across 7 Edge Functions
+5. `checkRateLimit()` duplicated across 3 Edge Functions
+6. `VALID_DISTRICTS` duplicated across 2 Edge Functions
+7. UUID regex duplicated across 3 Edge Functions
+8. Frontend validation (wizard) partially overlaps Edge Function validation — document as intentional (defense-in-depth)
+9. `AnimationStar.tsx` — decorative only, no business purpose
+10. `VectorMap/` + `CountryMap.tsx` — world map on dashboard, not relevant to DVH-IMS
+11. `ThemeCustomizer.tsx` — dark theme excluded from v1.0 scope
 
-## IMPORTANT — PRODUCTION URL CORRECTION
+---
 
-All documentation must use the official custom production domain:
+## NOTE — Audit status clarification
 
-[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
+Approved as a strategic audit and planning document.
 
-DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
+Keep the following interpretation explicit:
 
-Update all production URLs to:
+- The completion percentage is a governance estimate, not a release certification
 
-Landing:
+- Observability is only fully verified for public-facing functions
 
-[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
+- Authenticated Edge Functions still require manual verification with real RBAC sessions
 
-Housing Registration:
+- Production readiness remains PARTIAL until testing, backup/restore verification, and external monitoring configuration are completed
 
-[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
+Use this audit as the planning baseline for the next execution phases:
 
-Subsidy Application:
+Phase 9 — Code Quality Cleanup
 
-[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
+Phase 10 — Testing & QA Foundation
 
-Status Tracker:
+Phase 11 — Production Hardening
 
-[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
-
-Staff Login:
-
-[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
-
-Admin Dashboard:
-
-[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
-
-If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
-
-The Ministerial Manual must only reference the official production domain.  
+Phase 12 — Admin Workflow Completion & Verification  
   
-**Completion Report Format**
+  
+  
+**PART F — Recommended Next Phases**
 
-After all documents are generated:
+### Phase 9 — Code Quality Cleanup
 
-```
-IMPLEMENTED: [list of created files]
-PARTIAL: [any incomplete documents + reason]
-SKIPPED: [none expected]
-VERIFICATION: [checklist per document — PASS/FAIL]
-RESTORE POINT: [ID]
-BLOCKERS: NONE / [description]
-CONFIRMATION: No code changes. No schema changes. No RLS changes.
-```
+- **Purpose:** Reduce technical debt, consolidate duplicates, fix naming
+- **Scope:** Backend shared modules, frontend naming, dead code removal
+- **Risk:** Low — no functional changes
+- **Why now:** Prevents debt accumulation before testing phase
+- **Complexity:** Low (2-3 sessions)
+
+### Phase 10 — Testing & QA Foundation
+
+- **Purpose:** Establish automated test coverage for critical paths
+- **Scope:** Unit tests for Edge Functions, integration tests for public wizards, E2E smoke test suite
+- **Risk:** Medium — requires test infrastructure setup
+- **Why now:** Zero test coverage is the highest-risk gap
+- **Complexity:** High (5-8 sessions)
+
+### Phase 11 — Production Hardening
+
+- **Purpose:** Configure external services, backup procedures, incident runbook
+- **Scope:** BetterStack/Sentry configuration, Supabase backup verification, ops documentation
+- **Risk:** Low — configuration only
+- **Why now:** Required before any production deployment
+- **Complexity:** Medium (2-3 sessions)
+
+### Phase 12 — Admin Workflow Completion & Verification
+
+- **Purpose:** Full admin E2E verification with real RBAC sessions
+- **Scope:** All admin pages, authenticated Edge Functions, role-based access confirmation
+- **Risk:** Medium — may surface workflow gaps
+- **Why now:** After cleanup and testing infrastructure are in place
+- **Complexity:** Medium (3-4 sessions)

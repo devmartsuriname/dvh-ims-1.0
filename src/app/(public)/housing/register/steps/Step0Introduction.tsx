@@ -79,20 +79,20 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
             <Col md={6}>
               <h6 className="fw-semibold mb-3">{t('housing.step0.requirementsTitle')}</h6>
               <ul className="list-unstyled mb-0">
-                <li className="d-flex align-items-center mb-2">
-                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
+                <li className="d-flex align-items-start mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2 mt-1" style={{ minWidth: 16, minHeight: 16 }} />
                   <span className="small">{t('housing.step0.requirement1')}</span>
                 </li>
-                <li className="d-flex align-items-center mb-2">
-                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
+                <li className="d-flex align-items-start mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2 mt-1" style={{ minWidth: 16, minHeight: 16 }} />
                   <span className="small">{t('housing.step0.requirement2')}</span>
                 </li>
-                <li className="d-flex align-items-center mb-2">
-                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
+                <li className="d-flex align-items-start mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2 mt-1" style={{ minWidth: 16, minHeight: 16 }} />
                   <span className="small">{t('housing.step0.requirement3')}</span>
                 </li>
-                <li className="d-flex align-items-center mb-2">
-                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
+                <li className="d-flex align-items-start mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2 mt-1" style={{ minWidth: 16, minHeight: 16 }} />
                   <span className="small">{t('housing.step0.requirement4')}</span>
                 </li>
               </ul>
@@ -103,23 +103,23 @@ const Step0Introduction = ({ onNext }: Step0IntroductionProps) => {
                 {t('housing.step0.docsTitle')}
               </h6>
               <ul className="list-unstyled mb-2">
-                <li className="d-flex align-items-center mb-2">
-                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
+                <li className="d-flex align-items-start mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2 mt-1" style={{ minWidth: 16, minHeight: 16 }} />
                   <span className="small">{t('housing.step0.doc1')}</span>
                 </li>
-                <li className="d-flex align-items-center mb-2">
-                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
+                <li className="d-flex align-items-start mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2 mt-1" style={{ minWidth: 16, minHeight: 16 }} />
                   <span className="small">{t('housing.step0.doc2')}</span>
                 </li>
-                <li className="d-flex align-items-center mb-2">
-                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2" />
+                <li className="d-flex align-items-start mb-2">
+                  <IconifyIcon icon="mingcute:check-circle-line" className="text-success me-2 mt-1" style={{ minWidth: 16, minHeight: 16 }} />
                   <span className="small">{t('housing.step0.doc3')}</span>
                 </li>
               </ul>
-              <p className="text-muted small mb-0">
-                <IconifyIcon icon="mingcute:information-line" className="me-1" />
-                {t('housing.step0.docsNote')}
-              </p>
+              <div className="d-flex align-items-start text-muted small mb-0">
+                <IconifyIcon icon="mingcute:information-line" className="me-2 mt-1" style={{ minWidth: 16, minHeight: 16 }} />
+                <span>{t('housing.step0.docsNote')}</span>
+              </div>
             </Col>
           </Row>
 

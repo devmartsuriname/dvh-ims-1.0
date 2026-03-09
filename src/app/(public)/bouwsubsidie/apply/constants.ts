@@ -101,6 +101,8 @@ export const INITIAL_FORM_DATA = {
     document_code: doc.document_code,
     label: doc.label,
     is_mandatory: doc.is_mandatory,
+    category: doc.category,
+    validation_group: doc.validation_group,
     // uploaded_file is undefined until file is uploaded
   })),
   

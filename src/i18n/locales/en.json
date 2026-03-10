@@ -287,7 +287,7 @@
       "mandatoryMissing": "Upload all mandatory documents to proceed",
       "docIdCopy": "Copy of ID",
       "docIncomeProof": "Proof of Income",
-      "docResidenceProof": "Proof of Current Residence",
+      "docResidenceProof": "Proof of current residence address (SWM, EBS, Telesur, Agreement)",
       "docFamilyComposition": "Family Composition",
       "docMedicalCert": "Medical Certificate",
       "docEmergencyProof": "Emergency Documentation"

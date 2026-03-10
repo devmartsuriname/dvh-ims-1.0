@@ -1,280 +1,93 @@
-# Ministerial System Manual — Documentation Execution Plan
+# DVH-IMS — Phase 12: Secure Document Storage
 
-## Objective
+## Current State
 
-Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
+- `citizen-uploads` bucket is **public** — any file accessible via direct URL if path is known
+- Housing admin detail page uses `getPublicUrl()` to display citizen documents (line 192-195)
+- Subsidy admin detail page does **not** render citizen document links (only shows file_name, no download button)
+- Existing `get-document-download-url` Edge Function handles **generated-documents** bucket only (private, signed URLs)
+- Public wizard upload steps (Step8Documents for housing, Step6Documents for subsidy) use anonymous `supabase.storage.upload()` — must remain functional
 
-This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
+## Implementation Plan
 
----
+### Step 1 — New Edge Function: `get-citizen-document`
 
-## Deliverable Structure
+Create `supabase/functions/get-citizen-document/index.ts`:
 
-**Folder:** `/docs/manual/`
+- POST endpoint accepting `{ file_path: string }`
+- JWT authentication via `getUser()`
+- RBAC check: `system_admin`, `project_leader`, `minister`, `frontdesk_housing`, `frontdesk_bouwsubsidie`, `admin_staff`, `audit`, `director`, `ministerial_advisor`, `social_field_worker`, `technical_inspector`
+- Validate `file_path` starts with `housing/` or `bouwsubsidie/` (prevent path traversal)
+- Generate signed URL with 60-second expiry from `citizen-uploads` bucket using service role
+- Audit log entry for document access
+- Rate limit: 30 requests/IP/hour
+- Register in `supabase/config.toml` with `verify_jwt = false`
 
+### Step 2 — Update Frontend Document Access
 
-| #   | File                                                 | Purpose                                                                                                  |
-| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
-| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
-| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
-| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
-| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
-| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
-| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
-| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
-| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
-| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
-| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
-| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
-| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
-| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
-| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
-| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
+**Housing admin detail** (`src/app/(admin)/housing-registrations/[id]/page.tsx`):
 
+- Replace `getDocumentUrl()` (lines 192-195) with async function that calls `get-citizen-document` Edge Function
+- Update the download button (line 496-504) to use `onClick` handler instead of `href`
 
-**Total: 16 documents**
+**Subsidy admin detail** (`src/app/(admin)/subsidy-cases/[id]/page.tsx`):
 
----
+- Add download button to citizen document rows (lines 678-691) using same Edge Function pattern
 
-## URL Documentation
+### Step 3 — Database Migration: Harden Bucket
 
-All documents will include explicit URLs based on:
+SQL migration to:
 
-**Production (Published):**
+1. Set `citizen-uploads` bucket to `public = false`
+2. Set `file_size_limit = 10485760` (10MB) and `allowed_mime_types = ['application/pdf', 'image/jpeg', 'image/png']`
+3. Add `no_citizen_document_deletion` RLS policy on `storage.objects` blocking DELETE for `citizen-uploads`
+4. Keep anonymous INSERT policy (citizens must still upload)
+5. Remove `anon_can_read_citizen_documents` SELECT policy (no longer needed — signed URLs via service role)
 
-- Landing: `https://huggable-cloud-whisper.lovable.app/`
-- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
-- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
-- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
-- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
-- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
+### Step 4 — Verification
 
-**Staging (Preview):**
+After deployment:
 
-- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
-- Same path structure as production
+- Test citizen upload still works (anonymous INSERT)
+- Test admin document access via signed URL
+- Confirm direct public URL returns 400/403
+- Console clean check
 
-Admin module URLs will be listed per-module in document 12.
+**NOTE — Security Correction**
 
----
+In Step 1 please change the Edge Function configuration.
 
-## Content Coverage Per Document
+Instead of:
 
-### 00 - Executive Summary
+verify_jwt = false
 
-- System purpose and legal mandate
-- Two services overview (Housing + Subsidy)
-- Governance and accountability model (1 paragraph)
-- Role structure summary
-- Key operational metrics / KPIs
-- "What happens next?" for both services
-- 5-10 pages, non-technical language
+Use:
 
-### 01 - System Overview
+verify_jwt = true
 
-- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
-- Public vs Admin separation
-- Authentication model (staff-only login, citizen anonymous access)
-- District-based scoping
+The endpoint should only allow authenticated staff requests.
 
-### 02 + 03 - Public Wizard Workflows
+Additional validation requirement:
 
-Per service:
+Validate that file_path matches the expected pattern:
 
-- Preconditions
-- Step-by-step wizard walkthrough (each form step)
-- Reference number generation
-- Security token explanation
-- Receipt/confirmation page
-- Status tracking via `/status`
-- "What happens after submission?"
+housing/<case_id>/<filename>
 
-### 04 + 05 - Admin Workflows
+or
 
-Per service:
+bouwsubsidie/<case_id>/<filename>
 
-- Locating records in list view
-- Opening detail view
-- Status change process (with mandatory reason)
-- Document upload and verification
-- Field reports (Social, Technical — Bouwsubsidie only)
-- Decision chain steps
-- Raadvoorstel generation (Bouwsubsidie only)
-- Archive flow
-- Audit trail per action
+This prevents path traversal or file enumeration attacks.
 
-### 06 - Roles & Permission Matrix
-
-Table columns:
-
-- Role name (all 11 implemented roles)
-- Modules accessible
-- Create/Edit rights
-- Status change authority (which statuses)
-- Document upload/verify rights
-- Allocation/decision authority
-- Audit log access
-- Export/print permissions
-- National vs district-scoped flag
-
-### 07 - Status Lifecycle
-
-- ASCII state diagrams for both services
-- Transition rules with triggering roles
-- Decision authority per transition
-- Mandatory reason requirements
-
-### 08 - Document Management
-
-- Upload workflow
-- Verification tracking
-- Raadvoorstel generation (edge function)
-- Download via signed URLs
-
-### 09 - Audit Logging
-
-- `audit_event` table structure
-- What triggers a log entry
-- Where to view audit logs (Admin > Audit Log)
-- Append-only guarantee
-- Role access to audit log
-
-### 10 - Allocation Engine
-
-- District quotas setup
-- Urgency scoring model
-- Allocation run execution
-- Matching logic
-- Decision recording
-- Assignment registration
-
-### 11 - Governance Controls
-
-- RLS enforcement model
-- Least-privilege access
-- Ministerial Advisor mandatory paraph
-- Minister deviation logging
-- Status history immutability
-
-### 12 - Module Specification
-
-All 20 pages/modules documented:
-
-- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
-- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
-
-Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
-
-### 13 - Operational Scenarios
-
-Minimum 8 numbered end-to-end scenarios:
-
-1. Citizen submits Housing Registration
-2. Citizen submits Subsidy Application
-3. Frontdesk processes new Housing Registration
-4. Frontdesk processes new Subsidy Case through full decision chain
-5. Allocation run execution and assignment
-6. Minister approves/rejects with deviation from advisor
-7. Archive lookup of closed case
-8. Audit trail verification for a specific case
-
-Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
-
-### 14 - Troubleshooting & FAQ
-
-- Common submission errors
-- Duplicate/resubmission behavior
-- Status lookup failures
-- Document upload issues
-- Permission denied scenarios
-- Session timeout handling
-
-### 15 - Glossary
-
-- All status values (both services)
-- Field definitions
-- Role names with descriptions
-- System terminology (Raadvoorstel, paraph, district code, etc.)
-
----
-
-## Screenshots Strategy
-
-- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
-- Each reference follows format: `Figure X.Y — Description`
-- PII masking note included in each document header
-- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
-
----
-
-## Execution Sequence
-
-1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
-2. Create `/docs/manual/` folder
-3. Generate documents in order: 00 through 15
-4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
-5. After all 16 documents: produce completion checklist
-
----
-
-## Quality Gates
-
-- Language: Clear, non-technical, suitable for Minister and senior staff
-- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
-- UI alignment: All labels, navigation paths, and field names match current implementation
-- No invented features or roles
-- No code/schema/RLS changes
-- Restore point created before any file creation
-
-## IMPORTANT — PRODUCTION URL CORRECTION
-
-All documentation must use the official custom production domain:
-
-[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
-
-DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
-
-Update all production URLs to:
-
-Landing:
-
-[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
-
-Housing Registration:
-
-[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
-
-Subsidy Application:
-
-[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
-
-Status Tracker:
-
-[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
-
-Staff Login:
-
-[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
-
-Admin Dashboard:
-
-[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
-
-If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
-
-The Ministerial Manual must only reference the official production domain.  
+All other parts of the implementation plan are approved.  
   
-**Completion Report Format**
+**Files Changed**
 
-After all documents are generated:
 
-```
-IMPLEMENTED: [list of created files]
-PARTIAL: [any incomplete documents + reason]
-SKIPPED: [none expected]
-VERIFICATION: [checklist per document — PASS/FAIL]
-RESTORE POINT: [ID]
-BLOCKERS: NONE / [description]
-CONFIRMATION: No code changes. No schema changes. No RLS changes.
-```
+| File                                                  | Action                               |
+| ----------------------------------------------------- | ------------------------------------ |
+| `supabase/functions/get-citizen-document/index.ts`    | CREATE                               |
+| `supabase/config.toml`                                | ADD function entry                   |
+| `src/app/(admin)/housing-registrations/[id]/page.tsx` | UPDATE document access               |
+| `src/app/(admin)/subsidy-cases/[id]/page.tsx`         | ADD download button for citizen docs |
+| Database migration                                    | Bucket hardening + RLS               |

@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { type RouteProps } from 'react-router-dom'
+import { Navigate, type RouteProps } from 'react-router-dom'
 
 // Public Routes (Citizen-facing, Light Theme)
 const LandingPage = lazy(() => import('@/app/(public)/landing/page'))
@@ -39,6 +39,9 @@ const ArchiveList = lazy(() => import('@/app/(admin)/archive/page'))
 const ArchiveSubsidyDetail = lazy(() => import('@/app/(admin)/archive/subsidy/[id]/page'))
 const ArchiveHousingDetail = lazy(() => import('@/app/(admin)/archive/housing/[id]/page'))
 
+// Utility Routes
+const QrCodes = lazy(() => import('@/app/(admin)/qr-codes/page'))
+
 // Auth Routes
 const AuthSignIn = lazy(() => import('@/app/(other)/auth/sign-in/page'))
 const AuthSignUp = lazy(() => import('@/app/(other)/auth/sign-up/page'))
@@ -62,6 +65,9 @@ export const publicRoutes: RoutesProps[] = [
   { path: '/bouwsubsidie/apply', name: 'Bouwsubsidie Wizard', element: <BouwsubsidieWizard /> },
   { path: '/housing/register', name: 'Housing Wizard', element: <HousingWizard /> },
   { path: '/status', name: 'Status Tracker', element: <StatusTracker /> },
+  // Stable QR redirect routes — do NOT rename these paths
+  { path: '/q/woningregistratie', name: 'QR Woning Redirect', element: <Navigate to="/housing/register" replace /> },
+  { path: '/q/bouwsubsidie', name: 'QR Bouwsubsidie Redirect', element: <Navigate to="/bouwsubsidie/apply" replace /> },
 ]
 
 /**
@@ -135,6 +141,7 @@ const governanceRoutes: RoutesProps[] = [
   { path: '/archive/subsidy/:id', name: 'Archive Subsidy Detail', element: <ArchiveSubsidyDetail /> },
   { path: '/archive/housing/:id', name: 'Archive Housing Detail', element: <ArchiveHousingDetail /> },
   { path: '/audit-log', name: 'Audit Log', element: <AuditLog /> },
+  { path: '/qr-codes', name: 'QR Codes', element: <QrCodes /> },
 ]
 
 export const appRoutes = [

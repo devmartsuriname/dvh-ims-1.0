@@ -189,9 +189,37 @@ const HousingRegistrationDetail = () => {
     }
   }
 
-  const getDocumentUrl = (filePath: string) => {
-    const { data } = supabase.storage.from('citizen-uploads').getPublicUrl(filePath)
-    return data.publicUrl
+  const handleDocumentDownload = async (filePath: string, fileName: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        notify.error('Authentication required')
+        return
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-citizen-document`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ file_path: filePath }),
+        }
+      )
+
+      const result = await response.json()
+      if (!result.success || !result.signedUrl) {
+        notify.error(result.message || 'Failed to access document')
+        return
+      }
+
+      window.open(result.signedUrl, '_blank', 'noopener,noreferrer')
+    } catch (error) {
+      console.error('Document access error:', error)
+      notify.error('Failed to access document')
+    }
   }
 
   useEffect(() => {

@@ -523,9 +523,7 @@ const HousingRegistrationDetail = () => {
                               <Button
                                 variant="outline-primary"
                                 size="sm"
-                                href={getDocumentUrl(doc.file_path)}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                onClick={() => handleDocumentDownload(doc.file_path, doc.file_name)}
                               >
                                 <IconifyIcon icon="mingcute:download-2-line" className="me-1" />
                                 {doc.file_name}

@@ -678,7 +678,44 @@ const SubsidyCaseDetail = () => {
                         {documents.map((doc) => (
                           <tr key={doc.id}>
                             <td>{doc.requirement?.document_name || '-'}</td>
-                            <td>{doc.file_name}</td>
+                            <td>
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                onClick={async () => {
+                                  try {
+                                    const { data: { session } } = await supabase.auth.getSession()
+                                    if (!session) {
+                                      notify.error('Authentication required')
+                                      return
+                                    }
+                                    const response = await fetch(
+                                      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-citizen-document`,
+                                      {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          'Authorization': `Bearer ${session.access_token}`,
+                                        },
+                                        body: JSON.stringify({ file_path: doc.file_path }),
+                                      }
+                                    )
+                                    const result = await response.json()
+                                    if (!result.success || !result.signedUrl) {
+                                      notify.error(result.message || 'Failed to access document')
+                                      return
+                                    }
+                                    window.open(result.signedUrl, '_blank', 'noopener,noreferrer')
+                                  } catch (error) {
+                                    console.error('Document access error:', error)
+                                    notify.error('Failed to access document')
+                                  }
+                                }}
+                              >
+                                <IconifyIcon icon="mingcute:download-2-line" className="me-1" />
+                                {doc.file_name}
+                              </Button>
+                            </td>
                             <td>{new Date(doc.uploaded_at).toLocaleDateString()}</td>
                             <td>
                               {doc.is_verified ? (

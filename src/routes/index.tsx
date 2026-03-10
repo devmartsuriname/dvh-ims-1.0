@@ -141,6 +141,7 @@ const governanceRoutes: RoutesProps[] = [
   { path: '/archive/subsidy/:id', name: 'Archive Subsidy Detail', element: <ArchiveSubsidyDetail /> },
   { path: '/archive/housing/:id', name: 'Archive Housing Detail', element: <ArchiveHousingDetail /> },
   { path: '/audit-log', name: 'Audit Log', element: <AuditLog /> },
+  { path: '/qr-codes', name: 'QR Codes', element: <QrCodes /> },
 ]
 
 export const appRoutes = [

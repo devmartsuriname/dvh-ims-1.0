@@ -172,10 +172,10 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
             </li>
             <li className="d-flex align-items-center mb-2">
               <IconifyIcon
-                icon={bankStatementUploaded ? 'mingcute:check-circle-fill' : 'mingcute:close-circle-line'}
-                className={`me-2 ${bankStatementUploaded ? 'text-success' : 'text-warning'}`}
+                icon={nationalityDeclarationUploaded ? 'mingcute:check-circle-fill' : 'mingcute:close-circle-line'}
+                className={`me-2 ${nationalityDeclarationUploaded ? 'text-success' : 'text-warning'}`}
               />
-              <span className="small">{t('bouwsubsidie.step6.checkBankStatement')}</span>
+              <span className="small">{t('bouwsubsidie.step6.checkNationalityDeclaration')}</span>
             </li>
             <li className="d-flex align-items-center mb-2">
               <IconifyIcon

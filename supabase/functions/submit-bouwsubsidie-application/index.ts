@@ -260,7 +260,7 @@ Deno.serve(async (req) => {
     const input = validation.data
     
     // === V1.8 Phase 3: Server-side document validation ===
-    const MANDATORY_DOCUMENT_CODES = ['ID_COPY', 'BANK_STATEMENT']
+    const MANDATORY_DOCUMENT_CODES = ['ID_COPY', 'NATIONALITY_DECLARATION']
     const INCOME_PROOF_CODES = ['PAYSLIP', 'AOV_STATEMENT', 'PENSION_STATEMENT', 'EMPLOYER_DECLARATION']
     
     const uploadedDocCodes = (input.documents || [])

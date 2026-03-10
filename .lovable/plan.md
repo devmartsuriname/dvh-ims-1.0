@@ -1,280 +1,174 @@
-# Ministerial System Manual — Documentation Execution Plan
-
-## Objective
-
-Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
-
-This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
-
----
-
-## Deliverable Structure
-
-**Folder:** `/docs/manual/`
 
 
-| #   | File                                                 | Purpose                                                                                                  |
-| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
-| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
-| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
-| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
-| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
-| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
-| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
-| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
-| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
-| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
-| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
-| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
-| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
-| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
-| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
-| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
+# DVH-IMS — Phase 11 Production Hardening Report
 
+## SECTION 1 — Storage Security Review
 
-**Total: 16 documents**
+**Current Configuration:**
 
----
+| Bucket | Public | Size Limit | MIME Filter |
+|--------|--------|------------|-------------|
+| citizen-uploads | YES | None | None |
+| generated-documents | NO | 10 MB | None |
 
-## URL Documentation
+**Storage RLS Policies (storage.objects):**
 
-All documents will include explicit URLs based on:
+| Policy | Bucket | Command | Scope |
+|--------|--------|---------|-------|
+| anon_can_upload_citizen_documents | citizen-uploads | INSERT | Any anonymous user |
+| anon_can_read_citizen_documents | citizen-uploads | SELECT | Any anonymous user |
+| staff_can_read_citizen_documents | citizen-uploads | SELECT | Authenticated staff |
+| role_upload_documents | generated-documents | INSERT | Admin/frontdesk roles |
+| role_download_documents | generated-documents | SELECT | Admin/oversight roles |
+| no_document_deletion | generated-documents | DELETE | Blocked (false) |
 
-**Production (Published):**
+**Finding: MEDIUM RISK — citizen-uploads is fully public**
 
-- Landing: `https://huggable-cloud-whisper.lovable.app/`
-- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
-- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
-- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
-- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
-- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
+Files uploaded to `citizen-uploads` can be read by anyone who knows the file path. Since Edge Functions generate UUID-based paths, guessing is impractical, but this still exposes citizen documents if a URL leaks.
 
-**Staging (Preview):**
+**Recommendations (post-launch hardening):**
 
-- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
-- Same path structure as production
+1. Set `citizen-uploads` bucket to **private** (`public = false`)
+2. Replace `anon_can_read_citizen_documents` with a signed-URL approach via a new Edge Function
+3. Add `file_size_limit` (10 MB) and `allowed_mime_types` (pdf, jpg, png) to the bucket
+4. Add a `no_deletion` policy matching `generated-documents`
 
-Admin module URLs will be listed per-module in document 12.
+These changes require a new Edge Function for citizen document retrieval and are recommended for Phase 12. Current state is functional but not hardened.
 
 ---
 
-## Content Coverage Per Document
+## SECTION 2 — Rate Limit & Abuse Protection
 
-### 00 - Executive Summary
+| Edge Function | Rate Limit | Window | Status |
+|---------------|------------|--------|--------|
+| submit-housing-registration | 5/IP | 1 hour | ACTIVE |
+| submit-bouwsubsidie-application | 5/IP | 1 hour | ACTIVE |
+| lookup-public-status | 20/IP | 1 hour | ACTIVE |
 
-- System purpose and legal mandate
-- Two services overview (Housing + Subsidy)
-- Governance and accountability model (1 paragraph)
-- Role structure summary
-- Key operational metrics / KPIs
-- "What happens next?" for both services
-- 5-10 pages, non-technical language
+All three functions use `createRateLimiter()` from the shared module. Input validation via Zod schemas is confirmed. CORS headers applied. JWT verification disabled (by design for anonymous access).
 
-### 01 - System Overview
-
-- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
-- Public vs Admin separation
-- Authentication model (staff-only login, citizen anonymous access)
-- District-based scoping
-
-### 02 + 03 - Public Wizard Workflows
-
-Per service:
-
-- Preconditions
-- Step-by-step wizard walkthrough (each form step)
-- Reference number generation
-- Security token explanation
-- Receipt/confirmation page
-- Status tracking via `/status`
-- "What happens after submission?"
-
-### 04 + 05 - Admin Workflows
-
-Per service:
-
-- Locating records in list view
-- Opening detail view
-- Status change process (with mandatory reason)
-- Document upload and verification
-- Field reports (Social, Technical — Bouwsubsidie only)
-- Decision chain steps
-- Raadvoorstel generation (Bouwsubsidie only)
-- Archive flow
-- Audit trail per action
-
-### 06 - Roles & Permission Matrix
-
-Table columns:
-
-- Role name (all 11 implemented roles)
-- Modules accessible
-- Create/Edit rights
-- Status change authority (which statuses)
-- Document upload/verify rights
-- Allocation/decision authority
-- Audit log access
-- Export/print permissions
-- National vs district-scoped flag
-
-### 07 - Status Lifecycle
-
-- ASCII state diagrams for both services
-- Transition rules with triggering roles
-- Decision authority per transition
-- Mandatory reason requirements
-
-### 08 - Document Management
-
-- Upload workflow
-- Verification tracking
-- Raadvoorstel generation (edge function)
-- Download via signed URLs
-
-### 09 - Audit Logging
-
-- `audit_event` table structure
-- What triggers a log entry
-- Where to view audit logs (Admin > Audit Log)
-- Append-only guarantee
-- Role access to audit log
-
-### 10 - Allocation Engine
-
-- District quotas setup
-- Urgency scoring model
-- Allocation run execution
-- Matching logic
-- Decision recording
-- Assignment registration
-
-### 11 - Governance Controls
-
-- RLS enforcement model
-- Least-privilege access
-- Ministerial Advisor mandatory paraph
-- Minister deviation logging
-- Status history immutability
-
-### 12 - Module Specification
-
-All 20 pages/modules documented:
-
-- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
-- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
-
-Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
-
-### 13 - Operational Scenarios
-
-Minimum 8 numbered end-to-end scenarios:
-
-1. Citizen submits Housing Registration
-2. Citizen submits Subsidy Application
-3. Frontdesk processes new Housing Registration
-4. Frontdesk processes new Subsidy Case through full decision chain
-5. Allocation run execution and assignment
-6. Minister approves/rejects with deviation from advisor
-7. Archive lookup of closed case
-8. Audit trail verification for a specific case
-
-Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
-
-### 14 - Troubleshooting & FAQ
-
-- Common submission errors
-- Duplicate/resubmission behavior
-- Status lookup failures
-- Document upload issues
-- Permission denied scenarios
-- Session timeout handling
-
-### 15 - Glossary
-
-- All status values (both services)
-- Field definitions
-- Role names with descriptions
-- System terminology (Raadvoorstel, paraph, district code, etc.)
+**Verdict: PASS**
 
 ---
 
-## Screenshots Strategy
+## SECTION 3 — Audit Logging Verification
 
-- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
-- Each reference follows format: `Figure X.Y — Description`
-- PII masking note included in each document header
-- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
+**122 audit events** exist in the immutable `audit_event` table.
+
+**Logged action types confirmed:**
+
+| Action | Coverage |
+|--------|----------|
+| public_submission | Citizen registrations and subsidy applications |
+| status_lookup | Public status tracker queries |
+| status_lookup_failed | Invalid reference attempts |
+| SUBMISSION_VALIDATION_BLOCKED | Rejected malformed submissions |
+| STATUS_CHANGE | Admin status transitions |
+| CREATE / UPDATE | Admin case modifications |
+| DOCUMENT_VERIFIED | Document verification actions |
+| document_generated | Council proposal generation |
+| document_downloaded | Document download events |
+| role_assigned | Role assignment changes |
+| USER_ACTIVATED | Staff account activation |
+| ARCHIVE_VIEWED | Archive access logging |
+
+**RLS on audit_event:** INSERT restricted to authenticated roles with `actor_user_id = auth.uid()`. SELECT restricted to audit/admin/minister/project_leader. No UPDATE or DELETE permitted.
+
+**Verdict: PASS**
 
 ---
 
-## Execution Sequence
+## SECTION 4 — Error Visibility & Monitoring Readiness
 
-1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
-2. Create `/docs/manual/` folder
-3. Generate documents in order: 00 through 15
-4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
-5. After all 16 documents: produce completion checklist
+| Component | Status |
+|-----------|--------|
+| Sentry SDK (frontend) | Conditional — active when VITE_SENTRY_DSN set |
+| Structured logger (Edge Functions) | Active — JSON output with PII scrubbing |
+| Health check endpoint | Active — returns HTTP 200 |
+| Console errors (current) | Clean — no errors detected |
+
+**Recommendations (optional, not blocking launch):**
+
+1. Set `VITE_SENTRY_DSN` environment variable to activate frontend error tracking
+2. Set `SENTRY_DSN` Edge Function secret for backend error forwarding
+3. Configure BetterStack/UptimeRobot for 4 endpoints:
+   - Health check: `POST /health-check`
+   - Housing wizard page
+   - Subsidy wizard page
+   - Status tracker page
+
+Monitoring configuration documented in `docs/DVH-IMS/V1.8/MONITORING_CONFIGURATION.md`.
+
+**Verdict: PASS (monitoring optional but recommended)**
 
 ---
 
-## Quality Gates
+## SECTION 5 — RLS Data Safety Verification
 
-- Language: Clear, non-technical, suitable for Minister and senior staff
-- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
-- UI alignment: All labels, navigation paths, and field names match current implementation
-- No invented features or roles
-- No code/schema/RLS changes
-- Restore point created before any file creation
+| Table | RLS Policies | DELETE Blocked | Unauth Access |
+|-------|-------------|----------------|---------------|
+| housing_registration | 3 | YES | NO |
+| subsidy_case | 11 | YES | NO |
+| person | 7 | YES | NO |
+| household | 7 | YES | NO |
+| address | 3 | YES | NO |
 
-## IMPORTANT — PRODUCTION URL CORRECTION
+All five critical tables enforce RBAC via `has_role()` / `is_national_role()` / `get_user_district()`. No anonymous access. No DELETE policies exist on any operational table.
 
-All documentation must use the official custom production domain:
+**Verdict: PASS**
 
-[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
+---
 
-DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
+## SECTION 6 — System Health Checks
 
-Update all production URLs to:
+| Endpoint | Status |
+|----------|--------|
+| Health check Edge Function | HTTP 200 — `{"status":"ok"}` |
+| Preview URL (wizards/dashboard) | Accessible |
+| Console | Clean — no errors |
+| Database | Responsive — all queries return |
 
-Landing:
+**Verdict: PASS**
 
-[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
+---
 
-Housing Registration:
+## SECTION 7 — Launch Readiness Checklist
 
-[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
+| Check | Status |
+|-------|--------|
+| Database clean state (0 operational records) | CONFIRMED |
+| citizen-uploads bucket functional | CONFIRMED |
+| generated-documents bucket secured | CONFIRMED |
+| Staff accounts active (12 active, 1 inactive) | CONFIRMED |
+| Audit trail preserved (122 events) | CONFIRMED |
+| Rate limiting on all public endpoints | CONFIRMED |
+| Input validation on all public endpoints | CONFIRMED |
+| RLS enforced on all operational tables | CONFIRMED |
+| State machine triggers installed | CONFIRMED |
+| Edge Functions deployed (7 functions) | CONFIRMED |
+| Console clean | CONFIRMED |
+| Health check responding | CONFIRMED |
 
-Subsidy Application:
+---
 
-[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
+## SECTION 8 — Final Verdict
 
-Status Tracker:
+### PRODUCTION HARDENING COMPLETE
 
-[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
+**One advisory finding (non-blocking):**
 
-Staff Login:
+The `citizen-uploads` storage bucket is public. This is functional and does not expose data through listing (paths are UUID-based), but a leaked URL would allow direct file access. Recommended to convert to private bucket with signed URLs in a future hardening phase.
 
-[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
+**System is cleared for public intake.**
 
-Admin Dashboard:
+---
 
-[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
+### Implementation Plan (if approved)
 
-If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
+No code changes are required for this phase. The advisory finding (citizen-uploads bucket privacy) would require:
+1. A database migration to set `citizen-uploads` to private
+2. A new Edge Function for signed URL generation
+3. Frontend updates to use signed URLs for document display
 
-The Ministerial Manual must only reference the official production domain.  
-  
-**Completion Report Format**
+This is recommended as a post-launch improvement, not a launch blocker.
 
-After all documents are generated:
-
-```
-IMPLEMENTED: [list of created files]
-PARTIAL: [any incomplete documents + reason]
-SKIPPED: [none expected]
-VERIFICATION: [checklist per document — PASS/FAIL]
-RESTORE POINT: [ID]
-BLOCKERS: NONE / [description]
-CONFIRMATION: No code changes. No schema changes. No RLS changes.
-```

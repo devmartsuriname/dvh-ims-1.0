@@ -1,214 +1,280 @@
-# Phase 9E — Bouwsubsidie Wizard Screening Fixes: Impact Analysis & Safe Fix Plan
+# Ministerial System Manual — Documentation Execution Plan
+
+## Objective
+
+Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
+
+This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
 
 ---
 
-## 1. EXECUTIVE SUMMARY
+## Deliverable Structure
 
-10 requested changes spanning Step 0 (intro), Step 3 (household), Step 5 (application reason), and Step 6 (documents). 6 are copy-only i18n changes. 4 involve config/validation changes — most critically replacing BANK_STATEMENT with a new NATIONALITY_DECLARATION document code, which impacts the document requirements config, validation gating logic, Edge Function server-side validation, and error messages.
-
----
-
-## 2. WEAK ASSUMPTIONS FOUND
-
-- **Change #8 (replace Bankafschrift with Nationaliteitverklaring)**: This is NOT a simple text swap. BANK_STATEMENT is currently a **mandatory** document in config, gating logic, the Edge Function server-side validation, and the checklist UI. Replacing it requires coordinated changes across 5+ files.
-- **Change #5 ("correct wording for gezinsamenstelling")**: The user says "correct wording" but the current label "Huishoudgrootte" has a specific meaning (total persons). The replacement must preserve that meaning while aligning with "Gezinsamenstelling" terminology. Proposed: "Gezinsgrootte".
-
----
-
-## 3. MISSING CONSTRAINTS
-
-- No explicit Dutch wording provided for the new "Belangrijke mededeling" additions (changes #3a/#3b). Will need to draft appropriate NL text.
-- No explicit English translations provided. Will need to create EN equivalents for all new copy.
-- Change #8: No `document_code` specified for "Nationaliteitverklaring". Proposed: `NATIONALITY_DECLARATION`. Must also confirm whether this needs a DB migration in `subsidy_document_requirement`.
-
----
-
-## 4. CHANGE INVENTORY
+**Folder:** `/docs/manual/`
 
 
-| #   | Change                                               | Files                                                                                                                | Impact Type                       | Risk                |
-| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ------------------- |
-| 1   | Process step 3 text: replace "gecontacteerd"         | `nl.json` (step0.process3Text, noticeText), `en.json`                                                                | Copy-only, i18n                   | Low                 |
-| 2   | Remove bankafschrift from intro docs list            | `nl.json` (step0.doc2), `en.json`                                                                                    | Copy-only, i18n                   | Low                 |
-| 3a  | Important notice: previous subsidy exclusion         | `nl.json` (step0.noticeText), `en.json`                                                                              | Copy-only, i18n                   | Low                 |
-| 3b  | Important notice: unemployed must report in person   | `nl.json` (step0.noticeText), `en.json`                                                                              | Copy-only, i18n                   | Low                 |
-| 4   | Rename "Huishoudgegevens" → "Gezinsamenstelling"     | `nl.json` (step3.title, step7.sectionHousehold, wizard.steps.household, wizard.phases.household), `en.json`          | Copy-only, i18n                   | Low                 |
-| 5   | Rename "Huishoudgrootte" → "Gezinsgrootte"           | `nl.json` (step3.householdSize + related), `en.json`, validation keys                                                | Copy-only, i18n                   | Low                 |
-| 6   | Replace "Nieuwbouw" → "Afbouw woning"                | `nl.json` (reasons.new_construction), `en.json`                                                                      | Copy-only, i18n                   | Low                 |
-| 7   | Add unclear docs warning to Step 6 info text         | `nl.json` (step6.infoText), `en.json`                                                                                | Copy-only, i18n                   | Low                 |
-| 8   | Replace BANK_STATEMENT with NATIONALITY_DECLARATION  | `documentRequirements.ts`, `constants.ts`, `Step6Documents.tsx`, Edge Function, `nl.json`, `en.json`, error messages | **Config + Validation + Backend** | **HIGH**            |
-| 9   | Update "Vereisten om door te gaan" checklist         | `Step6Documents.tsx` (lines 173-179), `nl.json` (checkBankStatement), `en.json`                                      | Config + UI                       | Medium (tied to #8) |
-| 10  | Add "documents must be in applicant's own name" note | `nl.json` (step6 or docsNote), `en.json`                                                                             | Copy-only, i18n                   | Low                 |
+| #   | File                                                 | Purpose                                                                                                  |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
+| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
+| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
+| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
+| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
+| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
+| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
+| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
+| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
+| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
+| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
+| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
+| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
+| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
+| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
+| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
 
+
+**Total: 16 documents**
 
 ---
 
-## 5. AFFECTED WIZARD STEPS
+## URL Documentation
 
+All documents will include explicit URLs based on:
 
-| Step                         | Changes                                           |
-| ---------------------------- | ------------------------------------------------- |
-| Step 0 (Introduction)        | #1, #2, #3a, #3b                                  |
-| Step 3 (Household)           | #4, #5                                            |
-| Step 5 (Application context) | #6                                                |
-| Step 6 (Documents)           | #7, #8, #9, #10                                   |
-| Step 7 (Review)              | #4, #5 (section labels reference same i18n keys)  |
-| Step 8 (Receipt)             | #1 (step8.nextStep3Text also has "gecontacteerd") |
+**Production (Published):**
 
+- Landing: `https://huggable-cloud-whisper.lovable.app/`
+- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
+- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
+- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
+- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
+- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
 
----
+**Staging (Preview):**
 
-## 6. DOCUMENT LOGIC IMPACT
+- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
+- Same path structure as production
 
-**Change #8 is the critical one.** Current state:
-
-```text
-MANDATORY docs: ID_COPY (identity), BANK_STATEMENT (financial)
-GROUP-MANDATORY: PAYSLIP | AOV_STATEMENT | PENSION_STATEMENT | EMPLOYER_DECLARATION
-```
-
-After change #8:
-
-```text
-MANDATORY docs: ID_COPY (identity), NATIONALITY_DECLARATION (identity)
-GROUP-MANDATORY: unchanged
-```
-
-**Files requiring coordinated update:**
-
-1. `src/config/documentRequirements.ts` — replace BANK_STATEMENT entry with NATIONALITY_DECLARATION, `is_mandatory: true`, category: `identity`
-2. `src/app/(public)/bouwsubsidie/apply/steps/Step6Documents.tsx` — rename `bankStatementUploaded` variable to `nationalityDeclarationUploaded`, update document_code check
-3. `supabase/functions/submit-bouwsubsidie-application/index.ts` — update `MANDATORY_DOCUMENT_CODES` array from `['ID_COPY', 'BANK_STATEMENT']` to `['ID_COPY', 'NATIONALITY_DECLARATION']`
-4. `nl.json` / `en.json` — update document label, checklist label, error messages
-5. `nl.json` `errors.mandatoryDocumentsMissing` — remove bankafschrift reference
-
-**Income proof validation is NOT affected** — that logic filters by `validation_group === 'income_proof'` which remains unchanged.
+Admin module URLs will be listed per-module in document 12.
 
 ---
 
-## 7. COPY-ONLY CHANGES (Safe Batch)
+## Content Coverage Per Document
 
-Changes #1, #2, #3a, #3b, #4, #5, #6, #7, #10 — all i18n text updates in `nl.json` and `en.json`. Zero logic impact.
+### 00 - Executive Summary
+
+- System purpose and legal mandate
+- Two services overview (Housing + Subsidy)
+- Governance and accountability model (1 paragraph)
+- Role structure summary
+- Key operational metrics / KPIs
+- "What happens next?" for both services
+- 5-10 pages, non-technical language
+
+### 01 - System Overview
+
+- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
+- Public vs Admin separation
+- Authentication model (staff-only login, citizen anonymous access)
+- District-based scoping
+
+### 02 + 03 - Public Wizard Workflows
+
+Per service:
+
+- Preconditions
+- Step-by-step wizard walkthrough (each form step)
+- Reference number generation
+- Security token explanation
+- Receipt/confirmation page
+- Status tracking via `/status`
+- "What happens after submission?"
+
+### 04 + 05 - Admin Workflows
+
+Per service:
+
+- Locating records in list view
+- Opening detail view
+- Status change process (with mandatory reason)
+- Document upload and verification
+- Field reports (Social, Technical — Bouwsubsidie only)
+- Decision chain steps
+- Raadvoorstel generation (Bouwsubsidie only)
+- Archive flow
+- Audit trail per action
+
+### 06 - Roles & Permission Matrix
+
+Table columns:
+
+- Role name (all 11 implemented roles)
+- Modules accessible
+- Create/Edit rights
+- Status change authority (which statuses)
+- Document upload/verify rights
+- Allocation/decision authority
+- Audit log access
+- Export/print permissions
+- National vs district-scoped flag
+
+### 07 - Status Lifecycle
+
+- ASCII state diagrams for both services
+- Transition rules with triggering roles
+- Decision authority per transition
+- Mandatory reason requirements
+
+### 08 - Document Management
+
+- Upload workflow
+- Verification tracking
+- Raadvoorstel generation (edge function)
+- Download via signed URLs
+
+### 09 - Audit Logging
+
+- `audit_event` table structure
+- What triggers a log entry
+- Where to view audit logs (Admin > Audit Log)
+- Append-only guarantee
+- Role access to audit log
+
+### 10 - Allocation Engine
+
+- District quotas setup
+- Urgency scoring model
+- Allocation run execution
+- Matching logic
+- Decision recording
+- Assignment registration
+
+### 11 - Governance Controls
+
+- RLS enforcement model
+- Least-privilege access
+- Ministerial Advisor mandatory paraph
+- Minister deviation logging
+- Status history immutability
+
+### 12 - Module Specification
+
+All 20 pages/modules documented:
+
+- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
+- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
+
+Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
+
+### 13 - Operational Scenarios
+
+Minimum 8 numbered end-to-end scenarios:
+
+1. Citizen submits Housing Registration
+2. Citizen submits Subsidy Application
+3. Frontdesk processes new Housing Registration
+4. Frontdesk processes new Subsidy Case through full decision chain
+5. Allocation run execution and assignment
+6. Minister approves/rejects with deviation from advisor
+7. Archive lookup of closed case
+8. Audit trail verification for a specific case
+
+Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
+
+### 14 - Troubleshooting & FAQ
+
+- Common submission errors
+- Duplicate/resubmission behavior
+- Status lookup failures
+- Document upload issues
+- Permission denied scenarios
+- Session timeout handling
+
+### 15 - Glossary
+
+- All status values (both services)
+- Field definitions
+- Role names with descriptions
+- System terminology (Raadvoorstel, paraph, district code, etc.)
 
 ---
 
-## 8. CONFIG / VALIDATION CHANGES (Careful Batch)
+## Screenshots Strategy
 
-Changes #8 and #9 — require synchronized updates across:
-
-- `documentRequirements.ts` (source of truth)
-- `Step6Documents.tsx` (gating UI)
-- Edge Function (server-side validation)
-- i18n files (labels + error messages)
+- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
+- Each reference follows format: `Figure X.Y — Description`
+- PII masking note included in each document header
+- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
 
 ---
 
-## 9. ADMIN / REVIEW / RECEIPT IMPACT
+## Execution Sequence
 
-- **Step 7 (Review)**: Section header "Huishoudgegevens" → "Gezinsamenstelling" is automatic (same i18n key).
-- **Step 7 document list**: Renders from `formData.documents` using `t(doc.label)` — will automatically pick up the new document label once i18n key is updated.
-- **Step 8 (Receipt)**: `step8.nextStep3Text` also contains "gecontacteerd" — must also be updated for change #1.
-- **Admin case detail**: Uses DB document_code values. If existing applications used `BANK_STATEMENT`, those remain valid in DB. New applications will use `NATIONALITY_DECLARATION`. No admin code change needed — admin reads from DB, not from frontend config.
-
----
-
-## 10. SAFE IMPLEMENTATION PLAN
-
-### Batch A — Copy-Only i18n (7 changes, 2 files)
-
-Scope: `nl.json`, `en.json` only. Zero code/config changes.
-
-
-| Change | i18n keys affected                                                                                                                                                         |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| #1     | `step0.process3Text`, `step0.noticeText`, `step8.nextStep3Text`                                                                                                            |
-| #2     | `step0.doc2` (remove bankafschrift mention, replace with nationaliteitverklaring)                                                                                          |
-| #3a    | `step0.noticeText` (append exclusion clause)                                                                                                                               |
-| #3b    | `step0.noticeText` (append unemployed in-person clause)                                                                                                                    |
-| #4     | `step3.title`, `step3.description`, `step7.sectionHousehold`, `wizard.steps.household`, `wizard.phases.household`, `step7.sectionChildren` (update "huishouden" → "gezin") |
-| #5     | `step3.householdSize`, `step3.householdSizePlaceholder`, `step3.householdSizeHelp`, `validation.householdSizeRequired/Min/Max`                                             |
-| #6     | `reasons.new_construction`                                                                                                                                                 |
-| #7     | `step6.infoText` (append clarity warning)                                                                                                                                  |
-| #10    | `step6.infoText` or new key (append own-name requirement)                                                                                                                  |
-
-
-### Batch B — Document Config Change (3 changes, 4-5 files)
-
-Scope: Replace BANK_STATEMENT with NATIONALITY_DECLARATION
-
-1. `src/config/documentRequirements.ts` — swap entry
-2. `src/app/(public)/bouwsubsidie/apply/steps/Step6Documents.tsx` — update variable + document_code
-3. `supabase/functions/submit-bouwsubsidie-application/index.ts` — update MANDATORY_DOCUMENT_CODES
-4. `nl.json` / `en.json` — update `checkBankStatement` → `checkNationalityDeclaration`, `documents.NATIONALITY_DECLARATION`, `errors.mandatoryDocumentsMissing`
+1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
+2. Create `/docs/manual/` folder
+3. Generate documents in order: 00 through 15
+4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
+5. After all 16 documents: produce completion checklist
 
 ---
 
-## 11. RISKS IF IMPLEMENTED INCORRECTLY
+## Quality Gates
 
+- Language: Clear, non-technical, suitable for Minister and senior staff
+- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
+- UI alignment: All labels, navigation paths, and field names match current implementation
+- No invented features or roles
+- No code/schema/RLS changes
+- Restore point created before any file creation
 
-| Risk                                                           | Consequence                                                 |
-| -------------------------------------------------------------- | ----------------------------------------------------------- |
-| BANK_STATEMENT removed from config but not from Edge Function  | Server rejects all submissions                              |
-| New doc code added to Edge Function but not to frontend config | Gate never satisfies for new doc                            |
-| Income proof validation accidentally broken                    | Regression to the bug just fixed                            |
-| i18n key mismatch between label and document_code              | Document shows raw key instead of translated label          |
-| DB migration missed for new document_code                      | Admin "Required Documents" panel may not recognize new code |
+## IMPORTANT — PRODUCTION URL CORRECTION
 
+All documentation must use the official custom production domain:
 
----
+[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
 
-**NOTE — Approved as analysis and safe execution baseline, with these constraints:**
+DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
 
-1. Batch A (copy-only i18n) may proceed first.
+Update all production URLs to:
 
-2. Before Batch B is implemented, verify whether subsidy_document_requirement
+Landing:
 
-   requires an active-record update / insert for NATIONALITY_DECLARATION and
+[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
 
-   deactivation of BANK_STATEMENT.
+Housing Registration:
 
-3. Do not assume this is frontend-only.
+[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
 
-   Batch B must preserve exact alignment across:
+Subsidy Application:
 
-   - documentRequirements config
+[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
 
-   - Step6 gating logic
+Status Tracker:
 
-   - Edge Function mandatory document validation
+[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
 
-   - i18n document labels and checklist labels
+Staff Login:
 
-   - admin readability of old and new document codes
+[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
 
-4. Preserve the already-fixed income proof logic.
+Admin Dashboard:
 
-   NATIONALITY_DECLARATION must replace BANK_STATEMENT only as the second mandatory document.
+[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
 
-   Income proof documents (loonstrook, AOV, pensioenverklaring, werkgeversverklaring) must remain unchanged.
+If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
 
-5. After implementation, run a targeted smoke test for:
-
-   - Step 0 copy
-
-   - Step 3 terminology
-
-   - Step 5 dropdown option
-
-   - Step 6 document gate
-
-   - Step 7 review labels
-
-   - Step 8 receipt wording
-
-Stop after the implementation report and smoke test.
-
-Do not continue to Phase 10 automatically.  
+The Ministerial Manual must only reference the official production domain.  
   
-1**2. RECOMMENDED EXECUTION ORDER**
+**Completion Report Format**
 
-1. **Batch A first** — all copy-only i18n changes (zero risk)
-2. **Batch B second** — document config swap (coordinated, higher risk)
-3. **Post-implementation verification** — walk through Steps 0, 3, 5, 6, 7 confirming labels and gating
+After all documents are generated:
 
-**DB consideration for Batch B:** The `subsidy_document_requirement` table may need `BANK_STATEMENT` set to `is_active = false` and `NATIONALITY_DECLARATION` inserted. This should be verified before Batch B implementation.
+```
+IMPLEMENTED: [list of created files]
+PARTIAL: [any incomplete documents + reason]
+SKIPPED: [none expected]
+VERIFICATION: [checklist per document — PASS/FAIL]
+RESTORE POINT: [ID]
+BLOCKERS: NONE / [description]
+CONFIRMATION: No code changes. No schema changes. No RLS changes.
+```

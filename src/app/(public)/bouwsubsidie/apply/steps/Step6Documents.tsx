@@ -24,7 +24,7 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({})
 
-  // Mandatory check (ID_COPY, BANK_STATEMENT)
+  // Mandatory check (ID_COPY, NATIONALITY_DECLARATION)
   const mandatoryDocs = formData.documents.filter(d => d.is_mandatory)
   const uploadedMandatoryCount = mandatoryDocs.filter(d => d.uploaded_file).length
   const allMandatoryUploaded = uploadedMandatoryCount === mandatoryDocs.length
@@ -36,7 +36,7 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
 
   // Individual mandatory doc checks
   const idCopyUploaded = !!formData.documents.find(d => d.document_code === 'ID_COPY')?.uploaded_file
-  const bankStatementUploaded = !!formData.documents.find(d => d.document_code === 'BANK_STATEMENT')?.uploaded_file
+  const nationalityDeclarationUploaded = !!formData.documents.find(d => d.document_code === 'NATIONALITY_DECLARATION')?.uploaded_file
 
   // Combined gate
   const canProceed = allMandatoryUploaded && hasIncomeProof
@@ -172,10 +172,10 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
             </li>
             <li className="d-flex align-items-center mb-2">
               <IconifyIcon
-                icon={bankStatementUploaded ? 'mingcute:check-circle-fill' : 'mingcute:close-circle-line'}
-                className={`me-2 ${bankStatementUploaded ? 'text-success' : 'text-warning'}`}
+                icon={nationalityDeclarationUploaded ? 'mingcute:check-circle-fill' : 'mingcute:close-circle-line'}
+                className={`me-2 ${nationalityDeclarationUploaded ? 'text-success' : 'text-warning'}`}
               />
-              <span className="small">{t('bouwsubsidie.step6.checkBankStatement')}</span>
+              <span className="small">{t('bouwsubsidie.step6.checkNationalityDeclaration')}</span>
             </li>
             <li className="d-flex align-items-center mb-2">
               <IconifyIcon

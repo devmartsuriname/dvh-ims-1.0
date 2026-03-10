@@ -21,7 +21,7 @@ export interface DocumentRequirementConfig {
 
 /**
  * Bouwsubsidie document requirements
- * 14 active documents: 2 mandatory + 4 group-mandatory (income_proof) + 8 optional
+ * 14 active documents: 2 mandatory (ID_COPY, NATIONALITY_DECLARATION) + 4 group-mandatory (income_proof) + 8 optional
  * 
  * V1.8: Expanded from 7 to 14 active docs.
  * Deprecated codes (INCOME_PROOF, LAND_TITLE, HOUSEHOLD_COMP, etc.) are
@@ -37,8 +37,8 @@ export const BOUWSUBSIDIE_DOCUMENT_REQUIREMENTS: DocumentRequirementConfig[] = [
   { document_code: 'PENSION_STATEMENT', document_name: 'Pensioenverklaring', is_mandatory: false, category: 'income', validation_group: 'income_proof' },
   { document_code: 'EMPLOYER_DECLARATION', document_name: 'Werkgeversverklaring', is_mandatory: false, category: 'income', validation_group: 'income_proof' },
 
-  // financial — mandatory
-  { document_code: 'BANK_STATEMENT', document_name: 'Bankafschrift', is_mandatory: true, category: 'financial' },
+  // identity — mandatory
+  { document_code: 'NATIONALITY_DECLARATION', document_name: 'Nationaliteitverklaring', is_mandatory: true, category: 'identity' },
 
   // property — optional
   { document_code: 'PROPERTY_DEED', document_name: 'Grondbewijs / eigendomsbewijs', is_mandatory: false, category: 'property' },

@@ -389,10 +389,10 @@
       "emailPlaceholder": "Voer uw e-mailadres in"
     },
     "step3": {
-      "title": "Huishoudgegevens",
-      "description": "Vertel ons over uw huishoudsamenstelling.",
-      "householdSize": "Huishoudgrootte",
-      "householdSizePlaceholder": "Totaal aantal personen in huishouden",
+      "title": "Gezinsamenstelling",
+      "description": "Vertel ons over uw gezinsamenstelling.",
+      "householdSize": "Gezinsgrootte",
+      "householdSizePlaceholder": "Totaal aantal personen in het gezin",
       "householdSizeHelp": "Inclusief uzelf",
       "dependents": "Aantal afhankelijken",
       "dependentsPlaceholder": "Aantal afhankelijken",

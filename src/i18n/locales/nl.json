@@ -454,7 +454,7 @@
       "groupRequired": "Min. 1 vereist",
       "checklistTitle": "Vereisten om door te gaan",
       "checkIdCopy": "Kopie ID-kaart geüpload",
-      "checkBankStatement": "Bankafschrift geüpload",
+      "checkNationalityDeclaration": "Nationaliteitverklaring geüpload",
       "checkIncomeProof": "Minimaal één inkomensbewijs geüpload",
       "allRequiredUploaded": "Alle vereiste documenten zijn geüpload. U kunt doorgaan.",
       "uploadIncomeToProced": "Upload minimaal één inkomensbewijs om door te gaan."

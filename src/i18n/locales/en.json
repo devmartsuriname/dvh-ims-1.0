@@ -403,7 +403,7 @@
       "childAge": "Age",
       "childGender": "Gender",
       "childDisability": "Disability",
-      "noChildren": "No children added. Use the button above to add children to the household."
+      "noChildren": "No children added. Use the button above to add children to the family."
     },
     "step4": {
       "title": "Current Address",

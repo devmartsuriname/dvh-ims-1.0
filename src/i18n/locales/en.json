@@ -575,6 +575,6 @@
     "statusLookupFailed": "We were unable to retrieve your application status. Please try again.",
     "invalidCredentials": "The reference number or access token you entered is incorrect. Please check and try again.",
     "incomeProofRequired": "Please upload at least one income proof document (payslip, AOV statement, pension statement, or employer declaration) to proceed.",
-    "mandatoryDocumentsMissing": "Required documents are missing. Please ensure you have uploaded a copy of your ID and bank statement."
+    "mandatoryDocumentsMissing": "Required documents are missing. Please ensure you have uploaded a copy of your ID and nationality declaration."
   }
 }

@@ -36,7 +36,7 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
 
   // Individual mandatory doc checks
   const idCopyUploaded = !!formData.documents.find(d => d.document_code === 'ID_COPY')?.uploaded_file
-  const bankStatementUploaded = !!formData.documents.find(d => d.document_code === 'BANK_STATEMENT')?.uploaded_file
+  const nationalityDeclarationUploaded = !!formData.documents.find(d => d.document_code === 'NATIONALITY_DECLARATION')?.uploaded_file
 
   // Combined gate
   const canProceed = allMandatoryUploaded && hasIncomeProof

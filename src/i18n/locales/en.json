@@ -472,7 +472,7 @@
       "emergencyApplication": "Emergency Application",
       "declarationTitle": "Declaration of Truthfulness",
       "declarationText": "I hereby declare that all information provided in this application is true and accurate to the best of my knowledge. I understand that providing false information may result in rejection of my application and possible legal consequences.",
-      "noChildren": "No children registered in this household.",
+      "noChildren": "No children registered in this family.",
       "childLabel": "Child {{number}}",
       "childYears": "years",
       "childDisabilityYes": "disability"

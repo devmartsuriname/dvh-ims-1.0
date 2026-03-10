@@ -472,7 +472,7 @@
       "emergencyApplication": "Noodaanvraag",
       "declarationTitle": "Waarheidsverklaring",
       "declarationText": "Ik verklaar hierbij dat alle informatie in deze aanvraag naar waarheid en naar mijn beste weten is verstrekt. Ik begrijp dat het verstrekken van onjuiste informatie kan leiden tot afwijzing van mijn aanvraag en mogelijke juridische consequenties.",
-      "noChildren": "Geen kinderen geregistreerd in dit huishouden.",
+      "noChildren": "Geen kinderen geregistreerd in dit gezin.",
       "childLabel": "Kind {{number}}",
       "childYears": "jaar",
       "childDisabilityYes": "beperking"

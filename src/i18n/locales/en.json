@@ -432,7 +432,7 @@
       "title": "Upload Documents",
       "description": "Upload the required documents to proceed with your application.",
       "infoTitle": "Document Requirements",
-      "infoText": "All mandatory documents must be uploaded before you can submit your application. Supported file types: PDF, JPG, PNG. Maximum file size: 10MB per document.",
+      "infoText": "All mandatory documents must be uploaded before you can submit your application. Supported file types: PDF, JPG, PNG. Maximum file size: 10MB per document.\n\nPlease note: if photos or scans of documents are unclear, the application will not be processed further.\n\nAll documents must be in the applicant's own name (e.g. property deed, ownership proof).",
       "mandatory": "Mandatory",
       "mandatoryTab": "Mandatory",
       "optional": "Optional",

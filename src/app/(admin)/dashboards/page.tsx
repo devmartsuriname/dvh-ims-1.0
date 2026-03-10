@@ -3,6 +3,7 @@ import Footer from '@/components/layout/Footer'
 import Cards from './components/Cards'
 import Chart from './components/Chart'
 import User from './components/User'
+import QrUsageWidget from './components/QrUsageWidget'
 import PageTitle from '@/components/PageTitle'
 
 const page = () => {

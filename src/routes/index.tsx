@@ -39,6 +39,9 @@ const ArchiveList = lazy(() => import('@/app/(admin)/archive/page'))
 const ArchiveSubsidyDetail = lazy(() => import('@/app/(admin)/archive/subsidy/[id]/page'))
 const ArchiveHousingDetail = lazy(() => import('@/app/(admin)/archive/housing/[id]/page'))
 
+// Utility Routes
+const QrCodes = lazy(() => import('@/app/(admin)/qr-codes/page'))
+
 // Auth Routes
 const AuthSignIn = lazy(() => import('@/app/(other)/auth/sign-in/page'))
 const AuthSignUp = lazy(() => import('@/app/(other)/auth/sign-up/page'))

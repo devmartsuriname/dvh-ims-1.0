@@ -508,6 +508,7 @@
     },
     "documents": {
       "ID_COPY": "Copy of ID (front and back)",
+      "NATIONALITY_DECLARATION": "Nationality declaration",
       "INCOME_PROOF": "Income proof (AOV/pay slip)",
       "LAND_TITLE": "Land title or lease agreement",
       "CONSTRUCTION_PLAN": "Construction plan or drawing",

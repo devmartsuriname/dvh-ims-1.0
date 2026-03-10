@@ -508,6 +508,7 @@
     },
     "documents": {
       "ID_COPY": "Kopie ID-kaart (voor- en achterkant)",
+      "NATIONALITY_DECLARATION": "Nationaliteitverklaring",
       "INCOME_PROOF": "Inkomensverklaring (AOV/loonstrook)",
       "LAND_TITLE": "Grondbewijs of erfpachtovereenkomst",
       "CONSTRUCTION_PLAN": "Bouwplan of tekening",

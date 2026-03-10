@@ -152,10 +152,69 @@ COMMIT;
 
 ---
 
-## SECTION 6 — SIGN-OFF
+## SECTION 6 — POST-RESET VERIFICATION RESULTS (2026-03-10)
+
+### 1. Tables Cleared — ✅ ALL 25 CONFIRMED EMPTY
+
+| Table | Count |
+|-------|-------|
+| generated_document | 0 |
+| subsidy_document_upload | 0 |
+| housing_document_upload | 0 |
+| social_report | 0 |
+| technical_report | 0 |
+| subsidy_case_status_history | 0 |
+| housing_registration_status_history | 0 |
+| public_status_access | 0 |
+| allocation_decision | 0 |
+| allocation_candidate | 0 |
+| assignment_record | 0 |
+| housing_urgency | 0 |
+| inspection_visit | 0 |
+| case_assignment | 0 |
+| admin_notification | 0 |
+| allocation_run | 0 |
+| subsidy_household_child | 0 |
+| housing_registration | 0 |
+| subsidy_case | 0 |
+| address | 0 |
+| district_quota | 0 |
+| household_member | 0 |
+| household | 0 |
+| contact_point | 0 |
+| person | 0 |
+
+### 2. Preserved Tables — ✅ ALL INTACT
+
+| Table | Count | Status |
+|-------|-------|--------|
+| audit_event | 117 | ✅ INTACT |
+| app_user_profile | 13 | ✅ INTACT |
+| user_roles | 12 | ✅ INTACT |
+| subsidy_document_requirement | 23 | ✅ INTACT |
+| housing_document_requirement | 6 | ✅ INTACT |
+
+### 3. Storage Bucket — ✅ CLEARED
+
+citizen-uploads bucket: Files deleted (confirmed via screenshot evidence).
+Empty `bouwsubsidie` and `housing` folders remain (no files inside).
+
+### 4. Console — ✅ NO ERRORS
+
+No console errors detected.
+
+---
+
+## SECTION 7 — SIGN-OFF
 
 | Role | Name | Date | Status |
 |------|------|------|--------|
 | Approved By | Delroy | 2026-03-10 | ✅ PLAN APPROVED |
-| Executed By | — | — | ⏳ PENDING |
-| Verified By | — | — | ⏳ PENDING |
+| Executed By | Delroy (Manual SQL) | 2026-03-10 | ✅ COMPLETE |
+| Verified By | Lovable (Post-Reset) | 2026-03-10 | ✅ VERIFIED |
+
+---
+
+## FINAL STATUS: ✅ SYSTEM READY FOR INTAKE
+
+All operational tables empty. All preserved tables intact. Storage cleared. No errors.

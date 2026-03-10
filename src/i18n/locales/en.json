@@ -397,7 +397,7 @@
       "dependents": "Number of Dependents",
       "dependentsPlaceholder": "Number of dependents",
       "dependentsHelp": "Children or others who depend on you financially (optional)",
-      "childrenTitle": "Household Children",
+      "childrenTitle": "Children in the Family",
       "addChild": "Add Child",
       "removeChild": "Remove",
       "childAge": "Age",

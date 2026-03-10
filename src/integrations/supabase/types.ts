@@ -919,6 +919,33 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_scan_event: {
+        Row: {
+          district_guess: string | null
+          id: string
+          ip_hash: string | null
+          qr_type: string
+          scanned_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          district_guess?: string | null
+          id?: string
+          ip_hash?: string | null
+          qr_type: string
+          scanned_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          district_guess?: string | null
+          id?: string
+          ip_hash?: string | null
+          qr_type?: string
+          scanned_at?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       social_report: {
         Row: {
           case_id: string

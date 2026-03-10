@@ -149,4 +149,11 @@ export const MENU_ITEMS: MenuItemWithRoles[] = [
     url: '/audit-log',
     allowedRoles: ['system_admin', 'minister', 'project_leader', 'audit', 'director', 'ministerial_advisor'],
   },
+  {
+    key: 'qr-codes',
+    label: 'QR Codes',
+    icon: 'mingcute:qrcode-2-line',
+    url: '/qr-codes',
+    allowedRoles: ['system_admin', 'project_leader', 'minister', 'director'],
+  },
 ]

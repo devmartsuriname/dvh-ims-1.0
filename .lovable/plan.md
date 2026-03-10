@@ -1,218 +1,280 @@
-# DVH-IMS — Production Readiness Assessment + Safe Data Reset Plan
+# Ministerial System Manual — Documentation Execution Plan
+
+## Objective
+
+Create a comprehensive, Minister-grade system manual for DVH-IMS covering the full end-to-end operation of both services (Bouwsubsidie and Woningregistratie), from public citizen intake to administrative governance.
+
+This is a **documentation-only task**. Zero code, schema, RLS, or UI changes.
 
 ---
 
-## SECTION 1 — PRODUCTION READINESS VERDICT
+## Deliverable Structure
 
-### READY FOR INTAKE (Housing Registration)
-
-The Housing Registration module is functionally complete for receiving citizen applications.
+**Folder:** `/docs/manual/`
 
 
-| Area                  | Status   | Notes                                                                                                                                          |
-| --------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Wizard (11 steps)** | READY    | All steps render, i18n active, validation in place                                                                                             |
-| **Edge Function**     | READY    | `submit-housing-registration` handles person upsert, ref number retry, rate limiting (5/hr), input validation, document linking, audit logging |
-| **File Uploads**      | READY    | `citizen-uploads` bucket (public), uploads via Supabase Storage SDK                                                                            |
-| **Admin Intake View** | READY    | Housing registrations visible at `/admin/housing-registrations/[id]`                                                                           |
-| **Status Tracker**    | READY    | `lookup-public-status` Edge Function + `/status` page                                                                                          |
-| **Authentication**    | READY    | Staff login via Supabase Auth, RBAC via `user_roles` + RLS                                                                                     |
-| **Database Schema**   | STABLE   | No pending migrations                                                                                                                          |
-| **RLS Policies**      | COMPLETE | All tables protected with role-based policies                                                                                                  |
+| #   | File                                                 | Purpose                                                                                                  |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 00  | `00-Minister-Executive-Summary.md`                   | 5-10 page executive overview for Minister: system purpose, governance model, accountability, key metrics |
+| 01  | `01-System-Overview-Architecture.md`                 | High-level architecture (non-technical), module map, technology summary, deployment topology             |
+| 02  | `02-Frontend-Workflows-Housing-Registration.md`      | Step-by-step public Housing Registration wizard (applicant perspective)                                  |
+| 03  | `03-Frontend-Workflows-Subsidy-Application.md`       | Step-by-step public Bouwsubsidie wizard (applicant perspective)                                          |
+| 04  | `04-Admin-Workflow-Housing-Management.md`            | Staff-side Housing Registration management: intake review, status changes, waiting list, allocation      |
+| 05  | `05-Admin-Workflow-Subsidy-Management.md`            | Staff-side Bouwsubsidie management: intake, reviews, inspections, decision chain, Raadvoorstel           |
+| 06  | `06-User-Roles-and-Permission-Matrix.md`             | All 11 roles, per-module access matrix, status change authority, document rights                         |
+| 07  | `07-Status-Lifecycle-and-Decision-Flows.md`          | Status state diagrams for both services, transition rules, decision authority levels                     |
+| 08  | `08-Document-Management-and-Verification.md`         | Upload flows, verification tracking, generated documents (Raadvoorstel), download procedures             |
+| 09  | `09-Audit-Logging-and-Traceability.md`               | Audit event model, what is logged, where to find logs, compliance guarantees                             |
+| 10  | `10-Allocation-Engine-and-Decision-Logic.md`         | District quotas, urgency scoring, allocation runs, matching, assignment registration                     |
+| 11  | `11-Governance-Controls-and-Compliance.md`           | RLS enforcement, least-privilege model, ministerial decision chain, deviation logging                    |
+| 12  | `12-System-Modules-Full-Functional-Specification.md` | Module-by-module breakdown of all 16 admin modules + 4 public pages                                      |
+| 13  | `13-Operational-Scenarios-End-to-End.md`             | Complete numbered scenarios (preconditions, steps, outcomes, audit trail location)                       |
+| 14  | `14-Troubleshooting-and-FAQ.md`                      | Common issues, error handling, resubmission behavior, duplicate handling                                 |
+| 15  | `15-Glossary-and-Term-Definitions.md`                | All statuses, field definitions, role names, system terminology                                          |
 
 
-### Remaining Concerns (non-blocking for intake)
-
-
-| Item                                                     | Severity | Notes                                                                                                                  |
-| -------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `citizen-uploads` bucket is **public**                   | LOW      | Files are accessible by URL if path is known. Acceptable for MVP; consider making private with signed URLs post-launch |
-| No email confirmation to citizen                         | INFO     | By design (V1.5 boundary: no notifications)                                                                            |
-| No file size limit enforcement in frontend               | LOW      | Supabase Storage has default limits; no explicit frontend validation beyond file type                                  |
-| No automated monitoring/alerting                         | MEDIUM   | BetterStack/Sentry not configured for production alerts                                                                |
-| Edge Functions not manually verified with real admin JWT | MEDIUM   | `generate-raadvoorstel`, `execute-allocation-run` pending — but these are NOT needed for intake                        |
-
+**Total: 16 documents**
 
 ---
 
-## SECTION 2 — REMAINING LAUNCH CHECKLIST
+## URL Documentation
 
-Pre-launch (before tomorrow):
+All documents will include explicit URLs based on:
 
-- Execute data reset (Section 3 below)
-- Verify post-reset smoke (Section 5)
-- Confirm staff accounts are active and can log in
-- Verify the published URL is accessible
+**Production (Published):**
 
-Post-launch (can be done after intake starts):
+- Landing: `https://huggable-cloud-whisper.lovable.app/`
+- Housing Registration: `https://huggable-cloud-whisper.lovable.app/housing/register`
+- Subsidy Application: `https://huggable-cloud-whisper.lovable.app/bouwsubsidie/apply`
+- Status Tracker: `https://huggable-cloud-whisper.lovable.app/status`
+- Staff Login: `https://huggable-cloud-whisper.lovable.app/auth/sign-in`
+- Admin Dashboard: `https://huggable-cloud-whisper.lovable.app/dashboards`
 
-- Consider making `citizen-uploads` bucket private
-- Set up external monitoring (BetterStack/Sentry)
-- Add frontend file size validation (optional hardening)
+**Staging (Preview):**
 
----
+- Base: `https://id-preview--0863926a-748e-4b6c-8f0e-91c530bfb3a9.lovable.app`
+- Same path structure as production
 
-## SECTION 3 — SAFE DATA RESET PLAN
-
-### Tables to CLEAR (test/demo data)
-
-
-| Table                                 | Current Count | Action |
-| ------------------------------------- | ------------- | ------ |
-| `generated_document`                  | 1             | CLEAR  |
-| `subsidy_document_upload`             | 56            | CLEAR  |
-| `housing_document_upload`             | 12            | CLEAR  |
-| `social_report`                       | 0             | CLEAR  |
-| `technical_report`                    | 0             | CLEAR  |
-| `subsidy_case_status_history`         | 32            | CLEAR  |
-| `housing_registration_status_history` | 7             | CLEAR  |
-| `public_status_access`                | 20            | CLEAR  |
-| `allocation_decision`                 | 0             | CLEAR  |
-| `allocation_candidate`                | 0             | CLEAR  |
-| `assignment_record`                   | 0             | CLEAR  |
-| `housing_urgency`                     | 0             | CLEAR  |
-| `allocation_run`                      | 1             | CLEAR  |
-| `inspection_visit`                    | 0             | CLEAR  |
-| `case_assignment`                     | 0             | CLEAR  |
-| `admin_notification`                  | 7             | CLEAR  |
-| `housing_registration`                | 7             | CLEAR  |
-| `subsidy_case`                        | 14            | CLEAR  |
-| `address`                             | 26            | CLEAR  |
-| `household_member`                    | 26            | CLEAR  |
-| `household`                           | 26            | CLEAR  |
-| `contact_point`                       | 52            | CLEAR  |
-| `person`                              | 25            | CLEAR  |
-| `district_quota`                      | 0             | CLEAR  |
-
-
-### Tables to PRESERVE
-
-
-| Table                          | Current Count | Reason                                |
-| ------------------------------ | ------------- | ------------------------------------- |
-| `audit_event`                  | 117           | Immutable legal record — NEVER DELETE |
-| `app_user_profile`             | 13            | System/staff accounts                 |
-| `user_roles`                   | 12            | RBAC foundation                       |
-| `subsidy_document_requirement` | config        | Configuration data                    |
-| `housing_document_requirement` | config        | Configuration data                    |
-
+Admin module URLs will be listed per-module in document 12.
 
 ---
 
-## SECTION 4 — RESET EXECUTION ORDER (FK-Safe)
+## Content Coverage Per Document
 
-```text
- 1. generated_document
- 2. subsidy_document_upload
- 3. housing_document_upload
- 4. social_report
- 5. technical_report
- 6. subsidy_case_status_history
- 7. housing_registration_status_history
- 8. public_status_access
- 9. allocation_decision
-10. allocation_candidate
-11. assignment_record
-12. housing_urgency
-13. inspection_visit
-14. case_assignment
-15. admin_notification
-16. allocation_run
-17. housing_registration
-18. subsidy_case
-19. address
-20. district_quota
-21. household_member
-22. household
-23. contact_point
-24. person
-```
+### 00 - Executive Summary
 
-### SQL Script (for execution via Supabase SQL Editor with service role)
+- System purpose and legal mandate
+- Two services overview (Housing + Subsidy)
+- Governance and accountability model (1 paragraph)
+- Role structure summary
+- Key operational metrics / KPIs
+- "What happens next?" for both services
+- 5-10 pages, non-technical language
 
-```sql
--- DVH-IMS Pre-Launch Data Reset
--- Authorization: Delroy (pending approval)
--- Date: 2026-03-10
+### 01 - System Overview
 
-BEGIN;
+- Module map (Dashboard, Shared Core, Bouwsubsidie, Woningregistratie, Allocation, Governance)
+- Public vs Admin separation
+- Authentication model (staff-only login, citizen anonymous access)
+- District-based scoping
 
-DELETE FROM generated_document;
-DELETE FROM subsidy_document_upload;
-DELETE FROM housing_document_upload;
-DELETE FROM social_report;
-DELETE FROM technical_report;
-DELETE FROM subsidy_case_status_history;
-DELETE FROM housing_registration_status_history;
-DELETE FROM public_status_access;
-DELETE FROM allocation_decision;
-DELETE FROM allocation_candidate;
-DELETE FROM assignment_record;
-DELETE FROM housing_urgency;
-DELETE FROM inspection_visit;
-DELETE FROM case_assignment;
-DELETE FROM admin_notification;
-DELETE FROM allocation_run;
-DELETE FROM housing_registration;
-DELETE FROM subsidy_case;
-DELETE FROM address;
-DELETE FROM district_quota;
-DELETE FROM household_member;
-DELETE FROM household;
-DELETE FROM contact_point;
-DELETE FROM person;
+### 02 + 03 - Public Wizard Workflows
 
-COMMIT;
-```
+Per service:
 
-**Also clear uploaded files from the `citizen-uploads` storage bucket** via Supabase Dashboard > Storage > citizen-uploads > select all > delete.
+- Preconditions
+- Step-by-step wizard walkthrough (each form step)
+- Reference number generation
+- Security token explanation
+- Receipt/confirmation page
+- Status tracking via `/status`
+- "What happens after submission?"
+
+### 04 + 05 - Admin Workflows
+
+Per service:
+
+- Locating records in list view
+- Opening detail view
+- Status change process (with mandatory reason)
+- Document upload and verification
+- Field reports (Social, Technical — Bouwsubsidie only)
+- Decision chain steps
+- Raadvoorstel generation (Bouwsubsidie only)
+- Archive flow
+- Audit trail per action
+
+### 06 - Roles & Permission Matrix
+
+Table columns:
+
+- Role name (all 11 implemented roles)
+- Modules accessible
+- Create/Edit rights
+- Status change authority (which statuses)
+- Document upload/verify rights
+- Allocation/decision authority
+- Audit log access
+- Export/print permissions
+- National vs district-scoped flag
+
+### 07 - Status Lifecycle
+
+- ASCII state diagrams for both services
+- Transition rules with triggering roles
+- Decision authority per transition
+- Mandatory reason requirements
+
+### 08 - Document Management
+
+- Upload workflow
+- Verification tracking
+- Raadvoorstel generation (edge function)
+- Download via signed URLs
+
+### 09 - Audit Logging
+
+- `audit_event` table structure
+- What triggers a log entry
+- Where to view audit logs (Admin > Audit Log)
+- Append-only guarantee
+- Role access to audit log
+
+### 10 - Allocation Engine
+
+- District quotas setup
+- Urgency scoring model
+- Allocation run execution
+- Matching logic
+- Decision recording
+- Assignment registration
+
+### 11 - Governance Controls
+
+- RLS enforcement model
+- Least-privilege access
+- Ministerial Advisor mandatory paraph
+- Minister deviation logging
+- Status history immutability
+
+### 12 - Module Specification
+
+All 20 pages/modules documented:
+
+- **Public (4):** Landing, Housing Wizard, Subsidy Wizard, Status Tracker
+- **Admin (16):** Dashboard, Persons, Households, Housing Registrations, Housing Waiting List, Subsidy Cases, Control Queue, My Visits, Schedule Visits, Case Assignments, Allocation Quotas, Allocation Runs, Allocation Decisions, Allocation Assignments, Archive, Audit Log
+
+Per module: Purpose, target roles, available actions, data displayed, dependencies, audit implications.
+
+### 13 - Operational Scenarios
+
+Minimum 8 numbered end-to-end scenarios:
+
+1. Citizen submits Housing Registration
+2. Citizen submits Subsidy Application
+3. Frontdesk processes new Housing Registration
+4. Frontdesk processes new Subsidy Case through full decision chain
+5. Allocation run execution and assignment
+6. Minister approves/rejects with deviation from advisor
+7. Archive lookup of closed case
+8. Audit trail verification for a specific case
+
+Each includes: preconditions, numbered steps, expected outcomes, failure modes, audit trail location.
+
+### 14 - Troubleshooting & FAQ
+
+- Common submission errors
+- Duplicate/resubmission behavior
+- Status lookup failures
+- Document upload issues
+- Permission denied scenarios
+- Session timeout handling
+
+### 15 - Glossary
+
+- All status values (both services)
+- Field definitions
+- Role names with descriptions
+- System terminology (Raadvoorstel, paraph, district code, etc.)
 
 ---
 
-## SECTION 5 — POST-RESET VERIFICATION CHECKLIST
+## Screenshots Strategy
 
-
-| Check                      | Expected                          |
-| -------------------------- | --------------------------------- |
-| Dashboard KPIs             | All show 0, no errors             |
-| Housing Registrations list | Empty state                       |
-| Subsidy Cases list         | Empty state                       |
-| Persons list               | Empty state                       |
-| Households list            | Empty state                       |
-| Waiting List               | Empty state                       |
-| Audit Log                  | Still contains 117 entries        |
-| Staff accounts             | All 13 profiles intact            |
-| User roles                 | All 12 role assignments intact    |
-| Housing wizard             | Loads and accepts new submission  |
-| Status tracker             | Returns "not found" for any query |
-| Console                    | No new errors                     |
-| `citizen-uploads` bucket   | Empty                             |
-
+- Screenshots will be **described with placeholder references** (e.g., `[Screenshot: Dashboard - Recent Cases Widget]`)
+- Each reference follows format: `Figure X.Y — Description`
+- PII masking note included in each document header
+- Actual screenshot capture deferred to a separate visual documentation pass (requires browser tool)
 
 ---
 
-**NOTE — Storage Reset**
+## Execution Sequence
 
-Before launch, also clear all files from the
+1. Create restore point: `docs/restore-points/v1.7/RESTORE_POINT_V1_7_MINISTERIAL_MANUAL.md`
+2. Create `/docs/manual/` folder
+3. Generate documents in order: 00 through 15
+4. Each document sourced from: existing `/docs/` specifications, route definitions, component code, edge functions, and memory context
+5. After all 16 documents: produce completion checklist
 
-Supabase Storage bucket:
+---
 
-citizen-uploads
+## Quality Gates
 
-This prevents test documents from being linked
+- Language: Clear, non-technical, suitable for Minister and senior staff
+- Terminology: Consistent (Housing Registration / Subsidy Application / Bouwsubsidie)
+- UI alignment: All labels, navigation paths, and field names match current implementation
+- No invented features or roles
+- No code/schema/RLS changes
+- Restore point created before any file creation
 
-to new real citizen registrations.
+## IMPORTANT — PRODUCTION URL CORRECTION
 
-Verification:
+All documentation must use the official custom production domain:
 
-Bucket must be empty before the first live submission.  
+[https://volkshuisvesting.sr](https://volkshuisvesting.sr)
+
+DO NOT use any [lovable.app](http://lovable.app) subdomain in the manual.
+
+Update all production URLs to:
+
+Landing:
+
+[https://volkshuisvesting.sr/](https://volkshuisvesting.sr/)
+
+Housing Registration:
+
+[https://volkshuisvesting.sr/housing/register](https://volkshuisvesting.sr/housing/register)
+
+Subsidy Application:
+
+[https://volkshuisvesting.sr/bouwsubsidie/apply](https://volkshuisvesting.sr/bouwsubsidie/apply)
+
+Status Tracker:
+
+[https://volkshuisvesting.sr/status](https://volkshuisvesting.sr/status)
+
+Staff Login:
+
+[https://volkshuisvesting.sr/auth/sign-in](https://volkshuisvesting.sr/auth/sign-in)
+
+Admin Dashboard:
+
+[https://volkshuisvesting.sr/dashboards](https://volkshuisvesting.sr/dashboards)
+
+If staging URLs must be mentioned, place them in a separate clearly labeled "Technical Appendix — Staging Environment" section.
+
+The Ministerial Manual must only reference the official production domain.  
   
-**SECTION 6 — FINAL SUMMARY**
+**Completion Report Format**
 
-1. **Production Readiness:** READY FOR INTAKE — Housing Registration wizard, Edge Function, admin views, and status tracker are all functional
-2. **Remaining Checklist:** Data reset + post-reset smoke test required before launch
-3. **Data Reset Plan:** 24 tables to clear, 5 tables preserved (audit, users, roles, config)
-4. **Execution Order:** FK-safe 24-step deletion sequence provided
-5. **Post-Reset Verification:** 14-point checklist
+After all documents are generated:
 
-**Awaiting your authorization to execute the data reset.**
+```
+IMPLEMENTED: [list of created files]
+PARTIAL: [any incomplete documents + reason]
+SKIPPED: [none expected]
+VERIFICATION: [checklist per document — PASS/FAIL]
+RESTORE POINT: [ID]
+BLOCKERS: NONE / [description]
+CONFIRMATION: No code changes. No schema changes. No RLS changes.
+```

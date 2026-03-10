@@ -6,6 +6,7 @@ const LandingPage = lazy(() => import('@/app/(public)/landing/page'))
 const BouwsubsidieWizard = lazy(() => import('@/app/(public)/bouwsubsidie/apply/page'))
 const HousingWizard = lazy(() => import('@/app/(public)/housing/register/page'))
 const StatusTracker = lazy(() => import('@/app/(public)/status/page'))
+const QrRedirect = lazy(() => import('@/app/(public)/qr-redirect/page'))
 
 const Dashboards = lazy(() => import('@/app/(admin)/dashboards/page'))
 

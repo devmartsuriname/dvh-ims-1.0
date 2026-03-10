@@ -24,7 +24,7 @@ const Step6Documents = ({ formData, updateFormData, onNext, onBack }: WizardStep
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({})
 
-  // Mandatory check (ID_COPY, BANK_STATEMENT)
+  // Mandatory check (ID_COPY, NATIONALITY_DECLARATION)
   const mandatoryDocs = formData.documents.filter(d => d.is_mandatory)
   const uploadedMandatoryCount = mandatoryDocs.filter(d => d.uploaded_file).length
   const allMandatoryUploaded = uploadedMandatoryCount === mandatoryDocs.length

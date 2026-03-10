@@ -21,7 +21,7 @@ export interface DocumentRequirementConfig {
 
 /**
  * Bouwsubsidie document requirements
- * 14 active documents: 2 mandatory + 4 group-mandatory (income_proof) + 8 optional
+ * 14 active documents: 2 mandatory (ID_COPY, NATIONALITY_DECLARATION) + 4 group-mandatory (income_proof) + 8 optional
  * 
  * V1.8: Expanded from 7 to 14 active docs.
  * Deprecated codes (INCOME_PROOF, LAND_TITLE, HOUSEHOLD_COMP, etc.) are

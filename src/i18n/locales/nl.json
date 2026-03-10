@@ -432,7 +432,7 @@
       "title": "Documenten uploaden",
       "description": "Upload de vereiste documenten om door te gaan met uw aanvraag.",
       "infoTitle": "Documentvereisten",
-      "infoText": "Alle verplichte documenten moeten worden geüpload voordat u uw aanvraag kunt indienen. Ondersteunde bestandstypen: PDF, JPG, PNG. Maximale bestandsgrootte: 10MB per document.",
+      "infoText": "Alle verplichte documenten moeten worden geüpload voordat u uw aanvraag kunt indienen. Ondersteunde bestandstypen: PDF, JPG, PNG. Maximale bestandsgrootte: 10MB per document.\n\nLet op: indien foto's of scans van documenten onduidelijk zijn, wordt de aanvraag niet verder in behandeling genomen.\n\nAlle documenten moeten op naam van de aanvrager staan (bijv. grondbewijs, eigendomsbewijs).",
       "mandatory": "Verplicht",
       "mandatoryTab": "Verplicht",
       "optional": "Optioneel",

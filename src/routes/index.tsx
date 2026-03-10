@@ -67,8 +67,8 @@ export const publicRoutes: RoutesProps[] = [
   { path: '/housing/register', name: 'Housing Wizard', element: <HousingWizard /> },
   { path: '/status', name: 'Status Tracker', element: <StatusTracker /> },
   // Stable QR redirect routes — do NOT rename these paths
-  { path: '/q/woningregistratie', name: 'QR Woning Redirect', element: <Navigate to="/housing/register" replace /> },
-  { path: '/q/bouwsubsidie', name: 'QR Bouwsubsidie Redirect', element: <Navigate to="/bouwsubsidie/apply" replace /> },
+  { path: '/q/woningregistratie', name: 'QR Woning Redirect', element: <QrRedirect qrType="woningregistratie" targetPath="/housing/register" /> },
+  { path: '/q/bouwsubsidie', name: 'QR Bouwsubsidie Redirect', element: <QrRedirect qrType="bouwsubsidie" targetPath="/bouwsubsidie/apply" /> },
 ]
 
 /**

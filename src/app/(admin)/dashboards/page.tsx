@@ -17,6 +17,7 @@ const page = () => {
       <PageTitle subName="VolksHuisvesting IMS" title="Dashboard" />
       <Cards />
       <Chart />
+      <QrUsageWidget />
       <User />
       <Footer />
     </>

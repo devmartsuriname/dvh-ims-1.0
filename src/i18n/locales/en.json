@@ -454,7 +454,7 @@
       "groupRequired": "Min. 1 required",
       "checklistTitle": "Requirements to proceed",
       "checkIdCopy": "ID card copy uploaded",
-      "checkBankStatement": "Bank statement uploaded",
+      "checkNationalityDeclaration": "Nationality declaration uploaded",
       "checkIncomeProof": "At least one income proof uploaded",
       "allRequiredUploaded": "All required documents are uploaded. You can proceed.",
       "uploadIncomeToProced": "Upload at least one income proof to proceed."

@@ -1,5 +1,5 @@
 import { lazy } from 'react'
-import { type RouteProps } from 'react-router-dom'
+import { Navigate, type RouteProps } from 'react-router-dom'
 
 // Public Routes (Citizen-facing, Light Theme)
 const LandingPage = lazy(() => import('@/app/(public)/landing/page'))

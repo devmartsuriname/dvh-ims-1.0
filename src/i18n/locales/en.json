@@ -389,10 +389,10 @@
       "emailPlaceholder": "Enter your email address"
     },
     "step3": {
-      "title": "Household Information",
-      "description": "Tell us about your household composition.",
-      "householdSize": "Household Size",
-      "householdSizePlaceholder": "Total number of people in household",
+      "title": "Family Composition",
+      "description": "Tell us about your family composition.",
+      "householdSize": "Family Size",
+      "householdSizePlaceholder": "Total number of people in your family",
       "householdSizeHelp": "Including yourself",
       "dependents": "Number of Dependents",
       "dependentsPlaceholder": "Number of dependents",

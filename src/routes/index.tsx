@@ -102,6 +102,11 @@ export const authRoutes: RoutesProps[] = [
     element: <ResetPassword />,
   },
   {
+    name: 'New Password',
+    path: '/auth/new-password',
+    element: <NewPassword />,
+  },
+  {
     name: '404 Error',
     path: '/error-pages/pages-404',
     element: <Error404 />,

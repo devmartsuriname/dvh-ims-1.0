@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 const NewPassword = () => {
   const [loading, setLoading] = useState(false)
   const [sessionReady, setSessionReady] = useState(false)
+  const [hashError, setHashError] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -21,23 +22,39 @@ const NewPassword = () => {
     }
   }, [])
 
-  // Listen for the PASSWORD_RECOVERY event from the hash fragment
+  // Parse hash for errors and listen for PASSWORD_RECOVERY event
   useEffect(() => {
+    // Check for error in URL hash (e.g. expired OTP link)
+    const hash = window.location.hash.substring(1)
+    const params = new URLSearchParams(hash)
+    const error = params.get('error')
+    const errorDescription = params.get('error_description')
+
+    if (error) {
+      setHashError(errorDescription || 'The reset link is invalid or has expired.')
+      return
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setSessionReady(true)
       }
     })
 
-    // Also check if we already have a session (user clicked link and was auto-logged in)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSessionReady(true)
       }
     })
 
+    // Timeout fallback after 8 seconds
+    const timeout = setTimeout(() => {
+      setHashError('The reset link appears to be invalid or has expired. Please request a new one.')
+    }, 8000)
+
     return () => {
       subscription.unsubscribe()
+      clearTimeout(timeout)
     }
   }, [])
 

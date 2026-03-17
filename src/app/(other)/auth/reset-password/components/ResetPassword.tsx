@@ -4,10 +4,15 @@ import TextFormInput from '@/components/form/TextFormInput'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useForm } from 'react-hook-form'
 import { Card, CardBody, Col, Row } from 'react-bootstrap'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '@/integrations/supabase/client'
+import { toast } from 'sonner'
 
 const ResetPassword = () => {
+  const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
+
   useEffect(() => {
     document.body.classList.add('authentication-bg')
     return () => {
@@ -16,33 +21,55 @@ const ResetPassword = () => {
   }, [])
 
   const messageSchema = yup.object({
-    email: yup.string().email().required('Please enter Email'),
+    email: yup.string().email('Please enter a valid email').required('Please enter Email'),
   })
 
   const { handleSubmit, control } = useForm({
     resolver: yupResolver(messageSchema),
   })
+
+  const onSubmit = async (data: { email: string }) => {
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/auth/new-password`,
+      })
+      if (error) {
+        toast.error(error.message)
+      } else {
+        setSent(true)
+        toast.success('Password reset email sent. Please check your inbox.')
+      }
+    } catch (err) {
+      toast.error('An unexpected error occurred')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <>
-      <div className="">
-        <div className="account-pages py-5">
-          <div className="container">
-            <Row className=" justify-content-center">
-              <Col md={6} lg={5}>
-                <Card className=" border-0 shadow-lg">
-                  <CardBody className=" p-5">
-                    <div className="text-center">
-                      <div className="mx-auto mb-4 text-center auth-logo">
-                        <Link to="/dashboards" className="d-inline-block">
-                          <img src={logoSozavo} style={{ height: '56px', width: 'auto' }} alt="VolksHuisvesting" />
-                        </Link>
-                      </div>
-                      <h4 className="fw-bold text-dark mb-2">Reset Password</h4>
-                      <p className="text-muted">
-                        Enter your email address and we&apos;ll send you an email with instructions to reset your password.
-                      </p>
+    <div className="">
+      <div className="account-pages py-5">
+        <div className="container">
+          <Row className="justify-content-center">
+            <Col md={6} lg={5}>
+              <Card className="border-0 shadow-lg">
+                <CardBody className="p-5">
+                  <div className="text-center">
+                    <div className="mx-auto mb-4 text-center auth-logo">
+                      <Link to="/dashboards" className="d-inline-block">
+                        <img src={logoSozavo} style={{ height: '56px', width: 'auto' }} alt="VolksHuisvesting" />
+                      </Link>
                     </div>
-                    <form onSubmit={handleSubmit(() => {})} className="mt-4">
+                    <h4 className="fw-bold text-dark mb-2">Reset Password</h4>
+                    <p className="text-muted">
+                      {sent
+                        ? 'A password reset link has been sent to your email address. Please check your inbox.'
+                        : "Enter your email address and we'll send you an email with instructions to reset your password."}
+                    </p>
+                  </div>
+                  {!sent && (
+                    <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
                       <div className="mb-3">
                         <TextFormInput
                           control={control}
@@ -53,25 +80,25 @@ const ResetPassword = () => {
                         />
                       </div>
                       <div className="d-grid">
-                        <button className="btn btn-dark btn-lg fw-medium" type="submit">
-                          Reset Password
+                        <button className="btn btn-dark btn-lg fw-medium" type="submit" disabled={loading}>
+                          {loading ? 'Sending...' : 'Reset Password'}
                         </button>
                       </div>
                     </form>
-                  </CardBody>
-                </Card>
-                <p className="text-center mt-4 text-white text-opacity-50">
-                  Back to&nbsp;
-                  <Link to="/auth/sign-in" className="text-decoration-none text-white fw-bold">
-                    Sign In
-                  </Link>
-                </p>
-              </Col>
-            </Row>
-          </div>
+                  )}
+                </CardBody>
+              </Card>
+              <p className="text-center mt-4 text-white text-opacity-50">
+                Back to&nbsp;
+                <Link to="/auth/sign-in" className="text-decoration-none text-white fw-bold">
+                  Sign In
+                </Link>
+              </p>
+            </Col>
+          </Row>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 

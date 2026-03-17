@@ -47,6 +47,7 @@ const QrCodes = lazy(() => import('@/app/(admin)/qr-codes/page'))
 const AuthSignIn = lazy(() => import('@/app/(other)/auth/sign-in/page'))
 const AuthSignUp = lazy(() => import('@/app/(other)/auth/sign-up/page'))
 const ResetPassword = lazy(() => import('@/app/(other)/auth/reset-password/page'))
+const NewPassword = lazy(() => import('@/app/(other)/auth/new-password/page'))
 const Error404 = lazy(() => import('@/app/(other)/error-pages/pages-404/page'))
 
 export type RoutesProps = {
@@ -99,6 +100,11 @@ export const authRoutes: RoutesProps[] = [
     name: 'Reset Password',
     path: '/auth/reset-password',
     element: <ResetPassword />,
+  },
+  {
+    name: 'New Password',
+    path: '/auth/new-password',
+    element: <NewPassword />,
   },
   {
     name: '404 Error',

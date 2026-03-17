@@ -12,6 +12,7 @@ import { toast } from 'sonner'
 const NewPassword = () => {
   const [loading, setLoading] = useState(false)
   const [sessionReady, setSessionReady] = useState(false)
+  const [hashError, setHashError] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -21,23 +22,39 @@ const NewPassword = () => {
     }
   }, [])
 
-  // Listen for the PASSWORD_RECOVERY event from the hash fragment
+  // Parse hash for errors and listen for PASSWORD_RECOVERY event
   useEffect(() => {
+    // Check for error in URL hash (e.g. expired OTP link)
+    const hash = window.location.hash.substring(1)
+    const params = new URLSearchParams(hash)
+    const error = params.get('error')
+    const errorDescription = params.get('error_description')
+
+    if (error) {
+      setHashError(errorDescription || 'The reset link is invalid or has expired.')
+      return
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setSessionReady(true)
       }
     })
 
-    // Also check if we already have a session (user clicked link and was auto-logged in)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSessionReady(true)
       }
     })
 
+    // Timeout fallback after 8 seconds
+    const timeout = setTimeout(() => {
+      setHashError('The reset link appears to be invalid or has expired. Please request a new one.')
+    }, 8000)
+
     return () => {
       subscription.unsubscribe()
+      clearTimeout(timeout)
     }
   }, [])
 
@@ -99,12 +116,14 @@ const NewPassword = () => {
                     </div>
                     <h4 className="fw-bold text-dark mb-2">Set New Password</h4>
                     <p className="text-muted">
-                      {sessionReady
-                        ? 'Enter your new password below.'
-                        : 'Verifying your reset link...'}
+                      {hashError
+                        ? 'There was a problem with your reset link.'
+                        : sessionReady
+                          ? 'Enter your new password below.'
+                          : 'Verifying your reset link...'}
                     </p>
                   </div>
-                  {sessionReady && (
+                  {sessionReady && !hashError && (
                     <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
                       <div className="mb-3">
                         <TextFormInput
@@ -133,7 +152,17 @@ const NewPassword = () => {
                       </div>
                     </form>
                   )}
-                  {!sessionReady && (
+                  {hashError && (
+                    <div className="text-center mt-4">
+                      <div className="alert alert-danger" role="alert">
+                        {hashError}
+                      </div>
+                      <Link to="/auth/reset-password" className="btn btn-dark btn-lg fw-medium w-100 mt-3">
+                        Request New Reset Link
+                      </Link>
+                    </div>
+                  )}
+                  {!sessionReady && !hashError && (
                     <div className="text-center mt-4">
                       <div className="spinner-border text-primary" role="status">
                         <span className="visually-hidden">Loading...</span>

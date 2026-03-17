@@ -150,7 +150,17 @@ const NewPassword = () => {
                       </div>
                     </form>
                   )}
-                  {!sessionReady && (
+                  {hashError && (
+                    <div className="text-center mt-4">
+                      <div className="alert alert-danger" role="alert">
+                        {hashError}
+                      </div>
+                      <Link to="/auth/reset-password" className="btn btn-dark btn-lg fw-medium w-100 mt-3">
+                        Request New Reset Link
+                      </Link>
+                    </div>
+                  )}
+                  {!sessionReady && !hashError && (
                     <div className="text-center mt-4">
                       <div className="spinner-border text-primary" role="status">
                         <span className="visually-hidden">Loading...</span>

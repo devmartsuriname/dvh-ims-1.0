@@ -123,7 +123,7 @@ const NewPassword = () => {
                           : 'Verifying your reset link...'}
                     </p>
                   </div>
-                  {sessionReady && (
+                  {sessionReady && !hashError && (
                     <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
                       <div className="mb-3">
                         <TextFormInput

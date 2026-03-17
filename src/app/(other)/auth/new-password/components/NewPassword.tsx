@@ -116,9 +116,11 @@ const NewPassword = () => {
                     </div>
                     <h4 className="fw-bold text-dark mb-2">Set New Password</h4>
                     <p className="text-muted">
-                      {sessionReady
-                        ? 'Enter your new password below.'
-                        : 'Verifying your reset link...'}
+                      {hashError
+                        ? 'There was a problem with your reset link.'
+                        : sessionReady
+                          ? 'Enter your new password below.'
+                          : 'Verifying your reset link...'}
                     </p>
                   </div>
                   {sessionReady && (

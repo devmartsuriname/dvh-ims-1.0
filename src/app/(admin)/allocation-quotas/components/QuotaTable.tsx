@@ -170,7 +170,13 @@ const QuotaTable = () => {
             </Button>
           </div>
 
-          {loading ? null : quotas.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-4">
+              <Spinner animation="border" size="sm" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </Spinner>
+            </div>
+          ) : quotas.length === 0 ? (
             <p className="text-muted text-center py-4">No district quotas found. Click "New Quota" to create one.</p>
           ) : (
             <Grid

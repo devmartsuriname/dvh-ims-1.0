@@ -46,7 +46,15 @@ const ScheduleVisitsPage = () => {
   const [selectedType, setSelectedType] = useState<'social' | 'technical' | 'follow_up'>('social')
   const [visitNotes, setVisitNotes] = useState('')
 
-  if (loading || roleLoading) return null
+  if (loading || roleLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-50">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    )
+  }
 
   const hasAccess = roles.some((r) => ALLOWED_ROLES.includes(r))
   const canWrite = roles.some((r) => WRITE_ROLES.includes(r))

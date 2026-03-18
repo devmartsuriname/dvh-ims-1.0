@@ -310,3 +310,40 @@ Page-level role guards added to 8 previously unguarded admin pages. All role lis
 ### Full Report
 
 See [PHASE_2_AUTHORIZATION_CONSISTENCY_REPORT.md](PHASE_2_AUTHORIZATION_CONSISTENCY_REPORT.md) for complete details, role assignments, special cases, test scenarios, and rollback procedure.
+
+---
+
+## Amendment — Fix Execution Phase 3 (2026-03-18)
+
+**Authority:** Delroy
+**Executed By:** Claude (Governance-Controlled Fix Execution)
+
+### Changes Applied
+
+Stability and error-handling improvements. 10 files modified. No schema, RLS, edge function, or library changes.
+
+| Fix | File | Change |
+|-----|------|--------|
+| S-01 | `src/context/useAuthContext.tsx` | Added `.catch()` to `getSession()` — prevents infinite blank screen on auth failure |
+| S-02 | `src/context/useAuthContext.tsx` | Replaced `return null` with spinner — app-level loading state now visible |
+| S-03 | `src/app/(admin)/subsidy-cases/components/CaseTable.tsx` | `return null` → spinner |
+| S-04 | `src/app/(admin)/housing-registrations/components/RegistrationTable.tsx` | `return null` → spinner |
+| S-05 | `src/app/(admin)/housing-waiting-list/page.tsx` | `return null` → spinner |
+| S-06 | `src/app/(admin)/allocation-runs/components/RunTable.tsx` | Inline `null` → spinner |
+| S-07 | `src/app/(admin)/allocation-decisions/components/DecisionTable.tsx` | Inline `null` → spinner |
+| S-08 | `src/app/(admin)/allocation-quotas/components/QuotaTable.tsx` | Inline `null` → spinner |
+| S-09 | `src/app/(admin)/allocation-assignments/components/AssignmentTable.tsx` | Inline `null` → spinner |
+| S-10 | `src/app/(admin)/schedule-visits/page.tsx` | `return null` → spinner |
+| S-11 | `src/app/(admin)/my-visits/page.tsx` | `return null` → spinner |
+
+### Reliability Table Update
+
+| Area | Previous Status | Updated Status | Notes |
+|------|----------------|----------------|-------|
+| Auth failure handling | FAIL — app hangs indefinitely on `getSession()` error | PASS — `.catch()` clears loading state, triggers sign-in redirect |
+| Auth loading UX | PARTIAL — blank screen during startup | PASS — spinner shown during auth resolution |
+| Table loading UX | PARTIAL — 11 pages showed blank during data fetch | PASS — spinners shown on all pages |
+
+### Full Report
+
+See [PHASE_3_STABILITY_IMPROVEMENT_REPORT.md](PHASE_3_STABILITY_IMPROVEMENT_REPORT.md) for complete issue → fix mapping, before/after behavior, and regression check.

@@ -43,6 +43,10 @@ export function AuthProvider({ children }: ChildrenType) {
       setSession(session)
       setUser(session?.user ?? null)
       setIsLoading(false)
+    }).catch(() => {
+      // If getSession() rejects (network error, Supabase outage), clear loading state
+      // so the app does not hang on a blank screen indefinitely
+      setIsLoading(false)
     })
 
     return () => subscription.unsubscribe()
@@ -53,9 +57,15 @@ export function AuthProvider({ children }: ChildrenType) {
     navigate('/auth/sign-in')
   }
 
-  // Show nothing while loading to prevent flash of unauthenticated content
+  // Show a spinner while session is being resolved to prevent flash of unauthenticated content
   if (isLoading) {
-    return null
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    )
   }
 
   return (

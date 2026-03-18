@@ -88,7 +88,13 @@ const AssignmentTable = () => {
             </Button>
           </div>
 
-          {loading ? null : assignments.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-4">
+              <Spinner animation="border" size="sm" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </Spinner>
+            </div>
+          ) : assignments.length === 0 ? (
             <div className="text-center text-muted py-4">
               No assignments recorded yet.
             </div>

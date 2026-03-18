@@ -39,7 +39,15 @@ const MyVisitsPage = () => {
     }
   }, [completeVisit])
 
-  if (loading) return null
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-50">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    )
+  }
 
   if (!isSocial && !isTechnical) {
     return (

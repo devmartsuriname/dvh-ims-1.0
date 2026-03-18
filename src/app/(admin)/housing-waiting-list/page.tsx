@@ -100,9 +100,14 @@ const HousingWaitingList = () => {
     return <Navigate to="/dashboards" replace />
   }
 
-  // Initial load handled by route-level Suspense
   if (loading) {
-    return null
+    return (
+      <div className="text-center py-5">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    )
   }
 
   return (

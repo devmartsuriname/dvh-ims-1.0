@@ -13,10 +13,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.generate-raadvoorstel]
-verify_jwt = true
+verify_jwt = false
 
 [functions.get-document-download-url]
-verify_jwt = true
+verify_jwt = false
 
 [functions.health-check]
 verify_jwt = false

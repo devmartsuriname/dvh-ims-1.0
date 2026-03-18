@@ -448,3 +448,53 @@ Minimal test foundation established. Zero production source files modified. 4 de
 ### Full Report
 
 See [PHASE_5_TEST_FOUNDATION_REPORT.md](PHASE_5_TEST_FOUNDATION_REPORT.md) for complete details, verification instructions, blocker analysis, and Phase 6 recommendations.
+
+---
+
+## Amendment — Fix Execution Phase 6 (2026-03-18)
+
+**Authority:** Delroy
+**Executed By:** Claude (Governance-Controlled Fix Execution)
+
+### Changes Applied
+
+Minimal testability extraction. One production file modified (import change only — no logic change). Three new test files and one new shared constants module created.
+
+#### Files Changed
+
+| File | Change |
+|------|--------|
+| `src/lib/subsidyCaseTransitions.ts` | **Created** — Extracted `STATUS_TRANSITIONS`, `NEXT_RESPONSIBLE_ROLE`, `ROLE_ALLOWED_TRANSITIONS` from page component |
+| `src/app/(admin)/subsidy-cases/[id]/page.tsx` | **Modified** — Removed 3 local const declarations (172 lines); added import from `@/lib/subsidyCaseTransitions`; removed now-unused `AppRole` import |
+| `src/lib/subsidyCaseTransitions.test.ts` | **Created** — 50 assertions across 5 describe blocks |
+| `supabase/functions/get-document-download-url/index.test.ts` | **Created** — 4 Deno integration tests |
+| `src/hooks/useUserRole.test.ts` | **Created** — 12 test cases across 3 describe blocks |
+| `restore-points/v1.8/Restore_Point_Phase_6_Start.md` | Created — Pre-Phase 6 state snapshot |
+| `docs/DVH-IMS/V1.8/PHASE_6_TESTABILITY_RBAC_REPORT.md` | Created — Phase 6 deliverable report |
+
+#### Behavior Parity Verification
+
+The extraction is a pure data relocation. Behavioral parity is guaranteed because:
+1. `STATUS_TRANSITIONS` — identical content, now imported instead of local
+2. `NEXT_RESPONSIBLE_ROLE` — identical content, now imported instead of local
+3. `ROLE_ALLOWED_TRANSITIONS` — identical content, now imported instead of local
+4. All 3 constants are used at the same call sites with the same identifiers
+5. TypeScript compilation will fail if any identifier or type is mismatched
+
+#### Documentation Note
+
+The Phase 6 scope requested updates to `/docs/backend.md` and `/docs/architecture.md`. These files do not exist in this project. The project-equivalent documentation lives in `docs/DVH-IMS/V1.2/DVH-IMS-V1.2_Backend_Design_Overview.md` and `docs/DVH-IMS/V1.2/DVH-IMS-V1.2_Architecture_Overview_Logical.md`. Those documents describe the system's architectural intent and do not reference implementation file paths; updating them with a new `src/lib/` module path is not warranted. The Phase 6 report (linked below) serves as the authoritative record of the extraction.
+
+### Test Coverage Table
+
+| Area | Previous Status | Updated Status | Notes |
+|------|----------------|----------------|-------|
+| `ROLE_ALLOWED_TRANSITIONS` (subsidy RBAC matrix) | UNTESTED | **COVERED — 14 happy-path + 12 denied-path assertions** | Guards all role/transition combinations |
+| `STATUS_TRANSITIONS` (subsidy state machine) | UNTESTED | **COVERED — 10 assertions** | Guards state machine structure and completeness |
+| `NEXT_RESPONSIBLE_ROLE` (notification routing) | UNTESTED | **COVERED — 8 assertions** | Guards all target status → role mappings |
+| `useUserRole` hook | UNTESTED | **COVERED — 12 test cases** | Guards loading, role resolution, error handling, hasRole/hasAnyRole |
+| `get-document-download-url` auth gate | UNTESTED | **COVERED — 4 Deno tests** | Guards Phase 1 auth enforcement (AUTH_MISSING, AUTH_INVALID, VALIDATION_UUID) |
+
+### Full Report
+
+See [PHASE_6_TESTABILITY_RBAC_REPORT.md](PHASE_6_TESTABILITY_RBAC_REPORT.md) for complete details.

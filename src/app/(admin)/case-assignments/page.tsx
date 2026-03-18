@@ -1,11 +1,15 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Navigate } from 'react-router-dom'
 import { Card, Button, Badge, Table } from 'react-bootstrap'
 import PageTitle from '@/components/PageTitle'
 import { useCaseAssignments, type CaseAssignment } from '@/hooks/useCaseAssignments'
+import type { AppRole } from '@/hooks/useUserRole'
 import { useUserRole } from '@/hooks/useUserRole'
 import { supabase } from '@/integrations/supabase/client'
 import AssignmentFormModal from './components/AssignmentFormModal'
 import RevokeModal from './components/RevokeModal'
+
+const ALLOWED_ROLES: AppRole[] = ['system_admin', 'project_leader', 'social_field_worker', 'technical_inspector', 'admin_staff', 'director', 'ministerial_advisor', 'minister', 'audit']
 
 const statusBadgeVariant = (status: string) => {
   switch (status) {
@@ -19,7 +23,7 @@ const statusBadgeVariant = (status: string) => {
 
 const CaseAssignmentsPage = () => {
   const { canWrite, fetchAssignments, assignWorker, revokeAssignment, completeAssignment, loading } = useCaseAssignments()
-  const { loading: roleLoading } = useUserRole()
+  const { loading: roleLoading, hasAnyRole } = useUserRole()
   const [assignments, setAssignments] = useState<CaseAssignment[]>([])
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [showActionModal, setShowActionModal] = useState(false)
@@ -64,6 +68,20 @@ const CaseAssignmentsPage = () => {
       loadAssignments()
     }
   }, [roleLoading, loadAssignments])
+
+  if (roleLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-50">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasAnyRole(ALLOWED_ROLES)) {
+    return <Navigate to="/dashboards" replace />
+  }
 
   const handleAction = (assignment: CaseAssignment, action: 'revoke' | 'complete') => {
     setSelectedAssignment(assignment)

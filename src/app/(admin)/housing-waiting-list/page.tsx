@@ -1,9 +1,14 @@
 import { useEffect, useState, useCallback } from 'react'
+import { Navigate } from 'react-router-dom'
 import { Card, CardBody, CardHeader, CardTitle, Spinner, Badge, Form, Row, Col } from 'react-bootstrap'
 import { Grid } from 'gridjs-react'
 import { html } from 'gridjs'
 import PageTitle from '@/components/PageTitle'
+import type { AppRole } from '@/hooks/useUserRole'
+import { useUserRole } from '@/hooks/useUserRole'
 import { supabase } from '@/integrations/supabase/client'
+
+const ALLOWED_ROLES: AppRole[] = ['system_admin', 'minister', 'project_leader', 'frontdesk_housing', 'admin_staff', 'audit']
 
 interface WaitingListEntry {
   id: string
@@ -31,6 +36,7 @@ const STATUS_BADGES: Record<string, { bg: string; label: string }> = {
 }
 
 const HousingWaitingList = () => {
+  const { loading: roleLoading, hasAnyRole } = useUserRole()
   const [entries, setEntries] = useState<WaitingListEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [districtFilter, setDistrictFilter] = useState('')
@@ -79,6 +85,20 @@ const HousingWaitingList = () => {
   useEffect(() => {
     fetchWaitingList()
   }, [fetchWaitingList])
+
+  if (roleLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-50">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (!hasAnyRole(ALLOWED_ROLES)) {
+    return <Navigate to="/dashboards" replace />
+  }
 
   // Initial load handled by route-level Suspense
   if (loading) {

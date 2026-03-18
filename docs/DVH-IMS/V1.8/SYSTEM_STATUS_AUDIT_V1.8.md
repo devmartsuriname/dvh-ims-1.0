@@ -272,3 +272,41 @@
 ### Full Report
 
 See [PHASE_1_SECURITY_HARDENING_REPORT.md](PHASE_1_SECURITY_HARDENING_REPORT.md) for complete details, pre-deployment verification evidence, and rollback procedure.
+
+---
+
+## Amendment — Fix Execution Phase 2 (2026-03-18)
+
+**Authority:** Delroy
+**Executed By:** Claude (Governance-Controlled Fix Execution)
+
+### Change Applied
+
+Page-level role guards added to 8 previously unguarded admin pages. All role lists sourced from existing `menu-items.ts` `allowedRoles` definitions. No new permission model introduced.
+
+| Page | Guard Added | Allowed Roles |
+|------|-------------|---------------|
+| `allocation-runs/page.tsx` | `Navigate` redirect | `system_admin`, `project_leader` |
+| `allocation-decisions/page.tsx` | `Navigate` redirect | `system_admin`, `minister`, `project_leader`, `frontdesk_housing`, `admin_staff`, `audit` |
+| `allocation-quotas/page.tsx` | `Navigate` redirect | `system_admin`, `minister`, `project_leader`, `frontdesk_housing`, `admin_staff`, `audit` |
+| `allocation-assignments/page.tsx` | `Navigate` redirect | `system_admin`, `minister`, `project_leader`, `frontdesk_housing`, `admin_staff`, `audit` |
+| `case-assignments/page.tsx` | `Navigate` redirect (added `hasAnyRole` to existing hook) | `system_admin`, `project_leader`, `social_field_worker`, `technical_inspector`, `admin_staff`, `director`, `ministerial_advisor`, `minister`, `audit` |
+| `subsidy-cases/page.tsx` | `Navigate` redirect | `system_admin`, `minister`, `project_leader`, `frontdesk_bouwsubsidie`, `social_field_worker`, `technical_inspector`, `admin_staff`, `audit`, `director`, `ministerial_advisor` |
+| `housing-registrations/page.tsx` | `Navigate` redirect | `system_admin`, `minister`, `project_leader`, `frontdesk_housing`, `admin_staff`, `audit` |
+| `housing-waiting-list/page.tsx` | `Navigate` redirect (new `useUserRole` + guard before data load) | `system_admin`, `minister`, `project_leader`, `frontdesk_housing`, `admin_staff`, `audit` |
+
+### Security Table Update
+
+| Area | Previous Status | Updated Status | Notes |
+|------|----------------|----------------|-------|
+| Client-side route authorization (page guards) | PARTIAL — 4 pages had guards, 8 did not | PASS — all admin pages now guarded | `dashboards` intentionally excluded (redirect target) |
+
+### Risk Register Update
+
+| Risk | Previous | Updated |
+|------|----------|---------|
+| Low-privilege authenticated user can navigate to any admin URL by direct URL entry | MEDIUM | RESOLVED — all pages now redirect unauthorized users to `/dashboards` |
+
+### Full Report
+
+See [PHASE_2_AUTHORIZATION_CONSISTENCY_REPORT.md](PHASE_2_AUTHORIZATION_CONSISTENCY_REPORT.md) for complete details, role assignments, special cases, test scenarios, and rollback procedure.

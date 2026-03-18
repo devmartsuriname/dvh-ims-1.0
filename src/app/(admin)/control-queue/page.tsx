@@ -1,5 +1,5 @@
 import PageTitle from '@/components/PageTitle'
-import { Card, CardBody, CardHeader, CardTitle, Badge } from 'react-bootstrap'
+import { Card, CardBody, CardHeader, CardTitle, Badge, Spinner } from 'react-bootstrap'
 import { Grid } from 'gridjs-react'
 import { html } from 'gridjs'
 import { useControlQueue } from '@/hooks/useControlQueue'
@@ -39,7 +39,15 @@ const ControlQueuePage = () => {
 
   const roleLabel = roles.length > 0 ? roles[0].replace(/_/g, ' ') : ''
 
-  if (loading) return null
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-50">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
+    )
+  }
 
   return (
     <>

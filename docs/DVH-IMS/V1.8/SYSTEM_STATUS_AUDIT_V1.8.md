@@ -400,3 +400,51 @@ import { HOUSING_STATUS_BADGES as STATUS_BADGES } from '@/constants/statusBadges
 ### Full Report
 
 See [PHASE_4_QUICK_WINS_REPORT.md](PHASE_4_QUICK_WINS_REPORT.md) for complete details, skipped items reasoning, and regression check.
+
+---
+
+## Amendment — Fix Execution Phase 5 (2026-03-18)
+
+**Authority:** Delroy
+**Executed By:** Claude (Governance-Controlled Fix Execution)
+
+### Changes Applied
+
+Minimal test foundation established. Zero production source files modified. 4 devDependencies added, 2 config files created, 3 test files created.
+
+#### Test Infrastructure Added
+
+| Item | Detail |
+|------|--------|
+| Test runner | `vitest ^3.2.4` |
+| DOM environment | `jsdom ^26.1.0` |
+| React test utilities | `@testing-library/react ^16.3.0` |
+| DOM matchers | `@testing-library/jest-dom ^6.6.3` |
+| Config | `vitest.config.ts`, `src/test/setup.ts` |
+| Script | `npm test` → `vitest run` |
+
+#### Test Files Created
+
+| File | Type | Coverage |
+|------|------|---------|
+| `src/constants/statusBadges.test.ts` | Pure unit | 18 tests — all 5 badge group exports, structural integrity, key coverage, terminal color correctness |
+| `src/context/useAuthContext.test.tsx` | React component (offline) | 7 tests — Phase 3 spinner fix (S-02), Phase 3 catch fix (S-01), subscription cleanup |
+| `supabase/functions/execute-allocation-run/index.test.ts` | Deno integration | 5 tests — Phase 1 auth gate (AUTH_MISSING, AUTH_INVALID), input validation (VALIDATION_MISSING, VALIDATION_UUID, VALIDATION_DISTRICT) |
+
+#### Known Limitation
+
+`ROLE_ALLOWED_TRANSITIONS` (subsidy case RBAC matrix, 100+ lines in `subsidy-cases/[id]/page.tsx`) is not exported and cannot be tested without a production code change. Recommended for Phase 6: extract to `src/lib/subsidyCaseTransitions.ts`.
+
+### Test Coverage Table
+
+| Area | Previous Status | Updated Status | Notes |
+|------|----------------|----------------|-------|
+| Test infrastructure | NONE | BASELINE — vitest + testing-library installed | First test runner in the project |
+| Badge constant integrity | UNTESTED | PASS — 18 assertions | Guards Phase 4 single source of truth |
+| Auth loading stability (Phase 3 S-01/S-02) | UNTESTED | PASS — 7 assertions | Direct regression guard on Phase 3 fixes |
+| Admin edge function auth gate (Phase 1) | UNTESTED | PASS — 5 Deno tests | Guards Phase 1 JWT enforcement |
+| Subsidy RBAC matrix (`ROLE_ALLOWED_TRANSITIONS`) | UNTESTED | STILL UNTESTED | Blocked: not exported. Phase 6 prerequisite |
+
+### Full Report
+
+See [PHASE_5_TEST_FOUNDATION_REPORT.md](PHASE_5_TEST_FOUNDATION_REPORT.md) for complete details, verification instructions, blocker analysis, and Phase 6 recommendations.

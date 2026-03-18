@@ -236,3 +236,39 @@
 ---
 
 *No code changes made. No migrations executed. Audit report only.*
+
+---
+
+## Amendment — Fix Execution Phase 1 (2026-03-18)
+
+**Authority:** Delroy
+**Executed By:** Claude (Governance-Controlled Fix Execution)
+
+### Change Applied
+
+`supabase/config.toml` updated: `verify_jwt = false` → `verify_jwt = true` for 4 protected edge functions.
+
+| Function | Before | After |
+|----------|--------|-------|
+| `execute-allocation-run` | `verify_jwt = false` | `verify_jwt = true` |
+| `generate-raadvoorstel` | `verify_jwt = false` | `verify_jwt = true` |
+| `get-citizen-document` | `verify_jwt = false` | `verify_jwt = true` |
+| `get-document-download-url` | `verify_jwt = false` | `verify_jwt = true` |
+
+5 public functions unchanged (`submit-bouwsubsidie-application`, `submit-housing-registration`, `lookup-public-status`, `health-check`, `track-qr-scan`).
+
+### Security Table Update
+
+| Area | Previous Status | Updated Status | Notes |
+|------|----------------|----------------|-------|
+| Edge function JWT enforcement | PARTIAL | PASS | 4 admin functions now have gateway-level JWT + internal auth. 5 public functions intentionally open. |
+
+### Risk Register Update
+
+| Risk | Previous | Updated |
+|------|----------|---------|
+| Admin edge functions callable without valid JWT | HIGH | RESOLVED — `verify_jwt = true` enforced at gateway for all 4 admin functions |
+
+### Full Report
+
+See [PHASE_1_SECURITY_HARDENING_REPORT.md](PHASE_1_SECURITY_HARDENING_REPORT.md) for complete details, pre-deployment verification evidence, and rollback procedure.

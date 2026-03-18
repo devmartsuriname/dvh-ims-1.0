@@ -10,6 +10,7 @@ import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
 import { createAdminNotification } from '@/hooks/useAdminNotifications'
 import UrgencyAssessmentForm from '../components/UrgencyAssessmentForm'
+import AllocationPanel from './components/AllocationPanel'
 
 interface HousingRegistration {
   id: string

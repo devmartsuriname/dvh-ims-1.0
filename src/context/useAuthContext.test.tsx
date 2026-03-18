@@ -23,12 +23,17 @@ import { AuthProvider } from './useAuthContext'
 // so import.meta.env.VITE_SUPABASE_URL is never evaluated.
 // ---------------------------------------------------------------------------
 
-const mockUnsubscribe = vi.fn()
-const mockOnAuthStateChange = vi.fn(() => ({
-  data: { subscription: { unsubscribe: mockUnsubscribe } },
-}))
-const mockGetSession = vi.fn()
-const mockSignOut = vi.fn()
+const { mockUnsubscribe, mockOnAuthStateChange, mockGetSession, mockSignOut } = vi.hoisted(() => {
+  const mockUnsubscribe = vi.fn()
+  return {
+    mockUnsubscribe,
+    mockOnAuthStateChange: vi.fn(() => ({
+      data: { subscription: { unsubscribe: mockUnsubscribe } },
+    })),
+    mockGetSession: vi.fn(),
+    mockSignOut: vi.fn(),
+  }
+})
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {

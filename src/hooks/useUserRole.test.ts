@@ -29,8 +29,10 @@ import { useUserRole } from './useUserRole'
 // Mock setup
 // ---------------------------------------------------------------------------
 
-const mockGetUser = vi.fn()
-const mockFrom = vi.fn()
+const { mockGetUser, mockFrom } = vi.hoisted(() => ({
+  mockGetUser: vi.fn(),
+  mockFrom: vi.fn(),
+}))
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {

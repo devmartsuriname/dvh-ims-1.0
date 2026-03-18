@@ -575,15 +575,13 @@ const HousingRegistrationDetail = () => {
 
         {/* Allocation Tab */}
         <Tab eventKey="allocation" title="Allocation">
-          <Card>
-            <CardHeader>
-              <CardTitle as="h5">Allocation</CardTitle>
-            </CardHeader>
-            <CardBody className="text-center py-5">
-              <IconifyIcon icon="mingcute:time-line" className="fs-1 text-muted mb-3" />
-              <p className="text-muted">Allocation functionality coming in Phase 4</p>
-            </CardBody>
-          </Card>
+          {registration && (
+            <AllocationPanel
+              registrationId={registration.id}
+              currentStatus={registration.current_status}
+              districtCode={registration.district_code}
+            />
+          )}
         </Tab>
       </Tabs>
     </>

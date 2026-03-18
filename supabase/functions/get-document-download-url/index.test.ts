@@ -1,11 +1,10 @@
 /**
  * Integration tests for edge function: get-document-download-url
  *
- * Phase 6 — Testability Extraction & Critical RBAC Coverage.
- * Tests the authentication and input validation gates.
+ * Phase 8 — JWT Relay Fix.
+ * Tests authentication gates (function-level) and input validation.
  *
- * verify_jwt = true in config.toml — the Supabase gateway rejects missing/bad
- * JWTs with {"code":401,"message":"Invalid JWT"} before function code runs.
+ * verify_jwt = false — function handles auth internally via getUser(token).
  *
  * Run with:
  *   deno test --allow-net supabase/functions/get-document-download-url/index.test.ts
@@ -32,7 +31,7 @@ async function getAdminToken(): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
-// AUTH GATE TESTS — gateway-level JWT verification
+// AUTH GATE TESTS — function-level auth (verify_jwt = false)
 // ---------------------------------------------------------------------------
 
 Deno.test("rejects request with no Authorization header → 401", async () => {
@@ -43,8 +42,8 @@ Deno.test("rejects request with no Authorization header → 401", async () => {
   });
   assertEquals(res.status, 401);
   const body = await res.json();
-  assertEquals(body.code, 401);
-  assert(typeof body.message === "string");
+  assertEquals(body.success, false);
+  assertEquals(body.error, "AUTH_MISSING");
 });
 
 Deno.test("rejects request with malformed token → 401", async () => {
@@ -59,7 +58,8 @@ Deno.test("rejects request with malformed token → 401", async () => {
   });
   assertEquals(res.status, 401);
   const body = await res.json();
-  assertEquals(body.code, 401);
+  assertEquals(body.success, false);
+  assertEquals(body.error, "AUTH_INVALID");
 });
 
 // ---------------------------------------------------------------------------

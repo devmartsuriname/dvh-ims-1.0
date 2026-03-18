@@ -1,20 +1,16 @@
 /**
  * Integration tests for edge function: generate-raadvoorstel
  *
- * Phase 7 — Remaining Critical Coverage & Safe Quality Hardening.
- * Tests the authentication and input validation gates only.
+ * Phase 8 — JWT Relay Fix.
+ * Tests authentication gates (function-level) and input validation.
  *
  * Test strategy:
  *   - Live HTTP calls against the deployed Supabase function
- *   - verify_jwt = true in config.toml — the Supabase gateway rejects missing/bad
- *     JWTs with {"code":401,"message":"Invalid JWT"} before function code runs
- *   - Input validation tests use a real admin token but send invalid payloads,
- *     which cause the function to return 400 BEFORE any DOCX generation, storage
- *     upload, document record insert, or audit log write
+ *   - verify_jwt = false — function handles auth internally via getUser(token)
+ *   - Input validation tests use a real admin token but send invalid payloads
  *
  * Safety note:
- *   The happy path (valid case_id → DOCX generation → storage upload → DB record)
- *   is explicitly NOT tested here.
+ *   The happy path (valid case_id → DOCX generation) is NOT tested here.
  *
  * Run with:
  *   deno test --allow-net supabase/functions/generate-raadvoorstel/index.test.ts
@@ -41,7 +37,7 @@ async function getAdminToken(): Promise<string> {
 }
 
 // ---------------------------------------------------------------------------
-// AUTH GATE TESTS — verify_jwt = true means gateway rejects before function code
+// AUTH GATE TESTS — function-level auth (verify_jwt = false)
 // ---------------------------------------------------------------------------
 
 Deno.test("rejects request with no Authorization header → 401", async () => {
@@ -52,9 +48,8 @@ Deno.test("rejects request with no Authorization header → 401", async () => {
   });
   assertEquals(res.status, 401);
   const body = await res.json();
-  // Gateway returns {"code":401,"message":"Invalid JWT"}
-  assertEquals(body.code, 401);
-  assert(typeof body.message === "string");
+  assertEquals(body.success, false);
+  assertEquals(body.error, "AUTH_MISSING");
 });
 
 Deno.test("rejects request with malformed token → 401", async () => {
@@ -69,7 +64,8 @@ Deno.test("rejects request with malformed token → 401", async () => {
   });
   assertEquals(res.status, 401);
   const body = await res.json();
-  assertEquals(body.code, 401);
+  assertEquals(body.success, false);
+  assertEquals(body.error, "AUTH_INVALID");
 });
 
 // ---------------------------------------------------------------------------

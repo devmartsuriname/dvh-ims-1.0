@@ -68,13 +68,13 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    // Use service role client for auth verification and data operations
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    // Verify user token explicitly (required in serverless Deno context)
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await adminClient.auth.getUser(token);
     if (userError || !user) {
       log.warn('auth_failed', { reason: 'invalid_token' });
       return new Response(
@@ -82,8 +82,6 @@ Deno.serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // RBAC
     const { data: userRoles, error: rolesError } = await adminClient

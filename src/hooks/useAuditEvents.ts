@@ -110,7 +110,7 @@ export const useAuditEvents = (filters: AuditEventFilters): UseAuditEventsReturn
       }
 
       // Fetch actor names for user IDs
-      const userIds = [...new Set((data || []).filter(e => e.actor_user_id).map(e => e.actor_user_id))]
+      const userIds = [...new Set((data || []).map(e => e.actor_user_id).filter((id): id is string => id !== null))]
       let userMap: Record<string, string> = {}
 
       if (userIds.length > 0) {

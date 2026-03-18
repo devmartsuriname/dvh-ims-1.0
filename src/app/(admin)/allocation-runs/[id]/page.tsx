@@ -57,6 +57,7 @@ const AllocationRunDetail = () => {
   }, [id])
 
   const fetchRunDetails = async () => {
+    if (!id) return
     setLoading(true)
 
     // Fetch run

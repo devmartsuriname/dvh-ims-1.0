@@ -5,7 +5,7 @@ export default function useLocalStorage<T>(key: string, initialValue: T, overrid
   const [storedValue, setStoredValue] = useState<T>(() => {
     if (override) return initialValue
     try {
-      let item = null
+      let item: string | null = null
       if (key) {
         item = window.localStorage.getItem(key)
       }

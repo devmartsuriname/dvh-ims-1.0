@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Card, Table, Badge, Pagination, Spinner } from 'react-bootstrap'
 import { useAuditEvents, type AuditEventFilters, type AuditEvent } from '@/hooks/useAuditEvents'
 import AuditLogFilters from './AuditLogFilters'
@@ -64,7 +64,7 @@ const AuditLogTable = () => {
 
   // Generate pagination items
   const getPaginationItems = () => {
-    const items = []
+    const items: React.ReactElement[] = []
     const maxVisible = 5
     let startPage = Math.max(1, page - Math.floor(maxVisible / 2))
     const endPage = Math.min(totalPages, startPage + maxVisible - 1)

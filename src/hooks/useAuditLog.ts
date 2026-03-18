@@ -38,8 +38,9 @@ export async function logAuditEvent(params: AuditLogParams): Promise<void> {
   const { error } = await supabase.from('audit_event').insert([{
     actor_user_id: user.id,
     actor_role: actorRole,
-    entity_type: entityType,
-    entity_id: entityId,
+    // entity_type is required (non-null) in the DB; callers always supply one
+    entity_type: entityType!,
+    entity_id: entityId ?? null,
     action: params.action.toUpperCase(),
     reason: params.reason ?? null,
     metadata_json: params.metadata ?? null,

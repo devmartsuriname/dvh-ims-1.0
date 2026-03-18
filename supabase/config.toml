@@ -1,7 +1,7 @@
 project_id = "okfqnqsvsesdpkpvltpr"
 
 [functions.execute-allocation-run]
-verify_jwt = true
+verify_jwt = false
 
 [functions.submit-bouwsubsidie-application]
 verify_jwt = false

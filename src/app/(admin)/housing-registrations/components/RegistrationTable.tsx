@@ -9,6 +9,7 @@ import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
 import { notify } from '@/utils/notify'
 import { renderApplicantAvatarHtml } from '@/components/applicants/ApplicantInitialsAvatar'
+import { HOUSING_STATUS_BADGES as STATUS_BADGES } from '@/constants/statusBadges'
 
 interface HousingRegistration {
   id: string
@@ -27,17 +28,6 @@ interface HousingRegistration {
     last_name: string
     national_id: string
   }
-}
-
-const STATUS_BADGES: Record<string, { bg: string; label: string }> = {
-  received: { bg: 'secondary', label: 'Received' },
-  under_review: { bg: 'info', label: 'Under Review' },
-  urgency_assessed: { bg: 'primary', label: 'Urgency Assessed' },
-  waiting_list: { bg: 'warning', label: 'Waiting List' },
-  matched: { bg: 'success', label: 'Matched' },
-  allocated: { bg: 'dark', label: 'Allocated' },
-  finalized: { bg: 'success', label: 'Finalized' },
-  rejected: { bg: 'danger', label: 'Rejected' },
 }
 
 const RegistrationTable = () => {

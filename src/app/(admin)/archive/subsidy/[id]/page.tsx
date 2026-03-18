@@ -8,37 +8,9 @@ import { useUserRole } from '@/hooks/useUserRole'
 import { logAuditEvent } from '@/hooks/useAuditLog'
 import type { AppRole } from '@/hooks/useUserRole'
 import type { Json } from '@/integrations/supabase/types'
+import { SUBSIDY_STATUS_BADGES as STATUS_BADGES } from '@/constants/statusBadges'
 
 const ALLOWED_ROLES: AppRole[] = ['system_admin', 'minister', 'project_leader', 'director', 'ministerial_advisor', 'audit']
-
-const STATUS_BADGES: Record<string, { bg: string; label: string }> = {
-  received: { bg: 'secondary', label: 'Received' },
-  in_social_review: { bg: 'info', label: 'In Social Review' },
-  social_completed: { bg: 'primary', label: 'Social Completed' },
-  returned_to_intake: { bg: 'warning', label: 'Returned to Intake' },
-  in_technical_review: { bg: 'info', label: 'In Technical Review' },
-  technical_approved: { bg: 'success', label: 'Technical Approved' },
-  returned_to_social: { bg: 'warning', label: 'Returned to Social' },
-  in_admin_review: { bg: 'info', label: 'In Admin Review' },
-  admin_complete: { bg: 'success', label: 'Admin Complete' },
-  returned_to_technical: { bg: 'warning', label: 'Returned to Technical' },
-  screening: { bg: 'info', label: 'Screening' },
-  needs_more_docs: { bg: 'warning', label: 'Needs More Docs' },
-  fieldwork: { bg: 'primary', label: 'Fieldwork' },
-  awaiting_director_approval: { bg: 'info', label: 'Awaiting Director Approval' },
-  director_approved: { bg: 'success', label: 'Director Approved' },
-  returned_to_screening: { bg: 'warning', label: 'Returned to Screening' },
-  in_ministerial_advice: { bg: 'info', label: 'In Ministerial Advice' },
-  ministerial_advice_complete: { bg: 'success', label: 'Advice Complete' },
-  returned_to_director: { bg: 'warning', label: 'Returned to Director' },
-  awaiting_minister_decision: { bg: 'info', label: 'Awaiting Minister Decision' },
-  minister_approved: { bg: 'success', label: 'Minister Approved' },
-  returned_to_advisor: { bg: 'warning', label: 'Returned to Advisor' },
-  approved_for_council: { bg: 'success', label: 'Approved for Council' },
-  council_doc_generated: { bg: 'dark', label: 'Council Doc Generated' },
-  finalized: { bg: 'success', label: 'Finalized' },
-  rejected: { bg: 'danger', label: 'Rejected' },
-}
 
 interface SubsidyCase {
   id: string

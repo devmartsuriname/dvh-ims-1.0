@@ -5,17 +5,12 @@ import { Grid } from 'gridjs-react'
 import { html } from 'gridjs'
 import { useMyVisits } from '@/hooks/useMyVisits'
 import { toast } from 'react-toastify'
+import { VISIT_TYPE_BADGES } from '@/constants/statusBadges'
 
 const REPORT_BADGES: Record<string, { bg: string; label: string }> = {
   none: { bg: 'secondary', label: 'Not Started' },
   draft: { bg: 'warning', label: 'Draft' },
   finalized: { bg: 'success', label: 'Finalized' },
-}
-
-const VISIT_TYPE_BADGES: Record<string, { bg: string; label: string }> = {
-  social: { bg: 'info', label: 'Social' },
-  technical: { bg: 'warning', label: 'Technical' },
-  follow_up: { bg: 'secondary', label: 'Follow-up' },
 }
 
 const MyVisitsPage = () => {

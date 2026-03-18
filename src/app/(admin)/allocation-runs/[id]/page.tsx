@@ -5,6 +5,7 @@ import PageTitle from '@/components/PageTitle'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
 import { notify } from '@/utils/notify'
+import { ALLOCATION_RUN_STATUS_BADGES as STATUS_BADGES, DECISION_BADGES } from '@/constants/statusBadges'
 
 interface AllocationRun {
   id: string
@@ -39,19 +40,6 @@ interface AllocationDecision {
   decision_reason: string | null
   decided_by: string
   decided_at: string
-}
-
-const STATUS_BADGES: Record<string, string> = {
-  pending: 'warning',
-  running: 'info',
-  completed: 'success',
-  failed: 'danger'
-}
-
-const DECISION_BADGES: Record<string, string> = {
-  approved: 'success',
-  rejected: 'danger',
-  deferred: 'warning'
 }
 
 const AllocationRunDetail = () => {

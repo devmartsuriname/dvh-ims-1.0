@@ -5,6 +5,7 @@ import { html } from 'gridjs'
 import { supabase } from '@/integrations/supabase/client'
 import { notify } from '@/utils/notify'
 import DecisionFormModal from './DecisionFormModal'
+import { DECISION_BADGES } from '@/constants/statusBadges'
 
 interface AllocationCandidate {
   id: string
@@ -34,12 +35,6 @@ interface AllocationDecision {
   decision_reason: string | null
   decided_by: string
   decided_at: string
-}
-
-const DECISION_BADGES: Record<string, string> = {
-  approved: 'success',
-  rejected: 'danger',
-  deferred: 'warning'
 }
 
 const DecisionTable = () => {

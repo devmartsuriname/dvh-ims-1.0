@@ -5,6 +5,7 @@ import PageTitle from '@/components/PageTitle'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import { supabase } from '@/integrations/supabase/client'
 import { HOUSING_DOCUMENT_REQUIREMENTS } from '@/config/documentRequirements'
+import { HOUSING_STATUS_BADGES as STATUS_BADGES } from '@/constants/statusBadges'
 import { notify } from '@/utils/notify'
 import { useAuditLog } from '@/hooks/useAuditLog'
 import { createAdminNotification } from '@/hooks/useAdminNotifications'
@@ -65,17 +66,6 @@ interface DocumentUpload {
     document_code: string
     is_mandatory: boolean
   }
-}
-
-const STATUS_BADGES: Record<string, { bg: string; label: string }> = {
-  received: { bg: 'secondary', label: 'Received' },
-  under_review: { bg: 'info', label: 'Under Review' },
-  urgency_assessed: { bg: 'primary', label: 'Urgency Assessed' },
-  waiting_list: { bg: 'warning', label: 'Waiting List' },
-  matched: { bg: 'success', label: 'Matched' },
-  allocated: { bg: 'dark', label: 'Allocated' },
-  finalized: { bg: 'success', label: 'Finalized' },
-  rejected: { bg: 'danger', label: 'Rejected' },
 }
 
 const STATUS_TRANSITIONS: Record<string, string[]> = {

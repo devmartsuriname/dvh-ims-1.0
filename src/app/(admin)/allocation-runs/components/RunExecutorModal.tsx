@@ -57,8 +57,6 @@ const RunExecutorModal = ({ show, onHide, onSuccess }: RunExecutorModalProps) =>
       }
 
       // 2. Call the edge function to execute the run
-      const { data: { session } } = await supabase.auth.getSession()
-      
       const response = await supabase.functions.invoke('execute-allocation-run', {
         body: {
           run_id: newRun.id,

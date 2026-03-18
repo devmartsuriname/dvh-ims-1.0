@@ -7,6 +7,7 @@ import PageTitle from '@/components/PageTitle'
 import type { AppRole } from '@/hooks/useUserRole'
 import { useUserRole } from '@/hooks/useUserRole'
 import { supabase } from '@/integrations/supabase/client'
+import { HOUSING_STATUS_BADGES as STATUS_BADGES } from '@/constants/statusBadges'
 
 const ALLOWED_ROLES: AppRole[] = ['system_admin', 'minister', 'project_leader', 'frontdesk_housing', 'admin_staff', 'audit']
 
@@ -22,17 +23,6 @@ interface WaitingListEntry {
     first_name: string
     last_name: string
   }
-}
-
-const STATUS_BADGES: Record<string, { bg: string; label: string }> = {
-  received: { bg: 'secondary', label: 'Received' },
-  under_review: { bg: 'info', label: 'Under Review' },
-  urgency_assessed: { bg: 'primary', label: 'Urgency Assessed' },
-  waiting_list: { bg: 'warning', label: 'Waiting List' },
-  matched: { bg: 'success', label: 'Matched' },
-  allocated: { bg: 'dark', label: 'Allocated' },
-  finalized: { bg: 'success', label: 'Finalized' },
-  rejected: { bg: 'danger', label: 'Rejected' },
 }
 
 const HousingWaitingList = () => {

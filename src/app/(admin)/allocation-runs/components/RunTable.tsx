@@ -7,6 +7,7 @@ import { notify } from '@/utils/notify'
 import { useNavigate } from 'react-router-dom'
 import IconifyIcon from '@/components/wrapper/IconifyIcon'
 import RunExecutorModal from './RunExecutorModal'
+import { ALLOCATION_RUN_STATUS_BADGES as STATUS_BADGES } from '@/constants/statusBadges'
 
 interface AllocationRun {
   id: string
@@ -18,13 +19,6 @@ interface AllocationRun {
   executed_by: string
   completed_at: string | null
   error_message: string | null
-}
-
-const STATUS_BADGES: Record<string, string> = {
-  pending: 'warning',
-  running: 'info',
-  completed: 'success',
-  failed: 'danger'
 }
 
 const RunTable = () => {

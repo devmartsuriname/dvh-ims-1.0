@@ -7,6 +7,7 @@ import { useScheduleVisits } from '@/hooks/useScheduleVisits'
 import { useUserRole } from '@/hooks/useUserRole'
 import type { AppRole } from '@/hooks/useUserRole'
 import { toast } from 'react-toastify'
+import { VISIT_TYPE_BADGES } from '@/constants/statusBadges'
 
 const STATUS_BADGES: Record<string, { bg: string; label: string }> = {
   in_social_review: { bg: 'info', label: 'Social Review' },
@@ -17,12 +18,6 @@ const STATUS_BADGES: Record<string, { bg: string; label: string }> = {
 const ROLE_BADGES: Record<string, { bg: string; label: string }> = {
   social_field_worker: { bg: 'info', label: 'Social Worker' },
   technical_inspector: { bg: 'warning', label: 'Technical Inspector' },
-}
-
-const VISIT_TYPE_BADGES: Record<string, { bg: string; label: string }> = {
-  social: { bg: 'info', label: 'Social' },
-  technical: { bg: 'warning', label: 'Technical' },
-  follow_up: { bg: 'secondary', label: 'Follow-up' },
 }
 
 const VISIT_STATUS_BADGES: Record<string, { bg: string; label: string }> = {

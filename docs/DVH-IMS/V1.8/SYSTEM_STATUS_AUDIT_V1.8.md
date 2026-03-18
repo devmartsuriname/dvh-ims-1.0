@@ -347,3 +347,56 @@ Stability and error-handling improvements. 10 files modified. No schema, RLS, ed
 ### Full Report
 
 See [PHASE_3_STABILITY_IMPROVEMENT_REPORT.md](PHASE_3_STABILITY_IMPROVEMENT_REPORT.md) for complete issue → fix mapping, before/after behavior, and regression check.
+
+---
+
+## Amendment — Fix Execution Phase 4 (2026-03-18)
+
+**Authority:** Delroy
+**Executed By:** Claude (Governance-Controlled Fix Execution)
+
+### Changes Applied
+
+Quick wins: status badge consolidation and dead code removal. 11 files modified, 1 file created. No business logic, schema, RLS, edge function, or library changes.
+
+#### QW-01 — Status Badge Consolidation
+
+Created `src/constants/statusBadges.ts` as the single source of truth for all status/badge mappings. Removed 12 duplicate constant blocks (~130 lines) across 11 files.
+
+| Badge Group | Export Name | Duplicate Copies Removed | Consuming Files |
+|-------------|-------------|--------------------------|-----------------|
+| Housing registration statuses (8 entries) | `HOUSING_STATUS_BADGES` | 3 | `housing-registrations/[id]/page.tsx`, `housing-registrations/components/RegistrationTable.tsx`, `housing-waiting-list/page.tsx`, `archive/housing/[id]/page.tsx` |
+| Full subsidy case statuses (27 entries) | `SUBSIDY_STATUS_BADGES` | 1 | `subsidy-cases/[id]/page.tsx`, `archive/subsidy/[id]/page.tsx` |
+| Visit type badges (3 entries) | `VISIT_TYPE_BADGES` | 1 | `schedule-visits/page.tsx`, `my-visits/page.tsx` |
+| Allocation decision outcomes (3 entries) | `DECISION_BADGES` | 1 | `allocation-decisions/components/DecisionTable.tsx`, `allocation-runs/[id]/page.tsx` |
+| Allocation run statuses (4 entries) | `ALLOCATION_RUN_STATUS_BADGES` | 1 | `allocation-runs/components/RunTable.tsx`, `allocation-runs/[id]/page.tsx` |
+
+Import aliasing pattern used — zero changes to variable references in file bodies:
+```typescript
+import { HOUSING_STATUS_BADGES as STATUS_BADGES } from '@/constants/statusBadges'
+```
+
+#### QW-02 — Dead Code Removal
+
+| File | Change |
+|------|--------|
+| `src/app/(admin)/allocation-runs/components/RunExecutorModal.tsx` | Removed unused `const { data: { session } } = await supabase.auth.getSession()` — session variable was never referenced; removes one unnecessary async call per allocation run execution |
+
+#### Deliberately Skipped (Behavior-Preserving Non-Consolidations)
+
+| Item | Reason |
+|------|--------|
+| `control-queue/page.tsx` STATUS_BADGES | Intentionally shorter labels for denser layout — consolidating would change displayed text |
+| `subsidy-cases/components/CaseTable.tsx` STATUS_BADGES | Simplified 8-entry subset, not a duplicate of the full 27-entry set |
+| `archive/page.tsx` badge sets | 2-entry subsets (`finalized`, `rejected` only) — not duplicates of full sets |
+
+### Maintainability Table Update
+
+| Area | Previous Status | Updated Status | Notes |
+|------|----------------|----------------|-------|
+| Status badge constants (M-04) | FAIL — 5 badge groups defined in 2–4 files each | PASS — single definition per group in `src/constants/statusBadges.ts` |
+| Dead code | LOW — unused `getSession()` call in RunExecutorModal | RESOLVED — removed |
+
+### Full Report
+
+See [PHASE_4_QUICK_WINS_REPORT.md](PHASE_4_QUICK_WINS_REPORT.md) for complete details, skipped items reasoning, and regression check.

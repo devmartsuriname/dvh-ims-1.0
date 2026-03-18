@@ -98,7 +98,7 @@ function validateInput(data: unknown): { valid: true; data: BouwsubsidieInput } 
   }
   
   // Validate district code
-  if (input.district && !VALID_DISTRICTS.includes(input.district as string)) {
+  if (input.district && !(VALID_DISTRICTS as ReadonlyArray<string>).includes(input.district as string)) {
     errors.push({ field: 'district', message: 'Invalid district code' })
   }
   

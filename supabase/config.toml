@@ -22,7 +22,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.get-citizen-document]
-verify_jwt = true
+verify_jwt = false
 
 [functions.track-qr-scan]
 verify_jwt = false

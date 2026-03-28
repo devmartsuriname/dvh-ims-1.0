@@ -1,123 +1,50 @@
 
 
-# IMS System Analysis — Volks Huisvesting
+# Plan: Create Wizard Field Contract Documentation
 
-This is an analysis-only task. No code will be modified. A comprehensive `IMS_System_Analysis.md` will be generated to `/mnt/documents/` based on the findings below.
+## Objective
+Create `public/wizard-field-contract.md` — a read-only documentation file extracting all wizard step and field data from both wizards.
 
----
+## Source Data (Verified)
+All data extracted from:
+- `src/i18n/locales/nl.json` (exact NL labels)
+- Step components for both wizards (field types, validation, structure)
+- `src/config/documentRequirements.ts` (document lists)
+- `src/constants/districts.ts` (10 Suriname districts)
+- Constants files for both wizards (select options)
 
-## Findings Summary
+## File to Create
+**`public/wizard-field-contract.md`**
 
-### 1. System Overview
-- **Purpose:** Government-grade Information Management System for the Ministry of Social Affairs (SoZaVo), Department of Public Housing (Volkshuisvesting)
-- **Two core services:** Bouwsubsidie (Construction Subsidy) and Woning Registratie & Allocatie (Housing Registration & Allocation)
-- **Architecture:** React + Vite + TypeScript frontend, Supabase backend (Postgres + Edge Functions + Storage)
+Single markdown file containing:
 
-### 2. Modules (17 Admin + 5 Public)
+### BOUWSUBSIDIE WIZARD — 9 stappen
+1. **Stap 0 — Introductie**: Full mededeling text (including policy exclusion notice), 4 requirements, 3 documents with note, acknowledgement checkbox text
+2. **Stap 1 — Gegevens**: 5 fields (ID-nummer, Voornaam, Achternaam, Geboortedatum, Geslacht) with validation rules
+3. **Stap 2 — Contact**: 2 fields (Telefoonnummer, E-mailadres) with validation
+4. **Stap 3 — Gezin**: 2 main fields (Gezinsgrootte, Afhankelijken) + dynamic children table (Leeftijd, Geslacht, Beperking)
+5. **Stap 4 — Adres**: 3 fields (Straatnaam, District [10 options], Ressort [optional])
+6. **Stap 5 — Aanvraag**: 3 fields (Reden [5 options], Geschat bedrag, Calamiteit checkbox) + conditional warning
+7. **Stap 6 — Documenten**: 14 document slots (2 mandatory, 4 income-group-mandatory, 8 optional) + 3-item checklist
+8. **Stap 7 — Controleren**: Review sections + declaration checkbox with full text
+9. **Stap 8 — Receipt**: Reference number, security token, submission details, 3 next steps
 
-**Admin Modules:**
-1. Dashboards — Role-based overview
-2. Subsidy Cases — Full Bouwsubsidie lifecycle management (26-state workflow)
-3. Housing Registrations — Housing registration lifecycle (8-state workflow)
-4. Housing Waiting List — Waiting list management
-5. Allocation Quotas — District quota configuration
-6. Allocation Runs — Automated allocation execution
-7. Allocation Decisions — Accept/reject allocation candidates
-8. Allocation Assignments — Final housing assignments
-9. Case Assignments — Staff-to-case assignment
-10. Schedule Visits — Inspection visit scheduling
-11. My Visits — Inspector's personal visit queue
-12. Control Queue — Workflow control oversight
-13. Persons — Person registry (shared entity)
-14. Households — Household registry (shared entity)
-15. Archive — Finalized/rejected case archive
-16. Audit Log — Immutable audit event viewer
-17. QR Codes — Public QR code generation
+### WONINGREGISTRATIE WIZARD — 11 stappen
+1. **Stap 0 — Introductie**: About text, 4 requirements, 3 documents with note, acknowledgement checkbox
+2. **Stap 1 — Gegevens**: 5 fields (same pattern as Bouwsubsidie)
+3. **Stap 2 — Contact**: 2 fields
+4. **Stap 3 — Woonsituatie**: 5 fields (Adres, District, Type woning [5 options], Huur, Bewoners)
+5. **Stap 4 — Voorkeur**: 2 fields (Type interesse [3 options], Voorkeurdistrict) + info note
+6. **Stap 5 — Reden**: 1 field (radio group, 7 options)
+7. **Stap 6 — Inkomen**: 3 fields (Inkomensbron [7 options], Uw inkomen, Partner inkomen) + info note
+8. **Stap 7 — Urgentie**: 2 checkboxes + conditional textarea + info box
+9. **Stap 8 — Documenten**: 6 document slots (3 mandatory, 3 optional)
+10. **Stap 9 — Controleren**: Review sections + declaration checkbox with full text
+11. **Stap 10 — Receipt**: Reference number, security token, 3 next steps
 
-**Public Modules:**
-1. Landing Page
-2. Bouwsubsidie Application Wizard (9 steps)
-3. Housing Registration Wizard (11 steps)
-4. Public Status Lookup
-5. QR Redirect
-
-### 3. Roles (11)
-`system_admin`, `minister`, `project_leader`, `director`, `ministerial_advisor`, `frontdesk_bouwsubsidie`, `frontdesk_housing`, `admin_staff`, `social_field_worker`, `technical_inspector`, `audit`
-
-National roles: system_admin, minister, project_leader, director, ministerial_advisor, audit
-District-scoped: frontdesk_bouwsubsidie, frontdesk_housing, admin_staff, social_field_worker, technical_inspector
-
-### 4. Workflows
-
-**Bouwsubsidie (26 statuses, 24 non-terminal):**
-```
-received → in_social_review → social_completed → in_technical_review → technical_approved → in_admin_review → admin_complete → screening → fieldwork → awaiting_director_approval → director_approved → in_ministerial_advice → ministerial_advice_complete → awaiting_minister_decision → minister_approved → approved_for_council → council_doc_generated → finalized
-```
-With return loops (returned_to_intake, returned_to_social, returned_to_technical, returned_to_screening, returned_to_director, returned_to_advisor) and rejection from any state. RBAC-enforced transitions per role.
-
-**Housing Registration (8 statuses):**
-```
-received → under_review → urgency_assessed → waiting_list → matched → allocated → finalized
-```
-With rejection from any state.
-
-### 5. Data Model (20+ tables)
-Core: `person`, `household`, `household_member`, `address`, `contact_point`
-Subsidy: `subsidy_case`, `case_assignment`, `inspection_visit`, `generated_document`, `subsidy_document_requirement`
-Housing: `housing_registration`, `housing_registration_status_history`, `housing_urgency`, `housing_document_upload`, `housing_document_requirement`
-Allocation: `allocation_run`, `allocation_candidate`, `allocation_decision`, `assignment_record`, `district_quota`
-System: `user_roles`, `app_user_profile`, `audit_event`, `admin_notification`, `public_status_access`, `qr_scan_event`
-
-### 6. Edge Functions (8)
-- `submit-bouwsubsidie-application` (anonymous, rate-limited)
-- `submit-housing-registration` (anonymous, rate-limited)
-- `execute-allocation-run` (RBAC: system_admin, project_leader)
-- `generate-raadvoorstel` (RBAC: system_admin, project_leader, frontdesk_bouwsubsidie, admin_staff)
-- `get-citizen-document` (RBAC: all staff)
-- `get-document-download-url` (RBAC: admin/oversight roles)
-- `lookup-public-status` (anonymous)
-- `health-check` (anonymous)
-- `track-qr-scan` (anonymous)
-
-### 7. Reusable Components
-- **Workflow engine pattern** (STATUS_TRANSITIONS + ROLE_ALLOWED_TRANSITIONS) — directly reusable for any service
-- **RBAC framework** (useUserRole hook, RLS policies, has_role/is_national_role DB functions)
-- **Public wizard pattern** (multi-step form → edge function → DB)
-- **Audit framework** (audit_event table + logEvent hook)
-- **Notification system** (admin_notification with role/district routing)
-- **District-scoped RLS pattern** (reusable across any district-based service)
-- **Status badge/timeline UI components**
-
-### 8. Constraints & Risks
-- **Tightly coupled:** Subsidy case detail page (~900 lines) contains review panels inline
-- **No shared workflow engine:** Each service defines its own STATUS_TRANSITIONS inline
-- **10 Surinamese districts hardcoded** in `VALID_DISTRICTS` constant
-- **No foreign keys** in database (Supabase limitation or design choice) — relationships enforced by application logic
-- **RLS policies reference specific role names** — changing role taxonomy requires migration
-- **Raadvoorstel is Bouwsubsidie-exclusive** — not reusable for other services
-
-### 9. Integration Readiness
-
-**Directly reusable:**
-- Person/Household/Address/Contact data model (shared core)
-- RBAC infrastructure (user_roles table, has_role functions, useUserRole hook)
-- Audit event framework
-- Notification system
-- Public wizard submission pattern
-- District-scoped RLS architecture
-- Document upload/verification pattern
-
-**Requires refactoring:**
-- Workflow engine needs extraction into a generic, configurable service
-- Role definitions need parameterization (currently hardcoded as TypeScript union type)
-- District codes need to become configurable (currently hardcoded array)
-- Edge functions need service-agnostic abstraction layer
-
----
-
-## Deliverable
-
-Create `/mnt/documents/IMS_System_Analysis.md` with the full structured analysis above, formatted per the requested template.
-
-No code changes. No schema changes. Analysis only.
+## Constraints
+- Read-only task — no existing files modified
+- All text extracted verbatim from nl.json translations
+- All select options listed with exact NL labels
+- All validation rules documented from yup schemas
 
